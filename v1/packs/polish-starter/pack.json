@@ -1,0 +1,17 @@
+{
+  "name": "polish-starter",
+  "version": "1.0.0",
+  "author": "flashcards v1 prototype",
+  "description": "Starting Polish: cases, verb aspect, agreement, past tense and everyday words.",
+  "language": "pl",
+  "coreRange": "*",
+  "topics": ["cases", "aspect", "agreement", "past-tense", "basics", "questions"],
+  "topicLabels": {
+    "cases": "Cases",
+    "aspect": "Verb aspect",
+    "agreement": "Gender agreement",
+    "past-tense": "Past tense",
+    "basics": "Everyday basics",
+    "questions": "Questions"
+  }
+}

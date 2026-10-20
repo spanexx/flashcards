@@ -1,0 +1,286 @@
+FLASHCARDS V1 PROTOTYPE - GRILL
+Status: Locked
+Pack: v1-prototype
+Date: 2026-10-19
+
+SOURCE OF TRUTH
+The behaviour is locked by the wayfinder tickets in
+wayfinder/anything-learning-spec/tickets/. This grill does not reopen them.
+It records the few runtime choices the tickets deliberately left open, so the
+prototype can be built and used before the main thing is decided.
+
+USER REQUEST (verbatim)
+"using just nextjs for the backend and frontend create a full working v1 of
+this app, use the decisions at the wayfinder to know the behaviour, create a
+fully working prototype, we will use it to decide how it works in run time,
+make all working decision before deciding the main thing"
+
+WHAT THE PROTOTYPE MUST PROVE
+1. A learner can open the app, see a plan with reasons, study a session, stop
+   at any time, and see evidence-backed progress.
+2. Cards are one flat shape over two sides, parts, tags, summary and origin.
+3. Four answering surfaces work side by side: dotted blanks, picks, one typed
+   answer, and hear-then-type.
+4. Packs are plain folders of data. A broken pack is named and refused without
+   blocking the app.
+5. Evidence is append-only and card-scoped. Progress is read from it, never
+   stored as a conclusion.
+6. The browser never holds the provider key and never constructs a prompt.
+7. Every generation feature is optional. The app is fully usable offline.
+
+INHERITED DECISIONS (do not re-litigate)
+- Two sides; each side is an ordered list of parts. Attachments are parts.
+- Tags, a pack-built plain-text summary, and an origin note ride on the card.
+- Import is all-or-nothing per batch.
+- Evidence is one row per answer, attached to one card, append-only.
+- Four outcomes: Again, Got it, Nearly, No. Unjudged is its own state.
+- The plan is shown before a session, with reasons in plain words.
+- There is no fixed session length. Twenty is an offer.
+- A card answered wrongly returns once at the end of the same session.
+- Stopping is not an ending. No summary, no report, no sign-off.
+- No scores, percentages, grades, level bars, streaks, ranks or comparison.
+- Weakness is framed as next work, never as a lack.
+- Familiarity is never sold as progress.
+- Packs are plain files and never running code.
+- A broken pack is named and refused, never blocks the app.
+- Out-of-place checks are optional; with no checker the batch lands unflagged.
+- The generation gate's proposal state is withdrawn. Generated cards are
+  machine-validated and are cards. Editing creates a new card with zero history.
+- The model writes the whole correct line; the app derives the exercise.
+- A hint caps the card at Nearly, whether offered or requested.
+- The tutor talks in texts, reacts to answers not time, and cannot nag.
+- The app is fully usable with no provider. A missing key is never a blocker.
+- The page never holds the key, makes a provider call, or builds a prompt.
+
+STACK DECISION
+Question: The dev lane names Express + Angular. The user now names Next.js for
+both the backend and the frontend. Which wins?
+Locked answer: Next.js wins for this v1 prototype. The user's instruction is
+newer and explicit. The locked behaviour survives because Next.js route
+handlers are the local process: they hold the key, build prompts, call the
+provider, and read and write learner data. The browser only talks to loopback.
+The Express/Angular lines in docs/ethics/dev-lane.md are recorded as superseded
+for v1 and must be updated when the stack decision is made permanent.
+
+RUNTIME DECISIONS THE TICKETS LEFT OPEN
+These are prototype choices, not amendments to the wayfinder tickets. They are
+listed so the runtime trial can accept or replace each one.
+
+R1. Multi-blank evidence
+Question: A cloze card is several answers on one card. One row or several?
+Working answer: one evidence row per blank, carrying the blank's region id.
+Rows from one card showing share an attempt id. A card-level outcome is the
+worst blank outcome. This is the walkthrough's interim, made explicit.
+Why: it keeps each judgment visible without inventing a micro-card.
+Source: answering-surface.md friction; map.md "Multi-blank cards".
+
+R2. Pack card identity
+Question: what makes a pack card the same card after a reinstall or update?
+Working answer: the pack name plus the card's canonical content, hashed.
+Version is not part of identity. Unchanged cards survive updates and reinstalls
+without duplicates. A card whose content changed is a new card; the old card
+and its evidence remain visible.
+Why: this is the reading of progress-view.md decision 8 that keeps evidence
+honest when the wording changes.
+Source: progress-view.md; pack-shape.md.
+
+R3. Editing a card
+Question: editing must create a new card with zero history. What happens to the
+old card and its evidence?
+Working answer: the edited card gets a new id and zero evidence. The old card
+is marked retired, stays visible in the evidence archive, and is never selected
+for study again. Evidence is never edited or deleted by an edit.
+Why: append-only evidence stays append-only, and the learner is not recorded as
+strong on content that no longer exists.
+Source: generation-gate.md; progress-view.md.
+
+R4. Judging in v1
+Question: which judge runs in the prototype?
+Working answer: the local exact-match judge runs where the pack supplies
+expected answers. It accepts a small spelling slip as Nearly and uses prior
+exposure to choose Again versus No. Where no expected answer exists, the answer
+is recorded as unjudged and the learner states the outcome. The provider is not
+used as an answer judge in v1.
+Why: provider judging would send learner-written answer text, and the privacy
+boundary requires a per-item visible confirmation. Deferring it keeps the
+prototype honest and offline-capable.
+Source: evidence-model.md; privacy-boundary.md.
+
+R5. Tutor in v1
+Question: when does the tutor speak?
+Working answer: the learner can ask for a hint on any card. The pack may carry
+pre-written hints, which work offline. If a provider is configured and the
+session banner was approved, the server may ask the provider for words. The
+hint caps the card at Nearly. The tutor does not interrupt automatically in v1.
+Why: on-demand hinting exercises the cap, the banner, the offline floor and the
+provider path without spending money on every card.
+Source: ai-tutor-session.md decisions 2, 3, 5, 9, 10, 20.
+
+R6. What the tutor may see
+Question: the tutor reacts to the learner's answer, but learner text must not
+leave without per-item consent. Which one wins?
+Working answer: v1 sends the outcome category (Again, Nearly, No) and the card
+text, never the learner's typed answer. The card text is named in the session
+banner. The outcome category is app-chosen, not learner-written.
+Why: it keeps the privacy boundary intact and still lets the tutor respond to
+how the card went. A future provider-judge ticket can add per-item consent.
+Source: privacy-boundary.md; ai-tutor-session.md decisions 5 and 11.
+
+R7. Import without AI
+Question: what does an imported deck look like?
+Working answer: JSON pasted or chosen from a file, either an array of cards or
+{ "cards": [...] }. A human-friendly shorthand { front, back, topics, tags } is
+accepted and converted to the flat card shape. Every item is validated before
+anything is saved. The whole batch is refused with the item index and the field
+that is wrong. Duplicate content is not duplicated. Origin note says imported.
+Source: deck-import.md (open); card-shape.md.
+
+R8. Deck lifecycle
+Question: create, rename, merge, delete.
+Working answer for v1: a pack is a deck. Learners can add cards by hand, import
+cards, edit a card (new card, old retired), and delete a card (its evidence is
+deleted with it, after an explicit confirmation). There is no rename, merge or
+pack deletion in v1. Removing a pack folder does not delete its cards.
+Source: map.md fog "Deck lifecycle"; progress-view.md.
+
+R9. Attachments
+Question: where do attachment bytes live?
+Working answer for v1: a card part can carry a data URI or a local public path
+for an image or audio file. The sample pack uses no stored media; speech is
+generated by the browser's own speech engine. There is no upload UI in v1.
+Source: map.md fog "Attachment storage"; card-shape.md.
+
+R10. Retention
+Question: when does a card leave the deck, and does evidence decay?
+Working answer for v1: nothing leaves automatically and evidence does not
+decay. A learner can delete a card deliberately. The algorithm treats old
+evidence as old, but never discards it.
+Source: map.md fog "Retention and forgetting".
+
+R11. Offer adjustment
+Question: how does abandonment adjust the offer without nagging?
+Working answer: the server keeps a local session log of offered, answered and
+whether the learner finished. Two or more recent short stops lower the offer by
+five, to a floor of five. A completed session moves it back toward twenty.
+Nothing about this appears during a session. There is no streak or verdict.
+Source: session-loop.md.
+
+R12. Algorithm fallback receipt
+Question: how is a fallback visible only on reflection?
+Working answer: the plan response names the algorithm that ran. Settings shows
+that name, the fallback count, and the last fallback time. The session screen
+says nothing.
+Source: session-loop.md.
+
+R13. Prompt preview and send
+Question: the learner must see the exact prompt before it leaves, but the page
+must not construct prompts. How?
+Working answer: the server prepares a prompt and returns a request id plus the
+exact text for display and copying. The learner sends the request id, not the
+prompt. The server sends the stored prompt. The prompt log records it locally.
+Source: how-you-open-it.md; privacy-boundary.md.
+
+R14. Provider shape
+Question: which provider does v1 speak to?
+Working answer: any OpenAI-compatible chat completions endpoint, configured
+server-side with endpoint, model and key. The key lives in the OS key store
+where a command-line adapter exists, otherwise in a 0600 file. Settings names
+which store is in use. The key is never returned to the browser.
+Source: privacy-boundary.md; dev-lane.md.
+
+R15. Packs folder
+Question: where does the core look for packs?
+Working answer: one folder, configurable by FLASHCARDS_PACKS_DIR, default
+v1/packs. It is scanned at startup and on demand. The sample Polish pack lives
+there. Learner data lives separately in v1/data.
+Source: pack-shape.md.
+
+R16. Working shown, then discarded
+Question: how is shown working handled?
+Working answer: a card may declare a working region. The learner's working is
+held in the browser, shown beside the pack's correct working after the answer,
+and never sent to the server or written to evidence.
+Source: ai-tutor-session.md decisions 17-19.
+
+R17. Category safety
+Question: categories can still identify. What does v1 do?
+Working answer: v1 shows every category in the prompt preview and sends only
+the categories the learner approves. It does not claim to generalise them.
+Source: privacy-boundary.md unresolved note.
+
+R18. Out-of-place checker
+Question: what runs the checker?
+Working answer: no checker is configured in v1. Imported and adopted cards land
+unflagged, exactly as the ticket allows when no checker is available.
+Source: card-shape.md.
+
+NON-GOALS FOR V1
+- Accounts, logins, any hosted service, any sharing.
+- Mobile app or offline service worker.
+- Pack authoring UI beyond manual cards and JSON import.
+- Provider answer judging.
+- Automatic tutor interruptions.
+- Attachment upload and binary storage.
+- Fine-tuning or a real Laya integration.
+- Scores, streaks, notifications, onboarding polish.
+
+OPEN QUESTIONS THE RUNTIME TRIAL SHOULD ANSWER
+1. Does per-blank evidence make progress readable, or does it need a card-level
+   row instead?
+2. Is the local exact-match judge good enough to feel fair on typed answers?
+3. Is the pack identity rule right when a pack author fixes a typo?
+4. Does the plan's reason text feel honest without being noisy?
+5. Is an on-demand tutor enough, or does the session feel dead without an
+   interrupting tutor?
+6. Does the hint cap feel like a fair trade when the hint is pack-authored?
+7. Is the progress screen's "what I can do now" list actually motivating?
+8. Does the shorthand import format cover real decks people bring?
+
+ROUND 2 — UI SHELL (2026-10-19, after the learner used the build)
+
+U1. Screen arrangement
+Question: the look is accepted, but everything is one long vertical wall. How
+are the screens arranged?
+Verbatim learner words: "we must have to rearrange the layout of the UI";
+"we should be able to not scroll too much down"; "compact, compact, compact";
+"if you need more information you should be able to go to the other way";
+"it would make a home a lot easier if it is some kind of sidebar"; "the
+settings has a lot of things that we can just make it a tab. It shouldn't be
+laid out all the time on the screen"; "the library also if it could be a tab
+it would be much much better"; "there is no pattern in this. It's just too
+much information on the screen."
+Working answer: a fixed left sidebar is the only navigation (Study, Library,
+Progress, Settings), always visible, text labels. Every screen is a header
+plus tabs or disclosures. Compact rhythm. Lists scroll in place, the page does
+not grow without limit. Study keeps the centered card with the plan folded
+into a compact header; Library has Packs / Add cards / Generate tabs; Progress
+has Overview / Every card tabs with evidence in a right-hand panel; Settings
+has Profile / Provider / Prompts / Data tabs.
+Source: wayfinder/anything-learning-spec/tickets/ui-shell.md.
+
+U2. Diacritics
+Question: Polish words typed without ą/ę/ł/ż/ź/ć/ś/ń/ó were judged wrong. Must
+the judge accept keyboards that cannot type them?
+Working answer: loose judging folds diacritics — NFC, NFD with combining marks
+removed, then a stroked-letter map (ł/ø/đ/ß/æ/œ) — before the existing case,
+whitespace and edge-punctuation rules; exact judging stays strict. So
+"Dziekuje bardzo" matches "Dziękuję bardzo" and "jablko" matches "jabłko". The
+accepted cost is named: z and ż match in loose cards; a pack that needs the
+difference marks the card exact or lists both spellings.
+Source: wayfinder/anything-learning-spec/tickets/diacritics-not-required.md.
+
+U3. Batch repetition
+Question: generation repeated the same noun across a batch (twenty cards, three
+nouns). Must generation be batch-aware, and see what it already proposed?
+Working answer: no batch memory and no second pass. Exact repeats are already
+stopped by content identity (pack + full line + target), so the same line
+collapses inside a batch and against the deck. The real problem is variety, so
+one sentence joins the generation prompt in both the app default and the Polish
+pack's own template: vary the nouns, verbs and sentence shapes; do not reuse a
+line. No extra call, no learner text, no new prompt slot. Accepted costs: the same line under two topics keeps only the last
+topic, and a prompt sentence does not guarantee variety.
+Source: wayfinder/anything-learning-spec/tickets/batch-aware.md.
+
+LOCKED
+No open design questions block the build. The runtime questions above are
+observed, not decided by this prototype.

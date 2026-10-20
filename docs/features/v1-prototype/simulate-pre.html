@@ -1,0 +1,195 @@
+<!doctype html>
+<!--
+  ARCHIVED 2026-10-19 — this is the pre-implementation design mirror, kept for
+  the record only. The canonical simulation is v1/scripts/simulate.mjs
+  (post-implementation, runs against the real app). See IMPL Phase 10 and the
+  reconcile sections in IMPL/PRD.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>v1 prototype — design mirror</title>
+  <style>
+    :root { --paper:#f7f3ea; --ink:#1e2520; --muted:#6b7269; --line:#d8d2c4; --green:#2f6b4f; --amber:#a9672a; --card:#fffdf8; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+    main { max-width: 880px; margin: 0 auto; padding: 40px 24px 80px; }
+    h1 { font-size: 2rem; letter-spacing:-.02em; margin:0 0 6px; }
+    h2 { font-size:1.25rem; margin:0 0 10px; }
+    h3 { font-size:1rem; margin:0 0 6px; }
+    p { margin: 0 0 12px; }
+    .muted { color:var(--muted); }
+    .tiny { font-size:.82rem; }
+    .panel { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:22px; margin:18px 0; box-shadow:0 1px 0 rgba(0,0,0,.02); }
+    .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    button { font:inherit; border:1px solid var(--ink); background:var(--ink); color:#fff; padding:10px 16px; border-radius:999px; cursor:pointer; }
+    button.secondary { background:transparent; color:var(--ink); }
+    button.ghost { background:transparent; border-color:var(--line); color:var(--muted); }
+    button:disabled { opacity:.45; cursor:not-allowed; }
+    input { font:inherit; border:0; border-bottom:2px dotted var(--green); background:transparent; color:var(--ink); padding:2px 4px; width:120px; outline:none; }
+    .badge { display:inline-block; border:1px solid var(--line); border-radius:999px; padding:2px 10px; font-size:.78rem; color:var(--muted); }
+    .tag { display:inline-block; background:#eee8da; border-radius:999px; padding:2px 9px; font-size:.76rem; margin-right:6px; }
+    .reason { border-left:3px solid var(--green); padding-left:12px; margin:12px 0; }
+    .answer { font-size:1.15rem; padding:12px 14px; background:#eef4ee; border-radius:12px; }
+    .outcomes { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin:14px 0; }
+    .outcomes button { background:#fff; color:var(--ink); border:1px solid var(--line); border-radius:12px; text-align:left; padding:10px; }
+    .outcomes button:hover { border-color:var(--green); }
+    .outcomes b { display:block; }
+    .outcomes span { font-size:.76rem; color:var(--muted); display:block; margin-top:4px; }
+    .hint { border:1px dashed var(--amber); background:#fff8eb; color:#6b421a; padding:12px 14px; border-radius:12px; margin:12px 0; }
+    .cap { color:var(--amber); font-size:.86rem; }
+    .hidden { display:none; }
+    .steps { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; }
+    .steps span { font-size:.76rem; border:1px solid var(--line); border-radius:999px; padding:3px 9px; color:var(--muted); }
+    .steps span.on { background:var(--ink); color:#fff; border-color:var(--ink); }
+    .evidence { font-size:.9rem; }
+    .evidence li { margin:6px 0; }
+    .good { color:var(--green); font-weight:600; }
+    .warn { color:var(--amber); font-weight:600; }
+    code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size:.9em; }
+  </style>
+</head>
+<body>
+<main>
+  <p class="tiny muted">Design mirror · no real data · v1-prototype · pre-implementation</p>
+  <h1>Flashcards</h1>
+  <p class="muted">This mirror shows the designed flow with hardcoded Polish cards. The real app will run the same flow against evidence on disk.</p>
+
+  <div class="steps" id="steps">
+    <span class="on">Plan</span><span>Card</span><span>Reveal</span><span>Retry</span><span>Progress</span>
+  </div>
+
+  <section class="panel" id="plan">
+    <h2>This session</h2>
+    <p><b>20 cards offered.</b> You can stop at any time.</p>
+    <div class="reason">
+      <h3>16 from the genitive case</h3>
+      <p class="muted">because you have been getting these wrong</p>
+    </div>
+    <div class="reason">
+      <h3>4 from vocabulary</h3>
+      <p class="muted">because you are strong there and they check you are still strong</p>
+    </div>
+    <details>
+      <summary class="muted tiny">Tutor session banner (approval is per session)</summary>
+      <p class="tiny">The tutor may see: the card text already decided to be shown, your weak topic categories, your level, your learning style, and the outcome category. It never sees what you typed. It talks in texts, reacts to your answer, cannot nag, and goes silent if the provider is gone.</p>
+    </details>
+    <div class="row" style="margin-top:16px">
+      <button onclick="go('card')">Begin</button>
+      <button class="secondary" onclick="go('progress')">Not now</button>
+    </div>
+  </section>
+
+  <section class="panel hidden" id="card">
+    <div class="row" style="justify-content:space-between">
+      <span class="badge">Card 1 of 20</span>
+      <button class="ghost" onclick="go('plan')">Stop</button>
+    </div>
+    <p class="tiny muted" style="margin-top:14px">Genitive case · noun · masculine · negation</p>
+    <p style="font-size:1.3rem">Nie mam <input id="blank" aria-label="blank" placeholder="…" /> <span class="muted">(kot)</span>.</p>
+    <p class="tiny muted">Summary: saying “I don’t have a cat” in Polish.</p>
+    <div class="row">
+      <button class="secondary" onclick="showHint()">Ask for a hint</button>
+      <button onclick="reveal()">Check answer</button>
+    </div>
+    <div class="hint hidden" id="hint">
+      <b>Hint</b>
+      <p style="margin:6px 0 0">“Nie mam” is a negation, so the noun takes the genitive. What is the genitive of <code>kot</code>?</p>
+      <p class="cap" style="margin:6px 0 0">A hint is used, so this card can be recorded at most as Nearly.</p>
+    </div>
+  </section>
+
+  <section class="panel hidden" id="reveal">
+    <div class="row" style="justify-content:space-between">
+      <span class="badge">Card 1 of 20</span>
+      <span class="tiny warn" id="capNote">hint used · cap: Nearly</span>
+    </div>
+    <p class="tiny muted" style="margin-top:14px">Your answer</p>
+    <p style="font-size:1.2rem" id="given">—</p>
+    <p class="tiny muted">Answer</p>
+    <div class="answer">Nie mam <b>kota</b>. <span class="muted tiny">I don’t have a cat.</span></div>
+    <p class="tiny" style="margin-top:10px">Checked locally: the ending is right. Because a hint was used, the best available outcome is <b>Nearly</b>.</p>
+    <p class="tiny muted">Show your working (never stored): <span class="muted">the learner’s line appears here beside the correct working, then is discarded.</span></p>
+    <div class="outcomes">
+      <button onclick="pick('Again')"><b>Again</b><span>wrong, but familiar</span></button>
+      <button onclick="pick('Got it')" id="gotIt"><b>Got it</b><span>correct</span></button>
+      <button onclick="pick('Nearly')"><b>Nearly</b><span>a detail slipped</span></button>
+      <button onclick="pick('No')"><b>No</b><span>wrong, not known before</span></button>
+    </div>
+    <p class="tiny" id="picked"></p>
+    <div class="row">
+      <button onclick="go('retry')">Next card</button>
+      <button class="ghost" onclick="go('progress')">Stop here</button>
+    </div>
+  </section>
+
+  <section class="panel hidden" id="retry">
+    <h2>One card came back</h2>
+    <p>These are the same cards that slipped earlier. They return once, at the end of this session.</p>
+    <div class="reason">
+      <h3>Nie mam ___ (kot).</h3>
+      <p class="muted">because it was answered wrong earlier in this session</p>
+    </div>
+    <div class="row">
+      <button onclick="go('progress')">Study it once more</button>
+      <button class="ghost" onclick="go('progress')">Stop here</button>
+    </div>
+  </section>
+
+  <section class="panel hidden" id="progress">
+    <h2>Progress</h2>
+    <h3 class="good">What you can do now</h3>
+    <p><b>You used to answer “Nie mam kota” wrong. Now you answer it.</b> <span class="tiny muted">(open evidence)</span></p>
+    <h3 style="margin-top:18px">Next work</h3>
+    <p><b>Genitive case is next.</b> <span class="tiny muted">because these cards are still slipping</span></p>
+    <h3 style="margin-top:18px">Still strong</h3>
+    <p><b>Vocabulary.</b> These come back now and then to check you are still strong.</p>
+    <h3 style="margin-top:18px">Evidence</h3>
+    <ul class="evidence">
+      <li><b>Nie mam kota.</b> Nearly · took about 9 seconds · seen 2 times before · <span class="tiny muted">correct</span></li>
+      <li><b>Nie mam kota.</b> No · took about 14 seconds · seen 1 time before · <span class="tiny muted">wrong, not previously known</span></li>
+    </ul>
+    <p class="tiny muted">No scores, no percentages, no streak. Each named thing opens its raw evidence. Evidence can be corrected with a new row; conclusions are never edited.</p>
+    <div class="row"><button class="secondary" onclick="reset()">Back to the plan</button></div>
+  </section>
+
+  <p class="tiny muted" style="margin-top:28px">The post-implementation simulation will run the same flow against the real app and a temporary data folder.</p>
+</main>
+<script>
+  const order = ["plan", "card", "reveal", "retry", "progress"];
+  function go(name) {
+    order.forEach((id) => document.getElementById(id).classList.add("hidden"));
+    document.getElementById(name).classList.remove("hidden");
+    document.querySelectorAll("#steps span").forEach((el, i) => {
+      el.classList.toggle("on", order[i] === name);
+    });
+    if (name === "reveal") {
+      const value = document.getElementById("blank").value.trim();
+      document.getElementById("given").textContent = value || "(blank)";
+      document.getElementById("capNote").classList.toggle("hidden", !hinted);
+      document.getElementById("gotIt").disabled = hinted;
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  let hinted = false;
+  function showHint() {
+    hinted = true;
+    document.getElementById("hint").classList.remove("hidden");
+  }
+  function reveal() { go("reveal"); }
+  function pick(word) {
+    document.getElementById("picked").textContent = hinted && word === "Got it"
+      ? "Got it is not available while a hint is used."
+      : "Recorded: " + word + ".";
+  }
+  function reset() {
+    hinted = false;
+    document.getElementById("blank").value = "";
+    document.getElementById("hint").classList.add("hidden");
+    document.getElementById("picked").textContent = "";
+    go("plan");
+  }
+</script>
+</body>
+</html>

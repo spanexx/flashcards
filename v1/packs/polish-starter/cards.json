@@ -1,0 +1,558 @@
+{
+  "cards": [
+    {
+      "key": "cases-acc-kawa",
+      "summary": "Piję kawę",
+      "topics": ["cases"],
+      "tags": ["accusative"],
+      "prompt": [
+        { "type": "text", "text": "Piję " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " (kawa)." }
+      ],
+      "answer": [
+        { "type": "text", "text": "Piję kawę." },
+        { "type": "text", "text": "I am drinking coffee.", "role": "translation" }
+      ],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["kawę"] }] },
+      "hints": ["Drinking takes the accusative. Feminine -a turns into -ę."],
+      "fullLine": "Piję kawę."
+    },
+    {
+      "key": "cases-acc-kot",
+      "summary": "Mam kota",
+      "topics": ["cases"],
+      "tags": ["accusative"],
+      "prompt": [
+        { "type": "text", "text": "Mam " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " (kot)." }
+      ],
+      "answer": [
+        { "type": "text", "text": "Mam kota." },
+        { "type": "text", "text": "I have a cat.", "role": "translation" }
+      ],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["kota"] }] },
+      "hints": ["Having takes the accusative. Animate masculine nouns gain -a."],
+      "fullLine": "Mam kota."
+    },
+    {
+      "key": "cases-gen-czas",
+      "summary": "Nie mam czasu",
+      "topics": ["cases"],
+      "tags": ["genitive"],
+      "prompt": [
+        { "type": "text", "text": "Nie mam " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " (czas)." }
+      ],
+      "answer": [
+        { "type": "text", "text": "Nie mam czasu." },
+        { "type": "text", "text": "I do not have time.", "role": "translation" }
+      ],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["czasu"] }] },
+      "hints": ["A negation flips the accusative to the genitive."],
+      "fullLine": "Nie mam czasu."
+    },
+    {
+      "key": "cases-gen-klucz",
+      "summary": "Szukam klucza",
+      "topics": ["cases"],
+      "tags": ["genitive"],
+      "prompt": [
+        { "type": "text", "text": "Szukam " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " (klucz)." }
+      ],
+      "answer": [
+        { "type": "text", "text": "Szukam klucza." },
+        { "type": "text", "text": "I am looking for the key.", "role": "translation" }
+      ],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["klucza"] }] },
+      "hints": ["Szukać takes the genitive."],
+      "fullLine": "Szukam klucza."
+    },
+    {
+      "key": "cases-ins-autobus",
+      "summary": "Jadę autobusem",
+      "topics": ["cases"],
+      "tags": ["instrumental"],
+      "prompt": [
+        { "type": "text", "text": "Jadę " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " (autobus)." }
+      ],
+      "answer": [
+        { "type": "text", "text": "Jadę autobusem." },
+        { "type": "text", "text": "I am going by bus.", "role": "translation" }
+      ],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["autobusem"] }] },
+      "hints": ["Travelling by something takes the instrumental, usually -em."],
+      "fullLine": "Jadę autobusem."
+    },
+    {
+      "key": "cases-ins-muzyka",
+      "summary": "Interesuję się muzyką",
+      "topics": ["cases"],
+      "tags": ["instrumental"],
+      "prompt": [
+        { "type": "text", "text": "Interesuję się " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " (muzyka)." }
+      ],
+      "answer": [
+        { "type": "text", "text": "Interesuję się muzyką." },
+        { "type": "text", "text": "I am interested in music.", "role": "translation" }
+      ],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["muzyką"] }] },
+      "hints": ["Interesować się always takes the instrumental."],
+      "fullLine": "Interesuję się muzyką."
+    },
+    {
+      "key": "cases-loc-warszawa",
+      "summary": "Mieszkam w Warszawie",
+      "topics": ["cases"],
+      "tags": ["locative"],
+      "prompt": [
+        { "type": "text", "text": "Mieszkam w " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " (Warszawa)." }
+      ],
+      "answer": [
+        { "type": "text", "text": "Mieszkam w Warszawie." },
+        { "type": "text", "text": "I live in Warsaw.", "role": "translation" }
+      ],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["Warszawie"] }] },
+      "hints": ["Living somewhere takes the locative after w. -awa becomes -awie."],
+      "fullLine": "Mieszkam w Warszawie."
+    },
+    {
+      "key": "cases-loc-praca",
+      "summary": "Rozmawiamy o pracy",
+      "topics": ["cases"],
+      "tags": ["locative"],
+      "prompt": [
+        { "type": "text", "text": "Rozmawiamy o " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " (praca)." }
+      ],
+      "answer": [
+        { "type": "text", "text": "Rozmawiamy o pracy." },
+        { "type": "text", "text": "We are talking about work.", "role": "translation" }
+      ],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["pracy"] }] },
+      "hints": ["Talking about something takes o plus the locative. -ca becomes -cy."],
+      "fullLine": "Rozmawiamy o pracy."
+    },
+    {
+      "key": "cases-gen-mleko",
+      "summary": "nie ma mleka",
+      "topics": ["cases"],
+      "tags": ["genitive"],
+      "prompt": [
+        { "type": "text", "text": "W sklepie nie ma " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " (mleko)." }
+      ],
+      "answer": [
+        { "type": "text", "text": "W sklepie nie ma mleka." },
+        { "type": "text", "text": "There is no milk in the shop.", "role": "translation" }
+      ],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["mleka"] }] },
+      "hints": ["Nie ma always takes the genitive. Neuter -o becomes -a."],
+      "fullLine": "W sklepie nie ma mleka."
+    },
+    {
+      "key": "aspect-picks-skonczyc",
+      "summary": "skończyć or kończyć",
+      "topics": ["aspect"],
+      "tags": ["picks"],
+      "prompt": [
+        { "type": "text", "text": "Which verb means “to finish (and be done)”?" }
+      ],
+      "answer": [
+        { "type": "text", "text": "skończyć" },
+        { "type": "text", "text": "Perfective: the whole action, seen as done.", "role": "translation" }
+      ],
+      "answerDef": { "mode": "picks", "options": ["skończyć", "kończyć"], "correct": ["skończyć"] },
+      "hints": ["The perfective looks at the finished whole, not the process."],
+      "fullLine": "skończyć"
+    },
+    {
+      "key": "aspect-picks-przeczytac",
+      "summary": "czytać or przeczytać",
+      "topics": ["aspect"],
+      "tags": ["picks"],
+      "prompt": [
+        { "type": "text", "text": "Which verb means “to read through to the end”?" }
+      ],
+      "answer": [
+        { "type": "text", "text": "przeczytać" },
+        { "type": "text", "text": "Perfective: the reading is finished.", "role": "translation" }
+      ],
+      "answerDef": { "mode": "picks", "options": ["czytać", "przeczytać"], "correct": ["przeczytać"] },
+      "hints": ["The prefix przy- here marks the reading as completed."],
+      "fullLine": "przeczytać"
+    },
+    {
+      "key": "aspect-type-pisac",
+      "summary": "perfective of pisać",
+      "topics": ["aspect"],
+      "tags": ["type"],
+      "prompt": [{ "type": "text", "text": "What is the perfective partner of “pisać” (to write)?" }],
+      "answer": [
+        { "type": "text", "text": "napisać" },
+        { "type": "text", "text": "na- marks the writing as done.", "role": "translation" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["napisać"] },
+      "hints": ["Many perfectives form with the prefix na-."],
+      "fullLine": "napisać"
+    },
+    {
+      "key": "agreement-cloze-ksiazka",
+      "summary": "Ta nowa książka jest droga",
+      "topics": ["agreement"],
+      "tags": ["feminine"],
+      "prompt": [
+        { "type": "text", "text": "Ta nowa książka jest " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " (drogi)." }
+      ],
+      "answer": [
+        { "type": "text", "text": "Ta nowa książka jest droga." },
+        { "type": "text", "text": "This new book is expensive.", "role": "translation" }
+      ],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["droga"] }] },
+      "hints": ["Książka is feminine, so the adjective ends in -a."],
+      "fullLine": "Ta nowa książka jest droga."
+    },
+    {
+      "key": "agreement-cloze-okno",
+      "summary": "To duże okno jest otwarte",
+      "topics": ["agreement"],
+      "tags": ["neuter"],
+      "prompt": [
+        { "type": "text", "text": "To duże okno jest " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " (otwarty)." }
+      ],
+      "answer": [
+        { "type": "text", "text": "To duże okno jest otwarte." },
+        { "type": "text", "text": "This big window is open.", "role": "translation" }
+      ],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["otwarte"] }] },
+      "hints": ["Okno is neuter, so the adjective ends in -e."],
+      "fullLine": "To duże okno jest otwarte."
+    },
+    {
+      "key": "agreement-cloze-siostra",
+      "summary": "Moja siostra jest wysoka",
+      "topics": ["agreement"],
+      "tags": ["feminine"],
+      "prompt": [
+        { "type": "text", "text": "Moja siostra jest " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " (wysoki)." }
+      ],
+      "answer": [
+        { "type": "text", "text": "Moja siostra jest wysoka." },
+        { "type": "text", "text": "My sister is tall.", "role": "translation" }
+      ],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["wysoka"] }] },
+      "hints": ["Siostra is feminine: moja, wysoka."],
+      "fullLine": "Moja siostra jest wysoka."
+    },
+    {
+      "key": "agreement-picks-samochod",
+      "summary": "stary samochód",
+      "topics": ["agreement"],
+      "tags": ["picks", "masculine"],
+      "prompt": [{ "type": "text", "text": "Which one is correct Polish for “old car”?" }],
+      "answer": [
+        { "type": "text", "text": "stary samochód" },
+        { "type": "text", "text": "Masculine adjective with masculine noun.", "role": "translation" }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": ["stary samochód", "stara samochód", "stare samochód"],
+        "correct": ["stary samochód"]
+      },
+      "hints": ["Samochód is masculine, so the adjective ends in -y."],
+      "fullLine": "stary samochód"
+    },
+    {
+      "key": "past-bylem",
+      "summary": "Wczoraj byłem w domu",
+      "topics": ["past-tense"],
+      "tags": ["masculine"],
+      "prompt": [
+        { "type": "text", "text": "Wczoraj " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " w domu (a man speaking)." }
+      ],
+      "answer": [
+        { "type": "text", "text": "Wczoraj byłem w domu." },
+        { "type": "text", "text": "Yesterday I was at home.", "role": "translation" }
+      ],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["byłem"] }] },
+      "hints": ["A male speaker uses -em: byłem."],
+      "fullLine": "Wczoraj byłem w domu."
+    },
+    {
+      "key": "past-byla",
+      "summary": "Ona wczoraj była w kinie",
+      "topics": ["past-tense"],
+      "tags": ["feminine"],
+      "prompt": [
+        { "type": "text", "text": "Ona wczoraj " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " w kinie." }
+      ],
+      "answer": [
+        { "type": "text", "text": "Ona wczoraj była w kinie." },
+        { "type": "text", "text": "She was at the cinema yesterday.", "role": "translation" }
+      ],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["była"] }] },
+      "hints": ["A female speaker or a she-subject uses -a: była."],
+      "fullLine": "Ona wczoraj była w kinie."
+    },
+    {
+      "key": "past-byli-type",
+      "summary": "oni byli",
+      "topics": ["past-tense"],
+      "tags": ["plural"],
+      "prompt": [{ "type": "text", "text": "“They (a group of men, or mixed) were” — complete: Oni " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": "." }],
+      "answer": [
+        { "type": "text", "text": "Oni byli." },
+        { "type": "text", "text": "They were (masculine personal plural).", "role": "translation" }
+      ],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["byli"] }] },
+      "hints": ["Masculine personal plural takes -li."],
+      "fullLine": "Oni byli."
+    },
+    {
+      "key": "past-jedlismy",
+      "summary": "Jedliśmy obiad",
+      "topics": ["past-tense"],
+      "tags": ["plural"],
+      "prompt": [
+        { "type": "text", "text": "My " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " obiad. (We were eating dinner.)" }
+      ],
+      "answer": [
+        { "type": "text", "text": "My jedliśmy obiad." },
+        { "type": "text", "text": "We were eating dinner.", "role": "translation" }
+      ],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["jedliśmy"] }] },
+      "hints": ["First person plural past: -liśmy for masculine personal groups."],
+      "fullLine": "My jedliśmy obiad."
+    },
+    {
+      "key": "past-picks-jesc",
+      "summary": "past tense of jeść",
+      "topics": ["past-tense"],
+      "tags": ["picks"],
+      "prompt": [{ "type": "text", "text": "Which is the past tense for “ja” (a man speaking) of “jeść”?" }],
+      "answer": [
+        { "type": "text", "text": "jadłem" },
+        { "type": "text", "text": "I was eating / I ate.", "role": "translation" }
+      ],
+      "answerDef": { "mode": "picks", "options": ["jadłem", "jem", "będę jadł"], "correct": ["jadłem"] },
+      "hints": ["Past forms build on the stem with -łem for a male speaker."],
+      "fullLine": "jadłem"
+    },
+    {
+      "key": "basics-dzien-dobry",
+      "summary": "Dzień dobry",
+      "topics": ["basics"],
+      "tags": ["greetings"],
+      "prompt": [{ "type": "text", "text": "How do you say “good morning” (the standard daytime greeting)?" }],
+      "answer": [
+        { "type": "text", "text": "Dzień dobry." },
+        { "type": "text", "text": "Literally “good day”, used all morning and afternoon.", "role": "translation" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["Dzień dobry"] },
+      "hints": ["Literally “good day”."],
+      "fullLine": "Dzień dobry."
+    },
+    {
+      "key": "basics-dziekuje",
+      "summary": "Dziękuję",
+      "topics": ["basics"],
+      "tags": ["politeness"],
+      "prompt": [{ "type": "text", "text": "How do you say “thank you”?" }],
+      "answer": [
+        { "type": "text", "text": "Dziękuję." },
+        { "type": "text", "text": "Thank you.", "role": "translation" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["Dziękuję", "dziękuję"] },
+      "hints": ["It ends in -ę, like many first-person forms."],
+      "fullLine": "Dziękuję."
+    },
+    {
+      "key": "basics-kosztuje",
+      "summary": "Ile to kosztuje",
+      "topics": ["basics"],
+      "tags": ["shopping"],
+      "prompt": [
+        { "type": "text", "text": "Ile to " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": "? (How much does it cost?)" }
+      ],
+      "answer": [
+        { "type": "text", "text": "Ile to kosztuje?" },
+        { "type": "text", "text": "How much does it cost?", "role": "translation" }
+      ],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["kosztuje"] }] },
+      "hints": ["Kosztować — to cost. Third person singular ends in -uje."],
+      "fullLine": "Ile to kosztuje?"
+    },
+    {
+      "key": "basics-szklanke",
+      "summary": "Poproszę szklankę herbaty",
+      "topics": ["basics"],
+      "tags": ["shopping"],
+      "prompt": [
+        { "type": "text", "text": "Poproszę " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " herbaty. (A glass of tea, please.)" }
+      ],
+      "answer": [
+        { "type": "text", "text": "Poproszę szklankę herbaty." },
+        { "type": "text", "text": "A glass of tea, please.", "role": "translation" }
+      ],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["szklankę"] }] },
+      "hints": ["Poproszę asks for a whole thing: accusative, so -ę."],
+      "fullLine": "Poproszę szklankę herbaty."
+    },
+    {
+      "key": "basics-hear-dworzec",
+      "summary": "Gdzie jest dworzec?",
+      "topics": ["questions"],
+      "tags": ["hear", "travel"],
+      "prompt": [{ "type": "speak", "text": "Gdzie jest dworzec?", "lang": "pl", "label": "Listen" }],
+      "answer": [
+        { "type": "text", "text": "Where is the station?" },
+        { "type": "text", "text": "Gdzie jest dworzec?", "role": "translation" }
+      ],
+      "answerDef": { "mode": "hear_type", "expected": ["Gdzie jest dworzec?", "gdzie jest dworzec"] },
+      "hints": ["Gdzie — where. Dworzec — station."],
+      "fullLine": "Gdzie jest dworzec?"
+    },
+    {
+      "key": "basics-hear-dziekuje-bardzo",
+      "summary": "Dziękuję bardzo",
+      "topics": ["basics"],
+      "tags": ["hear", "politeness"],
+      "prompt": [{ "type": "speak", "text": "Dziękuję bardzo", "lang": "pl", "label": "Listen" }],
+      "answer": [
+        { "type": "text", "text": "Thank you very much." },
+        { "type": "text", "text": "Dziękuję bardzo.", "role": "translation" }
+      ],
+      "answerDef": { "mode": "hear_type", "expected": ["Dziękuję bardzo", "dziękuję bardzo"] },
+      "hints": ["Bardzo — very."],
+      "fullLine": "Dziękuję bardzo"
+    },
+    {
+      "key": "questions-jak-sie-masz",
+      "summary": "Jak się masz? means…",
+      "topics": ["questions"],
+      "tags": ["picks", "greetings"],
+      "prompt": [{ "type": "text", "text": "What does “Jak się masz?” mean?" }],
+      "answer": [
+        { "type": "text", "text": "How are you?" },
+        { "type": "text", "text": "Jak się masz? — How are you?", "role": "translation" }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": ["How are you?", "Where are you?", "What time is it?"],
+        "correct": ["How are you?"]
+      },
+      "hints": ["Jak — how."],
+      "fullLine": "Jak się masz?"
+    },
+    {
+      "key": "questions-jak-masz-na-imie",
+      "summary": "What is your name?",
+      "topics": ["questions"],
+      "tags": ["type"],
+      "prompt": [{ "type": "text", "text": "How do you ask (informally) “What is your name?”" }],
+      "answer": [
+        { "type": "text", "text": "Jak masz na imię?" },
+        { "type": "text", "text": "Literally “what do you have for a name?”", "role": "translation" }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": ["Jak masz na imię?", "Jak się nazywasz?"]
+      },
+      "hints": ["Imię — first name."],
+      "fullLine": "Jak masz na imię?"
+    },
+    {
+      "key": "questions-kocham-cie",
+      "summary": "Kocham cię",
+      "topics": ["basics"],
+      "tags": ["type", "accusative"],
+      "prompt": [
+        { "type": "text", "text": "Kocham " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": ". (I love you.)" }
+      ],
+      "answer": [
+        { "type": "text", "text": "Kocham cię." },
+        { "type": "text", "text": "I love you.", "role": "translation" }
+      ],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["cię"] }] },
+      "hints": ["The accusative of ty is ciebie, shortened to cię."],
+      "fullLine": "Kocham cię."
+    },
+    {
+      "key": "agreement-two-verbs",
+      "summary": "Ona pije i je",
+      "topics": ["agreement"],
+      "tags": ["cloze", "two-blanks"],
+      "prompt": [
+        { "type": "text", "text": "Ona " },
+        { "type": "blank", "id": "b1", "hint": "pić (she)" },
+        { "type": "text", "text": " mleko i " },
+        { "type": "blank", "id": "b2", "hint": "jeść (she)" },
+        { "type": "text", "text": " chleb." }
+      ],
+      "answer": [
+        { "type": "text", "text": "Ona pije mleko i je chleb." },
+        { "type": "text", "text": "She drinks milk and eats bread.", "role": "translation" }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          { "id": "b1", "expected": ["pije"] },
+          { "id": "b2", "expected": ["je"] }
+        ]
+      },
+      "hints": ["Both verbs are third person singular, present tense."],
+      "fullLine": "Ona pije mleko i je chleb."
+    },
+    {
+      "key": "past-tense-working-dom",
+      "summary": "Byłem w domu",
+      "topics": ["past-tense"],
+      "tags": ["type", "working"],
+      "prompt": [{ "type": "text", "text": "Say “I was at home.” (a man speaking)" }],
+      "answer": [
+        { "type": "text", "text": "Byłem w domu." },
+        { "type": "text", "text": "I was at home.", "role": "translation" }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": ["Byłem w domu.", "byłem w domu"],
+        "working": {
+          "label": "The rule",
+          "expected": "Masculine past tense singular ends in -łem. “At home” is w domu (locative of dom)."
+        }
+      },
+      "hints": ["A man says byłem; a woman says byłam."],
+      "fullLine": "Byłem w domu."
+    }
+  ]
+}

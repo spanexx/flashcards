@@ -1,0 +1,225 @@
+// WHY: In the hosted build the browser is the only thing that talks to the
+// provider. This module keeps that call honest: the key stays in IndexedDB, the
+// prompt is shown before it leaves, and every outbound prompt is logged locally.
+// PACK: browser-app
+// 2026-10-20 opencode: created for the browser-owned build.
+
+import type { Card, ProviderStatus } from "@/lib/shared/types";
+import { callProvider } from "@/lib/provider/client";
+import { generateCardsFromText } from "@/lib/provider/generate";
+import { pickPackHint, requestTutorHint } from "@/lib/provider/hint";
+import { holdPrepared, takePrepared } from "@/lib/provider/prepare";
+import { buildGenerationPrompt, type ProfileSlots } from "@/lib/provider/prompt";
+import type { ProviderConfig } from "@/lib/provider/types";
+import { deriveWeakTopics } from "@/lib/core/progress";
+import {
+  appendPrompt,
+  readCards,
+  readEvidence,
+  readPack,
+  readProviderKey,
+  readSettings,
+  upsertCards,
+  writeProviderKey,
+  clearProviderKey,
+  packRecord,
+} from "@/lib/browser/repository";
+
+/** No key, no call. This is the one refusal every provider feature shares. */
+async function providerConfig(): Promise<
+  { ok: true; config: ProviderConfig } | { ok: false; message: string }
+> {
+  const settings = await readSettings();
+  const url = settings.provider.url.trim();
+  const model = settings.provider.model.trim();
+  if (url.length === 0 || model.length === 0) {
+    return { ok: false, message: "No provider is set up. The app works without one." };
+  }
+  const key = await readProviderKey();
+  if (!key) {
+    return { ok: false, message: "A provider is set up but no key is stored. Add a key in settings." };
+  }
+  return { ok: true, config: { url, model, key, swappedForWsl: false } };
+}
+
+/** Provider state in plain words; the key itself is never returned. */
+export async function browserProviderStatus(): Promise<ProviderStatus> {
+  const settings = await readSettings();
+  const key = await readProviderKey();
+  const configured = settings.provider.url.trim().length > 0 && settings.provider.model.trim().length > 0;
+  let message = "The browser calls the provider directly. Some providers refuse browser calls (CORS).";
+  if (!configured) message = "No provider is set up. The app works without one.";
+  else if (!key) message = "A provider is set up but no key is stored. Add a key in settings.";
+  return {
+    configured,
+    hasKey: key.length > 0,
+    endpoint: settings.provider.url.trim() || null,
+    model: settings.provider.model.trim() || null,
+    keyStore: key.length > 0 ? "browser" : "none",
+    swappedForWsl: false,
+    message,
+  };
+}
+
+/** Store or replace the key in this browser. */
+export async function saveProviderKey(key: string): Promise<{ name: string; hasKey: boolean }> {
+  if (key.trim().length === 0) {
+    await clearProviderKey();
+    return { name: "this browser", hasKey: false };
+  }
+  await writeProviderKey(key.trim());
+  return { name: "this browser", hasKey: true };
+}
+
+/** Remove the key from this browser. */
+export async function removeProviderKey(): Promise<{ name: string; hasKey: boolean }> {
+  await clearProviderKey();
+  return { name: "this browser", hasKey: false };
+}
+
+/** The learner's three categories plus the weak topics the planner can see. */
+async function profileSlots(cards: Card[]): Promise<ProfileSlots> {
+  const [settings, rows] = await Promise.all([readSettings(), readEvidence()]);
+  return {
+    weakTopics: deriveWeakTopics(cards, rows),
+    level: settings.level,
+    learningStyle: settings.learningStyle,
+  };
+}
+
+/** One plain sentence after a test call. No learner content is sent. */
+export async function testProvider(): Promise<{ ok: boolean; message: string }> {
+  const config = await providerConfig();
+  if (!config.ok) return { ok: false, message: config.message };
+  const result = await callProvider(
+    config.config,
+    [
+      { role: "system", content: "You are a connection test. Answer with the single word OK." },
+      { role: "user", content: "Say OK." },
+    ],
+    { timeoutMs: 20000 },
+  );
+  return result.ok
+    ? { ok: true, message: "The provider answered. It is ready to use." }
+    : { ok: false, message: result.message };
+}
+
+/** Build a generation prompt and hold it until the learner presses send. */
+export async function prepareGeneration(body: {
+  packName?: string;
+  topic?: string;
+  count?: number;
+}): Promise<{ requestId: string; prompt: string; expiresAt: number }> {
+  if (!body.packName) throw new Error("Choose which pack the cards should come from.");
+  if (!body.topic) throw new Error("Choose a deck for the new cards.");
+  const pack = await readPack(body.packName);
+  if (!pack) throw new Error("That pack is not here.");
+  const deck = pack.decks.find((entry) => entry.name === body.topic);
+  if (!deck) throw new Error(`"${body.topic}" is not a deck in ${pack.name}.`);
+
+  const count = Math.min(20, Math.max(1, Math.floor(body.count ?? 5)));
+  const cards = await readCards();
+  const slots = await profileSlots(cards);
+  const prompt = buildGenerationPrompt(packRecord(pack), slots, { topic: body.topic, count });
+  const prepared = holdPrepared({
+    kind: "generation",
+    display: prompt.display,
+    messages: prompt.messages,
+    packName: pack.name,
+    topic: body.topic,
+    count,
+    cardId: null,
+  });
+  return { requestId: prepared.id, prompt: prompt.display, expiresAt: prepared.expiresAt };
+}
+
+/** Send a held generation prompt and keep the cards only if the whole batch is valid. */
+export async function generatePrepared(requestId: string): Promise<{ cards: Card[] }> {
+  if (!requestId) throw new Error("A prepared prompt id is needed.");
+  const prepared = takePrepared(requestId);
+  if (!prepared || prepared.kind !== "generation") {
+    throw new Error("That prepared prompt has expired. Prepare it again.");
+  }
+  const pack = await readPack(prepared.packName);
+  if (!pack) throw new Error("That pack is no longer here.");
+  const config = await providerConfig();
+  if (!config.ok) throw new Error(config.message);
+
+  const result = await callProvider(config.config, prepared.messages, { timeoutMs: 60000 });
+  await appendPrompt({
+    at: new Date().toISOString(),
+    kind: "generation",
+    requestId: prepared.id,
+    endpoint: config.config.url,
+    model: config.config.model,
+    prompt: prepared.display,
+  });
+  if (!result.ok) throw new Error(result.message);
+
+  const deck = pack.decks.find((entry) => entry.name === prepared.topic);
+  if (!deck) throw new Error("The deck for these cards is gone.");
+  const now = new Date().toISOString();
+  let cards: Card[];
+  try {
+    cards = generateCardsFromText(packRecord(pack), prepared.id, result.text, deck.name, now, deck.id);
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : "the provider's answer was not usable";
+    throw new Error(`Nothing was saved, because ${reason}.`);
+  }
+  await upsertCards(cards);
+  return { cards };
+}
+
+/** Ask for a hint: the pack's free hint first, the tutor only when approved. */
+export async function askHint(body: {
+  cardId?: string;
+  approved?: boolean;
+  usedHints?: string[];
+  outcomeCategory?: string;
+}): Promise<{
+  text: string | null;
+  source: string;
+  prompt: string | null;
+  providerMessage: string | null;
+}> {
+  if (!body.cardId) throw new Error("A hint needs to know which card it is for.");
+  const cards = await readCards();
+  const card = cards.find((entry) => entry.id === body.cardId);
+  if (!card) throw new Error("That card is not in the deck.");
+
+  const pack = card.packName ? await readPack(card.packName) : null;
+  const config = await providerConfig();
+  let providerMessage: string | null = null;
+
+  if (config.ok && pack && body.approved === true) {
+    const slots = await profileSlots(cards);
+    const attempt = await requestTutorHint(
+      packRecord(pack),
+      card,
+      slots,
+      body.outcomeCategory ?? "not answered yet",
+      config.config,
+    );
+    await appendPrompt({
+      at: new Date().toISOString(),
+      kind: "hint",
+      requestId: card.id,
+      endpoint: config.config.url,
+      model: config.config.model,
+      prompt: attempt.prompt,
+    });
+    if (attempt.ok) return { text: attempt.text, source: "tutor", prompt: attempt.prompt, providerMessage: null };
+    providerMessage = attempt.message;
+  } else if (body.approved === true && !config.ok) {
+    providerMessage = config.message;
+  }
+
+  const packHint = pickPackHint(card, body.usedHints ?? []);
+  if (packHint) return { text: packHint, source: "pack", prompt: null, providerMessage };
+  return {
+    text: null,
+    source: "none",
+    prompt: null,
+    providerMessage: providerMessage ?? "No hint is available for this card.",
+  };
+}

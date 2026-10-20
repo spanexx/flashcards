@@ -1,0 +1,74 @@
+# GRILL — browser-app
+
+**Status:** Locked
+**Date:** 2026-10-20
+**Source:** wayfinder decisions T16, T12, T17 (learner conversation 2026-10-20)
+
+## What this build is
+
+The v1 prototype proved the learning loop. This build moves it to a hosted page
+that the learner opens in a browser, with no server-side learner data. Packs,
+decks, cards, evidence, sessions, settings and the prompt log live in
+IndexedDB. The host serves files and nothing else.
+
+## Locked decisions
+
+1. **Store.** IndexedDB is the only store. No server API, no server storage.
+   The host serves the static build.
+2. **Hierarchy.** pack -> deck -> card. A card belongs to exactly one deck.
+   The pack declares its decks. Decks replace the old topic word; tags stay
+   free cross-cutting labels.
+3. **Not a session boundary.** A deck is a container. A lesson, and later an
+   exam, may draw cards from several decks.
+4. **One bundle.** A pack is one JSON file: pack, decks, cards, optional
+   prompts. The same file is create, import and export. At least one deck;
+   cards may start empty.
+5. **Import targets.** A whole pack creates a new pack. A decks-only file goes
+   into a chosen pack. A cards-only file goes into a chosen pack and deck.
+6. **Updates.** Same pack name plus a newer version adds decks and cards and
+   updates existing cards by identity; evidence survives. An import never
+   deletes, moves or renames. An older version is refused with a plain reason.
+7. **Identity.** A card is named by pack name + deck id + content. A re-import
+   of the same content is the same card. A card in another deck is another card.
+8. **No gate.** Imported cards are schedulable on arrival. The origin note is
+   "Imported by the learner."; an edit makes a new card.
+9. **Tutor.** The tutor may teach, hint and generate into an imported deck, but
+   never edits an imported card in place.
+10. **Provider.** The key lives in IndexedDB. The browser calls the provider
+    directly. No relay, no third-party scripts, no analytics. CORS may block
+    some providers; that is named, not hidden. With no key the app works and
+    generation/tutoring stay off.
+11. **Backup.** "Back up everything" is one JSON file with packs, decks, cards,
+    evidence, sessions and settings, never the key. Restore replaces after
+    confirmation. "Export this pack" is content only. Autosave: desktop
+    Chrome/Edge picks a file once and the app rewrites it after changes; phones
+    save manually; cloud/WebDAV sync is later.
+12. **Authoring skill.** A versioned, copyable Markdown prompt, filled with the
+    target's real pack and deck ids, makes a whole pack, decks or cards in a
+    browser chat and returns JSON only. It uses the same validator as import.
+13. **Migration.** Convert the Polish starter pack: its six topics become six
+    decks. Cards carry over. Prototype evidence and logs are test data and stay
+    behind.
+
+## Inherited and untouched
+
+- The card shape, judging, evidence rows, plan rules, progress view and session
+  loop from the resolved tickets.
+- The app is fully usable with no provider.
+- Broken packs are named and never block the app.
+- Plain files, never running code, inside a pack.
+
+## Process deviations (recorded, not hidden)
+
+- This workspace is **not a git repository**, so the feature-pipeline worktree
+  gate cannot run. There is no main branch to protect and no worktree to
+  create. The build runs in place; initializing git is a separate decision.
+- The learner gave blanket approval for this build on 2026-10-20 ("I will agree
+  with all your recommendations"), so grilling approval and document approval
+  are recorded rather than asked again.
+- The pre-implementation simulation is written but not run interactively,
+  under the same blanket approval.
+
+## Open questions
+
+None.
