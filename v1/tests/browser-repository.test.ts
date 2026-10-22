@@ -12,6 +12,8 @@ import {
   appendSession,
   clearLibrary,
   deleteCardEvidence,
+  deleteDeck,
+  deletePack,
   orphanedPackNames,
   packRecord,
   packStatus,
@@ -147,6 +149,41 @@ describe("the record", () => {
     const entries = await readPromptLog(1, store);
     expect(entries).toHaveLength(1);
     expect(entries[0].prompt).toBe("new");
+  });
+});
+
+describe("deletion", () => {
+  it("deletes a pack with its cards and evidence, and leaves other packs alone", async () => {
+    await writePack(pack(), store);
+    await writePack({ ...pack("other"), decks: [{ id: "extra", name: "Extra" }] }, store);
+    await upsertCards([card("one"), card("two"), { ...card("three"), packName: "other", deckId: "extra" }], store);
+    await appendEvidence([row("r1", "one"), row("r2", "two"), row("r3", "three")], store);
+
+    const result = await deletePack("starter", store);
+    expect(result).toMatchObject({ removedDecks: 2, removedCards: 2, removedEvidenceRows: 2 });
+    expect(await readPack("starter", store)).toBeNull();
+    expect((await readCards(store)).map((entry) => entry.id)).toEqual(["three"]);
+    expect((await readEvidence(store)).map((entry) => entry.id)).toEqual(["r3"]);
+  });
+
+  it("deletes one deck and its evidence but keeps the pack and its other decks", async () => {
+    await writePack(pack(), store);
+    await upsertCards([card("one"), card("two", "cases")], store);
+    await appendEvidence([row("r1", "one"), row("r2", "two")], store);
+
+    const result = await deleteDeck("starter", "basics", store);
+    expect(result).toMatchObject({ ok: true, removedDecks: 1, removedCards: 1, removedEvidenceRows: 1 });
+    expect((await readPack("starter", store))?.decks).toEqual([{ id: "cases", name: "Cases" }]);
+    expect((await readCards(store)).map((entry) => entry.id)).toEqual(["two"]);
+    expect((await readEvidence(store)).map((entry) => entry.id)).toEqual(["r2"]);
+  });
+
+  it("refuses to delete the last deck and names missing rows", async () => {
+    await writePack({ ...pack(), decks: [{ id: "basics", name: "Basics" }] }, store);
+    expect(await deleteDeck("starter", "basics", store)).toEqual({ ok: false, reason: "last-deck" });
+    expect(await deleteDeck("gone", "basics", store)).toEqual({ ok: false, reason: "missing-pack" });
+    expect(await deleteDeck("starter", "gone", store)).toEqual({ ok: false, reason: "missing-deck" });
+    expect(await deletePack("gone", store)).toBeNull();
   });
 });
 

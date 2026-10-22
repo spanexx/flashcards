@@ -4,8 +4,11 @@
 // PACK: v1-prototype
 // 2026-10-19 opencode: created for the v1 prototype [pack: v1-prototype]
 // 2026-10-20 opencode: the same short-lived hold now lives in the browser; no
-// server-only import, global randomUUID. [pack: browser-app]
+// server-only import, global random id.
+// 2026-10-22 opencode: newId keeps prepared prompts working on a static HTTP
+// host. [pack: library-create-flow]
 
+import { newId } from "@/lib/core/id";
 import type { ChatMessage } from "@/lib/provider/client";
 
 /** A prompt held for approval. It is one-time use and expires quickly. */
@@ -14,8 +17,11 @@ export interface PreparedRequest {
   kind: "generation" | "hint";
   display: string;
   messages: ChatMessage[];
-  packName: string;
+  /** Older held requests did not carry a target; they behave like cards. */
+  targetKind?: "pack" | "deck" | "cards";
+  packName: string | null;
   topic: string | null;
+  deckId?: string | null;
   count: number | null;
   cardId: string | null;
   expiresAt: number;
@@ -32,7 +38,7 @@ export function holdPrepared(
 ): PreparedRequest {
   const prepared: PreparedRequest = {
     ...request,
-    id: crypto.randomUUID(),
+    id: newId(),
     expiresAt: Date.now() + TTL_MS,
   };
   held.set(prepared.id, prepared);

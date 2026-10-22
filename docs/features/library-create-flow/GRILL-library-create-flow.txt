@@ -1,0 +1,189 @@
+Library Create Flow - Grill Notes
+
+Status: Locked
+Date: 2026-10-21
+Source: learner conversation 2026-10-21; docs/features/browser-app/GRILL-browser-app.txt
+
+What this feature is about
+
+- One target-first Create area inside Library. The learner chooses Pack, Deck, or Cards first, then chooses how to make it: Write, Generate, Chat, or Import.
+- Packs becomes browse-only. Cards becomes the place to browse and manage existing cards. Create is the only place that creates packs, decks, or cards.
+- It does NOT change the pack -> deck -> card hierarchy, card shape, judging, evidence, session loop, progress, backup format, or provider boundary.
+- It does NOT remove Chat authoring. Chat moves under Create as one method.
+- It does NOT add preview/approval before generated content is saved. Validation is the gate; delete is the undo.
+
+What exists today
+
+- Library has four tabs: Packs, Add cards, Generate, Create with a chat. See v1/src/app/library/LibraryClient.tsx:563-588.
+- Packs can create one pack with one first deck, import a bundle, export a pack, refresh, and search. See v1/src/app/library/LibraryClient.tsx:590-792.
+- Add cards both creates cards and manages existing cards: list, search, edit, delete, retired cards, and evidence records. See v1/src/app/library/LibraryClient.tsx:955-1100.
+- Generate can only add cards to an existing pack/deck. Its topic list is the selected pack's deck names, which is why a new or custom topic cannot be chosen there. See v1/src/app/library/LibraryClient.tsx:551 and 794-851.
+- Chat authoring can target a new pack, a whole pack, or one deck. See v1/src/app/library/LibraryClient.tsx:434-453 and 1100-1160.
+- Import has its own target selector and accepts whole-pack, decks-only, or cards-only content, by file or pasted text. See v1/src/app/library/LibraryClient.tsx:660-746.
+- There is no delete-pack or delete-deck action in the browser code.
+- The starter pack seeds once and records a "seeded" fact, so deleting it does not bring it back on reload. See v1/src/lib/browser/bundle.ts:530-545.
+
+Questions and answers locked so far
+
+1. "My point is that it is scattered, adding cards, decks and packs should be orgnized, example there is a add card tab, then there is generate, which somehow only generates only cards, no pack or deck generate options"
+Answer:
+- Add one Create tab inside Library. It asks Pack, Deck, or Cards first.
+- Packs becomes browse-only: search, expand, export, refresh, and delete.
+- Cards becomes the existing-card area: list, search, edit, delete, retired cards, and records. Its create forms move to Create.
+- Create is the only creation entry point.
+Why:
+- The current tabs are split by method (write, generate, chat, import), not by object (pack, deck, card). That causes duplicate entry points and mismatched options.
+- Target-first matches the locked hierarchy pack -> deck -> card. See docs/features/browser-app/GRILL-browser-app.txt:18.
+
+2. "yes if you want to generate with provider, if you have a provider profile saved, you see generate button, else you get a prompt. Be aware, user still should be able to import pack, decks and cards, through files or by plain texts."
+Answer:
+- Every target offers Write, Generate, Chat, and Import.
+- Generate is visible when the provider URL and model are saved. If the key is missing, Generate still shows, then prompts for the key and keeps the draft.
+- With no provider profile, Create shows an inline setup prompt with a link to Settings where Generate would be.
+- Chat works without a provider key because it builds a prompt for an external chat.
+- Import always accepts a chosen file or pasted plain text.
+Why:
+- Generation must not be a dead end, and it must not silently disappear.
+- Import is a first-class method at every level; it does not depend on the provider.
+
+3. "Nothing saves until the whole result passes validatio"
+Answer:
+- Generate works at all three levels: Pack, Deck, and Cards.
+- Pack generates a whole new pack with decks and cards.
+- Deck generates a new deck and its cards inside a chosen pack.
+- Cards generates cards into an existing pack and deck.
+- A failed validation saves nothing. No partial pack, deck, or card batch is kept.
+Why:
+- The existing import/authoring rules are all-or-nothing. Generated content follows the same rule.
+- A half-created pack or deck would be worse than a failed attempt.
+
+4. "your rec. is greate" (empty containers)
+Answer:
+- Write can create an empty container.
+- A new pack always has at least one deck, but that deck may start with zero cards.
+- A new deck may start with zero cards.
+- Cards are added later through Create -> Cards.
+Why:
+- This follows the locked pack rule: at least one deck; cards may start empty. See docs/features/browser-app/GRILL-browser-app.txt:24.
+- It lets the learner set up structure before loading content.
+
+5. "your rec. is greate" (strict import targets)
+Answer:
+- The chosen target decides what Import accepts.
+- Pack target accepts a whole-pack file or pasted whole-pack JSON.
+- Deck target accepts a decks-only file or pasted decks JSON and joins it to the chosen pack.
+- Cards target accepts a cards-only file or pasted cards JSON and joins it to the chosen pack and deck.
+- A mismatched file is refused with a plain message that suggests switching target.
+- There is no auto-detect that changes the target.
+- The old import target selector is removed.
+Why:
+- Target-first only works if Import cannot silently change what the learner is making.
+- Existing import semantics stay: whole pack creates, decks join a pack, cards join pack + deck. See docs/features/browser-app/GRILL-browser-app.txt:26-30.
+
+6. "add delete no preview"
+Answer:
+- Generated packs and decks save immediately after validation. No preview or extra Save step.
+- Delete is the undo.
+Why:
+- The learner explicitly chose speed over a preview.
+- Cards could already be deleted; packs and decks could not. Deletion closes that gap.
+
+7. "agreed" (deletion rules)
+Answer:
+- Delete pack removes the pack, all its decks, all cards in those decks, and those cards' evidence.
+- Delete deck removes that deck, its cards, and their evidence.
+- The last deck in a pack cannot be deleted. The pack must keep at least one deck, so the learner deletes the pack instead.
+- Both require typing the pack or deck name to confirm.
+- Prompt history stays.
+- Backup restore is the recovery path.
+- The starter pack has no special protection; once deleted it does not reseed.
+Why:
+- Deleting a container without its contents would leave orphaned cards and false progress.
+- Typing the name prevents a one-click loss.
+- The seed fact is already one-time; see v1/src/lib/browser/bundle.ts:530-545.
+
+8. "agreed" (Packs expands to decks)
+Answer:
+- Packs rows expand to show decks, card counts, an Add cards shortcut, and Delete deck.
+- The pack row has Delete pack.
+- Cards handles individual cards and records.
+Why:
+- Deck deletion needs a deck view. Expanding the pack keeps the hierarchy visible without adding another tab.
+
+9. "agreed" (provider readiness)
+Answer:
+- Generate appears when the provider URL and model are saved.
+- If the key is missing, clicking Generate shows an inline prompt with a Set up provider link and keeps the draft.
+- If no profile exists, the same prompt appears where Generate would be.
+Why:
+- The learner asked for the button to be visible when a profile is saved, with an honest prompt when it cannot run.
+- Hiding Generate entirely makes the option look missing.
+
+10. "keep" (Chat)
+Answer:
+- Chat stays as a fourth method under Create for Pack, Deck, and Cards.
+- It needs no provider key; it builds a prompt for an external chat.
+- It uses the same strict targets and validator as import.
+Why:
+- Chat is the only path that works without a saved provider profile.
+- Removing it would reduce authoring options rather than organize them.
+
+11. "provider if provider generates, learner if learner does"
+Answer:
+- Provider Generate names a new pack or deck.
+- Chat authoring also names the pack or deck because it is AI-generated. The Chat name field disappears.
+- Learner-written containers use the learner's name.
+- Imported containers use the name in the file and keep the existing version rules.
+Why:
+- The learner wants the AI to own identity when it owns the content.
+- Manual creation and imports keep their existing identity rules.
+
+12. "add number to it"
+Answer:
+- If a provider- or chat-generated pack/deck name already exists, append 2, then 3, and so on: "Polish Basics", "Polish Basics 2", "Polish Basics 3".
+- The suffix applies only to generated names.
+- Learner-written names keep the strict duplicate rule.
+- Imports keep the existing newer-version rule.
+- A generated deck id gets the matching suffix so name and id stay paired.
+Why:
+- The learner chose automatic numbering over a collision error.
+- Limiting it to generated names protects manual and import identity rules.
+
+13. "agreed" (card counts)
+Answer:
+- Generate -> Pack asks for total cards, default 10.
+- Generate -> Deck asks for cards in the new deck, default 5.
+- Generate -> Cards asks for cards to add, default 5.
+- Maximum 20 for every target.
+- The provider decides how a pack's cards are split across decks.
+Why:
+- A count gives the learner control without exposing deck-by-deck generation UI.
+- The 20 cap matches the current generation limit.
+
+14. "agreed" (after create)
+Answer:
+- New Pack or Deck -> open Packs with that pack expanded.
+- New Cards -> open Cards filtered to that pack and deck.
+- A short success notice names what was created.
+Why:
+- The learner should see the result in its real place, not be left on a form.
+
+15. "go with your rec." (Cards tab)
+Answer:
+- Rename Add cards to Cards.
+- Cards keeps list, search, edit, delete, retired cards, and records.
+- The add-card forms leave Cards and move to Create -> Cards.
+Why:
+- The old tab did two jobs. Separating creation from management removes the overlap.
+
+Non-goals
+
+- No preview/approval step for generated content.
+- No automatic import target detection.
+- No pack or deck rename.
+- No deletion by import.
+- No change to the bundle format, backup format, provider key rules, judging, evidence, sessions, or progress.
+- No cloud sync or server-side storage.
+- No protection for the starter pack beyond the existing one-time seed fact.
+
+No remaining open questions

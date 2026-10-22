@@ -77,7 +77,7 @@ beforeEach(async () => {
 describe("browser simulation contract", () => {
   it("walks every promise without a server", async () => {
     const seed = await readFile(seedPath, "utf8");
-    const seeded = await importBundle(seed, { kind: "new" });
+    const seeded = await importBundle(seed, { kind: "pack" });
     expect(seeded.ok).toBe(true);
     const packs = await localGet<{ packs: Array<{ name: string; cardCount: number; decks?: unknown[] }> }>("/api/packs");
     expect(packs.packs).toHaveLength(1);
@@ -106,7 +106,7 @@ describe("browser simulation contract", () => {
     try {
       await localSend("/api/packs/import", "POST", {
         json: JSON.stringify({ schema: PACK_BUNDLE_SCHEMA, pack: { name: "bad", version: "1.0.0" }, decks: [], cards: [{ deckId: "gone" }] }),
-        target: { kind: "new" },
+        target: { kind: "pack" },
       });
     } catch (error) {
       refusal = error as ApiError;
@@ -132,20 +132,18 @@ describe("browser simulation contract", () => {
     line("imports cards into a deck; the repeat is reported as a duplicate");
 
     const deckOnly = JSON.stringify({
-      schema: PACK_BUNDLE_SCHEMA,
-      pack: { name: "sim-pack", version: "1.0.0" },
       decks: [{ id: "farewells", name: "Farewells" }],
       cards: [],
     });
     const addedDeck = await localSend<{ decksAdded: number }>("/api/packs/import", "POST", {
       json: deckOnly,
-      target: { kind: "pack", packName: "sim-pack" },
+      target: { kind: "deck", packName: "sim-pack" },
     });
     expect(addedDeck.decksAdded).toBe(1);
     line("adds one deck to an existing pack");
 
-    const newer = await importBundle(miniBundle().replace("1.0.0", "1.1.0"), { kind: "new" });
-    const older = await importBundle(miniBundle(), { kind: "new" });
+    const newer = await importBundle(miniBundle().replace("1.0.0", "1.1.0"), { kind: "pack" });
+    const older = await importBundle(miniBundle(), { kind: "pack" });
     expect(newer.ok).toBe(true);
     expect(older.ok).toBe(false);
     line("a newer version adds; an older version is refused");
@@ -192,13 +190,13 @@ describe("browser simulation contract", () => {
     line("a backup with a bad evidence row is refused and changes nothing");
 
     const prompt = await localSend<{ prompt: string }>("/api/authoring/prompt", "POST", {
-      target: { kind: "deck", packName: "sim-pack", deckId: "greetings" },
+      target: { kind: "cards", packName: "sim-pack", deckId: "greetings" },
     });
     expect(prompt.prompt).toContain('"greetings"');
     expect(prompt.prompt).toContain("sim-pack");
     const answer = await localSend<{ cardsAdded: number }>("/api/packs/import", "POST", {
       json: exampleFromPrompt(prompt.prompt),
-      target: { kind: "deck", packName: "sim-pack", deckId: "greetings" },
+      target: { kind: "cards", packName: "sim-pack", deckId: "greetings" },
     });
     expect(answer.cardsAdded).toBe(1);
     line("the authoring prompt names real ids; its example imports back");

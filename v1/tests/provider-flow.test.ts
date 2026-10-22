@@ -6,7 +6,13 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { clearPrepared, holdPrepared, takePrepared } from "@/lib/provider/prepare";
-import { deriveCard, generateCardsFromText } from "@/lib/provider/generate";
+import {
+  deriveCard,
+  generateCardsFromText,
+  generatedCardsBundle,
+  generatedDeckBundle,
+  generatedPackBundle,
+} from "@/lib/provider/generate";
 import { pickPackHint, requestTutorHint } from "@/lib/provider/hint";
 import type { PackRecord } from "@/lib/packs/types";
 import type { ProviderConfig } from "@/lib/provider/config";
@@ -45,8 +51,10 @@ describe("prepared requests", () => {
       kind: "generation",
       display: "the exact text",
       messages: [{ role: "user", content: "the exact text" }],
+      targetKind: "cards",
       packName: "test-pack",
       topic: "cases",
+      deckId: "cases",
       count: 3,
       cardId: null,
     });
@@ -64,6 +72,7 @@ describe("prepared requests", () => {
         messages: [{ role: "user", content: "old" }],
         packName: "test-pack",
         topic: null,
+        deckId: null,
         count: null,
         cardId: "card:a",
       });
@@ -177,6 +186,54 @@ describe("generateCardsFromText", () => {
     const line = { fullLine: "Piję kawę.", target: "kawę" };
     const text = JSON.stringify({ lines: [line, line] });
     expect(generateCardsFromText(makePack(), "request-1", text, "cases", NOW)).toHaveLength(1);
+  });
+});
+
+describe("structured generation bundles", () => {
+  it("reads a generated pack into a whole-pack bundle", () => {
+    const text = JSON.stringify({
+      pack: { name: "slow-polish", version: "1.0.0", language: "pl" },
+      decks: [{ id: "basics", name: "Basics" }],
+      lines: [{ deckId: "basics", fullLine: "Piję kawę.", target: "kawę" }],
+    });
+    const read = generatedPackBundle(text);
+    expect(read.ok).toBe(true);
+    if (!read.ok) return;
+    expect(read.bundle.pack).toMatchObject({ name: "slow-polish" });
+    expect(read.bundle.decks).toEqual([{ id: "basics", name: "Basics" }]);
+    const cards = read.bundle.cards as Array<{ deckId: string }>;
+    expect(cards[0].deckId).toBe("basics");
+  });
+
+  it("refuses a generated pack line that names an undefined deck", () => {
+    const text = JSON.stringify({
+      pack: { name: "slow-polish" },
+      decks: [{ id: "basics", name: "Basics" }],
+      lines: [{ deckId: "gone", fullLine: "Piję kawę.", target: "kawę" }],
+    });
+    const read = generatedPackBundle(text);
+    expect(read.ok).toBe(false);
+    if (!read.ok) expect(read.message).toContain("did not define");
+  });
+
+  it("reads a generated deck and generated cards into their fragments", () => {
+    const deck = generatedDeckBundle(JSON.stringify({
+      deck: { id: "extra", name: "Extra" },
+      lines: [{ fullLine: "Piję kawę.", target: "kawę" }],
+    }));
+    expect(deck.ok).toBe(true);
+    if (deck.ok) expect(deck.bundle.decks).toEqual([{ id: "extra", name: "Extra" }]);
+
+    const cards = generatedCardsBundle(
+      JSON.stringify({ lines: [{ fullLine: "Piję kawę.", target: "kawę" }] }),
+      { id: "cases", name: "Cases" },
+    );
+    expect(cards.ok).toBe(true);
+    if (cards.ok) {
+      expect(cards.bundle.cards).toEqual([
+        expect.objectContaining({ deckId: "cases", fullLine: "Piję kawę." }),
+      ]);
+    }
   });
 });
 

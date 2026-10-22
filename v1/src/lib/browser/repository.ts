@@ -121,6 +121,72 @@ export function deleteCardEvidence(cardId: string, store: Store = browserStore()
   });
 }
 
+/** What a deliberate deletion took out, said in counts the screen can show. */
+export interface DeletionResult {
+  removedDecks: number;
+  removedCards: number;
+  removedEvidenceRows: number;
+}
+
+/** A deck deletion can be refused without touching any row. */
+export type DeleteDeckResult =
+  | ({ ok: true } & DeletionResult)
+  | { ok: false; reason: "missing-pack" | "missing-deck" | "last-deck" };
+
+/** Delete a pack, every card under it, and those cards' evidence. */
+export function deletePack(name: string, store: Store = browserStore()): Promise<DeletionResult | null> {
+  return serial(async () => {
+    const pack = await store.get<BrowserPack>("packs", name);
+    if (!pack) return null;
+    const cards = await store.all<Card>("cards");
+    const doomedCards = cards.filter((card) => card.packName === name);
+    const cardIds = new Set(doomedCards.map((card) => card.id));
+    const evidence = await store.all<EvidenceRow>("evidence");
+    const doomedEvidence = evidence.filter((row) => cardIds.has(row.cardId));
+    for (const card of doomedCards) await store.delete("cards", card.id);
+    for (const row of doomedEvidence) await store.delete("evidence", row.id);
+    await store.delete("packs", name);
+    markChanged();
+    return {
+      removedDecks: pack.decks.length,
+      removedCards: doomedCards.length,
+      removedEvidenceRows: doomedEvidence.length,
+    };
+  });
+}
+
+/** Delete one deck, its cards and their evidence, but keep the pack and its other decks. */
+export function deleteDeck(packName: string, deckId: string, store: Store = browserStore()): Promise<DeleteDeckResult> {
+  return serial(async () => {
+    const pack = await store.get<BrowserPack>("packs", packName);
+    if (!pack) return { ok: false, reason: "missing-pack" };
+    if (!pack.decks.some((deck) => deck.id === deckId)) return { ok: false, reason: "missing-deck" };
+    // WHY: A pack with no decks has no place to study and no shape a bundle
+    // can restore, so the learner must delete the whole pack instead.
+    if (pack.decks.length <= 1) return { ok: false, reason: "last-deck" };
+
+    const cards = await store.all<Card>("cards");
+    const doomedCards = cards.filter((card) => card.packName === packName && card.deckId === deckId);
+    const cardIds = new Set(doomedCards.map((card) => card.id));
+    const evidence = await store.all<EvidenceRow>("evidence");
+    const doomedEvidence = evidence.filter((row) => cardIds.has(row.cardId));
+    for (const card of doomedCards) await store.delete("cards", card.id);
+    for (const row of doomedEvidence) await store.delete("evidence", row.id);
+    await store.put<BrowserPack>("packs", {
+      ...pack,
+      decks: pack.decks.filter((deck) => deck.id !== deckId),
+      updatedAt: new Date().toISOString(),
+    });
+    markChanged();
+    return {
+      ok: true,
+      removedDecks: 1,
+      removedCards: doomedCards.length,
+      removedEvidenceRows: doomedEvidence.length,
+    };
+  });
+}
+
 /** Every session fact. */
 export async function readSessions(store: Store = browserStore()): Promise<SessionEvent[]> {
   return store.all<SessionEvent>("sessions");

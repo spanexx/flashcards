@@ -1,12 +1,13 @@
 // WHY: The authoring prompt is a versioned copy target. If it drifts from the
-// bundle shape, a chat's answer fails at import. These tests keep the ids and the
-// target rules written where the chat can see them.
+// bundle shape, a chat's answer fails at import. These tests keep the parent ids
+// and target rules written where the chat can see them.
 // PACK: browser-app
 // 2026-10-20 opencode: created for the browser-owned build (ticket 17).
+// 2026-10-21 opencode: target-first Pack/Deck/Cards prompt contract.
 
 import { describe, expect, it } from "vitest";
 import { AUTHORING_SKILL_VERSION, buildAuthoringPrompt } from "@/lib/browser/authoring";
-import { parseBundle } from "@/lib/browser/bundle";
+import { parseBundle, parseCardsBundle, parseDeckBundle } from "@/lib/browser/bundle";
 import type { BrowserPack } from "@/lib/browser/repository";
 
 function example(prompt: string): string {
@@ -47,60 +48,50 @@ const pack: BrowserPack = {
 };
 
 describe("buildAuthoringPrompt", () => {
-  it("names the version and the new pack", () => {
-    const prompt = buildAuthoringPrompt({ kind: "new", name: "my-pack" });
+  it("lets the chat name a new pack and shows a whole pack shape", () => {
+    const prompt = buildAuthoringPrompt({ kind: "pack" });
     expect(prompt).toContain(AUTHORING_SKILL_VERSION);
-    expect(prompt).toContain('"my-pack"');
+    expect(prompt).toContain("Choose a short lowercase pack name");
+    expect(prompt).toContain("slow-polish");
     expect(prompt).toContain("flashcards.pack/v1");
+    const result = parseBundle(example(prompt));
+    expect(result.ok, JSON.stringify(result)).toBe(true);
   });
 
-  it("writes the real deck id for a deck target and forbids new decks", () => {
-    const prompt = buildAuthoringPrompt({ kind: "deck", packName: "starter", deckId: "cases" }, pack);
-    expect(prompt).toContain('"cases"');
-    expect(prompt).toContain("Cases");
-    expect(prompt).toContain('"decks": []');
-    expect(prompt).not.toContain('"decks": [\n    {');
-  });
-
-  it("lists existing decks for a pack target", () => {
-    const prompt = buildAuthoringPrompt({ kind: "pack", packName: "starter" }, pack);
+  it("names the existing pack and asks for new decks only", () => {
+    const prompt = buildAuthoringPrompt({ kind: "deck", packName: "starter" }, pack);
+    expect(prompt).toContain("starter");
     expect(prompt).toContain("basics = Basics");
     expect(prompt).toContain("cases = Cases");
-    expect(prompt).toContain("1.2.3");
+    expect(prompt).toContain("Do not include a \"pack\" header");
+    expect(prompt).not.toContain("\"pack\": { \"name\": \"starter\"");
+    const result = parseDeckBundle(example(prompt));
+    expect(result.ok, JSON.stringify(result)).toBe(true);
   });
 
-  it("shows examples the validator accepts, with the real version", () => {
-    for (const prompt of [
-      buildAuthoringPrompt({ kind: "new", name: "my-pack" }),
-      buildAuthoringPrompt({ kind: "pack", packName: "starter" }, pack),
-      buildAuthoringPrompt({ kind: "deck", packName: "starter", deckId: "cases" }, pack),
-    ]) {
-      const result = parseBundle(example(prompt));
-      expect(result.ok, JSON.stringify(result)).toBe(true);
-    }
-    const deckPrompt = buildAuthoringPrompt({ kind: "deck", packName: "starter", deckId: "cases" }, pack);
-    expect(deckPrompt).toContain('"version": "1.2.3"');
-    expect(deckPrompt).toContain('"deckId": "cases"');
-  });
-
-  it("gives a pack example a new deck id that cannot rename an existing one", () => {
-    const prompt = buildAuthoringPrompt({ kind: "pack", packName: "starter" }, pack);
-    expect(prompt).toContain('"id": "extra"');
-    expect(prompt).not.toContain('"id": "basics", "name": "Everyday basics"');
-  });
-
-  it("refuses an existing target whose pack is gone", () => {
-    expect(() => buildAuthoringPrompt({ kind: "pack", packName: "starter" }, null)).toThrow(/starter/);
+  it("names the real deck and asks for cards only", () => {
+    const prompt = buildAuthoringPrompt({ kind: "cards", packName: "starter", deckId: "cases" }, pack);
+    expect(prompt).toContain('"cases"');
+    expect(prompt).toContain("Cases");
+    expect(prompt).toContain("Return only cards for the target deck");
+    const result = parseCardsBundle(example(prompt));
+    expect(result.ok, JSON.stringify(result)).toBe(true);
+    expect(example(prompt)).toContain('"deckId": "cases"');
   });
 
   it("picks a new deck id that does not collide with an existing one", () => {
     const withExtra: BrowserPack = { ...pack, decks: [...pack.decks, { id: "extra", name: "Extra" }] };
-    const prompt = buildAuthoringPrompt({ kind: "pack", packName: "starter" }, withExtra);
+    const prompt = buildAuthoringPrompt({ kind: "deck", packName: "starter" }, withExtra);
     expect(prompt).toContain('"id": "extra-2"');
-    expect(prompt).toContain('"version": "1.2.3"');
+  });
+
+  it("refuses an existing target whose pack is gone", () => {
+    expect(() => buildAuthoringPrompt({ kind: "deck", packName: "starter" }, null)).toThrow(/starter/);
   });
 
   it("refuses a deck that is not in the pack", () => {
-    expect(() => buildAuthoringPrompt({ kind: "deck", packName: "starter", deckId: "gone" }, pack)).toThrow(/gone/);
+    expect(() =>
+      buildAuthoringPrompt({ kind: "cards", packName: "starter", deckId: "gone" }, pack),
+    ).toThrow(/gone/);
   });
 });

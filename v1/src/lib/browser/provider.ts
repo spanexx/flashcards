@@ -6,10 +6,19 @@
 
 import type { Card, ProviderStatus } from "@/lib/shared/types";
 import { callProvider } from "@/lib/provider/client";
-import { generateCardsFromText } from "@/lib/provider/generate";
+import {
+  generatedCardsBundle,
+  generatedDeckBundle,
+  generatedPackBundle,
+} from "@/lib/provider/generate";
 import { pickPackHint, requestTutorHint } from "@/lib/provider/hint";
 import { holdPrepared, takePrepared } from "@/lib/provider/prepare";
-import { buildGenerationPrompt, type ProfileSlots } from "@/lib/provider/prompt";
+import {
+  buildDeckGenerationPrompt,
+  buildGenerationPrompt,
+  buildPackGenerationPrompt,
+  type ProfileSlots,
+} from "@/lib/provider/prompt";
 import type { ProviderConfig } from "@/lib/provider/types";
 import { deriveWeakTopics } from "@/lib/core/progress";
 import {
@@ -17,13 +26,15 @@ import {
   readCards,
   readEvidence,
   readPack,
+  readPacks,
   readProviderKey,
   readSettings,
-  upsertCards,
   writeProviderKey,
   clearProviderKey,
   packRecord,
+  type BrowserPack,
 } from "@/lib/browser/repository";
+import { importBundle } from "@/lib/browser/bundle";
 
 /** No key, no call. This is the one refusal every provider feature shares. */
 async function providerConfig(): Promise<
@@ -104,44 +115,108 @@ export async function testProvider(): Promise<{ ok: boolean; message: string }> 
     : { ok: false, message: result.message };
 }
 
+/** The three places a provider batch may land. */
+export type GenerationTarget =
+  | { kind: "pack" }
+  | { kind: "deck"; packName: string }
+  | { kind: "cards"; packName: string; deckId: string };
+
+/** What one provider batch made, in the shape the Create screen navigates with. */
+export interface GenerationResult {
+  kind: "pack" | "deck" | "cards";
+  packName: string;
+  deckId?: string;
+  count: number;
+  cards: Card[];
+  pack?: BrowserPack | null;
+}
+
+/** Keep the learner's count inside the range the provider prompt promises. */
+function generationCount(value: number | undefined, fallback: number): number {
+  return Math.min(20, Math.max(1, Math.floor(value ?? fallback)));
+}
+
 /** Build a generation prompt and hold it until the learner presses send. */
 export async function prepareGeneration(body: {
-  packName?: string;
-  topic?: string;
+  target?: GenerationTarget;
   count?: number;
 }): Promise<{ requestId: string; prompt: string; expiresAt: number }> {
-  if (!body.packName) throw new Error("Choose which pack the cards should come from.");
-  if (!body.topic) throw new Error("Choose a deck for the new cards.");
-  const pack = await readPack(body.packName);
-  if (!pack) throw new Error("That pack is not here.");
-  const deck = pack.decks.find((entry) => entry.name === body.topic);
-  if (!deck) throw new Error(`"${body.topic}" is not a deck in ${pack.name}.`);
-
-  const count = Math.min(20, Math.max(1, Math.floor(body.count ?? 5)));
+  if (!body.target) throw new Error("Choose what the provider should make.");
   const cards = await readCards();
   const slots = await profileSlots(cards);
-  const prompt = buildGenerationPrompt(packRecord(pack), slots, { topic: body.topic, count });
+
+  if (body.target.kind === "pack") {
+    const count = generationCount(body.count, 10);
+    const packs = await readPacks();
+    const knownTopics = [...new Set(packs.flatMap((pack) => pack.decks.map((deck) => deck.name)))];
+    const prompt = buildPackGenerationPrompt(slots, count, knownTopics);
+    const prepared = holdPrepared({
+      kind: "generation",
+      display: prompt.display,
+      messages: prompt.messages,
+      targetKind: "pack",
+      packName: null,
+      topic: null,
+      deckId: null,
+      count,
+      cardId: null,
+    });
+    return { requestId: prepared.id, prompt: prompt.display, expiresAt: prepared.expiresAt };
+  }
+
+  const pack = await readPack(body.target.packName);
+  if (!pack) throw new Error("That pack is not here.");
+
+  if (body.target.kind === "deck") {
+    const count = generationCount(body.count, 5);
+    const prompt = buildDeckGenerationPrompt(packRecord(pack), slots, count);
+    const prepared = holdPrepared({
+      kind: "generation",
+      display: prompt.display,
+      messages: prompt.messages,
+      targetKind: "deck",
+      packName: pack.name,
+      topic: null,
+      deckId: null,
+      count,
+      cardId: null,
+    });
+    return { requestId: prepared.id, prompt: prompt.display, expiresAt: prepared.expiresAt };
+  }
+
+  const wantedDeck = body.target.deckId;
+  const deck = pack.decks.find((entry) => entry.id === wantedDeck);
+  if (!deck) throw new Error(`That deck is not in ${pack.name}.`);
+  const count = generationCount(body.count, 5);
+  const prompt = buildGenerationPrompt(packRecord(pack), slots, { topic: deck.name, count });
   const prepared = holdPrepared({
     kind: "generation",
     display: prompt.display,
     messages: prompt.messages,
+    targetKind: "cards",
     packName: pack.name,
-    topic: body.topic,
+    topic: deck.name,
+    deckId: deck.id,
     count,
     cardId: null,
   });
   return { requestId: prepared.id, prompt: prompt.display, expiresAt: prepared.expiresAt };
 }
 
-/** Send a held generation prompt and keep the cards only if the whole batch is valid. */
-export async function generatePrepared(requestId: string): Promise<{ cards: Card[] }> {
+function importFailure(issues: Array<{ field: string; message: string }>): Error {
+  const first = issues[0];
+  return new Error(
+    `Nothing was saved, because ${first ? `${first.field}: ${first.message}` : "the provider's answer was not usable"}.`,
+  );
+}
+
+/** Send a held generation prompt and keep the whole batch only if it is valid. */
+export async function generatePrepared(requestId: string): Promise<GenerationResult> {
   if (!requestId) throw new Error("A prepared prompt id is needed.");
   const prepared = takePrepared(requestId);
   if (!prepared || prepared.kind !== "generation") {
     throw new Error("That prepared prompt has expired. Prepare it again.");
   }
-  const pack = await readPack(prepared.packName);
-  if (!pack) throw new Error("That pack is no longer here.");
   const config = await providerConfig();
   if (!config.ok) throw new Error(config.message);
 
@@ -156,18 +231,68 @@ export async function generatePrepared(requestId: string): Promise<{ cards: Card
   });
   if (!result.ok) throw new Error(result.message);
 
-  const deck = pack.decks.find((entry) => entry.name === prepared.topic);
-  if (!deck) throw new Error("The deck for these cards is gone.");
-  const now = new Date().toISOString();
-  let cards: Card[];
-  try {
-    cards = generateCardsFromText(packRecord(pack), prepared.id, result.text, deck.name, now, deck.id);
-  } catch (error) {
-    const reason = error instanceof Error ? error.message : "the provider's answer was not usable";
-    throw new Error(`Nothing was saved, because ${reason}.`);
+  if (prepared.targetKind === "pack") {
+    const read = generatedPackBundle(result.text);
+    if (!read.ok) throw new Error(`Nothing was saved, because ${read.message}.`);
+    const imported = await importBundle(JSON.stringify(read.bundle), { kind: "pack" }, {
+      namePolicy: "auto-suffix",
+      origin: "generated",
+      requestId: prepared.id,
+    });
+    if (!imported.ok) throw importFailure(imported.issues);
+    const pack = await readPack(imported.packName);
+    const cards = (await readCards()).filter(
+      (card) => card.origin.requestId === prepared.id && card.packName === imported.packName,
+    );
+    return { kind: "pack", packName: imported.packName, count: imported.cardsAdded, cards, pack };
   }
-  await upsertCards(cards);
-  return { cards };
+
+  if (prepared.targetKind === "deck") {
+    if (!prepared.packName) throw new Error("That pack is no longer here.");
+    const read = generatedDeckBundle(result.text);
+    if (!read.ok) throw new Error(`Nothing was saved, because ${read.message}.`);
+    const imported = await importBundle(JSON.stringify(read.bundle), {
+      kind: "deck",
+      packName: prepared.packName,
+    }, {
+      namePolicy: "auto-suffix",
+      origin: "generated",
+      requestId: prepared.id,
+    });
+    if (!imported.ok) throw importFailure(imported.issues);
+    const deckId = imported.deckIds[0];
+    const pack = await readPack(imported.packName);
+    const cards = (await readCards()).filter(
+      (card) => card.origin.requestId === prepared.id && card.packName === imported.packName,
+    );
+    return { kind: "deck", packName: imported.packName, deckId, count: imported.cardsAdded, cards, pack };
+  }
+
+  if (!prepared.packName || !prepared.deckId) throw new Error("That deck is no longer here.");
+  const pack = await readPack(prepared.packName);
+  const deck = pack?.decks.find((entry) => entry.id === prepared.deckId);
+  if (!deck) throw new Error("The deck for these cards is gone.");
+  const read = generatedCardsBundle(result.text, deck);
+  if (!read.ok) throw new Error(`Nothing was saved, because ${read.message}.`);
+  const imported = await importBundle(JSON.stringify(read.bundle), {
+    kind: "cards",
+    packName: prepared.packName,
+    deckId: prepared.deckId,
+  }, {
+    origin: "generated",
+    requestId: prepared.id,
+  });
+  if (!imported.ok) throw importFailure(imported.issues);
+  const cards = (await readCards()).filter(
+    (card) => card.origin.requestId === prepared.id && card.deckId === prepared.deckId,
+  );
+  return {
+    kind: "cards",
+    packName: imported.packName,
+    deckId: prepared.deckId,
+    count: imported.cardsAdded,
+    cards,
+  };
 }
 
 /** Ask for a hint: the pack's free hint first, the tutor only when approved. */

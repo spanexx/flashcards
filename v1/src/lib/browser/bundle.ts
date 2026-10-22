@@ -15,6 +15,7 @@ import {
 } from "@/lib/core/schema";
 import { normalizeSettings } from "@/lib/core/settings-shape";
 import { markChanged, resumeChanges, suspendChanges } from "@/lib/browser/changes";
+import { uniqueDeckIdentity, uniquePackName } from "@/lib/browser/creation";
 import {
   clearLibrary,
   readCards,
@@ -71,7 +72,7 @@ export const bundlePackSchema = z.object({
   prompts: packPromptsSchema.optional(),
 });
 
-/** The whole pack bundle. */
+/** A whole pack bundle. It creates a pack, or updates one when its version is newer. */
 export const packBundleSchema = z.object({
   schema: z.literal(PACK_BUNDLE_SCHEMA),
   pack: bundlePackSchema,
@@ -79,22 +80,51 @@ export const packBundleSchema = z.object({
   cards: z.array(bundleCardSchema),
 });
 
+/** A deck fragment adds one or more decks to an existing pack. */
+export const deckBundleSchema = z
+  .object({
+    schema: z.literal(PACK_BUNDLE_SCHEMA).optional(),
+    decks: z.array(deckSchema).min(1, "a deck fragment needs at least one deck"),
+    cards: z.array(bundleCardSchema).default([]),
+  })
+  .strict();
+
+/** A cards fragment adds cards to one existing deck. */
+export const cardsBundleSchema = z
+  .object({
+    schema: z.literal(PACK_BUNDLE_SCHEMA).optional(),
+    cards: z.array(bundleCardSchema).min(1, "a cards fragment needs at least one card"),
+  })
+  .strict();
+
 export type PackBundle = z.infer<typeof packBundleSchema>;
+export type DeckBundle = z.infer<typeof deckBundleSchema>;
+export type CardsBundle = z.infer<typeof cardsBundleSchema>;
 export type BundleCard = z.infer<typeof bundleCardSchema>;
 
 /** Where an import is allowed to put its content. */
 export type ImportTarget =
-  | { kind: "new" }
-  | { kind: "pack"; packName: string }
-  | { kind: "deck"; packName: string; deckId: string };
+  | { kind: "pack" }
+  | { kind: "deck"; packName: string }
+  | { kind: "cards"; packName: string; deckId: string };
+
+/** Generated names may take the next free suffix; learner-written names do not. */
+export interface ImportOptions {
+  namePolicy?: "strict" | "auto-suffix";
+  /** Provider batches keep their generated origin while sharing this validator. */
+  origin?: "generated";
+  requestId?: string;
+}
 
 /** What an import did, in counts the screen can say out loud. */
 export interface ImportSuccess {
   ok: true;
+  kind: ImportTarget["kind"];
   packName: string;
   decksAdded: number;
   cardsAdded: number;
   duplicates: number;
+  deckIds: string[];
 }
 
 /** An import either happened or named every problem. */
@@ -120,11 +150,10 @@ function schemaIssues(error: z.ZodError): ValidationIssue[] {
   });
 }
 
-/** Read the pasted or loaded text into a parsed bundle. */
-export function parseBundle(text: string): { ok: true; bundle: PackBundle } | { ok: false; issues: ValidationIssue[] } {
-  let raw: unknown;
+/** Read JSON once, so every target refuses malformed text the same way. */
+function readJson(text: string): { ok: true; raw: unknown } | { ok: false; issues: ValidationIssue[] } {
   try {
-    raw = JSON.parse(text) as unknown;
+    return { ok: true, raw: JSON.parse(text) as unknown };
   } catch (error) {
     return {
       ok: false,
@@ -136,8 +165,37 @@ export function parseBundle(text: string): { ok: true; bundle: PackBundle } | { 
       ],
     };
   }
+}
 
-  const parsed = packBundleSchema.safeParse(raw);
+/** Read the pasted or loaded text into a whole pack bundle. */
+export function parseBundle(text: string): { ok: true; bundle: PackBundle } | { ok: false; issues: ValidationIssue[] } {
+  const read = readJson(text);
+  if (!read.ok) return read;
+  const parsed = packBundleSchema.safeParse(read.raw);
+  if (!parsed.success) return { ok: false, issues: schemaIssues(parsed.error) };
+  return { ok: true, bundle: parsed.data };
+}
+
+/** Read a deck fragment: new decks for a pack that is already here. */
+export function parseDeckBundle(text: string): { ok: true; bundle: DeckBundle } | { ok: false; issues: ValidationIssue[] } {
+  const read = readJson(text);
+  if (!read.ok) return read;
+  if (read.raw && typeof read.raw === "object" && "pack" in read.raw) {
+    return { ok: false, issues: [issue("(bundle)", "this is a whole pack; choose Pack as the target", 0)] };
+  }
+  const parsed = deckBundleSchema.safeParse(read.raw);
+  if (!parsed.success) return { ok: false, issues: schemaIssues(parsed.error) };
+  return { ok: true, bundle: parsed.data };
+}
+
+/** Read a cards fragment: cards for one deck that is already here. */
+export function parseCardsBundle(text: string): { ok: true; bundle: CardsBundle } | { ok: false; issues: ValidationIssue[] } {
+  const read = readJson(text);
+  if (!read.ok) return read;
+  if (read.raw && typeof read.raw === "object" && ("pack" in read.raw || "decks" in read.raw)) {
+    return { ok: false, issues: [issue("(bundle)", "this is not a cards-only file; choose Pack or Deck", 0)] };
+  }
+  const parsed = cardsBundleSchema.safeParse(read.raw);
   if (!parsed.success) return { ok: false, issues: schemaIssues(parsed.error) };
   return { ok: true, bundle: parsed.data };
 }
@@ -178,8 +236,9 @@ function cardFromBundle(
   index: number,
   deck: { id: string; name: string },
   pack: { name: string; version: string },
-  kind: "pack" | "imported",
+  kind: "pack" | "imported" | "generated",
   now: string,
+  requestId?: string,
 ): { card: Card } | { issues: ValidationIssue[] } {
   const withoutDeck = { ...bundleCard };
   delete withoutDeck.deckId;
@@ -188,14 +247,21 @@ function cardFromBundle(
   if (problems.length > 0) return { issues: problems };
 
   const origin: CardOrigin =
-    kind === "imported"
-      ? { kind: "imported", note: "Imported by the learner.", packName: pack.name }
-      : {
-          kind: "pack",
-          note: `From the pack ${pack.name}, version ${pack.version}.`,
+    kind === "generated"
+      ? {
+          kind: "generated",
+          note: `Generated from a request on ${now.slice(0, 10)}.`,
           packName: pack.name,
-          packVersion: pack.version,
-        };
+          requestId,
+        }
+      : kind === "imported"
+        ? { kind: "imported", note: "Imported by the learner.", packName: pack.name }
+        : {
+            kind: "pack",
+            note: `From the pack ${pack.name}, version ${pack.version}.`,
+            packName: pack.name,
+            packVersion: pack.version,
+          };
 
   const card = buildCard(source, origin, deckCardId(pack.name, deck.id, source), now);
   card.packName = pack.name;
@@ -203,32 +269,39 @@ function cardFromBundle(
   return { card };
 }
 
-/**
- * Import a bundle into one of the three targets. Validation runs over the whole
- * file first; a refusal writes nothing.
- */
-export async function importBundle(text: string, target: ImportTarget): Promise<ImportResult> {
+/** Keep only cards the learner does not already have. */
+async function keepFreshCards(cards: Card[]): Promise<{ fresh: Card[]; duplicates: number }> {
+  const existingCards = await readCards();
+  const known = new Set(existingCards.map((card) => card.id));
+  const fresh: Card[] = [];
+  let duplicates = 0;
+  for (const card of cards) {
+    // A repeat inside the same file is a duplicate too, not a second card.
+    if (known.has(card.id)) {
+      duplicates += 1;
+      continue;
+    }
+    known.add(card.id);
+    fresh.push(card);
+  }
+  return { fresh, duplicates };
+}
+
+/** Create or update a whole pack. */
+async function importPack(text: string, options: ImportOptions): Promise<ImportResult> {
+  const namePolicy = options.namePolicy ?? "strict";
   const read = parseBundle(text);
   if (!read.ok) return read;
-  const bundle = read.bundle;
-  const issues: ValidationIssue[] = [];
-
+  const bundles = await readPacks();
+  const chosen =
+    namePolicy === "auto-suffix"
+      ? uniquePackName(read.bundle.pack.name, bundles.map((pack) => pack.name))
+      : read.bundle.pack.name;
+  const bundle: PackBundle =
+    chosen === read.bundle.pack.name
+      ? read.bundle
+      : { ...read.bundle, pack: { ...read.bundle.pack, name: chosen } };
   const installed = await readPack(bundle.pack.name);
-  if ((target.kind === "pack" || target.kind === "deck") && !installed) {
-    return { ok: false, issues: [issue("pack.name", `there is no pack "${bundle.pack.name}" here`, 0)] };
-  }
-  if (target.kind === "pack" && bundle.pack.name !== target.packName) {
-    return {
-      ok: false,
-      issues: [issue("pack.name", `this file is for "${bundle.pack.name}", not "${target.packName}"`, 0)],
-    };
-  }
-  if (target.kind === "deck" && bundle.pack.name !== target.packName) {
-    return {
-      ok: false,
-      issues: [issue("pack.name", `this file is for "${bundle.pack.name}", not "${target.packName}"`, 0)],
-    };
-  }
 
   if (installed) {
     const order = compareVersions(bundle.pack.version, installed.version);
@@ -258,40 +331,25 @@ export async function importBundle(text: string, target: ImportTarget): Promise<
     }
   }
 
-  const decks = new Map<string, { id: string; name: string }>();
-  if (installed) for (const deck of installed.decks) decks.set(deck.id, deck);
-  const decksBefore = decks.size;
-
-  if (target.kind !== "deck" && bundle.decks.length === 0 && !installed) {
+  const issues: ValidationIssue[] = [];
+  if (bundle.decks.length === 0 && !installed) {
     issues.push(issue("decks", "a new pack needs at least one deck", 0));
   }
 
-  for (const [index, deck] of bundle.decks.entries()) {
-    if (decks.has(deck.id) && installed && target.kind === "deck") {
-      issues.push(issue(`decks.${index}.id`, `"${deck.id}" is already the deck this file targets`, index));
-      continue;
-    }
-    const existing = decks.get(deck.id);
+  const decks = new Map<string, { id: string; name: string }>();
+  if (installed) for (const deck of installed.decks) decks.set(deck.id, deck);
+  const decksBefore = new Set(decks.keys());
+  for (const deck of bundle.decks) {
+    if (decks.has(deck.id)) continue;
     // WHY: A deck id is the identity; a display name is the learner's label.
     // An import may add a deck but never renames one behind their back.
-    if (!existing) decks.set(deck.id, { id: deck.id, name: deck.name });
-  }
-
-  if (target.kind === "deck") {
-    const deck = decks.get(target.deckId);
-    if (!deck) {
-      return { ok: false, issues: [issue("deckId", `there is no deck "${target.deckId}" in this pack`, 0)] };
-    }
-    if (bundle.decks.length > 0) {
-      issues.push(issue("decks", "a cards-only file must not add decks; choose the deck it targets", 0));
-    }
+    decks.set(deck.id, { id: deck.id, name: deck.name });
   }
 
   const now = new Date().toISOString();
-  const fallback = target.kind === "deck" ? target.deckId : null;
   const cards: Card[] = [];
   for (const [index, bundleCard] of bundle.cards.entries()) {
-    const found = deckFor(bundleCard, index, decks, fallback);
+    const found = deckFor(bundleCard, index, decks, null);
     if ("issues" in found) {
       issues.push(...found.issues);
       continue;
@@ -301,8 +359,9 @@ export async function importBundle(text: string, target: ImportTarget): Promise<
       index,
       found.deck,
       bundle.pack,
-      target.kind === "deck" ? "imported" : "pack",
+      options.origin === "generated" ? "generated" : "pack",
       now,
+      options.requestId,
     );
     if ("issues" in built) issues.push(...built.issues);
     else cards.push(built.card);
@@ -310,31 +369,16 @@ export async function importBundle(text: string, target: ImportTarget): Promise<
 
   if (issues.length > 0) return { ok: false, issues };
 
-  const existingCards = await readCards();
-  const known = new Set(existingCards.map((card) => card.id));
-  const fresh: Card[] = [];
-  let duplicates = 0;
-  for (const card of cards) {
-    // A repeat inside the same file is a duplicate too, not a second card.
-    if (known.has(card.id)) {
-      duplicates += 1;
-      continue;
-    }
-    known.add(card.id);
-    fresh.push(card);
-  }
-
-  const existingPack = installed;
-  const keepsMetadata = target.kind === "deck";
+  const { fresh, duplicates } = await keepFreshCards(cards);
   const pack: BrowserPack = {
     id: bundle.pack.name,
     name: bundle.pack.name,
-    version: keepsMetadata ? (existingPack?.version ?? bundle.pack.version) : bundle.pack.version,
-    description: keepsMetadata ? existingPack?.description : bundle.pack.description ?? existingPack?.description,
-    language: keepsMetadata ? existingPack?.language : bundle.pack.language ?? existingPack?.language,
+    version: bundle.pack.version,
+    description: bundle.pack.description ?? installed?.description,
+    language: bundle.pack.language ?? installed?.language,
     decks: [...decks.values()],
-    prompts: keepsMetadata ? (existingPack?.prompts ?? null) : bundle.pack.prompts ?? existingPack?.prompts ?? null,
-    createdAt: existingPack?.createdAt ?? now,
+    prompts: bundle.pack.prompts ?? installed?.prompts ?? null,
+    createdAt: installed?.createdAt ?? now,
     updatedAt: now,
   };
   await writePack(pack);
@@ -342,11 +386,164 @@ export async function importBundle(text: string, target: ImportTarget): Promise<
 
   return {
     ok: true,
+    kind: "pack",
     packName: pack.name,
-    decksAdded: Math.max(0, decks.size - decksBefore),
+    decksAdded: [...decks.keys()].filter((id) => !decksBefore.has(id)).length,
     cardsAdded: fresh.length,
     duplicates,
+    deckIds: [...decks.keys()].filter((id) => !decksBefore.has(id)),
   };
+}
+
+/** Add one or more decks to a pack that already exists. */
+async function importDeck(text: string, packName: string, options: ImportOptions): Promise<ImportResult> {
+  const namePolicy = options.namePolicy ?? "strict";
+  const read = parseDeckBundle(text);
+  if (!read.ok) return read;
+  const bundle = read.bundle;
+  const pack = await readPack(packName);
+  if (!pack) {
+    return { ok: false, issues: [issue("packName", `there is no pack "${packName}" here`, 0)] };
+  }
+
+  const issues: ValidationIssue[] = [];
+  const decks = [...pack.decks];
+  const added: Array<{ id: string; name: string }> = [];
+  const renamed = new Map<string, string>();
+  for (const [index, deck] of bundle.decks.entries()) {
+    if (renamed.has(deck.id)) {
+      issues.push(issue(`decks.${index}.id`, `"${deck.id}" appears twice in this file`, index));
+      continue;
+    }
+    const identity =
+      namePolicy === "auto-suffix"
+        ? uniqueDeckIdentity(deck.id, deck.name, decks)
+        : { id: deck.id, name: deck.name };
+    if (decks.some((existing) => existing.id === identity.id)) {
+      issues.push(issue(`decks.${index}.id`, `a deck with the id "${identity.id}" is already here`, index));
+      continue;
+    }
+    decks.push(identity);
+    added.push(identity);
+    renamed.set(deck.id, identity.id);
+  }
+
+  const now = new Date().toISOString();
+  const cards: Card[] = [];
+  for (const [index, bundleCard] of bundle.cards.entries()) {
+    const named = bundleCard.deckId ?? (bundle.decks.length === 1 ? bundle.decks[0].id : null);
+    if (!named) {
+      issues.push(issue("cards.deckId", "a card must name one of this file's decks", index));
+      continue;
+    }
+    const targetId = renamed.get(named);
+    if (!targetId) {
+      issues.push(issue("cards.deckId", `"${named}" is not a deck in this file`, index));
+      continue;
+    }
+    const deck = added.find((entry) => entry.id === targetId);
+    if (!deck) {
+      issues.push(issue("cards.deckId", `"${named}" is not a deck in this file`, index));
+      continue;
+    }
+    const built = cardFromBundle(
+      bundleCard,
+      index,
+      deck,
+      { name: pack.name, version: pack.version },
+      options.origin === "generated" ? "generated" : "imported",
+      now,
+      options.requestId,
+    );
+    if ("issues" in built) issues.push(...built.issues);
+    else cards.push(built.card);
+  }
+
+  if (issues.length > 0) return { ok: false, issues };
+
+  const { fresh, duplicates } = await keepFreshCards(cards);
+  await writePack({ ...pack, decks, updatedAt: now });
+  if (fresh.length > 0) await upsertCards(fresh);
+
+  return {
+    ok: true,
+    kind: "deck",
+    packName: pack.name,
+    decksAdded: added.length,
+    cardsAdded: fresh.length,
+    duplicates,
+    deckIds: added.map((deck) => deck.id),
+  };
+}
+
+/** Add cards to one deck that already exists. */
+async function importCards(
+  text: string,
+  packName: string,
+  deckId: string,
+  options: ImportOptions,
+): Promise<ImportResult> {
+  const read = parseCardsBundle(text);
+  if (!read.ok) return read;
+  const pack = await readPack(packName);
+  if (!pack) {
+    return { ok: false, issues: [issue("packName", `there is no pack "${packName}" here`, 0)] };
+  }
+  const deck = pack.decks.find((entry) => entry.id === deckId);
+  if (!deck) {
+    return { ok: false, issues: [issue("deckId", `there is no deck "${deckId}" in this pack`, 0)] };
+  }
+
+  const issues: ValidationIssue[] = [];
+  const now = new Date().toISOString();
+  const cards: Card[] = [];
+  const only = new Map([[deck.id, deck]]);
+  for (const [index, bundleCard] of read.bundle.cards.entries()) {
+    const found = deckFor(bundleCard, index, only, deck.id);
+    if ("issues" in found) {
+      issues.push(...found.issues);
+      continue;
+    }
+    const built = cardFromBundle(
+      bundleCard,
+      index,
+      found.deck,
+      { name: pack.name, version: pack.version },
+      options.origin === "generated" ? "generated" : "imported",
+      now,
+      options.requestId,
+    );
+    if ("issues" in built) issues.push(...built.issues);
+    else cards.push(built.card);
+  }
+  if (issues.length > 0) return { ok: false, issues };
+
+  const { fresh, duplicates } = await keepFreshCards(cards);
+  if (fresh.length > 0) await upsertCards(fresh);
+
+  return {
+    ok: true,
+    kind: "cards",
+    packName: pack.name,
+    decksAdded: 0,
+    cardsAdded: fresh.length,
+    duplicates,
+    deckIds: [deck.id],
+  };
+}
+
+/**
+ * Import a bundle into one of the three targets. Validation runs over the whole
+ * file first; a refusal writes nothing.
+ */
+export async function importBundle(
+  text: string,
+  target: ImportTarget,
+  options: ImportOptions = {},
+): Promise<ImportResult> {
+  if (target.kind === "pack") return importPack(text, options);
+  if (target.kind === "deck") return importDeck(text, target.packName, options);
+  return importCards(text, target.packName, target.deckId, options);
 }
 
 /** A card as it appears inside an exported bundle. */
@@ -538,7 +735,7 @@ export async function ensureSeeded(): Promise<void> {
     const response = await fetch("/packs/polish-starter.json", { cache: "no-store" });
     if (!response.ok) return;
     const text = await response.text();
-    const result = await importBundle(text, { kind: "new" });
+    const result = await importBundle(text, { kind: "pack" });
     if (result.ok) await writeMeta("seeded", "yes");
   } catch {
     // A missing seed must never stop the app; the learner can import or create.

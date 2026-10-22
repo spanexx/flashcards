@@ -93,7 +93,7 @@ beforeEach(async () => {
   setBrowserStore(store);
   writes = [];
   permission = "granted";
-  await importBundle(bundle(), { kind: "new" });
+  await importBundle(bundle(), { kind: "pack" });
   await store.put("autosave", { id: "file", handle: handle(), lastSavedAt: null });
 });
 

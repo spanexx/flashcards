@@ -81,6 +81,66 @@ export function buildGenerationPrompt(
   };
 }
 
+const STRUCTURED_SYSTEM =
+  "You write complete, correct study lines for one learner and choose the containers they belong to. You never write exercises: you write truth, and the app hides part of it.";
+
+const PACK_SHAPE =
+  '{"pack":{"name":"slow-polish","version":"1.0.0","description":"Everyday Polish","language":"pl"},"decks":[{"id":"basics","name":"Basics"}],"lines":[{"deckId":"basics","fullLine":"Piję kawę.","target":"kawę","translation":"I am drinking coffee.","topics":["Basics"],"tags":[],"summary":"Drinking coffee"}]}';
+
+const DECK_SHAPE =
+  '{"deck":{"id":"extra","name":"Extra"},"lines":[{"fullLine":"Piję kawę.","target":"kawę","translation":"I am drinking coffee.","topics":["Extra"],"tags":[],"summary":"Drinking coffee"}]}';
+
+/** A generated pack chooses its own name, version, decks and lines. */
+export function buildPackGenerationPrompt(
+  slots: ProfileSlots,
+  count: number,
+  knownTopics: string[],
+): BuiltPrompt {
+  const user = [
+    `Write ${count} complete, correct study lines for a new pack.`,
+    "Choose a short lowercase pack name from the content, version 1.0.0, and one to three decks. Deck ids use lowercase letters, numbers and dashes.",
+    knownTopics.length > 0
+      ? `The learner already studies these topics; stay in the same subject when it makes sense: ${knownTopics.join(", ")}.`
+      : "Choose a coherent subject for the pack.",
+    `Learner level: ${slots.level}. Preferred learning style: ${slots.learningStyle}.`,
+    "Every line must name one of your decks with deckId. The app hides the target inside each full line.",
+    "Return JSON only, shaped like:",
+    PACK_SHAPE,
+  ].join("\n");
+  return {
+    display: `${STRUCTURED_SYSTEM}\n\n${user}`,
+    messages: [
+      { role: "system", content: STRUCTURED_SYSTEM },
+      { role: "user", content: user },
+    ],
+  };
+}
+
+/** A generated deck chooses its own name and lines inside a known pack. */
+export function buildDeckGenerationPrompt(
+  pack: PackRecord,
+  slots: ProfileSlots,
+  count: number,
+): BuiltPrompt {
+  const deckList = pack.topics.length > 0 ? pack.topics.join(", ") : "none yet";
+  const user = [
+    `Write ${count} complete, correct study lines for one new deck inside the existing pack "${pack.name}".`,
+    "Choose a short lowercase deck id and a plain deck label from the content. The id uses lowercase letters, numbers and dashes.",
+    `The pack's existing decks are: ${deckList}. Do not reuse one of those ids.`,
+    `Learner level: ${slots.level}. Preferred learning style: ${slots.learningStyle}.`,
+    "The app hides the target inside each full line.",
+    "Return JSON only, shaped like:",
+    DECK_SHAPE,
+  ].join("\n");
+  return {
+    display: `${STRUCTURED_SYSTEM}\n\n${user}`,
+    messages: [
+      { role: "system", content: STRUCTURED_SYSTEM },
+      { role: "user", content: user },
+    ],
+  };
+}
+
 /** Pull the question text out of a card without touching the answer side. */
 export function promptSideText(card: Card): string {
   return card.prompt

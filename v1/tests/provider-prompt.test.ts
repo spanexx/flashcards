@@ -5,8 +5,10 @@
 
 import { describe, expect, it } from "vitest";
 import {
+  buildDeckGenerationPrompt,
   buildGenerationPrompt,
   buildHintPrompt,
+  buildPackGenerationPrompt,
   describeTutorShape,
   describeTutorSlots,
   promptSideText,
@@ -72,6 +74,26 @@ describe("buildGenerationPrompt", () => {
   it("asks for varied nouns, verbs and sentence shapes", () => {
     const built = buildGenerationPrompt(makePack(), slots, { topic: "cases", count: 3 });
     expect(built.messages[1].content).toContain("Vary the nouns, verbs and sentence shapes");
+  });
+});
+
+describe("structured generation prompts", () => {
+  it("asks a generated pack to choose its own name, decks and lines", () => {
+    const built = buildPackGenerationPrompt(slots, 4, ["Basics", "Cases"]);
+    expect(built.messages[0].content).toContain("choose the containers");
+    expect(built.messages[1].content).toContain("Write 4 complete");
+    expect(built.messages[1].content).toContain("Basics, Cases");
+    expect(built.messages[1].content).toContain('"pack":{"name"');
+    expect(built.messages[1].content).toContain('"deckId":"basics"');
+    expect(built.display).toContain("beginner");
+  });
+
+  it("asks a generated deck to avoid the pack's existing ids", () => {
+    const built = buildDeckGenerationPrompt(makePack(), slots, 3);
+    expect(built.messages[1].content).toContain("Write 3 complete");
+    expect(built.messages[1].content).toContain("test-pack");
+    expect(built.messages[1].content).toContain("Do not reuse one of those ids");
+    expect(built.messages[1].content).toContain('"deck":{"id"');
   });
 });
 

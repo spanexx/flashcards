@@ -4,6 +4,8 @@
 // shape, no hidden network calls.
 // PACK: browser-app
 // 2026-10-20 opencode: created for the browser-owned build.
+// 2026-10-22 opencode: newId replaces randomUUID so card edits and answer rows
+// work when a static host is opened over plain HTTP. [pack: library-create-flow]
 
 import type {
   AnswerResult,
@@ -15,6 +17,7 @@ import type {
   TutorBanner,
 } from "@/lib/shared/types";
 import { ApiError } from "@/lib/client/errors";
+import { newId } from "@/lib/core/id";
 import { APP_VERSION } from "@/lib/version";
 import {
   buildCard,
@@ -37,6 +40,8 @@ import {
   appendSession,
   deleteCard,
   deleteCardEvidence,
+  deleteDeck,
+  deletePack,
   orphanedPackNames,
   packRecord,
   packStatus,
@@ -69,8 +74,10 @@ import {
   removeProviderKey,
   saveProviderKey,
   testProvider,
+  type GenerationTarget,
 } from "@/lib/browser/provider";
 import { AUTHORING_SKILL_VERSION, buildAuthoringPrompt } from "@/lib/browser/authoring";
+import { slugFromName } from "@/lib/browser/creation";
 
 /** One sentence a screen can show without rewriting it. */
 function fail(message: string, detail?: unknown): never {
@@ -220,7 +227,7 @@ async function answer(body: Record<string, unknown>): Promise<AnswerResult> {
     if (typeof value === "string") answers[key] = value;
   }
 
-  const attemptId = asString(body.attemptId) ?? crypto.randomUUID();
+  const attemptId = asString(body.attemptId) ?? newId();
   const timeMs = asNumber(body.timeMs, 0, 0, 24 * 60 * 60 * 1000);
   const hintUsed = body.hintUsed === true;
 
@@ -256,12 +263,12 @@ function findDeck(
 
 /** Create a pack and its first deck through the one bundle validator. */
 async function createPack(body: Record<string, unknown>) {
-  const name = asString(body.name)?.trim();
+  const name = slugFromName(asString(body.name)?.trim() || "", "");
   if (!name) fail("Give the pack a name.");
   if (await readPack(name)) fail(`A pack named "${name}" is already here.`);
   const version = asString(body.version)?.trim() || "1.0.0";
   const deckName = asString(body.deckName)?.trim() || "Basics";
-  const deckId = asString(body.deckId)?.trim() || "basics";
+  const deckId = asString(body.deckId)?.trim() || slugFromName(deckName, "deck");
   const bundle = {
     schema: PACK_BUNDLE_SCHEMA,
     pack: {
@@ -273,10 +280,25 @@ async function createPack(body: Record<string, unknown>) {
     decks: [{ id: deckId, name: deckName }],
     cards: [],
   };
-  const result = await importBundle(JSON.stringify(bundle), { kind: "new" });
+  const result = await importBundle(JSON.stringify(bundle), { kind: "pack" });
   if (!result.ok) fail("The pack needs fixing before it can be saved.", result.issues);
   const pack = await readPack(name);
   return { pack };
+}
+
+/** Add one deck to an existing pack. The learner writes the label, not the id. */
+async function createDeck(packName: string, body: Record<string, unknown>) {
+  const pack = await readPack(packName);
+  if (!pack) fail(`There is no pack "${packName}" here.`);
+  const name = asString(body.name)?.trim();
+  if (!name) fail("Give the deck a name.");
+  const id = asString(body.id)?.trim() || slugFromName(name, "deck");
+  const fragment = { decks: [{ id, name }], cards: [] };
+  const result = await importBundle(JSON.stringify(fragment), { kind: "deck", packName });
+  if (!result.ok) fail("The deck needs fixing before it can be saved.", result.issues);
+  const fresh = await readPack(packName);
+  const deck = fresh?.decks.find((entry) => entry.id === result.deckIds[0]) ?? null;
+  return { pack: fresh, deck };
 }
 
 /** Add one card to a chosen deck. A deck is found by its pack and id together. */
@@ -382,7 +404,7 @@ async function editCard(id: string, body: Record<string, unknown>) {
       note: `Written by the learner, editing a card that came from ${existingCard.origin.kind}.`,
       packName: existingCard.origin.packName,
     },
-    manualCardId(crypto.randomUUID()),
+    manualCardId(newId()),
     now,
   );
   card.editedFrom = existingCard.id;
@@ -426,19 +448,10 @@ async function importFlatInto(
   sources: CardSource[],
 ) {
   const bundle = {
-    schema: PACK_BUNDLE_SCHEMA,
-    pack: {
-      name: pack.name,
-      version: pack.version,
-      description: pack.description,
-      language: pack.language,
-      prompts: pack.prompts ?? undefined,
-    },
-    decks: [],
     cards: sources.map((source) => ({ ...source, deckId: deck.id })),
   };
   const result = await importBundle(JSON.stringify(bundle), {
-    kind: "deck",
+    kind: "cards",
     packName: pack.name,
     deckId: deck.id,
   });
@@ -540,18 +553,27 @@ export async function localSend<T>(
     if (!text) fail("Paste the bundle as JSON before importing.");
     const targetRecord = asRecord(record?.target);
     const kind = targetRecord ? asString(targetRecord.kind) : null;
-    let target: ImportTarget = { kind: "new" };
+    let target: ImportTarget;
     if (kind === "pack") {
-      const packName = asString(targetRecord?.packName);
-      if (!packName) fail("Choose the pack this file should join.");
-      target = { kind: "pack", packName };
+      target = { kind: "pack" };
     } else if (kind === "deck") {
       const packName = asString(targetRecord?.packName);
+      if (!packName) fail("Choose the pack these decks should join.");
+      target = { kind: "deck", packName };
+    } else if (kind === "cards") {
+      const packName = asString(targetRecord?.packName);
       const deckId = asString(targetRecord?.deckId);
-      if (!packName || !deckId) fail("Choose the pack and deck this file should join.");
-      target = { kind: "deck", packName, deckId };
+      if (!packName || !deckId) fail("Choose the pack and deck these cards should join.");
+      target = { kind: "cards", packName, deckId };
+    } else {
+      fail("Choose Pack, Deck or Cards as the target.");
     }
-    const result = await importBundle(text, target);
+    const rawPolicy = asString(record?.namePolicy);
+    if (rawPolicy && rawPolicy !== "strict" && rawPolicy !== "auto-suffix") {
+      fail("That name policy is not one the app knows.");
+    }
+    const namePolicy = rawPolicy === "auto-suffix" ? "auto-suffix" : "strict";
+    const result = await importBundle(text, target, { namePolicy });
     if (!result.ok) fail("Nothing was imported, because the file needs fixing.", result.issues);
     return result as T;
   }
@@ -565,6 +587,29 @@ export async function localSend<T>(
   if (path === "/api/packs" && method === "POST") {
     if (!record) fail("The pack arrived in a shape the app does not understand.");
     return (await createPack(record)) as T;
+  }
+  const packPath = /^\/api\/packs\/([^/]+)$/.exec(path);
+  if (packPath && method === "DELETE") {
+    const name = decodeURIComponent(packPath[1]);
+    const result = await deletePack(name);
+    if (!result) fail(`There is no pack "${name}" here.`);
+    return { deleted: true, ...result } as T;
+  }
+  const deckPath = /^\/api\/packs\/([^/]+)\/decks(?:\/([^/]+))?$/.exec(path);
+  if (deckPath && method === "POST" && !deckPath[2]) {
+    if (!record) fail("The deck arrived in a shape the app does not understand.");
+    return (await createDeck(decodeURIComponent(deckPath[1]), record)) as T;
+  }
+  if (deckPath && method === "DELETE" && deckPath[2]) {
+    const packName = decodeURIComponent(deckPath[1]);
+    const deckId = decodeURIComponent(deckPath[2]);
+    const result = await deleteDeck(packName, deckId);
+    if (!result.ok) {
+      if (result.reason === "last-deck") fail("A pack must keep at least one deck. Delete the pack instead.");
+      if (result.reason === "missing-pack") fail(`There is no pack "${packName}" here.`);
+      fail(`There is no deck "${deckId}" in "${packName}".`);
+    }
+    return { deleted: true, ...result } as T;
   }
   if (path === "/api/cards") {
     if (!record) fail("The card arrived in a shape the app does not understand.");
@@ -640,14 +685,26 @@ export async function localSend<T>(
   if (path === "/api/provider/test") return (await testProvider()) as T;
   if (path === "/api/provider/prepare") {
     if (!record) fail("The request arrived in a shape the app does not understand.");
-    const packName = asString(record.packName);
-    const topic = asString(record.topic);
-    if (!packName) fail("Choose which pack the cards should come from.");
-    if (!topic) fail("Choose a deck for the new cards.");
+    const targetRecord = asRecord(record.target);
+    const kind = targetRecord ? asString(targetRecord.kind) : null;
+    let target: GenerationTarget;
+    if (kind === "pack") {
+      target = { kind: "pack" };
+    } else if (kind === "deck") {
+      const packName = asString(targetRecord?.packName);
+      if (!packName) fail("Choose the pack the provider should add a deck to.");
+      target = { kind: "deck", packName };
+    } else if (kind === "cards") {
+      const packName = asString(targetRecord?.packName);
+      const deckId = asString(targetRecord?.deckId);
+      if (!packName || !deckId) fail("Choose the pack and deck the provider should add cards to.");
+      target = { kind: "cards", packName, deckId };
+    } else {
+      fail("Choose Pack, Deck or Cards as the target.");
+    }
     const prepared = await prepareGeneration({
-      packName,
-      topic,
-      count: asNumber(record.count, 5, 1, 20),
+      target,
+      count: asNumber(record.count, kind === "pack" ? 10 : 5, 1, 20),
     });
     const settings = await readSettings();
     return {
@@ -679,23 +736,22 @@ export async function localSend<T>(
     const kind = asString(target.kind);
     const packName = asString(target.packName);
     const deckId = asString(target.deckId);
-    if (kind === "new") {
-      const name = asString(target.name) ?? "my-pack";
-      return { prompt: buildAuthoringPrompt({ kind: "new", name }), version: AUTHORING_SKILL_VERSION } as T;
+    if (kind === "pack") {
+      return { prompt: buildAuthoringPrompt({ kind: "pack" }), version: AUTHORING_SKILL_VERSION } as T;
     }
     if (kind === "deck") {
-      if (!packName || !deckId) fail("Choose the pack and deck the chat should add to.");
+      if (!packName) fail("Choose the pack the chat should add a deck to.");
       const pack = await readPack(packName);
       if (!pack) fail(`There is no pack "${packName}" here.`);
-      return { prompt: buildAuthoringPrompt({ kind: "deck", packName, deckId }, pack), version: AUTHORING_SKILL_VERSION } as T;
+      return { prompt: buildAuthoringPrompt({ kind: "deck", packName }, pack), version: AUTHORING_SKILL_VERSION } as T;
     }
-    if (kind === "pack") {
-      if (!packName) fail("Choose the pack the chat should add to.");
+    if (kind === "cards") {
+      if (!packName || !deckId) fail("Choose the pack and deck the chat should add cards to.");
       const pack = await readPack(packName);
       if (!pack) fail(`There is no pack "${packName}" here.`);
-      return { prompt: buildAuthoringPrompt({ kind: "pack", packName }, pack), version: AUTHORING_SKILL_VERSION } as T;
+      return { prompt: buildAuthoringPrompt({ kind: "cards", packName, deckId }, pack), version: AUTHORING_SKILL_VERSION } as T;
     }
-    fail("Choose whether the chat writes a new pack, a pack, or a deck.");
+    fail("Choose Pack, Deck or Cards as the chat target.");
   }
 
   fail(`The app does not know how to change ${path}.`);

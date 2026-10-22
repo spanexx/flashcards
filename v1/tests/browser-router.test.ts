@@ -51,7 +51,7 @@ describe("library reads and writes", () => {
   it("imports a bundle and reports packs, cards and settings", async () => {
     const imported = await localSend<{ cardsAdded: number; decksAdded: number }>("/api/packs/import", "POST", {
       json: packBundle(),
-      target: { kind: "new" },
+      target: { kind: "pack" },
     });
     expect(imported.cardsAdded).toBe(1);
     expect(imported.decksAdded).toBe(2);
@@ -70,7 +70,7 @@ describe("library reads and writes", () => {
   });
 
   it("creates, edits and deletes a card in a chosen deck", async () => {
-    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "new" } });
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
 
     const created = await localSend<{ card: Card }>("/api/cards", "POST", {
       front: "Mam kota",
@@ -93,7 +93,7 @@ describe("library reads and writes", () => {
   });
 
   it("creates a pack, keeps deck choices pack-qualified, and refuses a repeated card", async () => {
-    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "new" } });
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
     const made = await localSend<{ pack: { name: string; version: string; decks: Array<{ id: string; name: string }> } }>(
       "/api/packs",
       "POST",
@@ -122,14 +122,14 @@ describe("library reads and writes", () => {
   });
 
   it("refuses a deck choice when the named pack does not hold it", async () => {
-    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "new" } });
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
     await expect(
       localSend("/api/cards", "POST", { front: "A", back: "B", packName: "starter", deckId: "missing" }),
     ).rejects.toThrow('not in "starter"');
   });
 
   it("imports flat cards into the pack-qualified deck, not a same-id deck elsewhere", async () => {
-    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "new" } });
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
     await localSend("/api/packs", "POST", { name: "other", version: "1.0.0", deckName: "Other basics", deckId: "basics" });
     await localSend("/api/cards/import", "POST", {
       json: JSON.stringify([{ front: "Dzień dobry", back: "Good morning" }]),
@@ -148,7 +148,7 @@ describe("library reads and writes", () => {
   });
 
   it("imports flat cards into the chosen deck", async () => {
-    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "new" } });
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
     const result = await localSend<{ imported: number; duplicates: number }>("/api/cards/import", "POST", {
       json: JSON.stringify([{ front: "Dzień dobry", back: "Good morning" }]),
       packName: "starter",
@@ -183,30 +183,56 @@ describe("library reads and writes", () => {
 
     await expect(localSend("/api/packs", "POST", { name: "new-pack" })).rejects.toThrow("already here");
     await expect(localSend("/api/packs", "POST", {})).rejects.toThrow("Give the pack a name");
-    await expect(localSend("/api/packs", "POST", { name: "Bad Name" })).rejects.toThrow("needs fixing");
+    const slugged = await localSend<{ pack: { name: string } }>("/api/packs", "POST", { name: "Bad Name" });
+    expect(slugged.pack.name).toBe("bad-name");
   });
 
-  it("adds a deck to an existing pack through the pack target", async () => {
-    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "new" } });
+  it("adds a deck to an existing pack through the deck target", async () => {
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
     const deckOnly = JSON.stringify({
-      schema: PACK_BUNDLE_SCHEMA,
-      pack: { name: "starter", version: "1.0.0" },
       decks: [{ id: "extra", name: "Extra" }],
       cards: [],
     });
     const result = await localSend<{ decksAdded: number }>("/api/packs/import", "POST", {
       json: deckOnly,
-      target: { kind: "pack", packName: "starter" },
+      target: { kind: "deck", packName: "starter" },
     });
     expect(result.decksAdded).toBe(1);
     await expect(
-      localSend("/api/packs/import", "POST", { json: deckOnly, target: { kind: "pack" } }),
+      localSend("/api/packs/import", "POST", { json: deckOnly, target: { kind: "deck" } }),
     ).rejects.toThrow("Choose the pack");
-    await expect(localSend("/api/packs/import", "POST", { target: { kind: "new" } })).rejects.toThrow("Paste the bundle");
+    await expect(localSend("/api/packs/import", "POST", { target: { kind: "pack" } })).rejects.toThrow("Paste the bundle");
+  });
+
+  it("adds and deletes decks and packs through the router", async () => {
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
+    const made = await localSend<{ deck: { id: string; name: string } }>("/api/packs/starter/decks", "POST", {
+      name: "Extra Words",
+    });
+    expect(made.deck).toMatchObject({ id: "extra-words", name: "Extra Words" });
+
+    const card = await localSend<{ card: Card }>("/api/cards", "POST", {
+      front: "Nowy",
+      back: "New",
+      packName: "starter",
+      deckId: "extra-words",
+    });
+    const removedDeck = await localSend<{ removedCards: number }>("/api/packs/starter/decks/extra-words", "DELETE");
+    expect(removedDeck.removedCards).toBe(1);
+    expect((await localGet<{ cards: Card[] }>("/api/cards")).cards.some((entry) => entry.id === card.card.id)).toBe(false);
+    await expect(localSend("/api/packs/starter/decks/gone", "DELETE")).rejects.toThrow("There is no deck");
+
+    await localSend("/api/packs", "POST", { name: "solo", deckName: "Only" });
+    await expect(localSend("/api/packs/solo/decks/only", "DELETE")).rejects.toThrow("must keep at least one deck");
+    const removedPack = await localSend<{ removedDecks: number }>("/api/packs/solo", "DELETE");
+    expect(removedPack.removedDecks).toBe(1);
+    expect((await localGet<{ packs: Array<{ name: string }> }>("/api/packs")).packs.map((entry) => entry.name)).toEqual([
+      "starter",
+    ]);
   });
 
   it("round-trips a backup through the router and refuses bad ones", async () => {
-    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "new" } });
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
     const backup = await localGet<{ json: string }>("/api/backup/export");
     const restored = await localSend<{ packs: number; cards: number }>("/api/backup/restore", "POST", {
       json: backup.json,
@@ -217,7 +243,7 @@ describe("library reads and writes", () => {
   });
 
   it("returns plain refusals for missing ids, bad rows and bad export names", async () => {
-    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "new" } });
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
     await expect(localGet("/api/packs/export")).rejects.toThrow("Choose a pack");
     await expect(localGet("/api/evidence")).rejects.toThrow("card id");
     await expect(localGet("/api/evidence?cardId=missing")).rejects.toThrow("not in the deck");
@@ -232,17 +258,16 @@ describe("library reads and writes", () => {
     await expect(localSend("/api/provider/key", "POST", {})).rejects.toThrow("A key is needed");
     await expect(localSend("/api/provider/hint", "POST", {})).rejects.toThrow("which card");
     await expect(localSend("/api/provider/generate", "POST", {})).rejects.toThrow("prompt id");
-    await expect(localSend("/api/provider/prepare", "POST")).rejects.toThrow("shape");
     await expect(localSend("/api/cards/row", "PATCH")).rejects.toThrow("shape");
     await expect(localSend("/api/cards/row", "DELETE")).rejects.toThrow("not in the deck");
-    await expect(localSend("/api/authoring/prompt", "POST", { target: { kind: "pack" } })).rejects.toThrow(
+    await expect(localSend("/api/authoring/prompt", "POST", { target: { kind: "deck" } })).rejects.toThrow(
       "Choose the pack",
     );
-    await expect(localSend("/api/authoring/prompt", "POST", { target: { kind: "deck", packName: "starter" } })).rejects.toThrow(
-      "pack and deck",
-    );
     await expect(
-      localSend("/api/authoring/prompt", "POST", { target: { kind: "deck", packName: "gone", deckId: "basics" } }),
+      localSend("/api/authoring/prompt", "POST", { target: { kind: "cards", packName: "starter" } }),
+    ).rejects.toThrow("pack and deck");
+    await expect(
+      localSend("/api/authoring/prompt", "POST", { target: { kind: "deck", packName: "gone" } }),
     ).rejects.toThrow("There is no pack");
   });
 
@@ -259,7 +284,7 @@ describe("library reads and writes", () => {
 
 describe("plan, answer and progress", () => {
   it("plans, judges an answer, reads it back and records a correction", async () => {
-    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "new" } });
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
     const plan = await localGet<{ plan: Plan | null; message: string | null }>("/api/plan");
     expect(plan.plan?.cards).toHaveLength(1);
     expect(plan.message).toBeNull();
@@ -332,17 +357,17 @@ describe("settings and export", () => {
   });
 
   it("exports a pack and a full backup", async () => {
-    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "new" } });
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
     const pack = await localGet<{ json: string }>("/api/packs/export?name=starter");
     expect(JSON.parse(pack.json).schema).toBe(PACK_BUNDLE_SCHEMA);
     const backup = await localGet<{ json: string }>("/api/backup/export");
     expect(JSON.parse(backup.json).schema).toBe("flashcards.backup/v1");
   });
 
-  it("builds an authoring prompt for a deck", async () => {
-    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "new" } });
+  it("builds an authoring prompt for cards in a deck", async () => {
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
     const result = await localSend<{ prompt: string; version: string }>("/api/authoring/prompt", "POST", {
-      target: { kind: "deck", packName: "starter", deckId: "basics" },
+      target: { kind: "cards", packName: "starter", deckId: "basics" },
     });
     expect(result.prompt).toContain('"basics"');
     expect(result.version).toBeTruthy();
@@ -351,7 +376,7 @@ describe("settings and export", () => {
 
 describe("provider calls", () => {
   it("prepares, generates and hints through the browser", async () => {
-    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "new" } });
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
     await localSend("/api/settings", "PATCH", {
       provider: { url: "https://provider.test/v1", model: "test-model" },
     });
@@ -381,8 +406,7 @@ describe("provider calls", () => {
     expect(test.ok).toBe(true);
 
     const prepared = await localSend<{ requestId: string; prompt: string }>("/api/provider/prepare", "POST", {
-      packName: "starter",
-      topic: "Basics",
+      target: { kind: "cards", packName: "starter", deckId: "basics" },
       count: 1,
     });
     expect(prepared.prompt.length).toBeGreaterThan(0);
@@ -407,6 +431,83 @@ describe("provider calls", () => {
     expect(log.entries.map((entry) => entry.kind)).toEqual(["hint", "generation"]);
   });
 
+  it("generates a whole pack and suffixes a generated name collision", async () => {
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
+    await localSend("/api/settings", "PATCH", {
+      provider: { url: "https://provider.test/v1", model: "test-model" },
+    });
+    await localSend("/api/provider/key", "POST", { key: "secret" });
+    const reply = JSON.stringify({
+      pack: { name: "starter", version: "1.0.0", language: "pl" },
+      decks: [{ id: "basics", name: "Basics" }],
+      lines: [{ deckId: "basics", fullLine: "Piję kawę.", target: "kawę" }],
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(JSON.stringify({ choices: [{ message: { content: reply } }] }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+      ),
+    );
+
+    const prepared = await localSend<{ requestId: string }>("/api/provider/prepare", "POST", {
+      target: { kind: "pack" },
+      count: 1,
+    });
+    const generated = await localSend<{
+      kind: string;
+      packName: string;
+      count: number;
+      cards: Card[];
+      pack: { decks: Array<{ id: string }> };
+    }>("/api/provider/generate", "POST", { requestId: prepared.requestId });
+    expect(generated.kind).toBe("pack");
+    expect(generated.packName).toBe("starter-2");
+    expect(generated.count).toBe(1);
+    expect(generated.cards[0].origin.kind).toBe("generated");
+    expect(generated.pack.decks).toContainEqual({ id: "basics", name: "Basics" });
+  });
+
+  it("generates one deck with a paired id and label suffix", async () => {
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
+    await localSend("/api/settings", "PATCH", {
+      provider: { url: "https://provider.test/v1", model: "test-model" },
+    });
+    await localSend("/api/provider/key", "POST", { key: "secret" });
+    const reply = JSON.stringify({
+      deck: { id: "basics", name: "Basics" },
+      lines: [{ fullLine: "Piję kawę.", target: "kawę" }],
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(JSON.stringify({ choices: [{ message: { content: reply } }] }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+      ),
+    );
+
+    const prepared = await localSend<{ requestId: string }>("/api/provider/prepare", "POST", {
+      target: { kind: "deck", packName: "starter" },
+      count: 1,
+    });
+    const generated = await localSend<{
+      kind: string;
+      packName: string;
+      deckId: string;
+      count: number;
+      pack: { decks: Array<{ id: string; name: string }> };
+    }>("/api/provider/generate", "POST", { requestId: prepared.requestId });
+    expect(generated.kind).toBe("deck");
+    expect(generated.packName).toBe("starter");
+    expect(generated.deckId).toBe("basics-2");
+    expect(generated.count).toBe(1);
+    expect(generated.pack.decks).toContainEqual({ id: "basics-2", name: "Basics 2" });
+  });
+
   it("reports a test failure when no provider is set up", async () => {
     const test = await localSend<{ ok: boolean; message: string }>("/api/provider/test", "POST");
     expect(test.ok).toBe(false);
@@ -414,26 +515,26 @@ describe("provider calls", () => {
   });
 
   it("refuses provider calls whose pack, deck or prepared prompt is gone", async () => {
+    await expect(localSend("/api/provider/prepare", "POST", {})).rejects.toThrow("Choose Pack, Deck or Cards");
     await expect(
-      localSend("/api/provider/prepare", "POST", { topic: "Basics" }),
-    ).rejects.toThrow("Choose which pack");
+      localSend("/api/provider/prepare", "POST", { target: { kind: "cards", packName: "starter" } }),
+    ).rejects.toThrow("Choose the pack and deck");
     await expect(
-      localSend("/api/provider/prepare", "POST", { packName: "starter" }),
-    ).rejects.toThrow("Choose a deck");
-    await expect(
-      localSend("/api/provider/prepare", "POST", { packName: "starter", topic: "Basics" }),
+      localSend("/api/provider/prepare", "POST", { target: { kind: "deck", packName: "starter" } }),
     ).rejects.toThrow("not here");
-    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "new" } });
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
     await expect(
-      localSend("/api/provider/prepare", "POST", { packName: "starter", topic: "Nope" }),
-    ).rejects.toThrow("not a deck");
+      localSend("/api/provider/prepare", "POST", {
+        target: { kind: "cards", packName: "starter", deckId: "nope" },
+      }),
+    ).rejects.toThrow("not in");
     await expect(
       localSend("/api/provider/generate", "POST", { requestId: "expired" }),
     ).rejects.toThrow("expired");
   });
 
   it("saves nothing when the provider's batch is unusable, but logs the prompt", async () => {
-    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "new" } });
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
     await localSend("/api/settings", "PATCH", {
       provider: { url: "https://provider.test/v1", model: "test-model" },
     });
@@ -449,8 +550,7 @@ describe("provider calls", () => {
     );
 
     const prepared = await localSend<{ requestId: string }>("/api/provider/prepare", "POST", {
-      packName: "starter",
-      topic: "Basics",
+      target: { kind: "cards", packName: "starter", deckId: "basics" },
       count: 1,
     });
     await expect(
@@ -463,7 +563,7 @@ describe("provider calls", () => {
   });
 
   it("explains a provider failure and still offers the pack hint", async () => {
-    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "new" } });
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
     await localSend("/api/settings", "PATCH", {
       provider: { url: "https://provider.test/v1", model: "test-model" },
     });
@@ -489,7 +589,7 @@ describe("provider calls", () => {
   });
 
   it("names a missing key instead of hiding the provider setup", async () => {
-    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "new" } });
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
     await localSend("/api/settings", "PATCH", {
       provider: { url: "https://provider.test/v1", model: "test-model" },
     });
@@ -503,7 +603,7 @@ describe("provider calls", () => {
   });
 
   it("says no hint exists when the card has none", async () => {
-    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "new" } });
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
     const created = await localSend<{ card: Card }>("/api/cards", "POST", {
       front: "Mam kota",
       back: "I have a cat",
@@ -522,27 +622,29 @@ describe("provider calls", () => {
     ).rejects.toThrow("not in the deck");
   });
 
-  it("builds prompts for a whole pack and a brand new pack", async () => {
-    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "new" } });
+  it("builds prompts for a new pack, a new deck and existing cards", async () => {
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
     const pack = await localSend<{ prompt: string }>("/api/authoring/prompt", "POST", {
-      target: { kind: "pack", packName: "starter" },
+      target: { kind: "pack" },
     });
-    expect(pack.prompt).toContain("starter");
-    const fresh = await localSend<{ prompt: string }>("/api/authoring/prompt", "POST", {
-      target: { kind: "new" },
+    expect(pack.prompt).toContain("new pack");
+    const deck = await localSend<{ prompt: string }>("/api/authoring/prompt", "POST", {
+      target: { kind: "deck", packName: "starter" },
     });
-    expect(fresh.prompt.length).toBeGreaterThan(0);
-    await expect(
-      localSend("/api/authoring/prompt", "POST", { target: { kind: "pack", packName: "gone" } }),
-    ).rejects.toThrow("There is no pack");
+    expect(deck.prompt).toContain("starter");
+    expect(deck.prompt).toContain("new deck");
+    const cards = await localSend<{ prompt: string }>("/api/authoring/prompt", "POST", {
+      target: { kind: "cards", packName: "starter", deckId: "cases" },
+    });
+    expect(cards.prompt).toContain("Cases");
     await expect(localSend("/api/authoring/prompt", "POST", {})).rejects.toThrow("Choose what");
     await expect(
       localSend("/api/authoring/prompt", "POST", { target: { kind: "other" } }),
-    ).rejects.toThrow("Choose whether");
+    ).rejects.toThrow("Choose Pack, Deck or Cards");
   });
 
   it("refuses broken JSON and a deck named without its pack", async () => {
-    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "new" } });
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
     await expect(
       localSend("/api/cards/import", "POST", { json: "[", packName: "starter", deckId: "basics" }),
     ).rejects.toThrow("Nothing was imported");
@@ -559,7 +661,7 @@ describe("provider calls", () => {
   });
 
   it("still gives a pack hint when no provider is set up", async () => {
-    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "new" } });
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
     const card = (await localGet<{ cards: Card[] }>("/api/cards")).cards[0];
     const hint = await localSend<{ text: string | null; source: string }>("/api/provider/hint", "POST", {
       cardId: card.id,

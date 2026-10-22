@@ -8,7 +8,7 @@
 // [pack: browser-app]
 
 import { z } from "zod";
-import type { Card, CardPart } from "@/lib/shared/types";
+import type { Card, CardPart, CardSource } from "@/lib/shared/types";
 import { buildCard, deckCardId, generatedCardId } from "@/lib/core/card";
 import type { PackRecord } from "@/lib/packs/types";
 import { extractJson } from "@/lib/provider/client";
@@ -26,6 +26,26 @@ export const generatedLineSchema = z.object({
 export const generatedLinesSchema = z.object({
   lines: z.array(generatedLineSchema).min(1, "the provider wrote no lines"),
 });
+
+export const generatedPackSchema = z
+  .object({
+    pack: z.object({
+      name: z.string().min(1, "a generated pack needs a name"),
+      version: z.string().default("1.0.0"),
+      description: z.string().optional(),
+      language: z.string().optional(),
+    }),
+    decks: z.array(z.object({ id: z.string().min(1), name: z.string().min(1) })).min(1),
+    lines: z.array(generatedLineSchema.extend({ deckId: z.string().min(1) })).min(1),
+  })
+  .strict();
+
+export const generatedDeckSchema = z
+  .object({
+    deck: z.object({ id: z.string().min(1), name: z.string().min(1) }),
+    lines: z.array(generatedLineSchema).min(1),
+  })
+  .strict();
 
 export type GeneratedLine = z.infer<typeof generatedLineSchema>;
 
@@ -51,6 +71,31 @@ function partsAroundTarget(fullLine: string, found: { index: number; length: num
   return parts;
 }
 
+/** Turn one checked line into the card source the bundle validator checks. */
+function sourceFromLine(line: GeneratedLine, defaultTopic: string, allowedTopics?: string[]): CardSource {
+  const found = findTarget(line.fullLine, line.target);
+  if (!found) {
+    throw new Error(`the target "${line.target}" is not inside the line "${line.fullLine}"`);
+  }
+
+  const topics = (line.topics ?? []).filter((topic) => !allowedTopics || allowedTopics.includes(topic));
+  const chosenTopics = topics.length > 0 ? topics : [defaultTopic];
+  const answerParts: CardPart[] = [{ type: "text", text: line.fullLine }];
+  if (line.translation && line.translation.trim().length > 0) {
+    answerParts.push({ type: "text", text: line.translation.trim(), role: "translation" });
+  }
+
+  return {
+    summary: line.summary?.trim() || line.fullLine,
+    topics: chosenTopics,
+    tags: line.tags ?? [],
+    prompt: partsAroundTarget(line.fullLine, found),
+    answer: answerParts,
+    answerDef: { mode: "cloze" as const, blanks: [{ id: "b1", expected: [line.target] }] },
+    fullLine: line.fullLine,
+  };
+}
+
 /** Turn one checked line into a card with an origin note naming the request. */
 export function deriveCard(
   pack: PackRecord,
@@ -60,28 +105,7 @@ export function deriveCard(
   now: string,
   deckId?: string,
 ): Card {
-  const found = findTarget(line.fullLine, line.target);
-  if (!found) {
-    throw new Error(`the target "${line.target}" is not inside the line "${line.fullLine}"`);
-  }
-
-  const topics = (line.topics ?? []).filter((topic) => pack.topics.includes(topic));
-  const chosenTopics = topics.length > 0 ? topics : [defaultTopic];
-  const answerParts: CardPart[] = [{ type: "text", text: line.fullLine }];
-  if (line.translation && line.translation.trim().length > 0) {
-    answerParts.push({ type: "text", text: line.translation.trim(), role: "translation" });
-  }
-
-  const source = {
-    summary: line.summary?.trim() || line.fullLine,
-    topics: chosenTopics,
-    tags: line.tags ?? [],
-    prompt: partsAroundTarget(line.fullLine, found),
-    answer: answerParts,
-    answerDef: { mode: "cloze" as const, blanks: [{ id: "b1", expected: [line.target] }] },
-    fullLine: line.fullLine,
-  };
-
+  const source = sourceFromLine(line, defaultTopic, pack.topics);
   const id = deckId
     ? deckCardId(pack.name, deckId, source)
     : generatedCardId(pack.name, line.fullLine, line.target);
@@ -99,6 +123,90 @@ export function deriveCard(
   card.packName = pack.name;
   if (deckId) card.deckId = deckId;
   return card;
+}
+
+/** One card in the same shape the bundle validator reads. */
+function bundleCardFromLine(line: GeneratedLine, deck: { id: string; name: string }) {
+  const source = sourceFromLine(line, deck.name);
+  return {
+    deckId: deck.id,
+    summary: source.summary,
+    tags: source.tags,
+    prompt: source.prompt,
+    answer: source.answer,
+    answerDef: source.answerDef,
+    hints: source.hints,
+    fullLine: source.fullLine,
+  };
+}
+
+function providerRefusal(error: z.ZodError): { ok: false; message: string } {
+  return { ok: false, message: `the provider's answer was not usable: ${error.issues[0].message}` };
+}
+
+/** Read the reply once, so a missing or broken JSON object is a refusal, not a throw. */
+function readStructured(text: string): { ok: true; value: unknown } | { ok: false; message: string } {
+  try {
+    return { ok: true, value: extractJson(text) };
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "the provider's answer was not usable",
+    };
+  }
+}
+
+/** Read a generated pack reply into a whole-pack bundle. */
+export function generatedPackBundle(
+  text: string,
+): { ok: true; bundle: Record<string, unknown> } | { ok: false; message: string } {
+  const json = readStructured(text);
+  if (!json.ok) return json;
+  const parsed = generatedPackSchema.safeParse(json.value);
+  if (!parsed.success) return providerRefusal(parsed.error);
+  const decks = new Map(parsed.data.decks.map((deck) => [deck.id, deck]));
+  const cards = [];
+  for (const line of parsed.data.lines) {
+    const deck = decks.get(line.deckId);
+    if (!deck) {
+      return { ok: false, message: `the provider named a deck "${line.deckId}" that it did not define` };
+    }
+    cards.push(bundleCardFromLine(line, deck));
+  }
+  return {
+    ok: true,
+    bundle: {
+      schema: "flashcards.pack/v1",
+      pack: parsed.data.pack,
+      decks: parsed.data.decks,
+      cards,
+    },
+  };
+}
+
+/** Read a generated deck reply into a deck fragment. */
+export function generatedDeckBundle(
+  text: string,
+): { ok: true; bundle: Record<string, unknown> } | { ok: false; message: string } {
+  const json = readStructured(text);
+  if (!json.ok) return json;
+  const parsed = generatedDeckSchema.safeParse(json.value);
+  if (!parsed.success) return providerRefusal(parsed.error);
+  const cards = parsed.data.lines.map((line) => bundleCardFromLine(line, parsed.data.deck));
+  return { ok: true, bundle: { decks: [parsed.data.deck], cards } };
+}
+
+/** Read a generated cards reply into a cards fragment for the chosen deck. */
+export function generatedCardsBundle(
+  text: string,
+  deck: { id: string; name: string },
+): { ok: true; bundle: Record<string, unknown> } | { ok: false; message: string } {
+  const json = readStructured(text);
+  if (!json.ok) return json;
+  const parsed = generatedLinesSchema.safeParse(json.value);
+  if (!parsed.success) return providerRefusal(parsed.error);
+  const cards = parsed.data.lines.map((line) => bundleCardFromLine(line, deck));
+  return { ok: true, bundle: { cards } };
 }
 
 /**

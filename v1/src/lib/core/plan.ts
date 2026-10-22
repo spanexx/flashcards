@@ -3,10 +3,13 @@
 // returned for display and never written anywhere.
 // PACK: v1-prototype
 // 2026-10-19 opencode: created for the v1 prototype [pack: v1-prototype]
-// 2026-10-20 opencode: global randomUUID instead of the Node-only import, so
-// planning works in the browser build. [pack: browser-app]
+// 2026-10-20 opencode: global random id instead of the Node-only import, so
+// planning works in the browser build.
+// 2026-10-22 opencode: newId keeps planning working on a static HTTP host.
+// [pack: library-create-flow]
 
 import type { Card, EvidenceRow, Plan, SessionEvent } from "@/lib/shared/types";
+import { newId } from "@/lib/core/id";
 import { buildSummaries } from "@/lib/core/summaries";
 import { runSelection } from "@/lib/core/algorithm/run";
 import { computeOffer } from "@/lib/core/session";
@@ -46,7 +49,7 @@ export function buildPlan(input: PlanInput, fallbackCountBefore = 0): PlanResult
 
   const fallbackCount = fallbackCountBefore + (result.usedFallback ? 1 : 0);
   const plan: Plan = {
-    sessionId: crypto.randomUUID(),
+    sessionId: newId(),
     cards: result.selection.cards,
     groups: result.selection.groups,
     offer,

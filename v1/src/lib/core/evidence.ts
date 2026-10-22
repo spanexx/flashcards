@@ -3,11 +3,13 @@
 // corrections on top without editing the original, and reads attempts back.
 // PACK: v1-prototype
 // 2026-10-19 opencode: created for the v1 prototype [pack: v1-prototype]
-// 2026-10-20 opencode: global randomUUID (browser and test process) instead of
+// 2026-10-20 opencode: global random id (browser and test process) instead of
 // the Node-only import, so the same evidence code runs in IndexedDB.
-// [pack: browser-app]
+// 2026-10-22 opencode: newId keeps rows working on a static HTTP host.
+// [pack: library-create-flow]
 
 import type { EvidenceRow, Outcome } from "@/lib/shared/types";
+import { newId } from "@/lib/core/id";
 import type { JudgedRegion } from "@/lib/core/judge";
 import { worstOutcome } from "@/lib/core/outcome";
 
@@ -43,7 +45,7 @@ export function makeAnswerRows(
   at: string,
 ): EvidenceRow[] {
   return regions.map((region) => ({
-    id: crypto.randomUUID(),
+    id: newId(),
     cardId,
     attemptId,
     region: region.region,
@@ -62,7 +64,7 @@ export function makeCorrectionRow(
   at: string,
 ): EvidenceRow {
   return {
-    id: crypto.randomUUID(),
+    id: newId(),
     cardId: original.cardId,
     attemptId: original.attemptId,
     region: original.region,

@@ -1,0 +1,761 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flashcards - Create flow simulation</title>
+<!--
+WHY: Design-time simulation for the target-first Library Create flow.
+It mirrors the locked GRILL, uses hardcoded state, and saves nothing.
+PACK: library-create-flow
+2026-10-21 opencode: created before the PRD-TRD [pack: library-create-flow]
+-->
+<style>
+  :root {
+    --bg: #11100e;
+    --panel: #1a1917;
+    --panel-2: #211f1c;
+    --border: #38342e;
+    --text: #f4efe7;
+    --muted: #a9a097;
+    --accent: #9ec7b6;
+    --accent-2: #7eb39f;
+    --accent-ink: #10201a;
+    --danger: #e08374;
+    --warn: #d8b56f;
+    --ok: #9ec7b6;
+    --shadow: 0 18px 50px rgba(0,0,0,.28);
+    --radius: 16px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); }
+  body { font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  button, input, select, textarea { font: inherit; }
+  button { cursor: pointer; }
+  a { color: var(--accent); }
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    padding: 14px 22px; border-bottom: 1px solid var(--border); background: #151411;
+    position: sticky; top: 0; z-index: 20;
+  }
+  .brand { font-weight: 750; letter-spacing: .02em; }
+  .brand span { color: var(--accent); }
+  .sim-state { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; }
+  .sim-state select { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 9px; padding: 7px 9px; }
+  .banner {
+    background: #201e18; border-bottom: 1px solid var(--border); color: #d8cfc2;
+    padding: 9px 22px; font-size: 12px;
+  }
+  .banner strong { color: var(--warn); }
+  .shell { width: min(1180px, calc(100% - 36px)); margin: 0 auto; padding: 26px 0 80px; }
+  .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 18px; }
+  h1 { margin: 0; font-size: 32px; line-height: 1.1; letter-spacing: -.02em; }
+  h2 { margin: 0; font-size: 18px; letter-spacing: -.01em; }
+  h3 { margin: 0; font-size: 14px; }
+  .lead { color: var(--muted); margin: 7px 0 0; max-width: 720px; }
+  .tabs { display: flex; gap: 6px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+  .tab {
+    background: transparent; color: var(--muted); border: 0; border-bottom: 2px solid transparent;
+    padding: 11px 15px; font-weight: 650;
+  }
+  .tab[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); }
+  .tab:hover { color: var(--text); }
+  .grid { display: grid; gap: 14px; }
+  .two { grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr); }
+  .three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  @media (max-width: 900px) { .two, .three, .four { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 620px) {
+    .two, .three, .four { grid-template-columns: 1fr; }
+    .page-head { align-items: flex-start; flex-direction: column; }
+    h1 { font-size: 27px; }
+  }
+  .card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 17px; box-shadow: var(--shadow);
+  }
+  .card.flat { box-shadow: none; }
+  .card.tight { padding: 13px; }
+  .muted { color: var(--muted); }
+  .small { font-size: 12px; }
+  .tiny { font-size: 11px; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .stack { display: grid; gap: 10px; }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
+  .spread { justify-content: space-between; }
+  .choice {
+    text-align: left; width: 100%; background: var(--panel-2); border: 1px solid var(--border);
+    border-radius: 14px; padding: 15px; color: var(--text); transition: border-color .15s, transform .15s;
+  }
+  .choice:hover { border-color: #575046; transform: translateY(-1px); }
+  .choice[aria-pressed="true"] { border-color: var(--accent); background: #202a25; }
+  .choice .glyph {
+    display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px;
+    background: #2a2722; color: var(--accent); font-weight: 800; margin-bottom: 10px;
+  }
+  .choice strong { display: block; font-size: 15px; }
+  .choice span { display: block; color: var(--muted); font-size: 12px; margin-top: 3px; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--border);
+    border-radius: 999px; padding: 3px 8px; font-size: 11px; color: var(--muted);
+  }
+  .badge.ok { color: var(--accent); border-color: #456d5e; }
+  .badge.warn { color: var(--warn); border-color: #6b5731; }
+  .badge.bad { color: var(--danger); border-color: #70443d; }
+  .btn {
+    border: 1px solid var(--border); background: var(--panel-2); color: var(--text);
+    border-radius: 10px; padding: 8px 12px; font-weight: 650;
+  }
+  .btn:hover { border-color: #5b5449; }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .btn.primary:hover { background: #b1d7c7; }
+  .btn.danger { color: #ffd9d3; border-color: #6f3f38; background: #32201d; }
+  .btn.ghost { background: transparent; }
+  .btn.small { padding: 5px 9px; font-size: 12px; border-radius: 8px; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .field, select, textarea {
+    width: 100%; background: #151411; color: var(--text); border: 1px solid var(--border);
+    border-radius: 10px; padding: 9px 11px; outline: none;
+  }
+  .field:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  label { display: grid; gap: 5px; color: #d8d0c5; font-size: 12px; font-weight: 650; }
+  textarea { min-height: 105px; resize: vertical; }
+  .notice {
+    border: 1px solid #456d5e; background: #18231f; color: #d9efe6; border-radius: 12px; padding: 12px;
+  }
+  .notice.warn { border-color: #6b5731; background: #241f15; color: #f1dfb8; }
+  .notice.bad { border-color: #70443d; background: #2a1b19; color: #ffd9d3; }
+  .notice p { margin: 5px 0 0; font-size: 12px; }
+  .divider { height: 1px; background: var(--border); margin: 14px 0; }
+  .pack-row, .deck-row, .card-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 12px 3px; border-bottom: 1px solid var(--border);
+  }
+  .pack-row:last-child, .deck-row:last-child, .card-row:last-child { border-bottom: 0; }
+  .pack-main { min-width: 0; flex: 1; }
+  .pack-name { font-weight: 750; }
+  .deck-list { margin: 0 0 8px 34px; padding-left: 16px; border-left: 1px solid var(--border); }
+  .deck-row { padding: 9px 0; }
+  .deck-row .pack-name { font-weight: 600; color: #e5ddd2; }
+  .card-row { align-items: flex-start; }
+  .card-face { max-width: 330px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .empty { text-align: center; padding: 42px 18px; color: var(--muted); }
+  .empty strong { display: block; color: var(--text); margin-bottom: 5px; }
+  .prompt-box { background: #12110f; border: 1px dashed #4b453c; border-radius: 12px; padding: 12px; }
+  .prompt-box pre { margin: 8px 0 0; white-space: pre-wrap; font-size: 11px; color: #cfc6ba; max-height: 210px; overflow: auto; }
+  .toast {
+    position: fixed; right: 18px; bottom: 18px; z-index: 50; max-width: 420px;
+    background: #202a25; color: #e5f4ee; border: 1px solid #456d5e; border-radius: 12px;
+    padding: 11px 14px; box-shadow: var(--shadow); font-size: 13px;
+  }
+  .toast.error { background: #2a1b19; border-color: #70443d; color: #ffd9d3; }
+  .toast.info { background: #201e18; border-color: #6b5731; color: #f1dfb8; }
+  .modal-wrap {
+    position: fixed; inset: 0; z-index: 60; display: grid; place-items: center;
+    background: rgba(0,0,0,.66); padding: 18px;
+  }
+  .modal {
+    width: min(440px, 100%); background: var(--panel); border: 1px solid var(--border);
+    border-radius: 16px; padding: 18px; box-shadow: var(--shadow);
+  }
+  .modal h2 { margin-bottom: 7px; }
+  .modal .row { justify-content: flex-end; margin-top: 15px; }
+  .foot-note { margin-top: 24px; color: var(--muted); font-size: 12px; }
+  .provider-note { font-size: 11px; color: var(--muted); }
+  .split-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+  .pill { border: 1px solid var(--border); border-radius: 999px; padding: 3px 8px; font-size: 11px; color: var(--muted); }
+  .clickable { cursor: pointer; }
+  .clickable:hover { background: #1d1b18; }
+  .flash { animation: flash 1.4s ease; }
+  @keyframes flash { 0% { background: #2e4a3f; } 100% { background: transparent; } }
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Flash<span>cards</span> <span class="muted small">/ design simulation</span></div>
+    <div class="sim-state">
+      <span>Provider</span>
+      <select id="provider" aria-label="Simulation provider state" onchange="setProvider(this.value)">
+        <option value="ready">Ready</option>
+        <option value="nokey">Profile saved, no key</option>
+        <option value="none">No profile</option>
+      </select>
+    </div>
+  </header>
+  <div class="banner"><strong>Design simulation.</strong> Hardcoded data. Nothing saves. Use the provider selector to see the Generate states.</div>
+  <main class="shell">
+    <div class="page-head">
+      <div>
+        <h1>Library</h1>
+        <p class="lead">Packs, decks and cards live in this browser. Create is the one place that makes new things.</p>
+      </div>
+    </div>
+    <div class="tabs" role="tablist" aria-label="Library">
+      <button class="tab" role="tab" aria-selected="false" onclick="setTab('packs')" id="tab-packs">Packs</button>
+      <button class="tab" role="tab" aria-selected="false" onclick="setTab('cards')" id="tab-cards">Cards</button>
+      <button class="tab" role="tab" aria-selected="true" onclick="setTab('create')" id="tab-create">Create</button>
+    </div>
+    <div id="view"></div>
+    <p class="foot-note">Locked rules shown here: target first, strict imports, provider or chat names generated containers, collisions get a number, no preview, delete is the undo.</p>
+  </main>
+  <div id="toast"></div>
+  <div id="modal"></div>
+<script>
+  const state = {
+    tab: "create",
+    target: "pack",
+    method: "write",
+    provider: "ready",
+    expanded: new Set(["Polish Basics"]),
+    lastCreated: null,
+    editingCard: null,
+    deleteTarget: null,
+    filter: "",
+    showRetired: false,
+    packs: [
+      { name: "Polish Basics", version: "1.0.0", decks: [
+        { id: "cases", name: "Cases", cards: 4 },
+        { id: "verb-aspect", name: "Verb aspect", cards: 3 },
+        { id: "gender-agreement", name: "Gender agreement", cards: 3 },
+        { id: "past-tense", name: "Past tense", cards: 3 },
+        { id: "everyday-basics", name: "Everyday basics", cards: 4 },
+        { id: "questions", name: "Questions", cards: 3 }
+      ]},
+      { name: "Slow Polish", version: "1.0.0", decks: [
+        { id: "everyday-verbs", name: "Everyday verbs", cards: 5 }
+      ]}
+    ],
+    cards: [
+      { id: "c1", pack: "Polish Basics", deck: "Cases", front: "To jest kot.", back: "This is a cat.", retired: false },
+      { id: "c2", pack: "Polish Basics", deck: "Cases", front: "Nie mam czasu.", back: "I have no time.", retired: false },
+      { id: "c3", pack: "Polish Basics", deck: "Verb aspect", front: "Czytać / przeczytać", back: "to read (imperfective / perfective)", retired: false },
+      { id: "c4", pack: "Slow Polish", deck: "Everyday verbs", front: "iść", back: "to go (on foot)", retired: false },
+      { id: "c5", pack: "Polish Basics", deck: "Questions", front: "Gdzie jest dworzec?", back: "Where is the station?", retired: true }
+    ]
+  };
+
+  const $ = (id) => document.getElementById(id);
+  const val = (id) => ($(id) ? $(id).value : "");
+  const esc = (value) => String(value).replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+  const slug = (value) => String(value).toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "deck";
+  const totalCards = (pack) => pack.decks.reduce((sum, deck) => sum + deck.cards, 0);
+  const byPack = (name) => state.packs.find((pack) => pack.name === name);
+  const deckKey = (pack, deck) => pack.name + "|" + deck.id;
+  const parseDeckKey = (value) => {
+    const [packName, deckId] = String(value || "").split("|");
+    const pack = byPack(packName);
+    const deck = pack ? pack.decks.find((entry) => entry.id === deckId) : null;
+    return pack && deck ? { pack, deck } : null;
+  };
+  const uniqueName = (base, exists) => {
+    if (!exists(base)) return base;
+    let n = 2;
+    while (exists(base + " " + n)) n += 1;
+    return base + " " + n;
+  };
+  const uniquePackName = (base) => uniqueName(base, (name) => Boolean(byPack(name)));
+  const uniqueDeckName = (pack, base) => uniqueName(base, (name) => pack.decks.some((deck) => deck.name === name));
+
+  function setTab(tab) {
+    state.tab = tab;
+    state.editingCard = null;
+    render();
+  }
+  function setTarget(target) {
+    state.target = target;
+    state.method = "write";
+    render();
+  }
+  function setMethod(method) {
+    state.method = method;
+    render();
+  }
+  function setProvider(value) {
+    state.provider = value;
+    render();
+  }
+  function toast(message, kind = "") {
+    const node = $("toast");
+    node.innerHTML = '<div class="toast ' + kind + '">' + esc(message) + '</div>';
+    clearTimeout(window.__toastTimer);
+    window.__toastTimer = setTimeout(() => { node.innerHTML = ""; }, 4600);
+  }
+  function providerBadge() {
+    if (state.provider === "ready") return '<span class="badge ok">Provider ready</span>';
+    if (state.provider === "nokey") return '<span class="badge warn">Key missing</span>';
+    return '<span class="badge bad">No provider</span>';
+  }
+  function render() {
+    $("tab-packs").setAttribute("aria-selected", String(state.tab === "packs"));
+    $("tab-cards").setAttribute("aria-selected", String(state.tab === "cards"));
+    $("tab-create").setAttribute("aria-selected", String(state.tab === "create"));
+    $("provider").value = state.provider;
+    if (state.tab === "packs") $("view").innerHTML = renderPacks();
+    else if (state.tab === "cards") $("view").innerHTML = renderCards();
+    else $("view").innerHTML = renderCreate();
+    renderModal();
+    if (state.expanded.size) {
+      state.packs.forEach((pack) => {
+        const node = document.querySelector('[data-pack-highlight="' + CSS.escape(pack.name) + '"]');
+        if (node && state.lastCreated === pack.name) node.classList.add("flash");
+      });
+    }
+  }
+
+  function renderCreate() {
+    const targetCards = [
+      ["pack", "Pack", "A whole new pack. Always gets at least one deck."],
+      ["deck", "Deck", "A new deck inside a pack you already have."],
+      ["cards", "Cards", "New cards inside an existing pack and deck."]
+    ].map(([id, name, text]) => '<button class="choice" aria-pressed="' + (state.target === id) + '" onclick="setTarget(\'' + id + '\')">' +
+      '<span class="glyph">' + name[0] + '</span><strong>' + name + '</strong><span>' + text + '</span></button>').join("");
+
+    const generateBadge = state.provider === "ready" ? '<span class="badge ok">Ready</span>' :
+      state.provider === "nokey" ? '<span class="badge warn">Needs key</span>' : '<span class="badge bad">Set up first</span>';
+    const methods = [
+      ["write", "W", "Write", "Fill in the fields yourself."],
+      ["generate", "G", "Generate", "Use the saved provider profile."],
+      ["chat", "C", "Chat", "Copy a prompt into any chat, paste the answer."],
+      ["import", "I", "Import", "Choose a file or paste plain JSON."]
+    ].map(([id, letter, name, text]) => '<button class="choice" aria-pressed="' + (state.method === id) + '" onclick="setMethod(\'' + id + '\')">' +
+      '<span class="glyph">' + letter + '</span><strong>' + name + '</strong><span>' + text + '</span>' +
+      (id === "generate" ? '<span style="margin-top:8px;display:block">' + generateBadge + '</span>' : '') + '</button>').join("");
+
+    return '<div class="stack">' +
+      '<section class="card flat"><div class="split-head"><div><h2>1. What are you making?</h2><p class="muted small" style="margin:4px 0 0">Choose the object first. The method comes second.</p></div><span class="pill">' + state.target + '</span></div><div class="grid three">' + targetCards + '</div></section>' +
+      '<section class="card flat"><div class="split-head"><div><h2>2. How?</h2><p class="muted small" style="margin:4px 0 0">Every method uses the same validation.</p></div>' + providerBadge() + '</div><div class="grid four">' + methods + '</div></section>' +
+      '<section class="grid two"><div class="card">' + renderForm() + '</div><aside class="card tight"><h3>What happens</h3><div class="stack small muted" style="margin-top:9px">' +
+      '<p style="margin:0"><strong style="color:var(--text)">No preview.</strong> Generated content saves only after the whole result passes validation.</p>' +
+      '<p style="margin:0"><strong style="color:var(--text)">Delete is the undo.</strong> Packs and decks can be removed from Packs after typing their name.</p>' +
+      '<p style="margin:0"><strong style="color:var(--text)">Names:</strong> Write uses your name. Generate and Chat let the AI name it. A collision gets 2, 3, and so on.</p>' +
+      '<p style="margin:0"><strong style="color:var(--text)">Imports are strict.</strong> A pack file under Deck is refused; switch target instead.</p>' +
+      '</div></aside></section></div>';
+  }
+
+  function providerPrompt() {
+    if (state.provider === "ready") return "";
+    const noProfile = state.provider === "none";
+    return '<div class="notice warn"><strong>' + (noProfile ? "No provider profile yet" : "The provider key is missing") + '</strong>' +
+      '<p>' + (noProfile ? "Generate needs a provider URL and model. Save them in Settings, then come back." : "Save the key in Settings. Your draft stays here.") + '</p>' +
+      '<div class="row" style="margin-top:9px"><button class="btn small" onclick="toast(\'In the app this opens Settings - Provider.\',\'info\')">Set up provider</button>' +
+      '<button class="btn small ghost" onclick="setMethod(\'chat\')">Use Chat instead</button></div></div>';
+  }
+
+  function renderForm() {
+    const titles = { pack: "New pack", deck: "New deck", cards: "New cards" };
+    const methods = { write: "Write", generate: "Generate", chat: "Chat", import: "Import" };
+    let body = "";
+    if (state.method === "generate" && state.provider !== "ready") {
+      body = providerPrompt() + renderGenerateFields();
+    } else if (state.method === "generate") {
+      body = renderGenerateFields();
+    } else if (state.method === "write") {
+      body = renderWriteFields();
+    } else if (state.method === "chat") {
+      body = renderChatFields();
+    } else {
+      body = renderImportFields();
+    }
+    return '<div class="split-head"><h2>' + methods[state.method] + ' \u2192 ' + titles[state.target] + '</h2><span class="pill">' + (state.method === "generate" ? "one batch, all or nothing" : "design simulation") + '</span></div>' + body;
+  }
+
+  function packOptions() {
+    return state.packs.map((pack) => '<option value="' + esc(pack.name) + '">' + esc(pack.name) + '</option>').join("");
+  }
+  function deckOptions(selected) {
+    return state.packs.flatMap((pack) => pack.decks.map((deck) => {
+      const value = deckKey(pack, deck);
+      return '<option value="' + esc(value) + '"' + (value === selected ? " selected" : "") + '>' + esc(pack.name) + ' \u2192 ' + esc(deck.name) + ' (' + deck.cards + ')</option>';
+    })).join("");
+  }
+
+  function renderWriteFields() {
+    if (state.target === "pack") {
+      return '<div class="stack"><label>Pack name<input class="field" id="packName" placeholder="My pack"></label>' +
+        '<label>First deck name<input class="field" id="firstDeck" placeholder="Basics"></label>' +
+        '<p class="small muted" style="margin:0">The deck can start empty. Cards come later through Create \u2192 Cards.</p>' +
+        '<div class="row"><button class="btn primary" onclick="writePack()">Create empty pack</button></div></div>';
+    }
+    if (state.target === "deck") {
+      return '<div class="stack"><label>Parent pack<select id="parentPack">' + packOptions() + '</select></label>' +
+        '<label>Deck name<input class="field" id="deckName" placeholder="Everyday verbs"></label>' +
+        '<p class="small muted" style="margin:0">The deck can start empty. Cards come later through Create \u2192 Cards.</p>' +
+        '<div class="row"><button class="btn primary" onclick="writeDeck()">Create empty deck</button></div></div>';
+    }
+    return '<div class="stack"><label>Where<select id="deckSelect">' + deckOptions(state.preselectedDeck) + '</select></label>' +
+      '<label>Front<input class="field" id="front" placeholder="To jest kot."></label>' +
+      '<label>Back<input class="field" id="back" placeholder="This is a cat."></label>' +
+      '<div class="row"><button class="btn primary" onclick="writeCard()">Add card</button></div></div>';
+  }
+
+  function renderGenerateFields() {
+    if (state.provider !== "ready") {
+      return state.target === "cards" ? '<p class="small muted">The current target is Cards. Once the provider is ready, this form generates into the chosen deck.</p>' :
+        '<p class="small muted">Once the provider is ready, this form generates the ' + state.target + ' and saves it after validation.</p>';
+    }
+    if (state.target === "pack") {
+      return '<div class="stack"><div class="notice"><strong>The provider names the new pack.</strong><p>If the name already exists, the app appends 2, 3, and so on. The provider also decides the decks.</p></div>' +
+        '<label>Total cards<input class="field" id="count" type="number" min="1" max="20" value="10"></label>' +
+        '<div class="row"><button class="btn primary" onclick="generatePack()">Generate and save pack</button></div></div>';
+    }
+    if (state.target === "deck") {
+      return '<div class="stack"><label>Parent pack<select id="parentPack">' + packOptions() + '</select></label>' +
+        '<div class="notice"><strong>The provider names the new deck.</strong><p>A collision gets 2, 3, and so on inside the chosen pack.</p></div>' +
+        '<label>Cards in the new deck<input class="field" id="count" type="number" min="1" max="20" value="5"></label>' +
+        '<div class="row"><button class="btn primary" onclick="generateDeck()">Generate and save deck</button></div></div>';
+    }
+    return '<div class="stack"><label>Where<select id="deckSelect">' + deckOptions(state.preselectedDeck) + '</select></label>' +
+      '<label>Cards to add<input class="field" id="count" type="number" min="1" max="20" value="5"></label>' +
+      '<div class="row"><button class="btn primary" onclick="generateCards()">Generate and save cards</button></div></div>';
+  }
+
+  function chatPrompt() {
+    const parent = val("parentPack") || (state.packs[0] && state.packs[0].name) || "Pack";
+    if (state.target === "pack") {
+      return "Create a new pack. Choose a pack name and make at least one deck. Return one JSON object and nothing else.\n\n" +
+        '{"pack":{"name":"..."},"decks":[{"id":"lowercase-id","name":"Deck name"}],"cards":[{"deckId":"lowercase-id","front":"...","back":"..."}]}';
+    }
+    if (state.target === "deck") {
+      return "Create a new deck inside the pack \"" + parent + "\". Choose a deck name. Return JSON only.\n\n" +
+        '{"decks":[{"id":"lowercase-id","name":"Deck name"}],"cards":[{"deckId":"lowercase-id","front":"...","back":"..."}]}';
+    }
+    return "Add cards to pack \"" + parent + "\" and the chosen deck. Return JSON only.\n\n" +
+      '{"cards":[{"front":"...","back":"..."}]}';
+  }
+
+  function renderChatFields() {
+    const parent = state.target === "pack" ? "" : '<label>Parent ' + (state.target === "deck" ? "pack" : "deck") + '<select id="parentPack" onchange="render()">' + packOptions() + '</select></label>';
+    const deck = state.target === "cards" ? '<label>Deck<select id="deckSelect">' + deckOptions(state.preselectedDeck) + '</select></label>' : "";
+    const prompt = chatPrompt();
+    return '<div class="stack">' + parent + deck +
+      '<div class="prompt-box"><div class="row spread"><strong>Prompt to copy</strong><span class="badge">AI chooses the name</span></div><pre id="chatPrompt">' + esc(prompt) + '</pre></div>' +
+      '<div class="row"><button class="btn" onclick="copyPrompt()">Copy prompt</button><button class="btn" onclick="useChatSample()">Use a sample answer</button></div>' +
+      '<label>Paste the chat answer<textarea id="chatText" placeholder="Paste the JSON here"></textarea></label>' +
+      '<div class="row"><button class="btn primary" onclick="importChat()">Check and save</button></div></div>';
+  }
+
+  function renderImportFields() {
+    const label = state.target === "pack" ? "a whole pack" : state.target === "deck" ? "decks only" : "cards only";
+    const parent = state.target === "pack" ? "" : '<label>Parent ' + (state.target === "deck" ? "pack" : "deck") + '<select id="parentPack">' + packOptions() + '</select></label>';
+    const deck = state.target === "cards" ? '<label>Deck<select id="deckSelect">' + deckOptions(state.preselectedDeck) + '</select></label>' : "";
+    return '<div class="stack">' + parent + deck +
+      '<div class="notice"><strong>This target accepts ' + label + '.</strong><p>A different kind is refused; switch target instead of letting Import guess.</p></div>' +
+      '<label>Choose a file<input class="field" type="file" accept=".json,application/json" onchange="readImportFile(this)"></label>' +
+      '<label>Or paste the text<textarea id="importText" placeholder="Paste the JSON here"></textarea></label>' +
+      '<div class="row"><button class="btn" onclick="useImportSample()">Use a matching sample</button><button class="btn" onclick="useWrongSample()">Use the wrong kind</button></div>' +
+      '<div class="row"><button class="btn primary" onclick="importText()">Check and import</button></div></div>';
+  }
+
+  function writePack() {
+    const name = val("packName").trim();
+    const deckName = val("firstDeck").trim() || "Basics";
+    if (!name) return toast("Give the pack a name.", "error");
+    if (byPack(name)) return toast("A pack with that name already exists. Learner-written names do not auto-number.", "error");
+    state.packs.push({ name, version: "1.0.0", decks: [{ id: slug(deckName), name: deckName, cards: 0 }] });
+    state.expanded.add(name);
+    state.tab = "packs";
+    state.lastCreated = name;
+    toast('Created "' + name + '" with an empty deck.');
+    render();
+  }
+  function writeDeck() {
+    const pack = byPack(val("parentPack"));
+    const name = val("deckName").trim();
+    if (!pack) return toast("Choose a parent pack.", "error");
+    if (!name) return toast("Give the deck a name.", "error");
+    if (pack.decks.some((deck) => deck.name === name)) return toast("That pack already has a deck with this name.", "error");
+    pack.decks.push({ id: slug(name), name, cards: 0 });
+    state.expanded.add(pack.name);
+    state.tab = "packs";
+    state.lastCreated = pack.name;
+    toast('Created deck "' + name + '" in ' + pack.name + ".");
+    render();
+  }
+  function writeCard() {
+    const placement = parseDeckKey(val("deckSelect"));
+    const front = val("front").trim();
+    const back = val("back").trim();
+    if (!placement) return toast("Choose a deck.", "error");
+    if (!front || !back) return toast("Add both sides of the card.", "error");
+    placement.deck.cards += 1;
+    state.cards.push({ id: "c" + Date.now(), pack: placement.pack.name, deck: placement.deck.name, front, back, retired: false });
+    state.tab = "cards";
+    toast("Card added to " + placement.pack.name + " \u2192 " + placement.deck.name + ".");
+    render();
+  }
+  function generatePack() {
+    const count = Math.min(20, Math.max(1, Number(val("count")) || 10));
+    const base = "Polish Basics";
+    const name = uniquePackName(base);
+    const pack = { name, version: "1.0.0", decks: [
+      { id: "cases", name: "Cases", cards: Math.ceil(count / 2) },
+      { id: "verb-aspect", name: "Verb aspect", cards: Math.floor(count / 2) }
+    ]};
+    state.packs.push(pack);
+    for (let i = 1; i <= count; i += 1) {
+      const deck = pack.decks[i % 2];
+      state.cards.push({ id: "g" + Date.now() + i, pack: name, deck: deck.name, front: "Generated front " + i, back: "Generated back " + i, retired: false });
+    }
+    state.expanded.add(name);
+    state.tab = "packs";
+    state.lastCreated = name;
+    toast('Provider named the pack "' + name + '"' + (name !== base ? " (the base name was taken)" : "") + " and saved " + count + " cards.");
+    render();
+  }
+  function generateDeck() {
+    const pack = byPack(val("parentPack"));
+    const count = Math.min(20, Math.max(1, Number(val("count")) || 5));
+    if (!pack) return toast("Choose a parent pack.", "error");
+    const base = "Cases";
+    const name = uniqueDeckName(pack, base);
+    pack.decks.push({ id: slug(name), name, cards: count });
+    for (let i = 1; i <= count; i += 1) {
+      state.cards.push({ id: "g" + Date.now() + i, pack: pack.name, deck: name, front: "Generated front " + i, back: "Generated back " + i, retired: false });
+    }
+    state.expanded.add(pack.name);
+    state.tab = "packs";
+    state.lastCreated = pack.name;
+    toast('Provider named the deck "' + name + '"' + (name !== base ? " (the base name was taken)" : "") + " and saved " + count + " cards.");
+    render();
+  }
+  function generateCards() {
+    const placement = parseDeckKey(val("deckSelect"));
+    const count = Math.min(20, Math.max(1, Number(val("count")) || 5));
+    if (!placement) return toast("Choose a deck.", "error");
+    placement.deck.cards += count;
+    for (let i = 1; i <= count; i += 1) {
+      state.cards.push({ id: "g" + Date.now() + i, pack: placement.pack.name, deck: placement.deck.name, front: "Generated front " + i, back: "Generated back " + i, retired: false });
+    }
+    state.tab = "cards";
+    toast("Saved " + count + " generated cards in " + placement.pack.name + " \u2192 " + placement.deck.name + ".");
+    render();
+  }
+  function copyPrompt() {
+    const text = $("chatPrompt").textContent;
+    navigator.clipboard.writeText(text).then(() => toast("Prompt copied.")).catch(() => toast("Copy is blocked here; select the prompt text instead.", "info"));
+  }
+  function sampleChat() {
+    if (state.target === "pack") return '{"pack":{"name":"Slow Polish Basics"},"decks":[{"id":"verbs","name":"Everyday verbs"}],"cards":[{"deckId":"verbs","front":"i\u015b\u0107","back":"to go (on foot)"}]}';
+    if (state.target === "deck") return '{"decks":[{"id":"cases-2","name":"Cases"}],"cards":[{"deckId":"cases-2","front":"To jest kot.","back":"This is a cat."}]}';
+    return '{"cards":[{"front":"Gdzie jest dworzec?","back":"Where is the station?"}]}';
+  }
+  function useChatSample() {
+    if ($("chatText")) $("chatText").value = sampleChat();
+  }
+  function importChat() {
+    const text = val("chatText").trim();
+    if (!text) return toast("Paste the chat answer first.", "error");
+    importPayload(text, true);
+  }
+  function readImportFile(input) {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if ($("importText")) $("importText").value = String(reader.result || "");
+      toast('Read "' + file.name + '".');
+    };
+    reader.readAsText(file);
+  }
+  function sampleImport() {
+    if (state.target === "pack") return '{"pack":{"name":"Slow Polish Basics"},"decks":[{"id":"verbs","name":"Everyday verbs"}],"cards":[{"deckId":"verbs","front":"i\u015b\u0107","back":"to go (on foot)"}]}';
+    if (state.target === "deck") return '{"decks":[{"id":"cases-2","name":"Cases"}],"cards":[{"deckId":"cases-2","front":"To jest kot.","back":"This is a cat."}]}';
+    return '{"cards":[{"front":"Gdzie jest dworzec?","back":"Where is the station?"}]}';
+  }
+  function wrongImport() {
+    if (state.target === "pack") return '{"cards":[{"front":"To jest kot.","back":"This is a cat."}]}';
+    if (state.target === "deck") return '{"pack":{"name":"My pack"},"decks":[]}';
+    return '{"decks":[{"id":"cases","name":"Cases"}]}';
+  }
+  function useImportSample() { if ($("importText")) $("importText").value = sampleImport(); }
+  function useWrongSample() { if ($("importText")) $("importText").value = wrongImport(); }
+  function importText() {
+    const text = val("importText").trim();
+    if (!text) return toast("Paste the import text or choose a file.", "error");
+    importPayload(text, false);
+  }
+  function importPayload(text, fromChat) {
+    let payload;
+    try { payload = JSON.parse(text); } catch { return toast("That is not valid JSON.", "error"); }
+    if (state.target === "pack") {
+      if (!payload || typeof payload !== "object" || !payload.pack || !Array.isArray(payload.decks)) {
+        return toast("That is not a whole pack. Switch Create to " + (payload && Array.isArray(payload.cards) ? "Cards" : "the matching target") + ".", "error");
+      }
+      const base = typeof payload.pack === "string" ? payload.pack : payload.pack.name;
+      if (!base) return toast("The pack has no name.", "error");
+      if (byPack(base) && !fromChat) return toast("A pack with that name already exists. A newer version is required to update it.", "error");
+      const name = uniquePackName(base);
+      const decks = payload.decks.map((deck) => ({ id: deck.id || slug(deck.name), name: deck.name, cards: 0 }));
+      if (decks.length === 0) return toast("A pack needs at least one deck.", "error");
+      const cards = Array.isArray(payload.cards) ? payload.cards : [];
+      cards.forEach((card) => {
+        const deck = decks.find((entry) => entry.id === card.deckId) || decks[0];
+        if (deck) deck.cards += 1;
+        state.cards.push({ id: "i" + Date.now() + Math.random(), pack: name, deck: deck ? deck.name : decks[0].name, front: card.front || "Imported front", back: card.back || "Imported back", retired: false });
+      });
+      state.packs.push({ name, version: typeof payload.pack.version === "string" ? payload.pack.version : "1.0.0", decks });
+      state.expanded.add(name);
+      state.tab = "packs";
+      state.lastCreated = name;
+      return toast((fromChat ? "Chat answer" : "Pack") + ' saved as "' + name + '"' + (name !== base ? " (auto-numbered)" : "") + ".");
+    }
+    if (state.target === "deck") {
+      if (!payload || !Array.isArray(payload.decks) || payload.pack) {
+        return toast("That is not a decks-only file for this target. Switch Create to Pack.", "error");
+      }
+      const pack = byPack(val("parentPack"));
+      if (!pack) return toast("Choose a parent pack.", "error");
+      if (payload.decks.length === 0) return toast("There are no decks in that file.", "error");
+      const base = payload.decks[0].name || payload.decks[0].id || "Imported deck";
+      const name = uniqueDeckName(pack, base);
+      const deck = { id: slug(name), name, cards: 0 };
+      pack.decks.push(deck);
+      (Array.isArray(payload.cards) ? payload.cards : []).forEach((card) => {
+        deck.cards += 1;
+        state.cards.push({ id: "i" + Date.now() + Math.random(), pack: pack.name, deck: name, front: card.front || "Imported front", back: card.back || "Imported back", retired: false });
+      });
+      state.expanded.add(pack.name);
+      state.tab = "packs";
+      state.lastCreated = pack.name;
+      return toast('Deck "' + name + '" joined ' + pack.name + ".");
+    }
+    if (!payload || !Array.isArray(payload.cards) || payload.decks || payload.pack) {
+      return toast("That is not a cards-only file for this target. Switch Create to Pack or Deck.", "error");
+    }
+    const placement = parseDeckKey(val("deckSelect"));
+    if (!placement) return toast("Choose a deck.", "error");
+    placement.deck.cards += payload.cards.length;
+    payload.cards.forEach((card) => {
+      state.cards.push({ id: "i" + Date.now() + Math.random(), pack: placement.pack.name, deck: placement.deck.name, front: card.front || "Imported front", back: card.back || "Imported back", retired: false });
+    });
+    state.tab = "cards";
+    toast(payload.cards.length + " cards joined " + placement.pack.name + " \u2192 " + placement.deck.name + ".");
+  }
+
+  function renderPacks() {
+    const query = state.filter.toLowerCase();
+    const shown = state.packs.filter((pack) => !query || (pack.name + " " + pack.decks.map((deck) => deck.name).join(" ")).toLowerCase().includes(query));
+    const rows = shown.map((pack) => {
+      const open = state.expanded.has(pack.name);
+      const decks = open ? '<div class="deck-list">' + pack.decks.map((deck) =>
+        '<div class="deck-row"><div class="pack-main"><div class="pack-name">' + esc(deck.name) + '</div><div class="muted tiny">' + deck.cards + ' cards</div></div>' +
+        '<div class="row"><button class="btn small" onclick="addCardsTo(\'' + esc(pack.name).replace(/'/g, "\\'") + '\',\'' + esc(deck.id).replace(/'/g, "\\'") + '\')">Add cards</button>' +
+        '<button class="btn small danger" onclick="askDelete(\'deck\',\'' + esc(pack.name).replace(/'/g, "\\'") + '\',\'' + esc(deck.name).replace(/'/g, "\\'") + '\')">Delete deck</button></div></div>').join("") + '</div>' : "";
+      return '<div data-pack-highlight="' + esc(pack.name) + '">' +
+        '<div class="pack-row"><button class="btn small ghost" onclick="togglePack(\'' + esc(pack.name).replace(/'/g, "\\'") + '\')" aria-label="' + (open ? "Collapse" : "Expand") + '">' + (open ? "v" : ">") + '</button>' +
+        '<div class="pack-main"><div class="pack-name">' + esc(pack.name) + '</div><div class="muted tiny">v' + esc(pack.version) + ' \u00b7 ' + pack.decks.length + ' decks \u00b7 ' + totalCards(pack) + ' cards</div></div>' +
+        '<div class="row"><button class="btn small" onclick="toast(\'Export is unchanged; it writes one pack file.\',\'info\')">Export</button>' +
+        '<button class="btn small danger" onclick="askDelete(\'pack\',\'' + esc(pack.name).replace(/'/g, "\\'") + '\',\'\')">Delete pack</button></div></div>' + decks + '</div>';
+    }).join("");
+    return '<section class="card"><div class="split-head"><h2>Packs</h2><span class="pill">browse only</span></div>' +
+      '<div class="row" style="margin-bottom:12px"><input class="field" style="flex:1 1 280px" placeholder="Search packs and decks" value="' + esc(state.filter) + '" oninput="state.filter=this.value;render()">' +
+      '<button class="btn primary" onclick="setTab(\'create\');setTarget(\'pack\')">Create a pack</button></div>' +
+      (shown.length ? rows : '<div class="empty"><strong>No packs match.</strong>Try a different search.</div>') + '</section>';
+  }
+  function togglePack(name) {
+    if (state.expanded.has(name)) state.expanded.delete(name); else state.expanded.add(name);
+    render();
+  }
+  function addCardsTo(packName, deckId) {
+    state.tab = "create";
+    state.target = "cards";
+    state.method = "write";
+    state.preselectedDeck = packName + "|" + deckId;
+    toast("Create \u2192 Cards, with " + packName + " preselected.", "info");
+    render();
+  }
+
+  function renderCards() {
+    const query = state.filter.toLowerCase();
+    const shown = state.cards.filter((card) => {
+      if (!state.showRetired && card.retired) return false;
+      return !query || (card.front + " " + card.back + " " + card.pack + " " + card.deck).toLowerCase().includes(query);
+    });
+    const rows = shown.map((card) => {
+      if (state.editingCard === card.id) {
+        return '<div class="card-row"><div class="stack" style="flex:1"><input class="field" id="editFront" value="' + esc(card.front) + '"><input class="field" id="editBack" value="' + esc(card.back) + '"></div>' +
+          '<div class="row"><button class="btn small primary" onclick="saveCard(\'' + card.id + '\')">Save</button><button class="btn small" onclick="state.editingCard=null;render()">Cancel</button></div></div>';
+      }
+      return '<div class="card-row"><div class="stack" style="flex:1"><div><strong>' + esc(card.front) + '</strong> <span class="muted">\u2192 ' + esc(card.back) + '</span></div>' +
+        '<div class="muted tiny">' + esc(card.pack) + ' \u2192 ' + esc(card.deck) + (card.retired ? ' \u00b7 retired' : '') + '</div></div>' +
+        '<div class="row"><button class="btn small" onclick="state.editingCard=\'' + card.id + '\';render()">Edit</button>' +
+        '<button class="btn small danger" onclick="deleteCard(\'' + card.id + '\')">Delete</button></div></div>';
+    }).join("");
+    return '<section class="card"><div class="split-head"><h2>Cards</h2><span class="pill">manage existing cards</span></div>' +
+      '<div class="row" style="margin-bottom:12px"><input class="field" style="flex:1 1 280px" placeholder="Search cards" value="' + esc(state.filter) + '" oninput="state.filter=this.value;render()">' +
+      '<button class="btn" onclick="state.showRetired=!state.showRetired;render()">' + (state.showRetired ? "Hide retired" : "Show retired") + '</button>' +
+      '<button class="btn primary" onclick="setTab(\'create\');setTarget(\'cards\')">Create cards</button></div>' +
+      '<p class="muted small">Adding cards lives in Create. This tab only edits and removes cards.</p>' +
+      (rows ? rows : '<div class="empty"><strong>No cards match.</strong>Try a different search or add cards in Create.</div>') + '</section>';
+  }
+  function saveCard(id) {
+    const card = state.cards.find((entry) => entry.id === id);
+    if (!card) return;
+    card.front = val("editFront").trim() || card.front;
+    card.back = val("editBack").trim() || card.back;
+    state.editingCard = null;
+    toast("Card saved.");
+    render();
+  }
+  function deleteCard(id) {
+    state.cards = state.cards.filter((card) => card.id !== id);
+    toast("Card deleted.");
+    render();
+  }
+
+  function askDelete(kind, packName, deckName) {
+    state.deleteTarget = { kind, packName, deckName };
+    renderModal();
+    setTimeout(() => { const input = $("confirmName"); if (input) input.focus(); }, 30);
+  }
+  function closeDelete() {
+    state.deleteTarget = null;
+    renderModal();
+  }
+  function renderModal() {
+    const target = state.deleteTarget;
+    if (!target) { $("modal").innerHTML = ""; return; }
+    const name = target.kind === "pack" ? target.packName : target.deckName;
+    $("modal").innerHTML = '<div class="modal-wrap" onclick="if(event.target===this)closeDelete()"><div class="modal" role="dialog" aria-modal="true">' +
+      '<h2>Delete ' + target.kind + '?</h2><p class="muted small">This removes ' + (target.kind === "pack" ? "the pack, its decks, its cards, and their evidence." : "the deck, its cards, and their evidence.") + ' Type the name to confirm.</p>' +
+      '<label style="margin-top:10px">' + esc(name) + '<input class="field" id="confirmName" oninput="checkDelete(this.value)"></label>' +
+      '<div class="row"><button class="btn" onclick="closeDelete()">Cancel</button><button class="btn danger" id="confirmDelete" disabled onclick="doDelete()">Delete</button></div></div></div>';
+    const input = $("confirmName");
+    if (input) input.addEventListener("keydown", (event) => { if (event.key === "Escape") closeDelete(); });
+  }
+  function checkDelete(value) {
+    const target = state.deleteTarget;
+    if (!target) return;
+    const name = target.kind === "pack" ? target.packName : target.deckName;
+    $("confirmDelete").disabled = value !== name;
+  }
+  function doDelete() {
+    const target = state.deleteTarget;
+    if (!target) return;
+    if (target.kind === "pack") {
+      state.packs = state.packs.filter((pack) => pack.name !== target.packName);
+      state.cards = state.cards.filter((card) => card.pack !== target.packName);
+      state.expanded.delete(target.packName);
+      toast('Deleted pack "' + target.packName + '".');
+    } else {
+      const pack = byPack(target.packName);
+      if (pack && pack.decks.length === 1) {
+        state.deleteTarget = null;
+        toast("A pack needs at least one deck. Delete the pack instead.", "error");
+        render();
+        return;
+      }
+      if (pack) {
+        pack.decks = pack.decks.filter((deck) => deck.name !== target.deckName);
+        state.cards = state.cards.filter((card) => !(card.pack === target.packName && card.deck === target.deckName));
+      }
+      toast('Deleted deck "' + target.deckName + '" from ' + target.packName + ".");
+    }
+    state.deleteTarget = null;
+    render();
+  }
+  document.addEventListener("keydown", (event) => { if (event.key === "Escape" && state.deleteTarget) closeDelete(); });
+  render();
+</script>
+</body>
+</html>
