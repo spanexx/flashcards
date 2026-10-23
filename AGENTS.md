@@ -12,6 +12,7 @@
 - **NEVER PUT A SERVER AND A TEST IN ONE COMMAND** - start a server detached, then check its port in a separate step. A server start is not a test.
 - **EVERY WAIT MUST BE BOUNDED** - give long commands an explicit timeout. A command that produces no new output is stuck: stop it and inspect the process or port. Do not wait on it again.
 - **RUN THE SMALLEST CHECK FIRST** - one targeted check, then the full suite once at the end. When a check passes, stop and report it. Repeating the same check is not verification.
+- **RUN LONG WORK DETACHED** - start servers, browser lanes, builds and test suites in the background with a log; poll the log with a bound.
 - **CLEAN UP BACKGROUND PROCESSES** - stop test servers and fake providers when the check is done.
 
 ## BEFORE YOU COMMIT
