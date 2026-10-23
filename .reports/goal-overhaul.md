@@ -110,4 +110,6 @@
 
 **Pivot:** none
 
+**Commit note:** The first ledger commit message was truncated to `docs:` by shell quoting. Per `docs/ethics/commit.md` it was not amended; the follow-up commit records the correction and uses a message file.
+
 **Next:** Start Pack 3 `study-experience` from `main` in a new isolated worktree.
