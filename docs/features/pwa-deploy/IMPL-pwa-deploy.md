@@ -1,6 +1,6 @@
 # IMPL: PWA deploy
 
-Status: Implemented under delegated authority, 2026-10-23
+Status: Shipped and live, 2026-10-23
 Date: 2026-10-23
 Pack: `pwa-deploy`
 PRD-TRD: `PRD-TRD-pwa-deploy.md`
@@ -130,7 +130,8 @@ Implemented on 2026-10-23 in the `feature/pwa-deploy` worktree.
 - `check-pwa.mjs` passed the base-path export and is part of `npm run build`.
 - The responsive pass fixed a real phone bug: the one-column shell was
   stretching the top bar to the viewport height, leaving a large blank band.
-- The Pages workflow is ready; the live deploy is verified after landing.
+- The Pages workflow deployed `v1/out`; the live app, manifest and worker all
+  answer 200 at `https://spanexx.github.io/flashcards/`.
 
 Verification:
 
@@ -138,10 +139,19 @@ Verification:
 - `npm run lint` passed.
 - `NEXT_PUBLIC_BASE_PATH=/flashcards npm run build` passed.
 - `NEXT_PUBLIC_BASE_PATH=/flashcards npm test` passed: 43 files, 439 tests.
-- External Edge lane passed: base path seed, valid manifest, no installability
-  errors, scoped worker, 49-file cache, controlled page, no phone overflow,
-  install button clear of navigation, study/Create phone fit, all four screens
-  at 390/768/1280, offline reload.
+- `NEXT_PUBLIC_BASE_PATH=/flashcards npm run simulate:create-flow` passed on the
+  built tree.
+- External Edge lane passed locally and against the live Pages URL: base path
+  seed, valid manifest, no installability errors, scoped worker, 49-file cache,
+  controlled page, no phone overflow, install button clear of navigation,
+  study/Create phone fit, all four screens at 390/768/1280, offline reload.
+
+Landing:
+
+- Feature commit `682e93c` fast-forwarded `main` from `2c10fef`.
+- Pages run `39908324755` passed: build 53s, deploy 16s.
+- The workflow's live curl gate passed; the live Edge lane also passed against
+  `https://spanexx.github.io/flashcards/`.
 
 Deviations:
 

@@ -1,6 +1,6 @@
 # PRD-TRD: PWA deploy
 
-Status: Implemented under delegated authority, 2026-10-23
+Status: Shipped and live, 2026-10-23
 Date: 2026-10-23
 Pack: `pwa-deploy`
 GRILL: `GRILL-pwa-deploy.txt`
@@ -128,6 +128,8 @@ build gate that refuses an export that would break on Pages.
 - The artifact is `v1/out`; the deploy job uses `actions/deploy-pages@v4`.
 - After deploy, the workflow curls the page URL, then the manifest and `sw.js`.
   It retries six times, ten seconds apart, and fails if the page is not 200.
+- Live proof on 2026-10-23: run `39908324755` passed; the app, manifest and
+  worker answer 200 at `https://spanexx.github.io/flashcards/`.
 
 ## 4. Build validation
 

@@ -141,3 +141,31 @@
 **Pivot:** none
 
 **Next:** Start Pack 4 `pwa-deploy` from `main` in a new isolated worktree.
+
+### 9 — 2026-10-23T07:30
+
+**Action:** Built Pack 4 in `feature/pwa-deploy`: base-path helper and static export base path, standalone manifest and generated icons, fixed top-right install button with prompt/manual paths, production service-worker boot, post-build precache worker, hard export checker, GitHub Pages workflow, phone/tablet/desktop CSS fixes, tests and docs.
+
+**Verification:** `npm run typecheck`, `npm run lint` and `NEXT_PUBLIC_BASE_PATH=/flashcards npm run build` passed. The build wrote a 49-file precache; `check-pwa` passed with 53 files and 51 precache lines. Full `NEXT_PUBLIC_BASE_PATH=/flashcards npm test` passed 43 files / 439 tests. The external Edge lane passed locally: valid manifest, no installability errors, scoped worker, controlled page, 49 cached files, offline reload, no overflow at 390/768/1280, and the study/Create screens fit a phone. Screenshots are `pwa-phone.png`, `pwa-desktop.png` and `pwa-create-phone.png`.
+
+**Verdict:** pass
+
+**Failure class:** The first installability run used the WSL LAN address and Edge reported `not-from-secure-origin`; the lane moved to `127.0.0.1`. The one-column shell stretched the sidebar to the viewport height, leaving a blank band; `align-content: start` fixed it. A detached Windows static-server start timed out because `Start-Process` was given one redirect; it was restarted detached with separate output files. The install prompt is single-use; the button now clears the prompt after `userChoice` and on a prompt error. `check-pwa` now ignores source maps so its file set matches the worker's.
+
+**Pivot:** Serve the lane from a secure local origin. Hide standalone mode in CSS instead of a synchronous state write in an effect. Keep `skipWaiting` out so a deploy cannot swap assets under an open page.
+
+**Next:** Commit Pack 4, fast-forward `main`, push and verify Pages.
+
+### 10 — 2026-10-23T07:58
+
+**Action:** Committed Pack 4 as `682e93c`, fast-forwarded `main` from `2c10fef`, pushed `main`, and watched the Pages workflow. The deploy published `v1/out`. The workflow's live curl gate passed, then the same external Edge lane passed against `https://spanexx.github.io/flashcards/`. The local WSL/Windows static servers and the headless Edge profile were stopped and removed.
+
+**Verification:** Pages run `39908324755` passed: build 53s, deploy 16s. The live page, manifest, worker, library route and 192px icon all answer 200. The live lane found a valid manifest, no installability errors, scope `/flashcards/`, 49 cached files, a controlled page, no overflow at 390/768/1280, phone-fit study/Create screens and an offline reload. `NEXT_PUBLIC_BASE_PATH=/flashcards npm run simulate:create-flow` also passed on the built tree. The final gate checks typecheck, lint, build, 439 tests and the live lane are green.
+
+**Verdict:** pass
+
+**Failure class:** The main checkout's `node_modules` was built for Windows, so the final `simulate:create-flow` failed there with a missing Rolldown native binding; the same command passed in the WSL worktree that had a Linux `npm ci`. No source change was needed.
+
+**Pivot:** Run the final simulation from the Linux worktree; do not repair the Windows dependency tree for this pack.
+
+**Next:** All four packs are landed and live. Record the final Pack 4 docs and ledger state, then close the goal.
