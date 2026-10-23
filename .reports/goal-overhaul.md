@@ -69,3 +69,17 @@
 **Pivot:** none
 
 **Next:** Commit and merge Pack 1, then start Pack 2 `background-jobs` in a new worktree.
+
+### 4 — 2026-10-23T05:05
+
+**Action:** Landed Pack 1 on `main` as `6dcbd5f` and recorded the detached-command rule as `37ae40b`; pushed `main` to origin.
+
+**Verification:** `git push origin main` updated `a9539c4..37ae40b`. The landed tree matches the tested feature tree; the only later change is the `AGENTS.md` command rule.
+
+**Verdict:** pass
+
+**Failure class:** The first feature commit message was truncated to `feat:` because shell quoting split the `-m` text at a semicolon. Per `docs/ethics/commit.md`, the commit was not amended. The same tested tree was landed as a clean squash commit instead.
+
+**Pivot:** Land Pack 1 through a clean squash commit rather than merging the malformed feature commit.
+
+**Next:** Start Pack 2 `background-jobs` from `main` in a new isolated worktree.
