@@ -6,16 +6,18 @@
 // 2026-10-22 opencode: the learner's brief reaches every generation prompt, and
 // the requested style and pack language reach the generated card builder.
 // [pack: creation-control]
+// 2026-10-23 opencode: a generation can run from a stored prepared request, and
+// a timeout is marked for the background job retry. [pack: background-jobs]
 
 import type { Card, ProviderStatus } from "@/lib/shared/types";
-import { callProvider } from "@/lib/provider/client";
+import { callProvider, ProviderTimeoutError } from "@/lib/provider/client";
 import {
   generatedCardsBundle,
   generatedDeckBundle,
   generatedPackBundle,
 } from "@/lib/provider/generate";
 import { pickPackHint, requestTutorHint } from "@/lib/provider/hint";
-import { holdPrepared, takePrepared } from "@/lib/provider/prepare";
+import { holdPrepared, takePrepared, type PreparedRequest } from "@/lib/provider/prepare";
 import {
   buildDeckGenerationPrompt,
   buildGenerationPrompt,
@@ -234,12 +236,23 @@ function importFailure(issues: Array<{ field: string; message: string }>): Error
   );
 }
 
-/** Send a held generation prompt and keep the whole batch only if it is valid. */
+/**
+ * Send a held generation prompt. The synchronous route takes an id; a job
+ * already owns the prepared request, so both paths share the body below.
+ */
 export async function generatePrepared(requestId: string): Promise<GenerationResult> {
   if (!requestId) throw new Error("A prepared prompt id is needed.");
   const prepared = takePrepared(requestId);
   if (!prepared || prepared.kind !== "generation") {
     throw new Error("That prepared prompt has expired. Prepare it again.");
+  }
+  return generateFromPrepared(prepared);
+}
+
+/** Send one prepared generation prompt and keep the whole batch only if it is valid. */
+export async function generateFromPrepared(prepared: PreparedRequest): Promise<GenerationResult> {
+  if (prepared.kind !== "generation") {
+    throw new Error("That prepared prompt is not a generation request.");
   }
   const config = await providerConfig();
   if (!config.ok) throw new Error(config.message);
@@ -253,7 +266,10 @@ export async function generatePrepared(requestId: string): Promise<GenerationRes
     model: config.config.model,
     prompt: prepared.display,
   });
-  if (!result.ok) throw new Error(result.message);
+  if (!result.ok) {
+    if (result.reason === "timeout") throw new ProviderTimeoutError(result.message);
+    throw new Error(result.message);
+  }
 
   // The brief decides which style every line must use, so it travels with the hold.
   const cardStyle = prepared.brief?.cardStyle;

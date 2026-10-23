@@ -5,10 +5,13 @@
 // checked the same way. This panel is the only place that writes new content.
 // PACK: library-create-flow
 // 2026-10-21 opencode: created for the target-first Create panel [pack: library-create-flow]
+// 2026-10-23 opencode: Generate, Import and Chat import enqueue page-level jobs
+// instead of holding the Create screen. [pack: background-jobs]
 
 import { useCallback, useEffect, useState } from "react";
 import { apiGet, apiSend } from "@/lib/client/api";
-import type { Card, PackStatus, ProviderStatus } from "@/lib/shared/types";
+import type { JobView } from "@/lib/browser/jobs";
+import type { PackStatus, ProviderStatus } from "@/lib/shared/types";
 import { defaultCreationBrief, type CreationBrief } from "@/lib/shared/creation";
 import ChatPromptEditor from "./ChatPromptEditor";
 import CreationBriefFields from "./CreationBriefFields";
@@ -25,25 +28,6 @@ import {
   type CreateTarget,
 } from "./library-utils";
 
-/** One provider batch, as the generate route returns it. */
-interface GeneratedAnswer {
-  kind: "pack" | "deck" | "cards";
-  packName: string;
-  deckId?: string;
-  count: number;
-  cards: Card[];
-}
-
-/** One accepted import, as the import route returns it. */
-interface ImportedAnswer {
-  kind: "pack" | "deck" | "cards";
-  packName: string;
-  deckIds: string[];
-  decksAdded: number;
-  cardsAdded: number;
-  duplicates: number;
-}
-
 /** A link that leaves Create mounted, so a half-written draft stays put. */
 function SettingsPath() {
   return (
@@ -51,17 +35,6 @@ function SettingsPath() {
       Open Settings in a new tab
     </a>
   );
-}
-
-/** The small word after a count, so messages read like a person wrote them. */
-function cardWord(count: number): string {
-  return count === 1 ? "card" : "cards";
-}
-
-/** Mention skipped duplicates only when there were some. */
-function duplicateNote(count: number): string {
-  if (count <= 0) return "";
-  return ` ${count} ${count === 1 ? "duplicate was" : "duplicates were"} already here.`;
 }
 
 /** What the Create panel needs from the shell and its loaded library. */
@@ -310,6 +283,7 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
   };
 
   // Import is strict: the file must match the chosen target, never another shape.
+  // The validator runs in the background job, so Create is free immediately.
   const importNow = async () => {
     onError(null);
     onNotice(null);
@@ -317,33 +291,17 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
     try {
       const wanted = targetPayload();
       if (!wanted) throw new Error("Choose the parent pack and deck first.");
-      const data = await apiSend<ImportedAnswer>("/api/packs/import", "POST", {
-        json: importText,
+      await apiSend<{ job: JobView }>("/api/jobs", "POST", {
+        kind: "import",
+        text: importText,
         target: wanted,
+        namePolicy: "strict",
+        source: "file",
       });
       setImportText("");
-      if (data.kind === "pack") {
-        finish(
-          { kind: "pack", packName: data.packName },
-          `Imported pack "${data.packName}" with ${data.decksAdded} deck(s) and ${data.cardsAdded} ${cardWord(data.cardsAdded)}.${duplicateNote(data.duplicates)}`,
-        );
-        return;
-      }
-      const firstDeck = data.deckIds[0];
-      if (!firstDeck) throw new Error("The import did not name a deck.");
-      if (data.kind === "deck") {
-        finish(
-          { kind: "deck", packName: data.packName, deckId: firstDeck },
-          `Imported ${data.decksAdded} deck(s) and ${data.cardsAdded} ${cardWord(data.cardsAdded)} into "${data.packName}".${duplicateNote(data.duplicates)}`,
-        );
-        return;
-      }
-      finish(
-        { kind: "cards", packName: data.packName, deckId: firstDeck, count: data.cardsAdded },
-        `Imported ${data.cardsAdded} ${cardWord(data.cardsAdded)} into "${data.packName}".${duplicateNote(data.duplicates)}`,
-      );
+      onNotice("Import started. You can keep working.");
     } catch (problem) {
-      showError(problem, "The import could not be read.");
+      showError(problem, "The import could not start.");
     } finally {
       setBusy(false);
     }
@@ -413,7 +371,8 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
     onNotice("The authoring prompt was downloaded.");
   };
 
-  // Chat answers use generated-name suffixes on collision; the validator still owns the shape.
+  // A pasted Chat answer is the same strict import, so it uses the same job path
+  // with the generated-name suffix policy the Chat flow already promised.
   const importChatAnswer = async () => {
     onError(null);
     onNotice(null);
@@ -421,34 +380,17 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
     try {
       const wanted = targetPayload();
       if (!wanted) throw new Error("Choose the parent pack and deck first.");
-      const data = await apiSend<ImportedAnswer>("/api/packs/import", "POST", {
-        json: chatAnswerText,
+      await apiSend<{ job: JobView }>("/api/jobs", "POST", {
+        kind: "import",
+        text: chatAnswerText,
         target: wanted,
         namePolicy: "auto-suffix",
+        source: "chat",
       });
       setChatAnswer({ key: chatBuildKey, text: "" });
-      if (data.kind === "pack") {
-        finish(
-          { kind: "pack", packName: data.packName },
-          `The chat's pack was saved as "${data.packName}" with ${data.cardsAdded} ${cardWord(data.cardsAdded)}.${duplicateNote(data.duplicates)}`,
-        );
-        return;
-      }
-      const firstDeck = data.deckIds[0];
-      if (!firstDeck) throw new Error("The chat answer did not name a deck.");
-      if (data.kind === "deck") {
-        finish(
-          { kind: "deck", packName: data.packName, deckId: firstDeck },
-          `The chat's ${data.decksAdded} deck(s) and ${data.cardsAdded} ${cardWord(data.cardsAdded)} were saved in "${data.packName}".${duplicateNote(data.duplicates)}`,
-        );
-        return;
-      }
-      finish(
-        { kind: "cards", packName: data.packName, deckId: firstDeck, count: data.cardsAdded },
-        `The chat's ${data.cardsAdded} ${cardWord(data.cardsAdded)} were saved in "${data.packName}".${duplicateNote(data.duplicates)}`,
-      );
+      onNotice("The chat answer was queued. You can keep working.");
     } catch (problem) {
-      showError(problem, "The chat's answer could not be imported.");
+      showError(problem, "The chat's answer could not be queued.");
     } finally {
       setBusy(false);
     }
@@ -487,40 +429,23 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
     }
   };
 
-  // Send the one held prompt. The server keeps the whole batch or none of it.
+  // Send the one held prompt into the page-level queue. The runner keeps the
+  // whole batch or none of it, and Create is free again after the enqueue.
   const sendNow = async () => {
     if (!prepared) return;
     onError(null);
     onNotice(null);
     setBusy(true);
     try {
-      const data = await apiSend<GeneratedAnswer>("/api/provider/generate", "POST", {
+      await apiSend<{ job: JobView }>("/api/jobs", "POST", {
+        kind: "generation",
         requestId: prepared.requestId,
       });
       setPrepared(null);
-      if (data.kind === "pack") {
-        finish(
-          { kind: "pack", packName: data.packName },
-          `The provider named the pack "${data.packName}" and saved ${data.count} ${cardWord(data.count)}.`,
-        );
-        return;
-      }
-      if (data.kind === "deck") {
-        if (!data.deckId) throw new Error("The provider did not name the new deck.");
-        finish(
-          { kind: "deck", packName: data.packName, deckId: data.deckId },
-          `The provider named a new deck in "${data.packName}" and saved ${data.count} ${cardWord(data.count)}.`,
-        );
-        return;
-      }
-      if (!data.deckId) throw new Error("The deck for these cards is gone.");
-      finish(
-        { kind: "cards", packName: data.packName, deckId: data.deckId, count: data.count },
-        `Saved ${data.count} generated ${cardWord(data.count)} in "${data.packName}".`,
-      );
+      onNotice("Generation started. You can keep working.");
     } catch (problem) {
       setPrepared(null);
-      showError(problem, "The cards could not be generated.");
+      showError(problem, "The generation could not start.");
     } finally {
       setBusy(false);
     }

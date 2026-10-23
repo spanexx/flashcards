@@ -679,7 +679,10 @@ export async function exportBackup(): Promise<string> {
 }
 
 /** Restore a backup as a whole. A malformed file changes nothing. */
-export async function restoreBackup(text: string): Promise<{ ok: true; packs: number; cards: number } | { ok: false; issues: ValidationIssue[] }> {
+export async function restoreBackup(
+  text: string,
+  options: { beforeApply?: () => Promise<void> } = {},
+): Promise<{ ok: true; packs: number; cards: number } | { ok: false; issues: ValidationIssue[] }> {
   let raw: unknown;
   try {
     raw = JSON.parse(text) as unknown;
@@ -694,6 +697,9 @@ export async function restoreBackup(text: string): Promise<{ ok: true; packs: nu
 
   const backup = parsed.data;
   const key = await readProviderKey();
+  // The caller may stop background work after validation, but before the
+  // library changes. A malformed backup must not kill a healthy job.
+  await options.beforeApply?.();
   let restored = false;
   suspendChanges();
   try {

@@ -5,10 +5,14 @@
 // 2026-10-19 opencode: created for the v1 prototype [pack: v1-prototype]
 // 2026-10-19 opencode: sidebar shell replaces the top nav [pack: v1-prototype]
 // 2026-10-20 opencode: browser autosave boot and app icon [pack: browser-app]
+// 2026-10-23 opencode: the job runner boots with the shell and the dock is on
+// every screen. [pack: background-jobs]
 
 import type { Metadata } from "next";
 import Nav from "./Nav";
 import AutoSaveBoot from "./AutoSaveBoot";
+import JobsBoot from "./JobsBoot";
+import JobsDock from "./JobsDock";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -21,12 +25,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <AutoSaveBoot />
+        <JobsBoot />
         <div className="shell">
           <aside className="sidebar">
             <Nav />
           </aside>
           <main className="content">{children}</main>
         </div>
+        <JobsDock />
       </body>
     </html>
   );

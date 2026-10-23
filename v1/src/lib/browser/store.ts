@@ -3,6 +3,7 @@
 // browser and a memory adapter for tests, both behind the same small interface.
 // PACK: browser-app
 // 2026-10-20 opencode: created for the browser-owned build.
+// 2026-10-23 opencode: the jobs store is an additive version 3 upgrade. [pack: background-jobs]
 
 /** The object stores that hold the library, the record and the settings. */
 export const STORE_NAMES = [
@@ -14,6 +15,7 @@ export const STORE_NAMES = [
   "settings",
   "meta",
   "autosave",
+  "jobs",
 ] as const;
 
 export type StoreName = (typeof STORE_NAMES)[number];
@@ -97,7 +99,7 @@ let database: Promise<IDBDatabase> | null = null;
 function openDatabase(): Promise<IDBDatabase> {
   if (!database) {
     database = new Promise((resolve, reject) => {
-      const request = indexedDB.open("flashcards", 2);
+      const request = indexedDB.open("flashcards", 3);
       request.onupgradeneeded = () => {
         const db = request.result;
         for (const name of STORE_NAMES) {
@@ -106,6 +108,8 @@ function openDatabase(): Promise<IDBDatabase> {
       };
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error ?? new Error("The browser store could not open."));
+      request.onblocked = () =>
+        reject(new Error("Close the other Flashcards tabs so this tab can update the library."));
     });
   }
   return database;

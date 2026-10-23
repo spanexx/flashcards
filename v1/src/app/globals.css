@@ -2,7 +2,8 @@
    build step or a framework it does not need.
    PACK: v1-prototype
    2026-10-19 opencode: created for the v1 prototype [pack: v1-prototype]
-   2026-10-20 opencode: compact pack panels and taller card list [pack: browser-app] */
+   2026-10-20 opencode: compact pack panels and taller card list [pack: browser-app]
+   2026-10-23 opencode: the global jobs control, panel and notice. [pack: background-jobs] */
 
 :root {
   color-scheme: light dark;
@@ -825,4 +826,257 @@ textarea.field {
 
 .modal h2 {
   margin-top: 0;
+}
+
+/* Background jobs: one quiet control on every screen. */
+.grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.small {
+  font-size: 0.78rem;
+}
+
+.dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+  border-radius: 50%;
+  background: var(--quiet);
+}
+
+.dot.run {
+  background: var(--near);
+}
+
+.dot.wait {
+  background: var(--near);
+}
+
+.dot.good {
+  background: var(--good);
+}
+
+.dot.bad {
+  background: var(--miss);
+}
+
+.jobs-fab {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 9px 13px;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.16);
+}
+
+.jobs-fab .count {
+  min-width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.jobs-live {
+  position: fixed;
+  right: 22px;
+  bottom: 78px;
+  z-index: 44;
+  width: min(380px, calc(100vw - 28px));
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  border-radius: 12px;
+  padding: 9px 11px;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.16);
+  font-size: 0.82rem;
+}
+
+.jobs-live strong {
+  font-weight: 650;
+}
+
+.jobs-panel {
+  position: fixed;
+  right: 22px;
+  bottom: 78px;
+  z-index: 46;
+  width: min(410px, calc(100vw - 28px));
+  max-height: min(580px, calc(100vh - 120px));
+  overflow: auto;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  border-radius: 15px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.22);
+}
+
+.jobs-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 13px;
+  border-bottom: 1px solid var(--line);
+  background: var(--card);
+}
+
+.jobs-body {
+  display: grid;
+  gap: 7px;
+  padding: 9px;
+}
+
+.job-row {
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  padding: 10px;
+  background: var(--card);
+}
+
+.job-row.active {
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--line));
+}
+
+.job-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.job-title {
+  font-weight: 650;
+  font-size: 0.86rem;
+}
+
+.job-detail {
+  color: var(--quiet);
+  font-size: 0.75rem;
+  margin-top: 1px;
+}
+
+.job-state {
+  color: var(--quiet);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding-top: 2px;
+}
+
+.job-state.run,
+.job-state.wait {
+  color: var(--near);
+}
+
+.job-state.good {
+  color: var(--good);
+}
+
+.job-state.bad {
+  color: var(--miss);
+}
+
+.job-line {
+  margin-top: 6px;
+  color: var(--quiet);
+  font-size: 0.76rem;
+}
+
+.job-line.error {
+  color: var(--miss);
+}
+
+.job-details {
+  margin-top: 6px;
+  color: var(--quiet);
+  font-size: 0.74rem;
+}
+
+.job-details summary {
+  cursor: pointer;
+}
+
+.job-details ul {
+  margin: 5px 0 0;
+  padding-left: 17px;
+}
+
+.job-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.job-toast-stack {
+  position: fixed;
+  top: 18px;
+  right: 22px;
+  z-index: 47;
+  width: min(390px, calc(100vw - 28px));
+  display: grid;
+  gap: 8px;
+}
+
+.job-toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--good);
+  background: var(--card);
+  color: var(--ink);
+  border-radius: 12px;
+  padding: 10px 11px;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.18);
+}
+
+.job-toast.bad {
+  border-left-color: var(--miss);
+}
+
+.job-toast .dot {
+  margin-top: 4px;
+}
+
+.job-toast strong {
+  font-size: 0.86rem;
+}
+
+@media (max-width: 620px) {
+  .jobs-fab {
+    right: 14px;
+    bottom: 14px;
+  }
+
+  .jobs-live,
+  .jobs-panel {
+    right: 14px;
+    bottom: 68px;
+  }
+
+  .job-toast-stack {
+    top: 12px;
+    right: 14px;
+  }
 }

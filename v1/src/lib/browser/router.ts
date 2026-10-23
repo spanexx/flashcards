@@ -9,6 +9,8 @@
 // 2026-10-22 opencode: the creation brief is validated here and the library is
 // reduced to names, descriptions and deck labels before any prompt sees it.
 // [pack: creation-control]
+// 2026-10-23 opencode: URL-shaped job calls enqueue work and expose views
+// without their private prompt/import payloads. [pack: background-jobs]
 
 import type {
   AnswerResult,
@@ -79,6 +81,15 @@ import {
   testProvider,
   type GenerationTarget,
 } from "@/lib/browser/provider";
+import {
+  dismissJob,
+  enqueueGenerationJob,
+  enqueueImportJob,
+  interruptJobs,
+  readJobViews,
+  retryJob,
+} from "@/lib/browser/jobs";
+import { takePrepared } from "@/lib/provider/prepare";
 import { AUTHORING_SKILL_VERSION, buildAuthoringPrompt } from "@/lib/browser/authoring";
 import { slugFromName } from "@/lib/browser/creation";
 import {
@@ -107,6 +118,34 @@ function asString(value: unknown): string | null {
 function asNumber(value: unknown, fallback: number, min = 0, max = 86400000): number {
   if (typeof value !== "number" || !Number.isFinite(value)) return fallback;
   return Math.min(max, Math.max(min, value));
+}
+
+/** One target shape for the synchronous import and the background import job. */
+function importTargetFrom(value: unknown): ImportTarget {
+  const targetRecord = asRecord(value);
+  const kind = targetRecord ? asString(targetRecord.kind) : null;
+  if (kind === "pack") return { kind: "pack" };
+  if (kind === "deck") {
+    const packName = asString(targetRecord?.packName);
+    if (!packName) fail("Choose the pack these decks should join.");
+    return { kind: "deck", packName };
+  }
+  if (kind === "cards") {
+    const packName = asString(targetRecord?.packName);
+    const deckId = asString(targetRecord?.deckId);
+    if (!packName || !deckId) fail("Choose the pack and deck these cards should join.");
+    return { kind: "cards", packName, deckId };
+  }
+  fail("Choose Pack, Deck or Cards as the target.");
+}
+
+/** Only the two name policies the importer knows may reach the bundle parser. */
+function importNamePolicy(record: Record<string, unknown> | null): "strict" | "auto-suffix" {
+  const raw = asString(record?.namePolicy);
+  if (raw && raw !== "strict" && raw !== "auto-suffix") {
+    fail("That name policy is not one the app knows.");
+  }
+  return raw === "auto-suffix" ? "auto-suffix" : "strict";
 }
 
 /** Accept only an array of strings; a mixed array is refused whole. */
@@ -534,6 +573,7 @@ export async function localGet<T>(url: string): Promise<T> {
     const limit = Number(query.get("limit"));
     return { entries: await readPromptLog(Number.isFinite(limit) && limit > 0 ? Math.min(500, limit) : 50) } as T;
   }
+  if (path === "/api/jobs") return { jobs: await readJobViews() } as T;
   if (path === "/api/settings") {
     return {
       settings: await readSettings(),
@@ -570,36 +610,50 @@ export async function localSend<T>(
   if (path === "/api/packs/import") {
     const text = record ? asString(record.json) : null;
     if (!text) fail("Paste the bundle as JSON before importing.");
-    const targetRecord = asRecord(record?.target);
-    const kind = targetRecord ? asString(targetRecord.kind) : null;
-    let target: ImportTarget;
-    if (kind === "pack") {
-      target = { kind: "pack" };
-    } else if (kind === "deck") {
-      const packName = asString(targetRecord?.packName);
-      if (!packName) fail("Choose the pack these decks should join.");
-      target = { kind: "deck", packName };
-    } else if (kind === "cards") {
-      const packName = asString(targetRecord?.packName);
-      const deckId = asString(targetRecord?.deckId);
-      if (!packName || !deckId) fail("Choose the pack and deck these cards should join.");
-      target = { kind: "cards", packName, deckId };
-    } else {
-      fail("Choose Pack, Deck or Cards as the target.");
-    }
-    const rawPolicy = asString(record?.namePolicy);
-    if (rawPolicy && rawPolicy !== "strict" && rawPolicy !== "auto-suffix") {
-      fail("That name policy is not one the app knows.");
-    }
-    const namePolicy = rawPolicy === "auto-suffix" ? "auto-suffix" : "strict";
+    const target = importTargetFrom(record?.target);
+    const namePolicy = importNamePolicy(record);
     const result = await importBundle(text, target, { namePolicy });
     if (!result.ok) fail("Nothing was imported, because the file needs fixing.", result.issues);
     return result as T;
   }
+  if (path === "/api/jobs" && method === "POST") {
+    if (!record) fail("The job arrived in a shape the app does not understand.");
+    const kind = asString(record.kind);
+    if (kind === "generation") {
+      const requestId = asString(record.requestId);
+      if (!requestId) fail("A prepared prompt id is needed.");
+      const prepared = takePrepared(requestId);
+      if (!prepared || prepared.kind !== "generation") {
+        fail("That prepared prompt has expired. Prepare it again.");
+      }
+      return { job: await enqueueGenerationJob(prepared) } as T;
+    }
+    if (kind === "import") {
+      const text = asString(record.text);
+      if (!text || text.trim().length === 0) fail("Paste the bundle as JSON before importing.");
+      const target = importTargetFrom(record.target);
+      const namePolicy = importNamePolicy(record);
+      const source = record.source === "chat" ? "chat" : "file";
+      return { job: await enqueueImportJob({ text, target, namePolicy, source }) } as T;
+    }
+    fail("Choose a job kind the app knows.");
+  }
+  const jobRetryPath = /^\/api\/jobs\/([^/]+)\/retry$/.exec(path);
+  if (jobRetryPath && method === "POST") {
+    return { job: await retryJob(decodeURIComponent(jobRetryPath[1])) } as T;
+  }
+  const jobPath = /^\/api\/jobs\/([^/]+)$/.exec(path);
+  if (jobPath && method === "DELETE") {
+    await dismissJob(decodeURIComponent(jobPath[1]));
+    return { dismissed: true } as T;
+  }
   if (path === "/api/backup/restore") {
     const text = record ? asString(record.json) : null;
     if (!text) fail("Paste the backup as JSON before restoring.");
-    const result = await restoreBackup(text);
+    // Validate first; only a backup that will be applied may stop live jobs.
+    const result = await restoreBackup(text, {
+      beforeApply: () => interruptJobs("The library was restored."),
+    });
     if (!result.ok) fail("Nothing was restored, because the backup needs fixing.", result.issues);
     return result as T;
   }

@@ -7,9 +7,13 @@
 // 2026-10-21 opencode: rebuilt as a three-tab shell around Packs, Cards and
 // Create panels, with typed-name delete and after-create navigation
 // [pack: library-create-flow]
+// 2026-10-23 opencode: finished jobs refresh the shelves, and a job View link
+// focuses the affected pack/deck without a reload. [pack: background-jobs]
 
 import { useCallback, useEffect, useState } from "react";
 import { apiGet, apiSend } from "@/lib/client/api";
+import { onJobFinished } from "@/lib/browser/jobs";
+import { LIBRARY_FOCUS_EVENT, type LibraryFocus } from "@/lib/client/library-focus";
 import type { Card, PackStatus, ProviderStatus } from "@/lib/shared/types";
 import CardsPanel from "./CardsPanel";
 import CreatePanel from "./CreatePanel";
@@ -79,16 +83,57 @@ export default function LibraryClient() {
 
   useEffect(() => {
     const pending = Promise.resolve().then(() => {
-      const wanted = new URLSearchParams(window.location.search).get("card");
-      if (wanted) {
+      const params = new URLSearchParams(window.location.search);
+      const wantedCard = params.get("card");
+      if (wantedCard) {
         setTab("cards");
-        void openEvidence(wanted);
+        void openEvidence(wantedCard);
+        return;
+      }
+      const wantedPack = params.get("pack");
+      const wantedDeck = params.get("deck");
+      if (wantedPack && wantedDeck) {
+        setTab("cards");
+        setCardFocus({ packName: wantedPack, deckId: wantedDeck, token: Date.now() });
+        return;
+      }
+      if (wantedPack) {
+        setTab("packs");
+        setPacksFocus({ packName: wantedPack, token: Date.now() });
       }
     });
     return () => {
       void pending;
     };
   }, [openEvidence]);
+
+  // A completed job writes behind the screen. Refresh the packs/cards, but only
+  // when the job actually succeeded; a failure has nothing new to show.
+  useEffect(
+    () =>
+      onJobFinished((job) => {
+        if (job.status === "succeeded") void refresh();
+      }),
+    [refresh],
+  );
+
+  // A View link from the global job dock can point at a Library that is
+  // already mounted. Focus it without reloading the page and stopping work.
+  useEffect(() => {
+    const focus = (event: Event) => {
+      const detail = (event as CustomEvent<LibraryFocus>).detail;
+      if (!detail?.packName) return;
+      if (detail.deckId) {
+        setTab("cards");
+        setCardFocus({ packName: detail.packName, deckId: detail.deckId, token: Date.now() });
+        return;
+      }
+      setTab("packs");
+      setPacksFocus({ packName: detail.packName, token: Date.now() });
+    };
+    window.addEventListener(LIBRARY_FOCUS_EVENT, focus);
+    return () => window.removeEventListener(LIBRARY_FOCUS_EVENT, focus);
+  }, []);
 
   // Refresh reads every pack again and keeps the list honest after a change.
   const rescan = useCallback(async () => {

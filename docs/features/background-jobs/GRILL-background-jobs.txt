@@ -1,0 +1,155 @@
+GRILL: background jobs
+Status: Locked
+Date: 2026-10-23
+Decisions by: agent (delegated by Victor, 2026-10-23)
+
+This record replaces a live GRILL session on the user's instruction. It records
+the decisions the pack needed before code was written. No user quote is invented.
+
+User request (verbatim from the goal prompt):
+"It looks like the generation blocks the whole flow, we should have a
+background task that shows the state of the generation and notify user when
+generation is complete, this should also be same with import, it should not
+block the flow as i know it needs sometime to validate. Make sure other thing
+emulates this design pattern..."
+
+User retry report (verbatim from the goal prompt):
+"The provider took too long to answer. (after 60009ms)"
+"retry 3 times and stop, then try every minute 3 retries, until 3 times."
+
+[agent decision] What becomes a background job?
+Question: Should only provider generation move off the Create screen?
+Answer: Provider generation and every import path become jobs: Create → Generate,
+Create → Import, and the pasted Chat answer import. Write, edits and deletes stay
+immediate because they are local and fast.
+Why: Both generation and validation were the two waits the learner named. A Chat
+answer is an import with the same validator, so leaving it immediate would make
+two import behaviours.
+Source: user request above; existing Generate, Import and Chat import branches in
+CreatePanel.
+
+[agent decision] What does "background" mean in a browser-only app?
+Question: Does this pack add a service worker, a Web Worker or a server queue?
+Answer: No. The app is a static, local-first page. A page-global runner lives in
+the root layout, so it keeps working while the learner changes Library tabs or
+moves to Study, Progress or Settings. A full browser reload ends the page and a
+running provider call cannot continue; the job is marked failed as interrupted.
+Why: The expensive wait is an async provider call, not CPU work. The current
+promise already survives a tab change; what was missing was a visible owner and
+a completion notice. A service worker would add a new deployment and permission
+surface without making the provider call resume after the tab is gone.
+Source: static Next export, browser-only provider call, goal pack order.
+
+[agent decision] What does the learner see while a job runs?
+Question: Where can the learner see the state without holding the Create screen?
+Answer: A small fixed Jobs control is present on every screen. It shows the
+running job and a live label ("Generating", "Importing", "Waiting to retry"),
+opens a panel with queued, running, waiting and recent finished jobs, and shows a
+completion or failure notice. A successful job has a View link to the affected
+pack or deck.
+Why: Hiding the work in the Create tab is what made it feel blocked. A global,
+quiet control makes the state honest from any screen without taking over the page.
+Source: user request to show the state and notify on completion.
+
+[agent decision] How many retries, and for which failures?
+Question: What does "retry 3 times and stop, then try every minute" mean exactly?
+Answer: A provider timeout gets one initial try plus three retries, one minute
+apart: four tries total. Only the timeout sentence "The provider took too long to
+answer." is retried. A rejected key, unreachable provider, HTTP error, empty
+answer, invalid batch or invalid import fails once and stays failed. A manual
+"Try again" starts a fresh four-try budget.
+Why: The user named a timeout and a count; three retries after the first try is
+the smallest reading that gives four total attempts. Retrying a bad key or a
+malformed import cannot help and would only delay the honest error.
+Source: user retry report above; existing 60-second provider timeout.
+
+[agent decision] What happens between retries?
+Question: Should the app retry immediately or wait?
+Answer: The job enters Waiting with the next retry time, the panel counts down,
+and the runner waits 60 seconds from the timeout. A reload keeps the waiting
+timestamp; if it has already passed, the retry starts on the next boot. The
+learner can keep using the app during the wait.
+Why: The user said "every minute", and a visible wait is better than a silent
+loop. Storing the timestamp means a reload does not restart the minute.
+Source: user retry report; job persistence decision.
+
+[agent decision] Does a retry ever write twice?
+Question: If a provider times out, could the first try still have saved cards?
+Answer: A timeout is classified before the answer is read or imported, so the
+automatic retries cannot write twice. A failure after a successful import is
+treated as a non-retryable failure, never an automatic retry. A manual Try again
+on an interrupted job is explicit and uses the same prepared prompt.
+Why: The all-or-nothing importer already owns duplicate protection for generated
+cards. Automatic retries must stay on the safe side of that boundary.
+Source: existing generatePrepared order (provider call, parse, import) and
+importBundle duplicate rules.
+
+[agent decision] What happens to a job when the page reloads?
+Question: Does a running generation resume after a reload?
+Answer: No. On boot, a job left Running is marked Failed with "The page was
+reloaded before this job finished." Queued jobs and waiting retries continue
+because their work is stored. Nothing is auto-retried after a reload except a
+waiting timeout whose minute has already passed.
+Why: A browser page cannot keep a provider request alive across a reload. Saying
+it failed is more honest than pretending it is still running.
+Source: page-scoped runner decision; user asked for state, not false progress.
+
+[agent decision] What is stored locally?
+Question: Can a job survive a tab change without keeping the prompt in memory?
+Answer: The job store is a new IndexedDB store. It keeps the job kind, target,
+state, attempts, next retry time, result/error, and the prepared prompt or import
+text needed to finish the work. The learner-facing job view never includes the
+prompt or import text. Jobs are not part of the backup export.
+Why: The prepared request currently lives only in a ten-minute in-memory hold;
+a persisted job must own its request, or a retry and a reload would lose it.
+The prompt is local content and belongs in the local database, not the backup.
+Source: existing PreparedRequest hold; backup excludes settings/key and should
+not grow a hidden prompt archive.
+
+[agent decision] Does the old synchronous Generate route stay?
+Question: Should this pack replace /api/provider/generate?
+Answer: No. The synchronous route stays for existing calls and tests. The Create
+screen switches to a new POST /api/jobs call. Both use the same final generation
+function, so validation cannot drift.
+Why: Removing the old seam would make the change harder to review and would
+break tests that pin the current provider contract.
+Source: existing provider-flow and simulate-create-flow tests; feature-pipeline
+smallest-surface rule.
+
+[agent decision] How are jobs ordered?
+Question: Can two generations or an import write at the same time?
+Answer: One runner processes one job at a time. New jobs wait in a queue. A
+waiting retry does not block a newer queued job; the runner takes whichever ready
+job is oldest.
+Why: Library writes are all-or-nothing batches. Serialising them keeps the
+library and the notice order understandable.
+Source: existing atomic importBatch behaviour; single-user local app.
+
+[agent decision] What happens when the library is restored or cleared?
+Question: Can a job write into a library that was just replaced?
+Answer: Restoring a backup marks every active job failed before the restore
+starts; a job that is already writing is not forcibly aborted. Finished job
+history is kept. The jobs store is not cleared by the backup restore.
+Why: A background write must not silently land in a restored library. The
+remaining in-flight write edge is named rather than hidden.
+Source: existing clearLibrary/restoreBackup flow; user data-safety priority.
+
+[agent decision] Is this the tutor/background-study pack?
+Question: Does this pack also run hints or study plans in the background?
+Answer: No. This pack covers generation and import jobs only. Tutor hints,
+study redesign and the PWA/deploy packs remain in their own goal packs.
+Why: The job runner is a reusable pattern, but mixing unrelated learning changes
+would make the review and rollback unsafe.
+Source: goal ledger pack order.
+
+[agent decision] What is out of scope?
+Question: Does the pack coordinate multiple tabs or cancel provider calls?
+Answer: No. Multiple tabs can share the jobs store but are not leader-elected;
+the supported path is one tab. There is no Cancel button for an in-flight
+provider call, and no OS-level background work after the tab closes.
+Why: These are separate reliability projects. The pack solves the visible wait,
+retry and notification on the supported single-tab path without pretending to be
+a service worker.
+Source: page-scoped runner decision; existing static export.
+
+No remaining open questions.

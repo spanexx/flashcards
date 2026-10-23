@@ -99,7 +99,10 @@ describe("callProvider", () => {
     vi.stubGlobal("fetch", vi.fn(async () => failure(401)));
     const result = await callProvider(config, [{ role: "user", content: "hi" }]);
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.message).toContain("key");
+    if (!result.ok) {
+      expect(result.message).toContain("key");
+      expect(result.reason).toBe("http");
+    }
   });
 
   it("tries the second endpoint only after a 404", async () => {
@@ -131,7 +134,10 @@ describe("callProvider", () => {
     );
     const result = await callProvider(config, [{ role: "user", content: "hi" }]);
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.message).toContain("could not be reached");
+    if (!result.ok) {
+      expect(result.message).toContain("could not be reached");
+      expect(result.reason).toBe("unreachable");
+    }
   });
 
   it("says a provider took too long when the call aborts", async () => {
@@ -145,13 +151,19 @@ describe("callProvider", () => {
     );
     const result = await callProvider(config, [{ role: "user", content: "hi" }], { timeoutMs: 5 });
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.message).toContain("too long");
+    if (!result.ok) {
+      expect(result.message).toContain("too long");
+      expect(result.reason).toBe("timeout");
+    }
   });
 
   it("refuses an answer with no words", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => reply({ choices: [{ message: { content: "   " } }] })));
     const result = await callProvider(config, [{ role: "user", content: "hi" }]);
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.message).toContain("no words");
+    if (!result.ok) {
+      expect(result.message).toContain("no words");
+      expect(result.reason).toBe("empty");
+    }
   });
 });

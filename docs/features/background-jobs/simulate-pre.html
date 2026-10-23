@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flashcards - Background jobs design simulation</title>
+<!--
+WHY: Design-time simulation for the background job runner, dock, completion
+notice, timeout retries and import jobs. It mirrors the locked GRILL, uses
+hardcoded data and saves nothing. The five scenarios are the PRD contract.
+PACK: background-jobs
+2026-10-23 opencode: created before the implementation [pack: background-jobs]
+-->
+<style>
+  :root {
+    --bg: #f7f6f3;
+    --card: #ffffff;
+    --ink: #23211d;
+    --quiet: #6d6a63;
+    --line: #dedbd3;
+    --accent: #2f5d50;
+    --accent-ink: #ffffff;
+    --good: #2f6d3f;
+    --warn: #8a6d1f;
+    --miss: #8a3b2f;
+    --shadow: 0 16px 40px rgba(35, 33, 29, .14);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #191816; --card: #232220; --ink: #ece9e2; --quiet: #a5a199;
+      --line: #3a3833; --accent: #7fb3a2; --accent-ink: #10120f;
+      --good: #8ec79b; --warn: #d9bc6a; --miss: #e0968a;
+      --shadow: 0 16px 40px rgba(0, 0, 0, .34);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); }
+  body { font: 15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  button { font: inherit; cursor: pointer; }
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 12px 22px; border-bottom: 1px solid var(--line); background: var(--card);
+    position: sticky; top: 0; z-index: 30;
+  }
+  .brand { font-weight: 700; }
+  .brand span { color: var(--accent); }
+  .tag { color: var(--quiet); font-size: 12px; border: 1px solid var(--line); border-radius: 999px; padding: 4px 9px; }
+  .banner { padding: 8px 22px; border-bottom: 1px solid var(--line); color: var(--quiet); font-size: 12px; background: color-mix(in srgb, var(--card) 60%, var(--bg)); }
+  .shell { width: min(1120px, calc(100% - 36px)); margin: 0 auto; padding: 24px 0 110px; }
+  h1 { margin: 0; font-size: 30px; letter-spacing: -.02em; }
+  h2 { margin: 0; font-size: 18px; letter-spacing: -.01em; }
+  h3 { margin: 0; font-size: 14px; }
+  p { margin: 6px 0 0; }
+  .lead { color: var(--quiet); max-width: 760px; margin-top: 6px; }
+  .scenario-nav { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--line); margin: 18px 0 18px; }
+  .scenario-tab {
+    background: transparent; color: var(--quiet); border: 0; border-bottom: 2px solid transparent;
+    padding: 10px 12px; font-weight: 650;
+  }
+  .scenario-tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+  .scenario { display: none; }
+  .scenario.active { display: block; }
+  .scenario-head { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 14px; }
+  .num {
+    display: grid; place-items: center; width: 28px; height: 28px; flex: 0 0 28px;
+    border-radius: 50%; background: var(--accent); color: var(--accent-ink); font-weight: 750;
+  }
+  .grid { display: grid; gap: 14px; }
+  .two { grid-template-columns: minmax(0, 1.1fr) minmax(320px, .9fr); }
+  @media (max-width: 900px) { .two { grid-template-columns: 1fr; } }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; box-shadow: none; }
+  .card.raised { box-shadow: var(--shadow); }
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 14px; }
+  .tab { background: transparent; border: 0; border-bottom: 2px solid transparent; color: var(--quiet); padding: 8px 11px; }
+  .tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); font-weight: 650; }
+  .muted { color: var(--quiet); }
+  .small { font-size: 12px; }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .grow { flex: 1; }
+  .btn { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 9px; padding: 8px 11px; }
+  .btn:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 650; }
+  .btn.small { padding: 5px 8px; font-size: 12px; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 999px; padding: 3px 8px; color: var(--quiet); font-size: 12px; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--quiet); }
+  .dot.run { background: var(--warn); }
+  .dot.good { background: var(--good); }
+  .dot.bad { background: var(--miss); }
+  .brief { border: 1px solid var(--line); border-radius: 10px; padding: 12px; background: color-mix(in srgb, var(--card) 70%, var(--bg)); }
+  .brief strong { display: block; margin-bottom: 4px; }
+  .fake-list { display: grid; gap: 7px; margin-top: 12px; }
+  .fake-pack { border: 1px solid var(--line); border-radius: 10px; padding: 10px; display: flex; align-items: center; gap: 10px; }
+  .fake-pack .name { font-weight: 650; }
+  .fake-pack .meta { color: var(--quiet); font-size: 12px; }
+  .fake-pack .bar { width: 3px; height: 34px; border-radius: 2px; background: var(--accent); }
+  .timeline { display: grid; gap: 8px; margin-top: 10px; }
+  .step { display: flex; gap: 9px; align-items: flex-start; color: var(--quiet); font-size: 13px; }
+  .step .mark { width: 18px; height: 18px; flex: 0 0 18px; border-radius: 50%; border: 1px solid var(--line); display: grid; place-items: center; font-size: 10px; color: var(--quiet); }
+  .step.done { color: var(--ink); }
+  .step.done .mark { background: var(--good); border-color: var(--good); color: #fff; }
+  .step.now { color: var(--ink); }
+  .step.now .mark { border-color: var(--warn); color: var(--warn); }
+  .jobs-fab {
+    position: fixed; right: 22px; bottom: 22px; z-index: 40;
+    display: flex; align-items: center; gap: 9px;
+    border: 1px solid var(--line); background: var(--card); color: var(--ink);
+    border-radius: 999px; padding: 10px 13px; box-shadow: var(--shadow);
+  }
+  .jobs-fab .count { background: var(--accent); color: var(--accent-ink); border-radius: 999px; min-width: 20px; height: 20px; display: grid; place-items: center; font-size: 11px; font-weight: 700; }
+  .jobs-live {
+    position: fixed; right: 22px; bottom: 76px; z-index: 39;
+    max-width: min(360px, calc(100vw - 28px));
+    display: flex; align-items: center; gap: 9px;
+    border: 1px solid var(--line); background: var(--card); border-radius: 12px;
+    padding: 9px 12px; box-shadow: var(--shadow); font-size: 13px;
+  }
+  .jobs-live strong { font-weight: 650; }
+  .jobs-panel {
+    position: fixed; right: 22px; bottom: 76px; z-index: 41;
+    width: min(390px, calc(100vw - 28px)); max-height: min(560px, calc(100vh - 110px));
+    overflow: auto; border: 1px solid var(--line); background: var(--card);
+    border-radius: 15px; box-shadow: var(--shadow);
+  }
+  .jobs-head { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--card); z-index: 1; }
+  .jobs-body { padding: 8px 10px 10px; display: grid; gap: 7px; }
+  .job-row { border: 1px solid var(--line); border-radius: 11px; padding: 10px; }
+  .job-row.active { border-color: color-mix(in srgb, var(--accent) 44%, var(--line)); }
+  .job-top { display: flex; align-items: flex-start; gap: 8px; }
+  .job-state { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--quiet); }
+  .job-state.run { color: var(--warn); }
+  .job-state.good { color: var(--good); }
+  .job-state.bad { color: var(--miss); }
+  .job-title { font-weight: 650; font-size: 13px; }
+  .job-detail { color: var(--quiet); font-size: 12px; margin-top: 2px; }
+  .job-line { margin-top: 6px; font-size: 12px; color: var(--quiet); }
+  .job-line.error { color: var(--miss); }
+  .job-actions { display: flex; gap: 6px; margin-top: 8px; }
+  .toast {
+    position: fixed; right: 22px; bottom: 76px; z-index: 38;
+    width: min(370px, calc(100vw - 28px));
+    background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--good);
+    border-radius: 12px; padding: 11px 12px; box-shadow: var(--shadow);
+    display: flex; gap: 9px; align-items: flex-start;
+  }
+  .toast.bad { border-left-color: var(--miss); }
+  .toast .small { color: var(--quiet); }
+  .toast .grow { min-width: 0; }
+  .toast strong { font-size: 13px; }
+  .stale { opacity: .55; }
+  .note { border-left: 3px solid var(--accent); padding: 8px 10px; background: color-mix(in srgb, var(--accent) 8%, transparent); border-radius: 0 8px 8px 0; font-size: 12px; color: var(--quiet); }
+  @media (max-width: 620px) {
+    .shell { width: calc(100% - 24px); }
+    h1 { font-size: 25px; }
+    .jobs-fab { right: 14px; bottom: 14px; }
+    .jobs-live, .jobs-panel, .toast { right: 14px; bottom: 68px; }
+  }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">Flashcards <span>jobs</span></div>
+  <span class="tag">Design simulation · hardcoded · saves nothing</span>
+</header>
+<div class="banner"><strong>Before build:</strong> this page checks the background-job shape. The real app uses IndexedDB and the real provider boundary.</div>
+
+<main class="shell">
+  <h1>Generation and import keep working</h1>
+  <p class="lead">The learner presses once, can leave Create, sees live state in a global Jobs control, and gets a completion notice with a way back to the affected pack or deck.</p>
+
+  <nav class="scenario-nav" role="tablist" aria-label="Simulation scenarios">
+    <button class="scenario-tab" role="tab" aria-selected="true" data-scenario="continue">1 · Continue</button>
+    <button class="scenario-tab" role="tab" aria-selected="false" data-scenario="retry">2 · Timeout retry</button>
+    <button class="scenario-tab" role="tab" aria-selected="false" data-scenario="import">3 · Import</button>
+    <button class="scenario-tab" role="tab" aria-selected="false" data-scenario="bad">4 · Bad import</button>
+    <button class="scenario-tab" role="tab" aria-selected="false" data-scenario="reload">5 · Reload</button>
+  </nav>
+
+  <section class="scenario active" data-panel="continue">
+    <div class="scenario-head"><span class="num">1</span><div><h2>Generation continues after leaving Create</h2><p class="muted">The job belongs to the page, not the panel. The learner can read Packs while it runs.</p></div></div>
+    <div class="grid two">
+      <div class="card">
+        <div class="tabs" role="tablist"><button class="tab" aria-selected="false">Packs</button><button class="tab" aria-selected="false">Cards</button><button class="tab" aria-selected="true">Create</button></div>
+        <div class="brief">
+          <strong>Generate 5 cards · New pack</strong>
+          <div class="small muted">Subject: ordering coffee · Focus: cafes, paying · Mixed styles</div>
+          <div class="row" style="margin-top:10px"><button class="btn primary" id="start-generation">Send it</button><span class="small muted">The prompt was approved. It leaves only when you press Send.</span></div>
+        </div>
+        <div class="note" style="margin-top:12px">After Send, Create is free. The Jobs control shows the state from any screen.</div>
+      </div>
+      <div class="card">
+        <h3>What the learner sees</h3>
+        <div class="timeline" id="continue-timeline">
+          <div class="step"><span class="mark">1</span><span>Queued behind any older ready job.</span></div>
+          <div class="step"><span class="mark">2</span><span>Asking the provider. Live label in the Jobs control.</span></div>
+          <div class="step"><span class="mark">3</span><span>Validation and the all-or-nothing import.</span></div>
+          <div class="step"><span class="mark">4</span><span>Completion notice with View → the new pack.</span></div>
+        </div>
+        <p class="small muted" style="margin-top:12px">No modal. No blocked Create screen. A failure is a notice and a Try again row.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="scenario" data-panel="retry">
+    <div class="scenario-head"><span class="num">2</span><div><h2>Timeout waits one minute, then tries again</h2><p class="muted">Only “The provider took too long to answer.” is retried. One initial try plus three retries.</p></div></div>
+    <div class="grid two">
+      <div class="card">
+        <h3>Job panel</h3>
+        <div class="job-row active" style="margin-top:10px">
+          <div class="job-top"><span class="dot run"></span><div class="grow"><div class="job-title">Generating 5 cards</div><div class="job-detail">New pack · ordering coffee</div></div><span class="job-state run">Waiting</span></div>
+          <div class="job-line" id="retry-line">The provider took too long to answer. Retrying in 60s (try 2 of 4).</div>
+          <div class="job-actions"><button class="btn small" id="play-retry">Play the minute</button><span class="small muted">The learner can keep working.</span></div>
+        </div>
+        <div class="job-row" style="margin-top:8px">
+          <div class="job-top"><span class="dot good"></span><div class="grow"><div class="job-title">Importing 12 cards</div><div class="job-detail">Starter → Basics · file</div></div><span class="job-state good">Done</span></div>
+          <div class="job-line">Imported 12 cards. 2 duplicates were already here.</div>
+          <div class="job-actions"><button class="btn small">View</button><button class="btn small">Dismiss</button></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>After the last retry</h3>
+        <p class="small muted">The row becomes Failed. The panel keeps the exact provider sentence and offers Try again. A manual Try again starts a fresh four-try budget.</p>
+        <div class="note" style="margin-top:12px">Not retried: rejected key, unreachable address, HTTP error, empty answer, invalid batch, invalid import.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="scenario" data-panel="import">
+    <div class="scenario-head"><span class="num">3</span><div><h2>Import is a job too</h2><p class="muted">The file is validated away from the Create screen. A valid import writes atomically.</p></div></div>
+    <div class="grid two">
+      <div class="card">
+        <h3>Create → Import</h3>
+        <div class="fake-list">
+          <div class="fake-pack"><span class="bar"></span><div class="grow"><div class="name">Starter</div><div class="meta">2 decks · 32 cards</div></div><span class="pill">Target</span></div>
+        </div>
+        <div class="row" style="margin-top:12px"><button class="btn primary" id="start-import">Check and import</button><span class="small muted">Paste JSON or choose a file.</span></div>
+        <div class="note" style="margin-top:12px">The same strict validator runs. The Create screen is free as soon as the job is queued.</div>
+      </div>
+      <div class="card">
+        <h3>Completion notice</h3>
+        <div class="toast" style="position:static; width:auto; margin-top:10px">
+          <span class="dot good"></span>
+          <div class="grow"><strong>Import finished</strong><div class="small">12 cards were saved in Starter → Basics.</div><div class="row" style="margin-top:7px"><button class="btn small">View</button><button class="btn small">Dismiss</button></div></div>
+        </div>
+        <p class="small muted" style="margin-top:10px">The notice sits above the Jobs control and disappears after a short time. The job stays in the panel.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="scenario" data-panel="bad">
+    <div class="scenario-head"><span class="num">4</span><div><h2>A bad import fails honestly</h2><p class="muted">Validation errors are not retried and nothing is written.</p></div></div>
+    <div class="grid two">
+      <div class="card">
+        <h3>Failed job</h3>
+        <div class="job-row" style="margin-top:10px; border-color: color-mix(in srgb, var(--miss) 38%, var(--line))">
+          <div class="job-top"><span class="dot bad"></span><div class="grow"><div class="job-title">Importing cards</div><div class="job-detail">Starter → Basics · file</div></div><span class="job-state bad">Failed</span></div>
+          <div class="job-line error">Nothing was imported, because the file needs fixing.</div>
+          <div class="small muted" style="margin-top:4px">cards[2].answerDef: expected a cloze answer</div>
+          <div class="job-actions"><button class="btn small">Try again</button><button class="btn small">Dismiss</button></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Why no retry?</h3>
+        <p class="small muted">A malformed file will stay malformed. Retrying would hide the error for another minute. The learner fixes the file and presses Try again only when they choose.</p>
+        <div class="note" style="margin-top:12px">The old library is untouched. The all-or-nothing importer is still the only writer.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="scenario" data-panel="reload">
+    <div class="scenario-head"><span class="num">5</span><div><h2>A reload does not pretend to resume</h2><p class="muted">Queued jobs and future retries resume. A running provider call becomes an interrupted failure.</p></div></div>
+    <div class="grid two">
+      <div class="card">
+        <h3>Before reload</h3>
+        <div class="job-row active" style="margin-top:10px"><div class="job-top"><span class="dot run"></span><div class="grow"><div class="job-title">Generating 5 cards</div><div class="job-detail">New pack · ordering coffee</div></div><span class="job-state run">Working</span></div><div class="job-line">Asking the provider…</div></div>
+        <button class="btn" style="margin-top:12px" id="simulate-reload">Reload the page</button>
+      </div>
+      <div class="card">
+        <h3>After reload</h3>
+        <div class="job-row" style="margin-top:10px">
+          <div class="job-top"><span class="dot bad"></span><div class="grow"><div class="job-title">Generating 5 cards</div><div class="job-detail">New pack · ordering coffee</div></div><span class="job-state bad">Failed</span></div>
+          <div class="job-line error">The page was reloaded before this job finished.</div>
+          <div class="job-actions"><button class="btn small">Try again</button><button class="btn small">Dismiss</button></div>
+        </div>
+        <p class="small muted" style="margin-top:10px">A queued job would resume with its stored prompt. A waiting retry keeps its original minute.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="jobs-live" id="live" hidden><span class="dot run"></span><div class="grow" id="live-text"></div><button class="btn small" id="open-live">Open</button></div>
+<button class="jobs-fab" id="fab" aria-haspopup="dialog"><span class="dot run"></span> <span>Jobs</span><span class="count" id="fab-count">1</span></button>
+
+<div class="jobs-panel" id="panel" hidden role="dialog" aria-label="Jobs">
+  <div class="jobs-head"><strong class="grow">Jobs</strong><button class="btn small" id="close-panel">Close</button></div>
+  <div class="jobs-body" id="jobs-body"></div>
+</div>
+
+<div id="toast-slot"></div>
+
+<script>
+// WHY: One tiny state machine for the design rehearsal. It never calls a
+// provider and never writes a library; it only paints the states the PRD names.
+const jobs = [
+  { id: "job-import", title: "Importing 12 cards", detail: "Starter → Basics · file", state: "done", line: "Imported 12 cards. 2 duplicates were already here.", result: "Starter" },
+];
+let current = null;
+let tick = null;
+
+const panel = document.querySelector("#panel");
+const fab = document.querySelector("#fab");
+const fabCount = document.querySelector("#fab-count");
+const live = document.querySelector("#live");
+const liveText = document.querySelector("#live-text");
+const body = document.querySelector("#jobs-body");
+const toastSlot = document.querySelector("#toast-slot");
+
+function stateWord(state) {
+  return { queued: "Queued", running: "Working", waiting: "Waiting", done: "Done", failed: "Failed" }[state] || state;
+}
+function stateClass(state) {
+  return state === "running" || state === "queued" ? "run" : state === "done" ? "good" : state === "failed" ? "bad" : "";
+}
+function activeJobs() { return jobs.filter((job) => job.state === "queued" || job.state === "running" || job.state === "waiting"); }
+function render() {
+  const active = activeJobs();
+  const first = active[0];
+  fabCount.textContent = String(active.length);
+  fab.hidden = jobs.length === 0;
+  live.hidden = !first;
+  if (first) liveText.innerHTML = `<strong>${first.title}</strong><span class="small muted"> · ${first.line || stateWord(first.state)}</span>`;
+  body.innerHTML = jobs.map((job) => {
+    const actions = [];
+    if (job.state === "done" && job.result) actions.push(`<button class="btn small">View</button>`);
+    if (job.state === "failed") actions.push(`<button class="btn small">Try again</button>`);
+    if (job.state !== "running" && job.state !== "waiting" && job.state !== "queued") actions.push(`<button class="btn small">Dismiss</button>`);
+    return `<div class="job-row ${active.includes(job) ? "active" : ""}">
+      <div class="job-top"><span class="dot ${stateClass(job.state)}"></span><div class="grow"><div class="job-title">${job.title}</div><div class="job-detail">${job.detail}</div></div><span class="job-state ${stateClass(job.state)}">${stateWord(job.state)}</span></div>
+      ${job.line ? `<div class="job-line ${job.state === "failed" ? "error" : ""}">${job.line}</div>` : ""}
+      ${job.details ? `<div class="small muted" style="margin-top:4px">${job.details}</div>` : ""}
+      ${actions.length ? `<div class="job-actions">${actions.join("")}</div>` : ""}
+    </div>`;
+  }).join("");
+}
+function openPanel() { panel.hidden = false; live.hidden = true; }
+function closePanel() { panel.hidden = true; if (activeJobs()[0]) live.hidden = false; }
+function toast(title, text, bad = false, result = null) {
+  toastSlot.innerHTML = `<div class="toast ${bad ? "bad" : ""}"><span class="dot ${bad ? "bad" : "good"}"></span><div class="grow"><strong>${title}</strong><div class="small">${text}</div><div class="row" style="margin-top:7px">${result ? `<button class="btn small">View</button>` : ""}<button class="btn small" onclick="this.closest('.toast').remove()">Dismiss</button></div></div></div>`;
+}
+function startGeneration() {
+  if (current) return;
+  current = { id: `job-gen-${Date.now()}`, title: "Generating 5 cards", detail: "New pack · ordering coffee", state: "running", line: "Asking the provider…" };
+  jobs.unshift(current);
+  render();
+  const steps = [...document.querySelectorAll("#continue-timeline .step")];
+  steps.forEach((step, index) => {
+    step.className = "step";
+    if (index === 0) step.classList.add("done");
+    if (index === 1) step.classList.add("now");
+  });
+  tick = setTimeout(() => {
+    current.state = "done";
+    current.line = "Saved 5 cards in “Coffee basics”.";
+    current.result = "Coffee basics";
+    toast("Generation finished", "5 cards were saved in “Coffee basics”.", false, "Coffee basics");
+    const index = jobs.indexOf(current);
+    if (index > 0) { jobs.splice(index, 1); jobs.unshift(current); }
+    current = null;
+    render();
+  }, 2400);
+}
+function playRetry() {
+  const line = document.querySelector("#retry-line");
+  let seconds = 60;
+  const id = setInterval(() => {
+    seconds -= 5;
+    if (seconds <= 0) {
+      clearInterval(id);
+      line.textContent = "Trying again (try 2 of 4)…";
+      setTimeout(() => { line.textContent = "The provider took too long to answer. Retrying in 60s (try 3 of 4)."; }, 900);
+    } else {
+      line.textContent = `The provider took too long to answer. Retrying in ${seconds}s (try 2 of 4).`;
+    }
+  }, 120);
+}
+function simulateReload() {
+  const running = jobs.find((job) => job.state === "running");
+  if (running) {
+    running.state = "failed";
+    running.line = "The page was reloaded before this job finished.";
+    running.details = "";
+  }
+  render();
+}
+document.querySelectorAll(".scenario-tab").forEach((tab) => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".scenario-tab").forEach((item) => item.setAttribute("aria-selected", String(item === tab)));
+    document.querySelectorAll(".scenario").forEach((panel) => panel.classList.toggle("active", panel.dataset.panel === tab.dataset.scenario));
+    closePanel();
+  });
+});
+document.querySelector("#start-generation").addEventListener("click", startGeneration);
+document.querySelector("#start-import").addEventListener("click", () => {
+  if (current) return;
+  current = { id: `job-imp-${Date.now()}`, title: "Importing cards", detail: "Starter → Basics · file", state: "running", line: "Checking the file…" };
+  jobs.unshift(current);
+  render();
+  setTimeout(() => {
+    current.state = "done";
+    current.line = "Imported 12 cards. 2 duplicates were already here.";
+    current.result = "Starter";
+    toast("Import finished", "12 cards were saved in Starter → Basics.", false, "Starter");
+    current = null;
+    render();
+  }, 1800);
+});
+document.querySelector("#play-retry").addEventListener("click", playRetry);
+document.querySelector("#simulate-reload").addEventListener("click", simulateReload);
+document.querySelector("#open-live").addEventListener("click", openPanel);
+fab.addEventListener("click", () => panel.hidden ? openPanel() : closePanel());
+document.querySelector("#close-panel").addEventListener("click", closePanel);
+render();
+</script>
+</body>
+</html>

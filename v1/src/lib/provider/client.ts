@@ -5,6 +5,8 @@
 // 2026-10-19 opencode: created for the v1 prototype [pack: v1-prototype]
 // 2026-10-20 opencode: runs in the browser too; the config arrives as an
 // argument, so no server-only import remains. [pack: browser-app]
+// 2026-10-23 opencode: failures carry a reason so a job retries only a timeout.
+// [pack: background-jobs]
 
 import type { ProviderConfig } from "@/lib/provider/types";
 
@@ -14,10 +16,23 @@ export interface ChatMessage {
   content: string;
 }
 
+/** Why a provider call failed, so a job retries only a timeout. */
+export type ProviderFailureReason = "timeout" | "unreachable" | "http" | "empty";
+
 /** A provider call either returns text or a sentence a person can act on. */
 export type ProviderCallResult =
   | { ok: true; text: string }
-  | { ok: false; message: string };
+  | { ok: false; message: string; reason: ProviderFailureReason };
+
+/** A timeout is the one provider failure a background job retries. */
+export class ProviderTimeoutError extends Error {
+  readonly reason = "timeout";
+
+  constructor(message: string) {
+    super(message);
+    this.name = "ProviderTimeoutError";
+  }
+}
 
 /** Candidate endpoints, in the order they are tried. */
 export function chatEndpoints(baseUrl: string): string[] {
@@ -90,14 +105,14 @@ export async function callProvider(
         // A 404 may mean the other candidate shape is the right one; anything
         // else is a real answer and should not be retried against a second URL.
         if (response.status === 404 && index + 1 < endpoints.length) continue;
-        return { ok: false, message: lastMessage };
+        return { ok: false, message: lastMessage, reason: "http" };
       }
 
       const payload = (await response.json()) as unknown;
       const text = readReplyText(payload);
       if (!text || text.trim().length === 0) {
         console.warn(`[provider] empty reply from ${url} in ${Date.now() - startedAt}ms`);
-        return { ok: false, message: "The provider answered with no words." };
+        return { ok: false, message: "The provider answered with no words.", reason: "empty" };
       }
       console.info(`[provider] ok from ${url} in ${Date.now() - startedAt}ms, ${text.length} characters`);
       return { ok: true, text };
@@ -108,13 +123,13 @@ export async function callProvider(
         : `The provider could not be reached at ${url}.`;
       console.warn(`[provider] ${lastMessage} (after ${Date.now() - startedAt}ms)`);
       if (index + 1 < endpoints.length && !aborted) continue;
-      return { ok: false, message: lastMessage };
+      return { ok: false, message: lastMessage, reason: aborted ? "timeout" : "unreachable" };
     } finally {
       clearTimeout(timer);
     }
   }
 
-  return { ok: false, message: lastMessage };
+  return { ok: false, message: lastMessage, reason: "unreachable" };
 }
 
 /**

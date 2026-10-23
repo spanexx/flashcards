@@ -11,6 +11,7 @@ import { MemoryStore, setBrowserStore, type Store } from "@/lib/browser/store";
 import { localGet, localSend } from "@/lib/browser/router";
 import { writeMeta } from "@/lib/browser/repository";
 import { PACK_BUNDLE_SCHEMA } from "@/lib/browser/bundle";
+import type { BrowserJob, JobView } from "@/lib/browser/jobs";
 import { ApiError } from "@/lib/client/errors";
 import type { AnswerResult, Card, Plan, ProviderStatus } from "@/lib/shared/types";
 
@@ -848,5 +849,151 @@ describe("creation brief through the router", () => {
     expect(heard.cards[0].prompt).toEqual([
       { type: "speak", text: "Mam kota.", lang: "pl", label: "Listen" },
     ]);
+  });
+});
+
+describe("background job routes", () => {
+  async function preparedRequest(): Promise<string> {
+    const prepared = await localSend<{ requestId: string }>("/api/provider/prepare", "POST", {
+      target: { kind: "pack" },
+      count: 1,
+    });
+    return prepared.requestId;
+  }
+
+  it("enqueues a generation job and returns a payload-free view", async () => {
+    const requestId = await preparedRequest();
+    const created = await localSend<{ job: JobView }>("/api/jobs", "POST", {
+      kind: "generation",
+      requestId,
+    });
+    expect(created.job.status).toBe("queued");
+    expect(created.job.kind).toBe("generation");
+    expect(created.job.maxAttempts).toBe(4);
+    expect("payload" in created.job).toBe(false);
+
+    const listed = await localGet<{ jobs: JobView[] }>("/api/jobs");
+    expect(listed.jobs).toHaveLength(1);
+    expect(listed.jobs[0].id).toBe(created.job.id);
+    expect("payload" in listed.jobs[0]).toBe(false);
+  });
+
+  it("refuses a prepared request twice", async () => {
+    const requestId = await preparedRequest();
+    await localSend("/api/jobs", "POST", { kind: "generation", requestId });
+    await expect(localSend("/api/jobs", "POST", { kind: "generation", requestId })).rejects.toThrow(
+      "expired",
+    );
+    expect((await localGet<{ jobs: JobView[] }>("/api/jobs")).jobs).toHaveLength(1);
+  });
+
+  it("enqueues an import without writing it yet", async () => {
+    const created = await localSend<{ job: JobView }>("/api/jobs", "POST", {
+      kind: "import",
+      text: packBundle(),
+      target: { kind: "pack" },
+      source: "import",
+    });
+    expect(created.job.kind).toBe("import");
+    expect(created.job.title).toBe("Import pack");
+    expect(created.job.maxAttempts).toBe(1);
+    expect((await localGet<{ packs: unknown[] }>("/api/packs")).packs).toHaveLength(0);
+  });
+
+  it("rejects an empty or badly targeted import before enqueueing", async () => {
+    await expect(
+      localSend("/api/jobs", "POST", { kind: "import", text: "  ", target: { kind: "pack" } }),
+    ).rejects.toThrow("Paste the bundle");
+    await expect(
+      localSend("/api/jobs", "POST", {
+        kind: "import",
+        text: packBundle(),
+        target: { kind: "nope" },
+      }),
+    ).rejects.toThrow("Choose Pack");
+    expect((await localGet<{ jobs: JobView[] }>("/api/jobs")).jobs).toHaveLength(0);
+  });
+
+  it("retries a failed job with a fresh budget and dismisses a finished one", async () => {
+    const created = await localSend<{ job: JobView }>("/api/jobs", "POST", {
+      kind: "import",
+      text: packBundle(),
+      target: { kind: "pack" },
+    });
+    const [stored] = await store.all<BrowserJob>("jobs");
+    await store.put("jobs", {
+      ...stored,
+      status: "failed",
+      lastError: "boom",
+      updatedAt: new Date().toISOString(),
+      finishedAt: new Date().toISOString(),
+    });
+    await expect(localSend(`/api/jobs/${created.job.id}/retry`, "POST")).resolves.toMatchObject({
+      job: { status: "queued", attempts: 0 },
+    });
+    const retried = await localGet<{ jobs: JobView[] }>("/api/jobs");
+    const fresh = retried.jobs[0];
+    expect(fresh.id).not.toBe(created.job.id);
+
+    const [queued] = await store.all<BrowserJob>("jobs");
+    await store.put("jobs", {
+      ...queued,
+      status: "failed",
+      lastError: "boom",
+      updatedAt: new Date().toISOString(),
+      finishedAt: new Date().toISOString(),
+    });
+    await expect(localSend(`/api/jobs/${fresh.id}`, "DELETE")).resolves.toMatchObject({
+      dismissed: true,
+    });
+    expect((await localGet<{ jobs: JobView[] }>("/api/jobs")).jobs).toHaveLength(0);
+  });
+
+  it("marks an active job interrupted when a backup is restored", async () => {
+    const requestId = await preparedRequest();
+    const created = await localSend<{ job: JobView }>("/api/jobs", "POST", {
+      kind: "generation",
+      requestId,
+    });
+    const [stored] = await store.all<BrowserJob>("jobs");
+    await store.put("jobs", { ...stored, status: "running" });
+
+    const backup = await localGet<{ json: string }>("/api/backup/export");
+    await localSend("/api/backup/restore", "POST", { json: backup.json });
+
+    const [job] = (await localGet<{ jobs: JobView[] }>("/api/jobs")).jobs;
+    expect(job.id).toBe(created.job.id);
+    expect(job.status).toBe("failed");
+    expect(job.lastError).toBe("The library was restored.");
+  });
+
+  it("keeps a running job when the backup is refused", async () => {
+    const requestId = await preparedRequest();
+    const created = await localSend<{ job: JobView }>("/api/jobs", "POST", {
+      kind: "generation",
+      requestId,
+    });
+    const [stored] = await store.all<BrowserJob>("jobs");
+    await store.put("jobs", { ...stored, status: "running" });
+
+    await expect(
+      localSend("/api/backup/restore", "POST", { json: JSON.stringify({ schema: "nope" }) }),
+    ).rejects.toThrow("Nothing was restored");
+    const [job] = (await localGet<{ jobs: JobView[] }>("/api/jobs")).jobs;
+    expect(job.id).toBe(created.job.id);
+    expect(job.status).toBe("running");
+  });
+
+  it("will not dismiss a running job", async () => {
+    const requestId = await preparedRequest();
+    const created = await localSend<{ job: JobView }>("/api/jobs", "POST", {
+      kind: "generation",
+      requestId,
+    });
+    const [stored] = await store.all<BrowserJob>("jobs");
+    await store.put("jobs", { ...stored, status: "running" });
+    await expect(localSend(`/api/jobs/${created.job.id}`, "DELETE")).rejects.toThrow(
+      "cannot be dismissed",
+    );
   });
 });
