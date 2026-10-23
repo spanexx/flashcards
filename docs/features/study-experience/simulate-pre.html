@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flashcards - Study experience design simulation</title>
+<!--
+WHY: Design-time simulation for the study pack. It mirrors the locked GRILL:
+no answer before the answer, no spoken answer on a listening card, a tutor that
+does something, pack choice, and a card that looks deliberate. Hardcoded data;
+saves nothing. The five scenarios are the PRD contract.
+PACK: study-experience
+2026-10-23 opencode: created before the implementation [pack: study-experience]
+-->
+<style>
+  :root {
+    --bg: #f7f6f3; --card: #fff; --ink: #23211d; --quiet: #6d6a63;
+    --line: #dedbd3; --accent: #2f5d50; --accent-ink: #fff;
+    --good: #2f6d3f; --near: #8a6d1f; --miss: #8a3b2f;
+    --shadow: 0 18px 44px rgba(35, 33, 29, .15);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #191816; --card: #232220; --ink: #ece9e2; --quiet: #a5a199;
+      --line: #3a3833; --accent: #7fb3a2; --accent-ink: #10120f;
+      --good: #8ec79b; --near: #d9bc6a; --miss: #e0968a;
+      --shadow: 0 18px 44px rgba(0, 0, 0, .36);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); }
+  body { font: 15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  button, select, input { font: inherit; }
+  button { cursor: pointer; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 22px; border-bottom: 1px solid var(--line); background: var(--card); position: sticky; top: 0; z-index: 10; }
+  .brand { font-weight: 750; letter-spacing: -.01em; }
+  .brand span { color: var(--accent); }
+  .tag { color: var(--quiet); font-size: 12px; border: 1px solid var(--line); border-radius: 999px; padding: 4px 9px; }
+  .shell { width: min(980px, calc(100% - 32px)); margin: 0 auto; padding: 24px 0 80px; }
+  h1 { margin: 0; font-size: 30px; letter-spacing: -.025em; }
+  h2 { margin: 0; font-size: 17px; }
+  h3 { margin: 0; font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--quiet); }
+  p { margin: 6px 0 0; }
+  .lead { color: var(--quiet); max-width: 720px; }
+  .nav { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--line); margin: 18px 0; }
+  .nav button { background: transparent; color: var(--quiet); border: 0; border-bottom: 2px solid transparent; padding: 10px 12px; font-weight: 650; }
+  .nav button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+  .scenario { display: none; }
+  .scenario.active { display: block; }
+  .head { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 14px; }
+  .num { display: grid; place-items: center; width: 28px; height: 28px; flex: 0 0 28px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font-weight: 750; }
+  .grid { display: grid; gap: 14px; }
+  .two { grid-template-columns: minmax(0, 1.1fr) minmax(300px, .9fr); }
+  @media (max-width: 860px) { .two { grid-template-columns: 1fr; } }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
+  .raised { box-shadow: var(--shadow); }
+  .muted { color: var(--quiet); }
+  .small { font-size: 12px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .grow { flex: 1; }
+  .btn { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 9px; padding: 8px 11px; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 650; }
+  .btn.small { padding: 4px 9px; font-size: 12px; }
+  .select { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 9px; padding: 8px 10px; }
+  .progress { height: 6px; border-radius: 999px; background: var(--line); overflow: hidden; margin: 10px 0 16px; }
+  .progress span { display: block; height: 100%; width: 35%; border-radius: inherit; background: var(--accent); }
+  .study-card { border-radius: 18px; padding: 22px; box-shadow: var(--shadow); background: linear-gradient(180deg, color-mix(in srgb, var(--card) 96%, var(--accent)), var(--card)); }
+  .mode { display: inline-block; border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; color: var(--quiet); font-size: 12px; font-weight: 650; letter-spacing: .04em; text-transform: uppercase; }
+  .prompt { font-size: clamp(1.35rem, 3vw, 1.9rem); line-height: 1.55; letter-spacing: -.01em; margin: 18px 0; }
+  .blank { display: inline-block; width: 8ch; border-bottom: 2px solid var(--accent); }
+  .answer-input { width: 100%; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink); padding: 11px 13px; font-size: 1.05rem; }
+  .listen { display: grid; gap: 10px; justify-items: start; margin: 18px 0; }
+  .listen button { border: 0; border-radius: 999px; background: var(--accent); color: var(--accent-ink); padding: 14px 22px; font-weight: 700; font-size: 1rem; }
+  .listen p { color: var(--quiet); }
+  .answer { border-left: 3px solid var(--accent); padding: 2px 0 2px 14px; margin-top: 16px; }
+  .answer .line { font-size: 1.2rem; font-weight: 650; }
+  .answer .translation { display: block; color: var(--quiet); font-style: italic; margin-top: 6px; }
+  .result { margin-top: 14px; border-top: 1px dashed var(--line); padding-top: 12px; }
+  .badge { font-weight: 700; }
+  .badge.miss { color: var(--miss); }
+  .badge.near { color: var(--near); }
+  .badge.good { color: var(--good); }
+  .tutor { margin-top: 12px; border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line)); border-radius: 11px; padding: 10px 12px; background: color-mix(in srgb, var(--accent) 7%, var(--card)); }
+  .tutor h3 { color: var(--accent); margin-bottom: 3px; }
+  details { margin-top: 10px; color: var(--quiet); }
+  summary { cursor: pointer; font-size: 13px; }
+  .note { border-left: 3px solid var(--near); padding: 8px 12px; background: color-mix(in srgb, var(--near) 8%, var(--card)); color: var(--quiet); }
+  @media (max-width: 560px) {
+    .shell { width: min(100% - 20px, 980px); padding-top: 16px; }
+    h1 { font-size: 24px; }
+    .study-card { padding: 16px; border-radius: 14px; }
+    .prompt { font-size: 1.3rem; }
+    .listen button { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">Flash<span>cards</span></div>
+  <span class="tag">study-experience · design simulation</span>
+</header>
+<main class="shell">
+  <h1>Study, without giving the answer away.</h1>
+  <p class="lead">Five scenarios show the promises: choose what to study, see no answer before the answer, hear a card without reading it, make the tutor useful, and make the card the centre of the screen.</p>
+
+  <nav class="nav" aria-label="Scenarios">
+    <button type="button" aria-selected="true" data-tab="one">1 · Choose a pack</button>
+    <button type="button" aria-selected="false" data-tab="two">2 · No answer on top</button>
+    <button type="button" aria-selected="false" data-tab="three">3 · Listening card</button>
+    <button type="button" aria-selected="false" data-tab="four">4 · Tutor after a miss</button>
+    <button type="button" aria-selected="false" data-tab="five">5 · The reveal</button>
+  </nav>
+
+  <section class="scenario active" id="one">
+    <div class="head"><span class="num">1</span><div><h2>Choose what to study</h2><p class="muted">The plan is no longer chosen only by the system.</p></div></div>
+    <div class="two grid">
+      <div class="card">
+        <h3>Study from</h3>
+        <div class="row" style="margin-top:8px">
+          <select class="select" aria-label="Study from"><option>All cards</option><option selected>Polish Starter</option><option>Travel Basics</option></select>
+          <select class="select" aria-label="Deck"><option>All decks in this pack</option><option>Basics</option><option>Questions</option></select>
+        </div>
+        <div class="card raised" style="margin-top:14px">
+          <h3>Today's session</h3>
+          <p class="lead">12 cards from Polish Starter are laid out. It is an offer — stop whenever you like.</p>
+          <div class="progress" aria-hidden="true"><span></span></div>
+          <div class="row"><span class="muted">Cards offered</span><input class="select" style="width:5.5rem" value="12" aria-label="Cards offered"><button class="btn small" type="button">Rebuild the plan</button><span class="grow"></span><button class="btn primary" type="button">Start</button></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Why this is better</h3>
+        <ul class="muted">
+          <li>The learner can choose a pack, a deck, or everything.</li>
+          <li>The offer count still works inside the chosen scope.</li>
+          <li>An empty pack says so and offers a way back to All cards.</li>
+        </ul>
+        <div class="note">No new algorithm. The same plan and reasons, filtered to the learner's choice.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="scenario" id="two">
+    <div class="head"><span class="num">2</span><div><h2>No answer on top</h2><p class="muted">The summary chip is hidden until the answer is revealed.</p></div></div>
+    <div class="two grid">
+      <div class="card study-card">
+        <div class="row"><span class="mode">Fill the blank</span><span class="grow"></span><span class="muted small">Card 1 of 20</span></div>
+        <div class="prompt">Piję <span class="blank"></span> (kawa).</div>
+        <input class="answer-input" placeholder="Your answer" aria-label="Your answer">
+        <div class="row" style="margin-top:12px"><button class="btn primary" type="button">Answer</button><button class="btn small" type="button">Ask for a hint</button></div>
+      </div>
+      <div class="card">
+        <h3>What changed</h3>
+        <p class="muted">The old screen printed “Piję kawę” in a chip above the question. That is the answer. The mode label tells the learner what kind of card it is without telling them the words.</p>
+        <p class="muted">The answer appears only after the learner submits.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="scenario" id="three">
+    <div class="head"><span class="num">3</span><div><h2>A listening card only asks you to listen</h2><p class="muted">One play button. No summary, no full line, no translation.</p></div></div>
+    <div class="two grid">
+      <div class="card study-card">
+        <div class="row"><span class="mode">Listen and type</span><span class="grow"></span><span class="muted small">Card 4 of 5 · tutor on</span></div>
+        <div class="listen"><button type="button">Play the line</button><p>Listen, then type what you hear.</p></div>
+        <input class="answer-input" placeholder="Type what you hear" aria-label="Type what you hear">
+        <div class="row" style="margin-top:12px"><button class="btn primary" type="button">Answer</button></div>
+      </div>
+      <div class="card">
+        <h3>What changed</h3>
+        <p class="muted">The old screen showed “Gdzie jest dworzec?” above the play buttons. A listening card must not print the line it asks the learner to hear.</p>
+        <p class="muted">After the answer, the line and its translation are revealed.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="scenario" id="four">
+    <div class="head"><span class="num">4</span><div><h2>The tutor does something</h2><p class="muted">When it is on, the first miss on a card gets a tutor hint automatically.</p></div></div>
+    <div class="two grid">
+      <div class="card study-card">
+        <div class="row"><span class="mode">Fill the blank</span><span class="grow"></span><span class="muted small">tutor on</span></div>
+        <div class="prompt">My <span class="blank"></span> obiad. <span class="muted">(We were eating dinner.)</span></div>
+        <div class="result">
+          <div class="row"><span class="badge miss">No</span><span class="muted">You wrote “jade”; expected “jedliśmy”.</span></div>
+          <div class="answer"><span class="line">My jedliśmy obiad.</span><span class="translation">We were eating dinner.</span></div>
+          <div class="tutor"><h3>Tutor hint</h3><p>The verb is past tense, masculine plural: -liśmy. “Jade” is present tense.</p></div>
+          <details><summary>Was this fair?</summary><div class="row" style="margin-top:8px"><button class="btn small" type="button">I got it</button><button class="btn small" type="button">Nearly</button><button class="btn small" type="button">I missed it</button><button class="btn small" type="button">No</button></div></details>
+          <div class="row" style="margin-top:14px"><button class="btn primary" type="button">Next card</button><button class="btn small" type="button">Look at this card's record</button></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>What changed</h3>
+        <p class="muted">Turning the tutor on now has a visible effect: it offers one hint after the first wrong answer on a card. The learner can still ask for more.</p>
+        <p class="muted">Every hint says where it came from: Tutor hint or Pack hint. If the tutor cannot answer, the pack hint is used and the reason is shown.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="scenario" id="five">
+    <div class="head"><span class="num">5</span><div><h2>The reveal is calm and readable</h2><p class="muted">One clear answer block, a progress bar, and a phone-sized layout.</p></div></div>
+    <div class="two grid">
+      <div class="card study-card">
+        <div class="row"><span class="mode">Fill the blank</span><span class="grow"></span><span class="muted small">Card 12 of 12</span></div>
+        <div class="progress" aria-hidden="true"><span style="width:100%"></span></div>
+        <div class="prompt">My <span class="blank"></span> obiad. <span class="muted">(We were eating dinner.)</span></div>
+        <div class="result">
+          <div class="row"><span class="badge miss">No</span><span class="muted">Blank 1 · You wrote “jade”; expected “jedliśmy”.</span></div>
+          <div class="answer"><span class="line">My jedliśmy obiad.</span><span class="translation">We were eating dinner.</span></div>
+          <details><summary>Was this fair?</summary><div class="row" style="margin-top:8px"><button class="btn small" type="button">I got it</button><button class="btn small" type="button">Nearly</button><button class="btn small" type="button">I missed it</button><button class="btn small" type="button">No</button></div></details>
+          <div class="row" style="margin-top:14px"><button class="btn primary" type="button">Finish</button><button class="btn small" type="button">Look at this card's record</button></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>What changed</h3>
+        <p class="muted">The answer's translation sits on its own line instead of running into the sentence. The outcome badge replaces a row of four always-visible buttons; corrections live behind “Was this fair?”.</p>
+        <p class="muted">At phone width the card fills the screen, the prompt stays readable, and the primary action is full-width.</p>
+      </div>
+    </div>
+  </section>
+</main>
+<script>
+  const tabs = Array.from(document.querySelectorAll(".nav button"));
+  for (const tab of tabs) {
+    tab.addEventListener("click", () => {
+      for (const other of tabs) other.setAttribute("aria-selected", String(other === tab));
+      for (const scenario of document.querySelectorAll(".scenario")) {
+        scenario.classList.toggle("active", scenario.id === tab.dataset.tab);
+      }
+    });
+  }
+</script>
+</body>
+</html>

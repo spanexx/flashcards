@@ -1,0 +1,68 @@
+GRILL: Study experience
+Status: Locked
+Date: 2026-10-23
+Pack: study-experience
+Authority: delegated by the learner on 2026-10-22. No interactive approval.
+
+Source questions, quoted from the learner:
+- "How can the system give user an answer on top and tehn tell them to answer it?
+  thats stupid, that should not be there."
+- "Some questions ae stupid example this what does it tell user to do exactly to
+  write what they hear? if so why the fuck is it written at the top!!"
+- "i do not feel the tutor do anyting for me when i turned it on for a session."
+- "A learner should be able to study a pack if they want, the system does not
+  have to be the only one that chooses what to learn."
+- "I am still underwhelmed by how the flashcard looks, being it is the center
+  point of this app and it should look addictive."
+
+Q1. What exactly leaks the answer before the learner answers?
+A1. The `card.summary` chip at the top of every card is often the answer itself
+    (for example "Dzień dobry" on a card asking for that phrase). It is removed
+    before judging. A neutral mode label replaces it. The summary appears only
+    after the answer is revealed.
+
+Q2. What should a listening card show before the answer?
+A2. Only a play control and one instruction: "Listen, then type what you hear."
+    No summary, no full line, no translation. The duplicate "Play it again" and
+    "Hear it" controls become one clear play button.
+
+Q3. What should the tutor actually do when it is on?
+A3. The plan says the tutor will offer a hint after a missed answer. When the
+    learner turns it on, the first wrong answer on a card automatically asks for
+    one tutor hint. The learner can still ask for hints manually. Every hint is
+    labelled "Tutor hint" or "Pack hint" so the source is visible. If the tutor
+    cannot answer, the pack hint is used and the reason is shown. Automatic help
+    is once per card per session, not a stream.
+
+Q4. How does pack choice work?
+A4. The plan screen gets a "Study from" selector: All cards (default) or one
+    installed pack. Choosing a pack rebuilds the plan from that pack. If the pack
+    has decks, a deck selector narrows it further. An empty scope says so and
+    offers a way back to All cards. The offer count still works inside the scope.
+
+Q5. What changes about the card's look?
+A5. The study card becomes the visual centre: a progress bar, a clear mode label,
+    a larger prompt, a distinct answer block, translations on their own line, and
+    a calm outcome badge. The four judgement-correction buttons move behind a
+    small "Was this fair?" disclosure so the next action is obvious. The layout
+    stays comfortable on a phone.
+
+Q6. What does not change?
+A6. The four outcome words, the judge, the one-return rule, the session offer and
+    the no-score ending are untouched. No new dependency. No change to the card
+    schema, backup schema, pack schema or provider prompt contract.
+
+Q7. What proves it?
+A7. Router tests for pack/deck plan filtering; a study simulation through the
+    real router and built output; an external Edge lane that chooses a pack,
+    checks no answer text is visible before submitting, checks a listening card
+    prints no answer, asks for a hint, sees an automatic tutor hint after a miss,
+    and checks the reveal and phone width. Full typecheck, lint, build and test
+    suite stay green.
+
+Locked decisions:
+- Hide summary before judging.
+- One listen control; no answer text on a listening card.
+- Tutor on means an automatic hint after the first miss on each card.
+- Pack and deck scope selector on the plan.
+- Card restyle without changing the judging rules.

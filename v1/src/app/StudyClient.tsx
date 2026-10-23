@@ -13,11 +13,18 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { apiGet, apiSend, ApiError } from "@/lib/client/api";
 import { isWrong, OUTCOME_LABELS, OUTCOME_MEANINGS, worstOutcome } from "@/lib/core/outcome";
+import {
+  LISTEN_INSTRUCTION,
+  listenPrompt,
+  shouldAutoHint,
+  studyModeLabel,
+} from "@/lib/client/study-view";
 import type {
   AnswerResult,
   Card,
   CardPart,
   Outcome,
+  PackStatus,
   Plan,
   TutorBanner,
 } from "@/lib/shared/types";
@@ -71,7 +78,25 @@ function Side({
     <div className={interactive ? "prompt-text" : undefined}>
       {parts.map((part, index) => {
         if (part.type === "text") {
-          return <span key={index}>{part.role === "translation" ? <em>{part.text}</em> : part.text}</span>;
+          // WHY: Pack parts arrive as separate strings; without a joining space
+          // the answer reads "My jedliśmy obiad.We were eating dinner.".
+          const next = parts[index + 1];
+          const nextText = next?.type === "text" ? next.text : "";
+          const needsSpace =
+            index < parts.length - 1 &&
+            !/\s$/.test(part.text) &&
+            !/^[,.;:!?…]/.test(part.text) &&
+            !/^[,.;:!?…]/.test(nextText);
+          return (
+            <span key={index}>
+              {part.role === "translation" ? (
+                <em className="study-translation">{part.text}</em>
+              ) : (
+                part.text
+              )}
+              {needsSpace ? " " : ""}
+            </span>
+          );
         }
         if (part.type === "code") {
           return (
@@ -112,6 +137,58 @@ function Side({
   );
 }
 
+/** Pick a pack and, when it has decks, one deck. All cards is the default. */
+function ScopePicker({
+  packs,
+  packName,
+  deckId,
+  onChange,
+}: {
+  packs: PackStatus[];
+  packName: string;
+  deckId: string;
+  onChange: (packName: string, deckId: string) => void;
+}) {
+  const selected = packs.find((pack) => pack.name === packName) ?? null;
+  const decks = selected?.decks ?? [];
+  return (
+    <div className="card study-scope">
+      <label className="study-scope-field">
+        <span>Study from</span>
+        <select
+          className="study-select"
+          value={packName}
+          onChange={(event) => onChange(event.target.value, "")}
+        >
+          <option value="">All cards</option>
+          {packs.map((pack) => (
+            <option key={pack.name} value={pack.name}>
+              {pack.name}
+            </option>
+          ))}
+        </select>
+      </label>
+      {selected && decks.length > 0 ? (
+        <label className="study-scope-field">
+          <span>Deck</span>
+          <select
+            className="study-select"
+            value={deckId}
+            onChange={(event) => onChange(packName, event.target.value)}
+          >
+            <option value="">All decks</option>
+            {decks.map((deck) => (
+              <option key={deck.id} value={deck.id}>
+                {deck.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : null}
+    </div>
+  );
+}
+
 export default function StudyClient() {
   const [phase, setPhase] = useState<Phase>("loading");
   const [message, setMessage] = useState<string | null>(null);
@@ -128,22 +205,32 @@ export default function StudyClient() {
   const [offerChoice, setOfferChoice] = useState(20);
   const [busy, setBusy] = useState(false);
   const [working, setWorking] = useState("");
+  const [packs, setPacks] = useState<PackStatus[]>([]);
+  const [scopePack, setScopePack] = useState("");
+  const [scopeDeck, setScopeDeck] = useState("");
+  const [hintSource, setHintSource] = useState<string | null>(null);
 
   const returnedRef = useRef<Set<string>>(new Set());
   const [returnedIds, setReturnedIds] = useState<string[]>([]);
   const startedRef = useRef<number>(0);
   const attemptsRef = useRef(0);
+  const autoHintedRef = useRef<Set<string>>(new Set());
 
   const card = queue[index] ?? null;
   const result = card ? results[card.id] : undefined;
 
-  /** Load a fresh plan; the offer may be adjusted before any card is seen. */
-  const loadPlan = useCallback(async (offer?: number) => {
+  /** Load a fresh plan; the offer and the chosen pack/deck may be adjusted. */
+  const loadPlan = useCallback(async (offer?: number, packName = "", deckId = "") => {
     setPhase("loading");
     setMessage(null);
     try {
+      const params = new URLSearchParams();
+      if (offer !== undefined) params.set("offer", String(offer));
+      if (packName) params.set("pack", packName);
+      if (deckId) params.set("deck", deckId);
+      const query = params.toString();
       const data = await apiGet<{ plan: Plan | null; message: string | null }>(
-        offer === undefined ? "/api/plan" : `/api/plan?offer=${offer}`,
+        query ? `/api/plan?${query}` : "/api/plan",
       );
       if (!data.plan) {
         setPlan(null);
@@ -157,6 +244,7 @@ export default function StudyClient() {
       setIndex(0);
       setResults({});
       returnedRef.current = new Set();
+      autoHintedRef.current = new Set();
       setReturnedIds([]);
       attemptsRef.current = 0;
       setPhase("plan");
@@ -173,6 +261,21 @@ export default function StudyClient() {
     };
   }, [loadPlan]);
 
+  // The scope choices come from the same pack list the Library uses.
+  useEffect(() => {
+    let cancelled = false;
+    void apiGet<{ packs: PackStatus[] }>("/api/packs")
+      .then((data) => {
+        if (!cancelled) setPacks(data.packs);
+      })
+      .catch(() => {
+        // The plan still works without the optional scope selector.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   useEffect(() => {
     startedRef.current = Date.now();
   }, [index]);
@@ -185,8 +288,10 @@ export default function StudyClient() {
     setAnswers({});
     setHintTexts([]);
     setHintMessage(null);
+    setHintSource(null);
     setHintUsed(false);
     setWorking("");
+    autoHintedRef.current = new Set();
     setPhase("running");
   }, [plan]);
 
@@ -194,6 +299,7 @@ export default function StudyClient() {
     setAnswers({});
     setHintTexts([]);
     setHintMessage(null);
+    setHintSource(null);
     setHintUsed(false);
     setWorking("");
   }, []);
@@ -217,13 +323,56 @@ export default function StudyClient() {
       setBusy(false);
       if (stopped) {
         // Stopping is not an ending: no sign-off, just a calm return to the plan.
-        await loadPlan();
+        await loadPlan(undefined, scopePack, scopeDeck);
         return;
       }
       setPhase("done");
     },
-    [loadPlan, plan],
+    [loadPlan, plan, scopeDeck, scopePack],
   );
+
+  const requestHint = useCallback(
+    async (outcomeCategory?: string, automatic = false) => {
+      if (!card || hintBusy) return;
+      setHintBusy(true);
+      setHintMessage(null);
+      try {
+        const data = await apiSend<{
+          text: string | null;
+          source: string;
+          prompt: string | null;
+          providerMessage: string | null;
+        }>("/api/provider/hint", "POST", {
+          cardId: card.id,
+          approved: approved === "yes",
+          usedHints: hintTexts,
+          outcomeCategory:
+            outcomeCategory ??
+            (result ? OUTCOME_LABELS[result.cardOutcome] : "not answered yet"),
+        });
+        if (data.text) {
+          setHintTexts((previous) => [...previous, data.text as string]);
+          setHintSource(data.source);
+          setHintUsed(true);
+        }
+        if (data.providerMessage) setHintMessage(data.providerMessage);
+        if (!data.text && !data.providerMessage) {
+          setHintMessage(
+            automatic ? "The tutor had no hint for this one." : "No hint is available for this card.",
+          );
+        }
+      } catch (error) {
+        setHintMessage(error instanceof Error ? error.message : "The hint could not be asked for.");
+      } finally {
+        setHintBusy(false);
+      }
+    },
+    [approved, card, hintBusy, hintTexts, result],
+  );
+
+  const askHint = useCallback(() => {
+    void requestHint();
+  }, [requestHint]);
 
   const submitAnswer = useCallback(async () => {
     if (!card || busy) return;
@@ -243,12 +392,24 @@ export default function StudyClient() {
         setReturnedIds((previous) => [...previous, card.id]);
         setQueue((previous) => [...previous, card]);
       }
+      // A tutor that is on should do something without being asked: one hint
+      // after the first miss on this card, never a stream.
+      if (
+        shouldAutoHint({
+          approved: approved === "yes",
+          outcome: response.cardOutcome,
+          alreadyAutoHinted: autoHintedRef.current.has(card.id),
+        })
+      ) {
+        autoHintedRef.current.add(card.id);
+        void requestHint(OUTCOME_LABELS[response.cardOutcome], true);
+      }
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "The answer could not be judged.");
     } finally {
       setBusy(false);
     }
-  }, [answers, busy, card, hintUsed]);
+  }, [answers, approved, busy, card, hintUsed, requestHint]);
 
   const nextCard = useCallback(() => {
     if (index + 1 < queue.length) {
@@ -258,35 +419,6 @@ export default function StudyClient() {
       void finish(true, false);
     }
   }, [finish, index, queue.length, resetCardState]);
-
-  const askHint = useCallback(async () => {
-    if (!card || hintBusy) return;
-    setHintBusy(true);
-    setHintMessage(null);
-    try {
-      const data = await apiSend<{
-        text: string | null;
-        source: string;
-        prompt: string | null;
-        providerMessage: string | null;
-      }>("/api/provider/hint", "POST", {
-        cardId: card.id,
-        approved: approved === "yes",
-        usedHints: hintTexts,
-        outcomeCategory: result ? OUTCOME_LABELS[result.cardOutcome] : "not answered yet",
-      });
-      if (data.text) {
-        setHintTexts((previous) => [...previous, data.text as string]);
-        setHintUsed(true);
-      }
-      if (data.providerMessage) setHintMessage(data.providerMessage);
-      if (!data.text && !data.providerMessage) setHintMessage("No hint is available for this card.");
-    } catch (error) {
-      setHintMessage(error instanceof Error ? error.message : "The hint could not be asked for.");
-    } finally {
-      setHintBusy(false);
-    }
-  }, [approved, card, hintBusy, hintTexts, result]);
 
   const correct = useCallback(
     async (region: string | null, outcome: Outcome) => {
@@ -342,10 +474,33 @@ export default function StudyClient() {
     return (
       <div>
         <h1>Study</h1>
+        <ScopePicker
+          packs={packs}
+          packName={scopePack}
+          deckId={scopeDeck}
+          onChange={(nextPack, nextDeck) => {
+            setScopePack(nextPack);
+            setScopeDeck(nextDeck);
+            void loadPlan(undefined, nextPack, nextDeck);
+          }}
+        />
         <div className="card">
           <p>{message ?? "No cards yet."}</p>
           <div className="row">
-            <Link className="btn primary" href="/library" prefetch={false}>
+            {scopePack ? (
+              <button
+                className="btn primary"
+                type="button"
+                onClick={() => {
+                  setScopePack("");
+                  setScopeDeck("");
+                  void loadPlan();
+                }}
+              >
+                Study all cards
+              </button>
+            ) : null}
+            <Link className="btn" href="/library" prefetch={false}>
               Open the library
             </Link>
             <Link className="btn" href="/settings" prefetch={false}>
@@ -363,7 +518,11 @@ export default function StudyClient() {
         <h1>This session is finished.</h1>
         <div className="card">
           <div className="row">
-            <button className="btn primary" type="button" onClick={() => void loadPlan()}>
+            <button
+              className="btn primary"
+              type="button"
+              onClick={() => void loadPlan(undefined, scopePack, scopeDeck)}
+            >
               Study again
             </button>
             <Link className="btn" href="/progress" prefetch={false}>
@@ -377,12 +536,30 @@ export default function StudyClient() {
 
   if (phase === "plan" && plan) {
     const banner: TutorBanner | null = plan.banner;
+    const selectedPack = packs.find((pack) => pack.name === scopePack) ?? null;
+    const selectedDeck = selectedPack?.decks?.find((deck) => deck.id === scopeDeck) ?? null;
+    const scopeText = selectedPack
+      ? `${selectedPack.name}${selectedDeck ? ` / ${selectedDeck.name}` : ""}`
+      : "the whole library";
     return (
       <div>
         <h1>Today&apos;s session</h1>
         <p className="lead">
-          {plan.offer} cards are laid out. It is an offer — stop whenever you like.
+          {plan.cards.length} {plan.cards.length === 1 ? "card" : "cards"} from {scopeText}{" "}
+          {plan.cards.length === 1 ? "is" : "are"} laid out. It is an offer — stop whenever you
+          like.
         </p>
+
+        <ScopePicker
+          packs={packs}
+          packName={scopePack}
+          deckId={scopeDeck}
+          onChange={(nextPack, nextDeck) => {
+            setScopePack(nextPack);
+            setScopeDeck(nextDeck);
+            void loadPlan(offerChoice, nextPack, nextDeck);
+          }}
+        />
 
         <div className="card plan-bar">
           <label>
@@ -398,7 +575,11 @@ export default function StudyClient() {
               style={{ width: "5.5rem" }}
             />
           </label>
-          <button className="btn small" type="button" onClick={() => void loadPlan(offerChoice)}>
+          <button
+            className="btn small"
+            type="button"
+            onClick={() => void loadPlan(offerChoice, scopePack, scopeDeck)}
+          >
             Rebuild the plan
           </button>
           <span className="grow" />
@@ -416,7 +597,9 @@ export default function StudyClient() {
               {plan.groups.map((group) => (
                 <li key={group.topic}>
                   <strong>{group.label}</strong> — {group.reason}{" "}
-                  <span className="chip">{group.cardIds.length} cards</span>
+                  <span className="chip">
+                    {group.cardIds.length} {group.cardIds.length === 1 ? "card" : "cards"}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -468,6 +651,11 @@ export default function StudyClient() {
             <p className="muted">No tutor is set up. Hints come from the pack itself, if it ships any.</p>
           )}
         </details>
+        {approved === "yes" ? (
+          <p className="muted study-tutor-note">
+            The tutor will offer a hint after a missed answer.
+          </p>
+        ) : null}
       </div>
     );
   }
@@ -477,57 +665,81 @@ export default function StudyClient() {
     const canSubmit = mode !== "picks" || (answers.choice ?? "").length > 0;
     const regionLabel = (region: string | null) =>
       region === null ? "The answer" : `Blank ${blanks.findIndex((part) => part.id === region) + 1}`;
+    const listen = mode === "hear_type" ? listenPrompt(card) : null;
+    const progress = queue.length > 0 ? ((index + (result ? 1 : 0)) / queue.length) * 100 : 0;
 
     return (
-      <div className="focus">
-        <div className="row" style={{ justifyContent: "space-between" }}>
+      <div className="focus study-focus">
+        <div className="study-head">
           <span className="muted">
             Card {index + 1} of {queue.length}
-            {approved === "yes" ? " · tutor on" : ""}
           </span>
-          <button className="btn small" type="button" onClick={() => void finish(false, true)} disabled={busy}>
-            End here
-          </button>
+          <div className="row">
+            {approved === "yes" ? <span className="chip study-tutor-chip">Tutor on</span> : null}
+            <button className="btn small" type="button" onClick={() => void finish(false, true)} disabled={busy}>
+              End here
+            </button>
+          </div>
+        </div>
+
+        <div
+          className="study-progress"
+          role="progressbar"
+          aria-label="Card progress"
+          aria-valuemin={0}
+          aria-valuemax={queue.length}
+          aria-valuenow={index + 1}
+        >
+          <span style={{ width: `${Math.max(6, progress)}%` }} />
         </div>
 
         {message ? <div className="notice error">{message}</div> : null}
 
-        <div className="card">
-          <div className="row" style={{ justifyContent: "space-between" }}>
-            <span className="chip">{card.summary}</span>
+        <div className="card study-card">
+          <div className="study-card-top">
+            <span className="study-mode">{studyModeLabel(mode)}</span>
             <button className="btn small" type="button" onClick={() => void askHint()} disabled={hintBusy}>
               {hintBusy ? "Asking…" : hintTexts.length > 0 ? "Ask for another hint" : "Ask for a hint"}
             </button>
           </div>
 
           {returnedIds.includes(card.id) ? (
-            <p className="muted" style={{ marginTop: 8 }}>
-              This one came back — it was missed earlier in this session. It returns once.
+            <p className="muted study-returned">
+              This one is marked to return once — it was missed in this session.
             </p>
           ) : null}
 
-          {mode === "hear_type" ? (
-            <p>
+          {mode === "hear_type" && listen ? (
+            <div className="study-listen">
               <button
-                className="btn"
+                className="btn study-play"
                 type="button"
-                onClick={() => speak(card.prompt.filter((part) => part.type === "speak").map((part) => (part.type === "speak" ? part.text : "")).join(" ") || card.fullLine || card.summary)}
+                onClick={() => speak(listen.text, listen.lang)}
               >
-                Play it again
+                Play the line
               </button>
-            </p>
-          ) : null}
-
-          <Side parts={card.prompt} answers={answers} setAnswer={(id, value) => setAnswers((previous) => ({ ...previous, [id]: value }))} interactive />
+              <p className="muted">{LISTEN_INSTRUCTION}</p>
+            </div>
+          ) : (
+            <Side
+              parts={card.prompt}
+              answers={answers}
+              setAnswer={(id, value) => setAnswers((previous) => ({ ...previous, [id]: value }))}
+              interactive
+            />
+          )}
 
           {hintTexts.length > 0 ? (
-            <div className="notice">
+            <div className="notice study-hint">
+              <p className="study-hint-label">
+                {hintSource === "tutor" ? "Tutor hint" : hintSource === "pack" ? "Pack hint" : "Hint"}
+              </p>
               {hintTexts.map((text, position) => (
-                <p key={position} style={{ margin: "4px 0" }}>
+                <p key={position} className="study-hint-text">
                   {text}
                 </p>
               ))}
-              {hintMessage ? <p className="muted" style={{ margin: 0 }}>{hintMessage}</p> : null}
+              {hintMessage ? <p className="muted study-hint-message">{hintMessage}</p> : null}
             </div>
           ) : hintMessage ? (
             <div className="notice">{hintMessage}</div>
@@ -552,7 +764,7 @@ export default function StudyClient() {
               ) : mode === "cloze" ? null : (
                 <input
                   className="answer-input"
-                  placeholder="Your answer"
+                  placeholder={mode === "hear_type" ? "Type what you hear" : "Your answer"}
                   value={answers.answer ?? ""}
                   onChange={(event) => setAnswers({ answer: event.target.value })}
                 />
@@ -572,57 +784,76 @@ export default function StudyClient() {
               </div>
             </div>
           ) : (
-            <div style={{ marginTop: 14 }}>
-              <div className="answer-side">
+            <div className="study-result">
+              <div className="study-result-head">
+                <span className={`outcome outcome-${result.cardOutcome} study-outcome`}>
+                  {OUTCOME_LABELS[result.cardOutcome]}
+                </span>
+                {card.summary ? <span className="study-summary">{card.summary}</span> : null}
+              </div>
+
+              <div className="study-answer">
+                <p className="study-label">Answer</p>
                 <Side parts={card.answer} />
               </div>
 
+              {result.capped ? (
+                <p className="muted study-capped">A hint capped this at Nearly.</p>
+              ) : null}
+
               {card.answerDef.working ? (
-                <div className="notice">
-                  <div className="row" style={{ alignItems: "flex-start", gap: 16 }}>
-                    <div style={{ flex: 1 }}>
-                      <p className="muted" style={{ margin: 0 }}>Your working</p>
-                      <p style={{ margin: "4px 0 0" }}>{working.trim().length > 0 ? working : "(nothing written)"}</p>
+                <div className="notice study-working">
+                  <div className="study-working-grid">
+                    <div>
+                      <p className="muted">Your working</p>
+                      <p>{working.trim().length > 0 ? working : "(nothing written)"}</p>
                     </div>
-                    <div style={{ flex: 1 }}>
-                      <p className="muted" style={{ margin: 0 }}>{card.answerDef.working.label}</p>
-                      <p style={{ margin: "4px 0 0" }}>{card.answerDef.working.expected}</p>
+                    <div>
+                      <p className="muted">{card.answerDef.working.label}</p>
+                      <p>{card.answerDef.working.expected}</p>
                     </div>
                   </div>
-                  <p className="muted" style={{ margin: "8px 0 0" }}>
+                  <p className="muted study-working-note">
                     Side by side for a moment. Nothing here was saved or sent.
                   </p>
                 </div>
               ) : null}
 
-              {result.results.map((region, position) => (
-                <div className="region-row" key={`${region.region ?? "whole"}-${position}`}>
-                  <div>
-                    <span className="muted">{regionLabel(region.region)}</span>{" "}
-                    <span className={`outcome outcome-${region.outcome}`}>{OUTCOME_LABELS[region.outcome]}</span>
-                    <div className="muted">
-                      You wrote “{region.given || "(nothing)"}”; expected “{region.expected.join(" / ")}”.
-                      {result.capped ? " A hint capped this at Nearly." : ""}
+              <details className="study-adjust">
+                <summary>Was this fair?</summary>
+                <div className="study-adjust-list">
+                  {result.results.map((region, position) => (
+                    <div className="region-row study-region" key={`${region.region ?? "whole"}-${position}`}>
+                      <div>
+                        <span className="muted">{regionLabel(region.region)}</span>{" "}
+                        <span className={`outcome outcome-${region.outcome}`}>
+                          {OUTCOME_LABELS[region.outcome]}
+                        </span>
+                        <div className="muted study-region-detail">
+                          You wrote “{region.given || "(nothing)"}”; expected “
+                          {region.expected.join(" / ")}”.
+                        </div>
+                      </div>
+                      <div className="row study-corrections">
+                        <button className="btn small" type="button" title={OUTCOME_MEANINGS.got_it} onClick={() => void correct(region.region, "got_it")}>
+                          I got it
+                        </button>
+                        <button className="btn small" type="button" title={OUTCOME_MEANINGS.nearly} onClick={() => void correct(region.region, "nearly")}>
+                          Nearly
+                        </button>
+                        <button className="btn small" type="button" title={OUTCOME_MEANINGS.again} onClick={() => void correct(region.region, "again")}>
+                          I missed it
+                        </button>
+                        <button className="btn small" type="button" title={OUTCOME_MEANINGS.no} onClick={() => void correct(region.region, "no")}>
+                          No
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                  <div className="row">
-                    <button className="btn small" type="button" title={OUTCOME_MEANINGS.got_it} onClick={() => void correct(region.region, "got_it")}>
-                      I got it
-                    </button>
-                    <button className="btn small" type="button" title={OUTCOME_MEANINGS.nearly} onClick={() => void correct(region.region, "nearly")}>
-                      Nearly
-                    </button>
-                    <button className="btn small" type="button" title={OUTCOME_MEANINGS.again} onClick={() => void correct(region.region, "again")}>
-                      I missed it
-                    </button>
-                    <button className="btn small" type="button" title={OUTCOME_MEANINGS.no} onClick={() => void correct(region.region, "no")}>
-                      No
-                    </button>
-                  </div>
+                  ))}
                 </div>
-              ))}
+              </details>
 
-              <div className="row" style={{ marginTop: 14 }}>
+              <div className="study-actions">
                 <button className="btn primary" type="button" onClick={nextCard} disabled={busy}>
                   {index + 1 < queue.length ? "Next card" : "Finish"}
                 </button>

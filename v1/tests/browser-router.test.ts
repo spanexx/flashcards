@@ -331,6 +331,79 @@ describe("plan, answer and progress", () => {
     expect(plan.plan).toBeNull();
     expect(plan.message).toContain("No cards");
   });
+
+  it("studies one pack or one deck at a time", async () => {
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
+    await localSend("/api/packs", "POST", {
+      name: "other",
+      version: "1.0.0",
+      deckName: "Basics",
+      deckId: "basics",
+    });
+    await localSend("/api/cards", "POST", {
+      front: "Dzień dobry",
+      back: "Good morning",
+      packName: "other",
+      deckId: "basics",
+    });
+    await localSend("/api/cards", "POST", {
+      front: "Mam kota",
+      back: "I have a cat",
+      packName: "starter",
+      deckId: "cases",
+    });
+    await localSend("/api/packs", "POST", {
+      name: "empty",
+      version: "1.0.0",
+      deckName: "Only",
+      deckId: "only",
+    });
+
+    const starter = await localGet<{ plan: Plan | null; message: string | null }>(
+      "/api/plan?pack=starter",
+    );
+    expect(starter.plan?.cards).toHaveLength(2);
+    expect(starter.plan?.cards.every((card) => card.packName === "starter")).toBe(true);
+
+    const limited = await localGet<{ plan: Plan | null; message: string | null }>(
+      "/api/plan?pack=starter&offer=1",
+    );
+    expect(limited.plan?.cards).toHaveLength(1);
+
+    const cases = await localGet<{ plan: Plan | null; message: string | null }>(
+      "/api/plan?pack=starter&deck=cases",
+    );
+    expect(cases.plan?.cards).toHaveLength(1);
+    expect(cases.plan?.cards[0].deckId).toBe("cases");
+
+    const other = await localGet<{ plan: Plan | null; message: string | null }>(
+      "/api/plan?pack=other",
+    );
+    expect(other.plan?.cards).toHaveLength(1);
+    expect(other.plan?.cards[0].packName).toBe("other");
+
+    const missingPack = await localGet<{ plan: null; message: string }>(
+      "/api/plan?pack=missing",
+    );
+    expect(missingPack.plan).toBeNull();
+    expect(missingPack.message).toContain("no pack");
+
+    const missingDeck = await localGet<{ plan: null; message: string }>(
+      "/api/plan?pack=starter&deck=missing",
+    );
+    expect(missingDeck.plan).toBeNull();
+    expect(missingDeck.message).toContain("no deck");
+
+    const deckWithoutPack = await localGet<{ plan: null; message: string }>(
+      "/api/plan?deck=basics",
+    );
+    expect(deckWithoutPack.plan).toBeNull();
+    expect(deckWithoutPack.message).toContain("Choose a pack");
+
+    const empty = await localGet<{ plan: null; message: string }>("/api/plan?pack=empty");
+    expect(empty.plan).toBeNull();
+    expect(empty.message).toContain("No cards in");
+  });
 });
 
 describe("settings and export", () => {

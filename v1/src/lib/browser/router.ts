@@ -212,18 +212,44 @@ async function packsAnswer(): Promise<{ packs: PackStatus[]; orphans: string[]; 
 }
 
 /** Build the plan exactly as the old route did, but from browser data. */
-async function planAnswer(offerRaw: number | undefined) {
+async function planAnswer(offerRaw: number | undefined, packName?: string, deckId?: string) {
   const state = await loadState();
   const active = state.cards.filter((card) => !card.retired);
   if (active.length === 0) {
     return { plan: null, message: "No cards yet. Create a pack, or import a bundle in the library." };
   }
 
+  let scoped = active;
+  if (packName) {
+    const pack = state.packs.find((entry) => entry.name === packName);
+    if (!pack) {
+      return { plan: null, message: `There is no pack “${packName}” here.` };
+    }
+    scoped = scoped.filter((card) => card.packName === packName);
+    if (deckId) {
+      if (!pack.decks?.some((deck) => deck.id === deckId)) {
+        return { plan: null, message: `There is no deck “${deckId}” in “${packName}”.` };
+      }
+      scoped = scoped.filter((card) => card.deckId === deckId);
+    }
+  } else if (deckId) {
+    return { plan: null, message: "Choose a pack before choosing a deck." };
+  }
+
+  if (scoped.length === 0) {
+    return {
+      plan: null,
+      message: packName
+        ? `No cards in “${packName}”${deckId ? ` / “${deckId}”` : ""} yet.`
+        : "No cards are ready to study yet.",
+    };
+  }
+
   const [rows, events] = await Promise.all([readEvidence(), readSessions()]);
   let settings = await readSettings();
   const result = buildPlan(
     {
-      cards: state.cards,
+      cards: scoped,
       rows,
       events,
       topicLabels: {},
@@ -553,7 +579,9 @@ export async function localGet<T>(url: string): Promise<T> {
   if (path === "/api/plan") {
     const raw = Number(query.get("offer"));
     const offer = Number.isFinite(raw) && raw >= 1 ? Math.min(200, Math.floor(raw)) : undefined;
-    return (await planAnswer(offer)) as T;
+    const packName = query.get("pack")?.trim() || undefined;
+    const deckId = query.get("deck")?.trim() || undefined;
+    return (await planAnswer(offer, packName, deckId)) as T;
   }
   if (path === "/api/progress") {
     const state = await loadState();
