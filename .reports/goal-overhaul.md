@@ -113,3 +113,31 @@
 **Commit note:** The first ledger commit message was truncated to `docs:` by shell quoting. Per `docs/ethics/commit.md` it was not amended; the follow-up commit records the correction and uses a message file.
 
 **Next:** Start Pack 3 `study-experience` from `main` in a new isolated worktree.
+
+### 7 — 2026-10-23T06:55
+
+**Action:** Built Pack 3 in `feature/study-experience`: a pack/deck filter in `planAnswer`, neutral mode labels, one listen control, an automatic tutor hint after the first miss, source-labelled hints, the reveal layout, the scope selectors and the `.study-*` styles. Added the router test, helper tests, canonical rehearsal, `simulate-pre.html`, `simulate-post.md` and the external Edge lane.
+
+**Verification:** `npm run typecheck`, `npm run lint` and `npm run build` passed. Full `npm test` passed 41 files / 432 tests after the build. The external Edge lane passed two pack imports, pack scope, no answer before submission, one play control, one automatic Tutor hint, separate answer/translation lines and a 390px phone width with no overflow. The final result screenshot is `C:\Users\shuga\AppData\Local\Temp\opencode\study-result.png`. The static server, fake provider and headless Edge were stopped and the profile removed.
+
+**Verdict:** pass
+
+**Failure class:** The first lane assumed a cleared library had only the two imported packs; the app also seeds the Polish starter pack, so All cards shows 20 cards. The lane now checks "from the whole library" and then narrows to the travel pack. The plan line said "1 cards"; it now uses the actual planned count and pluralizes. Answer parts ran together as "obiad.We"; `Side` now joins text parts with a space and gives translations their own block. The final lane found the headless Edge page target missing; a fresh target was opened with `/json/new` before the rerun. A docs append heredoc mangled control characters; the record was truncated at the marker and appended through a temp file.
+
+**Pivot:** Report the planned card count, not the requested offer; treat the seeded starter pack as part of All cards; recreate a CDP target when the headless page disappears.
+
+**Next:** Land Pack 3 on `main`, then start Pack 4 `pwa-deploy`.
+
+### 8 — 2026-10-23T07:00
+
+**Action:** Landed Pack 3 on `main` as `6157763` with a fast-forward from `feature/study-experience`, then pushed `5ab4c23..6157763` to origin. The feature commit and the landed tree are the same tree that passed the full suite and the external lane.
+
+**Verification:** `main` was clean before the merge and clean after the push. `git log` shows `6157763 feat: make study scoped, quiet and tutor-aware`.
+
+**Verdict:** pass
+
+**Failure class:** none
+
+**Pivot:** none
+
+**Next:** Start Pack 4 `pwa-deploy` from `main` in a new isolated worktree.
