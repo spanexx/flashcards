@@ -6,7 +6,7 @@
 
 **Acceptance evidence:**
 - Pack 1 `creation-control`: targeted Vitest, full `npm test`, `npm run lint`, `npm run typecheck`, `npm run build`, and a built-app browser lane that chooses an explicit learning goal, edits a chat prompt with library inventory, and creates with Write then extends with Generate/Chat.
-- Pack 2 `background-jobs`: fake-timer tests prove the retry schedule and terminal states; a built-app browser lane starts generation/import, leaves the screen, sees live status, and gets a completion notice.
+- Pack 2 `background-jobs`: 426 tests pass; fake-timer tests prove the retry schedule and terminal states; a built-app browser lane starts generation/import, leaves Create through the app's own navigation, sees live status and completion, imports a good file, explains a bad file, and recovers from a reload.
 - Pack 3 `study-experience`: tests prove no answer leaks before judging, listening cards state the task and never print the answer, tutor hints return useful text, and a pack/deck can be chosen for study.
 - Pack 4 `pwa-deploy`: built output has a manifest and service worker, phone-width browser checks pass, the existing full checks stay green, the GitHub Actions Pages workflow succeeds, and the live Pages URL returns the app shell.
 - Final gate: full `npm test`, `npm run lint`, `npm run typecheck`, `npm run build`, `npm run simulate:create-flow`, external browser lane, and live deployment check.
@@ -83,3 +83,31 @@
 **Pivot:** Land Pack 1 through a clean squash commit rather than merging the malformed feature commit.
 
 **Next:** Start Pack 2 `background-jobs` from `main` in a new isolated worktree.
+
+### 5 — 2026-10-23T06:05
+
+**Action:** Built Pack 2 in `feature/background-jobs`: a persisted page-level job store and runner, the global Jobs control and notices, timeout retries, import jobs, restore interruption, docs, post-implementation rehearsal and external Edge lane. Create now enqueues Generate, Import and Chat import instead of holding the screen.
+
+**Verification:** `npm run typecheck`, `npm run lint` and `npm run build` passed. Full `npm test` passed 39 files / 426 tests after the build. The external Edge lane passed provider setup, generation while navigating to Settings, success notice and View, valid import, bad-import details and reload recovery with no page errors. The post-sim is `v1/tests/simulate-background-jobs.test.ts`; `simulate-post.md` records it.
+
+**Verdict:** pass
+
+**Failure class:** Five implementation failures were found and fixed. The queue did not schedule a future waiting retry after a boot with no ready work; `processQueue` now schedules it and a runner test pins it. Restore interrupted jobs before validating the backup; restore now validates first and uses `beforeApply` to interrupt only a backup that will apply, with a router test for the refused case. The external lane's hard navigation interrupted the job; the lane now clicks the app's client-side Settings link. The fake provider's `"slow"` marker collided with a prompt example; the marker is now `"zzz"`. The built-output assertion also had to use stable phrases because template interpolation split the exact four-try sentence.
+
+**Pivot:** Prove "keep working" with the app's own navigation, not a hard page load. Validate a backup before stopping live work.
+
+**Next:** Land Pack 2 on `main`, then start Pack 3 `study-experience`.
+
+### 6 — 2026-10-23T06:10
+
+**Action:** Landed Pack 2 on `main` as `d1ab113` with a fast-forward from `feature/background-jobs`, then pushed `6749e63..d1ab113` to origin. The feature commit and the landed tree are the same tree that passed the full suite and the external lane.
+
+**Verification:** `main` was clean before the merge and clean after the push. `git log` shows `d1ab113 feat: run generation and import as background jobs`.
+
+**Verdict:** pass
+
+**Failure class:** none
+
+**Pivot:** none
+
+**Next:** Start Pack 3 `study-experience` from `main` in a new isolated worktree.
