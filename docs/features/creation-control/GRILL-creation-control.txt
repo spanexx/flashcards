@@ -1,0 +1,158 @@
+GRILL: creation control
+Status: Locked
+Date: 2026-10-22
+Decisions by: agent (delegated by Victor, 2026-10-22)
+
+This record replaces a live GRILL session on the user's instruction. It records
+the decisions the pack needed before code was written. No user quote is invented.
+
+[agent decision] What does the learner control when creating?
+Question: Should Generate and Chat expose a learning goal, deck focus, and card
+style, or continue to let the provider infer everything from a name?
+Answer: Both Generate and Chat get a shared creation brief: a subject, a deck
+focus, desired card styles, and optional pack/deck names. The brief is prefilled
+from the selected target but the learner may change every field.
+Why: The learner's goal must survive AI naming. Naming is presentation; subject,
+deck scope, and exercise type are learning decisions.
+Source: user complaint about forced boxes and AI-chosen names; existing
+CreatePanel target/method split.
+
+[agent decision] Can the provider decide the subject?
+Question: How can a learner ask the app to suggest what to learn without typing
+a subject?
+Answer: A "Let the provider choose from my library" mode sends the available
+pack names, descriptions, and deck names, then asks the provider to avoid
+duplicates and fill a useful gap. The learner can still type a subject instead.
+Why: The user asked for AI suggestions based on what is available. Sending the
+library inventory makes that suggestion contextual instead of random.
+Source: user request for AI suggestions based on packs and decks.
+
+[agent decision] How is the Chat prompt controlled?
+Question: Should the Chat prompt stay read-only?
+Answer: No. The prompt is shown in an editable textarea, can be rebuilt from the
+brief, and copy/download use the edited text. The import still validates the
+answer and refuses an invalid shape.
+Why: The learner must be able to correct the prompt without abandoning the flow.
+Editing changes the request, not the safety rule.
+Source: user complaint that Chat cannot edit the prompt.
+
+[agent decision] What library context goes into a prompt?
+Question: What should the provider or chat know about the existing library?
+Answer: Every readable pack's name, description, and deck names. Cards,
+evidence, settings, and the provider key never enter the prompt.
+Why: The learner asked for prompts that know what packs and decks exist. Names
+and deck scope are enough to avoid duplication; card text and evidence would
+add size and privacy risk without helping container choice.
+Source: browser pack shape and the existing authoring prompt boundary.
+
+[agent decision] What card styles may the learner request?
+Question: What does "what kind of card" mean in the creation brief?
+Answer: Mixed, fill the blank (cloze), type the answer, or listen and type. A
+specific style is enforced by the validator; Mixed lets the provider choose and
+defaults an omitted style to cloze.
+Why: These three production modes already exist in the card model. Offering
+them makes the choice real without inventing a new answer engine.
+Source: CardPart and answerDef modes in the current card and judge code.
+
+[agent decision] What happens to names?
+Question: Does learner control mean the learner must name every pack and deck?
+Answer: No. Pack and deck names are optional. A blank name lets the provider or
+chat choose one. A supplied name is used, then the existing collision suffix
+rules still apply. Learner-written Write names remain strict and do not
+auto-number.
+Why: The user is happy for AI to name containers as long as the learning goal
+is theirs. Optional names preserve both preferences.
+Source: existing namePolicy and auto-suffix rules in the library-create-flow
+pack.
+
+[agent decision] Can Write create containers and then another method extend
+them?
+Question: Must Write and Generate/Chat be separate journeys?
+Answer: Write can create a pack or an empty deck exactly as it does now. The
+learner can then choose Generate or Chat with that pack/deck selected and add
+more content. The pack does not add a second, parallel creation path.
+Why: The path already exists; the missing piece was control of what is
+generated. Keeping one write path avoids two ways to create the same object.
+Source: existing CreatePanel Write target branches and after-create navigation.
+
+[agent decision] What is the smallest acceptable implementation boundary?
+Question: Does this pack also add background jobs, card redesign, or PWA work?
+Answer: No. Those are separate packs in the goal ledger. This pack changes the
+creation brief, prompt context, editable chat prompt, generated card styles, and
+the tests around them.
+Why: Mixing four unrelated surfaces would make review and rollback unsafe.
+Source: goal ledger pack order.
+
+[agent decision] What does a request without a brief mean?
+Question: Must the router refuse a Generate or Chat call that sends no brief?
+Answer: No. The brief stays optional at the router so existing CreatePanel calls
+keep working. A missing brief means the older prompt: no subject, no inventory,
+and no style request. Sending the brief from the screen is a separate pack.
+Why: The app is being changed one layer at a time. Refusing absent briefs would
+break the current Create flow before the new screen exists.
+Source: existing CreatePanel calls and simulate-create-flow prompt checks.
+
+[agent decision] Which defaults apply to style?
+Question: What happens when a brief or a line leaves the style out?
+Answer: A missing brief.cardStyle is "mixed". A missing style on a generated
+line under a mixed request becomes "cloze". A missing style on a line when one
+concrete style was requested is a refusal, not a default.
+Why: Mixed is a request to let the provider pick per line, so a line still needs
+a concrete mode. A concrete request has no safe guess; the batch is wrong.
+Source: PRD-TRD "an omitted style means cloze" in the generated-line section,
+and the existing cloze default in deriveCard.
+
+[agent decision] What happens in provider-choice mode?
+Question: Is the learner's subject text used when the provider chooses?
+Answer: No. The mode is still checked, but any subject text is dropped before a
+prompt is built. Provider mode sees the allowed library facts and any deck
+focus the learner typed.
+Why: A subject contradicts the request to choose from the library, and sending
+ignored text only invites the provider to follow the wrong goal.
+Source: creation brief subjectMode rule and the library-context decision.
+
+[agent decision] How strict is the requested style?
+Question: What happens when a provider line uses the wrong style?
+Answer: A concrete style is enforced across every line in the batch. Any wrong
+or unlabeled line refuses the whole batch and saves nothing. A type line must
+also carry a translation part, because that is what the learner reads before
+typing.
+Why: The batch is already all-or-nothing, and a partly styled deck is worse than
+a clear refusal the learner can retry.
+Source: existing all-or-nothing import rule and the type card answer mode.
+
+[agent decision] What language does a listen-and-type card speak?
+Question: Which language should a hear_type card use?
+Answer: A new pack uses the generated pack's language. A deck or cards target
+uses the existing pack's language when one is known. A spoken prompt may repeat
+the answer word for word, so the duplicate-side hard rule skips prompts that
+contain a speak part.
+Why: The learner should hear the language they are studying, not the app's
+current language setting. A listen-and-type answer is meant to repeat what was
+heard, so the old duplicate check would refuse every valid card.
+Source: existing speak part and pack language fields; generated hear_type test.
+
+[agent decision] Does Generate see the library in learner mode?
+Question: Should every Generate prompt include the existing library?
+Answer: No. Generate includes inventory only when provider mode is on. Chat
+includes it for every target because the learner is asking the chat to place
+content. The allowed facts are pack name, description, language, and deck
+labels. Cards, evidence, settings, and the provider key never enter either
+prompt.
+Why: A learner subject does not need the library, while the chat still needs to
+know where its answer will land. Language is a pack fact that helps the provider
+choose a fitting subject; it is not learner content. Keeping card text out
+protects privacy and keeps prompts small.
+Source: library-context decision and the authoring prompt boundary.
+
+[agent decision] Does the authoring prompt version change?
+Question: Is a skill version bump required for this pack?
+Answer: Yes. AUTHORING_SKILL_VERSION moves from 2.0.0 to 3.0.0 because the prompt
+now carries the brief, inventory, and style rules. The JSON answer shape stays
+the same; style remains a generation-only field and is not added to authored
+cards.
+Why: A copied prompt and its importer must agree on a version, and the prompt
+text changed even though the bundle shape did not.
+Source: AUTHORING_SKILL_VERSION contract in browser/authoring.ts.
+
+No remaining open questions.

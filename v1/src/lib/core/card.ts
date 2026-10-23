@@ -6,6 +6,8 @@
 // 2026-10-20 opencode: hashing is browser-safe now (FNV-1a 64) so the same
 // identity rule works in IndexedDB; ids are stable for the same content.
 // [pack: browser-app]
+// 2026-10-22 opencode: a spoken prompt may repeat as the answer, so a
+// listen-and-type card is not refused as a duplicated side. [pack: creation-control]
 
 import { z } from "zod";
 import type {
@@ -154,9 +156,12 @@ export function hardRuleIssues(source: CardSource, index = 0): ValidationIssue[]
     }
   }
 
+  // A listen-and-type card is meant to repeat the spoken line as its answer,
+  // so the repeat check only applies when the prompt is read rather than heard.
   const front = renderPlainText(source.prompt);
   const back = renderPlainText(source.answer);
-  if (front.length > 0 && front === back)
+  const heard = source.prompt.some((part) => part.type === "speak");
+  if (!heard && front.length > 0 && front === back)
     issues.push({ index, field: "answer", message: "the answer side repeats the prompt side word for word" });
 
   return issues;

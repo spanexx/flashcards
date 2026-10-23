@@ -3,6 +3,8 @@
 // hint must always fall back to the pack's own words.
 // PACK: v1-prototype
 // 2026-10-19 opencode: created for the v1 prototype [pack: v1-prototype]
+// 2026-10-22 opencode: cloze, type and hear_type lines are checked here, and a
+// batch that ignores the requested style is refused whole. [pack: creation-control]
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { clearPrepared, holdPrepared, takePrepared } from "@/lib/provider/prepare";
@@ -142,6 +144,51 @@ describe("deriveCard", () => {
     );
     expect(kept.topics).toEqual(["cases"]);
   });
+
+  it("turns a type line into a translation prompt and a typed answer", () => {
+    const card = deriveCard(
+      makePack(),
+      "request-1",
+      {
+        fullLine: "Piję kawę.",
+        target: "kawę",
+        translation: "I am drinking coffee.",
+        style: "type",
+      },
+      "cases",
+      NOW,
+    );
+    expect(card.prompt).toEqual([{ type: "text", text: "I am drinking coffee." }]);
+    expect(card.answer).toEqual([{ type: "text", text: "Piję kawę." }]);
+    expect(card.answerDef).toEqual({ mode: "type", expected: ["Piję kawę."] });
+  });
+
+  it("turns a hear_type line into a spoken prompt in the pack language", () => {
+    const card = deriveCard(
+      makePack(),
+      "request-1",
+      { fullLine: "Piję kawę.", target: "kawę", style: "hear_type" },
+      "cases",
+      NOW,
+      undefined,
+      { language: "pl" },
+    );
+    expect(card.prompt).toEqual([
+      { type: "speak", text: "Piję kawę.", lang: "pl", label: "Listen" },
+    ]);
+    expect(card.answerDef).toEqual({ mode: "hear_type", expected: ["Piję kawę."] });
+  });
+
+  it("leaves the language off a hear_type card when the pack has none", () => {
+    const card = deriveCard(
+      makePack(),
+      "request-1",
+      { fullLine: "Piję kawę.", target: "kawę", style: "hear_type" },
+      "cases",
+      NOW,
+    );
+    expect(card.prompt).toEqual([{ type: "speak", text: "Piję kawę.", label: "Listen" }]);
+  });
 });
 
 describe("generateCardsFromText", () => {
@@ -186,6 +233,52 @@ describe("generateCardsFromText", () => {
     const line = { fullLine: "Piję kawę.", target: "kawę" };
     const text = JSON.stringify({ lines: [line, line] });
     expect(generateCardsFromText(makePack(), "request-1", text, "cases", NOW)).toHaveLength(1);
+  });
+
+  it("treats an omitted style as cloze for a mixed request", () => {
+    const text = JSON.stringify({ lines: [{ fullLine: "Piję kawę.", target: "kawę" }] });
+    const cards = generateCardsFromText(makePack(), "request-1", text, "cases", NOW, undefined, {
+      cardStyle: "mixed",
+    });
+    expect(cards[0].answerDef.mode).toBe("cloze");
+  });
+
+  it("refuses a line whose style ignores the learner's request", () => {
+    const text = JSON.stringify({
+      lines: [
+        {
+          fullLine: "Piję kawę.",
+          target: "kawę",
+          translation: "I am drinking coffee.",
+          style: "type",
+        },
+      ],
+    });
+    expect(() =>
+      generateCardsFromText(makePack(), "request-1", text, "cases", NOW, undefined, {
+        cardStyle: "cloze",
+      }),
+    ).toThrow(/cloze/i);
+  });
+
+  it("refuses a line with no style when a specific style was requested", () => {
+    const text = JSON.stringify({ lines: [{ fullLine: "Piję kawę.", target: "kawę" }] });
+    expect(() =>
+      generateCardsFromText(makePack(), "request-1", text, "cases", NOW, undefined, {
+        cardStyle: "cloze",
+      }),
+    ).toThrow(/style/i);
+  });
+
+  it("refuses a type line that has no translation", () => {
+    const text = JSON.stringify({
+      lines: [{ fullLine: "Piję kawę.", target: "kawę", style: "type" }],
+    });
+    expect(() =>
+      generateCardsFromText(makePack(), "request-1", text, "cases", NOW, undefined, {
+        cardStyle: "type",
+      }),
+    ).toThrow(/translation/i);
   });
 });
 
@@ -234,6 +327,67 @@ describe("structured generation bundles", () => {
         expect.objectContaining({ deckId: "cases", fullLine: "Piję kawę." }),
       ]);
     }
+  });
+
+  it("builds the requested type style inside a generated pack bundle", () => {
+    const text = JSON.stringify({
+      pack: { name: "slow-polish", version: "1.0.0", language: "pl" },
+      decks: [{ id: "basics", name: "Basics" }],
+      lines: [
+        {
+          deckId: "basics",
+          style: "type",
+          fullLine: "Piję kawę.",
+          target: "kawę",
+          translation: "I am drinking coffee.",
+        },
+      ],
+    });
+    const read = generatedPackBundle(text, { cardStyle: "type" });
+    expect(read.ok).toBe(true);
+    if (!read.ok) return;
+    const cards = read.bundle.cards as Array<{ answerDef: { mode: string }; prompt: unknown[] }>;
+    expect(cards[0].answerDef.mode).toBe("type");
+    expect(cards[0].prompt).toEqual([{ type: "text", text: "I am drinking coffee." }]);
+  });
+
+  it("uses the pack language for a hear_type generated deck", () => {
+    const text = JSON.stringify({
+      deck: { id: "extra", name: "Extra" },
+      lines: [{ style: "hear_type", fullLine: "Piję kawę.", target: "kawę" }],
+    });
+    const read = generatedDeckBundle(text, { cardStyle: "hear_type", language: "pl" });
+    expect(read.ok).toBe(true);
+    if (!read.ok) return;
+    const cards = read.bundle.cards as Array<{ prompt: unknown[] }>;
+    expect(cards[0].prompt).toEqual([
+      { type: "speak", text: "Piję kawę.", lang: "pl", label: "Listen" },
+    ]);
+  });
+
+  it("refuses a whole bundle that ignores a specific requested style", () => {
+    const text = JSON.stringify({
+      lines: [
+        {
+          fullLine: "Piję kawę.",
+          target: "kawę",
+          translation: "I am drinking coffee.",
+          style: "type",
+        },
+      ],
+    });
+    const read = generatedCardsBundle(text, { id: "cases", name: "Cases" }, { cardStyle: "cloze" });
+    expect(read.ok).toBe(false);
+    if (!read.ok) expect(read.message).toMatch(/cloze|style/i);
+  });
+
+  it("refuses a whole bundle whose style is not one the app knows", () => {
+    const text = JSON.stringify({
+      lines: [{ fullLine: "Piję kawę.", target: "kawę", style: "picks" }],
+    });
+    const read = generatedCardsBundle(text, { id: "cases", name: "Cases" });
+    expect(read.ok).toBe(false);
+    if (!read.ok) expect(read.message).toMatch(/style|usable/i);
   });
 });
 

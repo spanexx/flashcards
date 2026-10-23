@@ -1,7 +1,10 @@
 // WHY: Everything the provider sees passes through here, so the tests check
-// both directions: the allowed slots go in, the learner's words never do.
+// both directions: the allowed slots go in, the learner's words never do, and
+// the learner's creation brief reaches all three prompts.
 // PACK: v1-prototype
 // 2026-10-19 opencode: created for the v1 prototype [pack: v1-prototype]
+// 2026-10-22 opencode: the brief and library inventory are now checked here too
+// [pack: creation-control]
 
 import { describe, expect, it } from "vitest";
 import {
@@ -16,6 +19,11 @@ import {
   tutorSlotNames,
 } from "@/lib/provider/prompt";
 import type { PackRecord } from "@/lib/packs/types";
+import {
+  defaultCreationBrief,
+  libraryInventoryFromPacks,
+  type CreationBrief,
+} from "@/lib/shared/creation";
 import { makeCard, makeSource } from "./helpers";
 
 function makePack(overrides: Partial<PackRecord> = {}): PackRecord {
@@ -77,9 +85,37 @@ describe("buildGenerationPrompt", () => {
   });
 });
 
+const inventory = libraryInventoryFromPacks([
+  {
+    name: "starter",
+    description: "Everyday Polish",
+    language: "pl",
+    decks: [{ name: "Basics" }, { name: "Cases" }],
+  },
+]);
+
+/** The learner's brief used by the prompt tests. */
+function learnerBrief(overrides: Partial<CreationBrief> = {}): CreationBrief {
+  return defaultCreationBrief({ subject: "ordering coffee", ...overrides });
+}
+
+/** Build all three generation prompts with one context. */
+function allGenerationPrompts(brief: CreationBrief) {
+  return {
+    pack: buildPackGenerationPrompt(slots, 4, { brief, inventory }),
+    deck: buildDeckGenerationPrompt(makePack(), slots, 3, { brief, inventory }),
+    cards: buildGenerationPrompt(makePack(), slots, {
+      topic: "cases",
+      count: 3,
+      brief,
+      inventory,
+    }),
+  };
+}
+
 describe("structured generation prompts", () => {
   it("asks a generated pack to choose its own name, decks and lines", () => {
-    const built = buildPackGenerationPrompt(slots, 4, ["Basics", "Cases"]);
+    const built = buildPackGenerationPrompt(slots, 4, { inventory });
     expect(built.messages[0].content).toContain("choose the containers");
     expect(built.messages[1].content).toContain("Write 4 complete");
     expect(built.messages[1].content).toContain("Basics, Cases");
@@ -94,6 +130,61 @@ describe("structured generation prompts", () => {
     expect(built.messages[1].content).toContain("test-pack");
     expect(built.messages[1].content).toContain("Do not reuse one of those ids");
     expect(built.messages[1].content).toContain('"deck":{"id"');
+  });
+
+  it("puts the learner's subject in all three generation prompts", () => {
+    const built = allGenerationPrompts(learnerBrief());
+    expect(built.pack.messages[1].content).toContain("ordering coffee");
+    expect(built.deck.messages[1].content).toContain("ordering coffee");
+    expect(built.cards.messages[1].content).toContain("ordering coffee");
+  });
+
+  it("names the library and asks for a gap in provider mode for all three", () => {
+    const built = allGenerationPrompts(defaultCreationBrief({ subjectMode: "provider" }));
+    for (const prompt of [built.pack, built.deck, built.cards]) {
+      expect(prompt.messages[1].content).toMatch(/gap/i);
+      expect(prompt.messages[1].content).toContain("starter");
+      expect(prompt.messages[1].content).toContain("Basics");
+      expect(prompt.messages[1].content).toContain("Cases");
+    }
+  });
+
+  it("does not send the library to a learner-subject prompt", () => {
+    const built = allGenerationPrompts(learnerBrief());
+    expect(built.pack.messages[1].content).not.toContain("Cases");
+    expect(built.deck.messages[1].content).not.toContain("Cases");
+    expect(built.cards.messages[1].content).not.toContain("Cases");
+  });
+
+  it("states a requested name and leaves a blank name to the provider", () => {
+    const named = allGenerationPrompts(learnerBrief({ packName: "cafe", deckName: "ordering" }));
+    for (const prompt of [named.pack, named.deck, named.cards]) {
+      expect(prompt.messages[1].content).toContain('"cafe"');
+      expect(prompt.messages[1].content).toContain('"ordering"');
+    }
+
+    const blank = allGenerationPrompts(learnerBrief());
+    for (const prompt of [blank.pack, blank.deck, blank.cards]) {
+      expect(prompt.messages[1].content).not.toContain("asked for the pack name");
+      expect(prompt.messages[1].content).not.toContain("asked for the deck name");
+    }
+  });
+
+  it("asks for one concrete style on all three when the learner chose one", () => {
+    const built = allGenerationPrompts(learnerBrief({ cardStyle: "type" }));
+    for (const prompt of [built.pack, built.deck, built.cards]) {
+      expect(prompt.messages[1].content).toContain('"style"');
+      expect(prompt.messages[1].content).toContain('"type"');
+      expect(prompt.messages[1].content).toMatch(/translation/i);
+    }
+  });
+
+  it("lets a mixed brief reuse an omitted style as cloze", () => {
+    const built = allGenerationPrompts(learnerBrief({ cardStyle: "mixed" }));
+    for (const prompt of [built.pack, built.deck, built.cards]) {
+      expect(prompt.messages[1].content).toContain("mixed");
+      expect(prompt.messages[1].content).toContain("cloze");
+    }
   });
 });
 

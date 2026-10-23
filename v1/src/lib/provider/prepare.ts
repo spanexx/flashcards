@@ -7,9 +7,12 @@
 // server-only import, global random id.
 // 2026-10-22 opencode: newId keeps prepared prompts working on a static HTTP
 // host. [pack: library-create-flow]
+// 2026-10-22 opencode: a held request keeps the brief that prepared it, so the
+// answer can be checked against the requested style. [pack: creation-control]
 
 import { newId } from "@/lib/core/id";
 import type { ChatMessage } from "@/lib/provider/client";
+import type { CreationBrief } from "@/lib/shared/creation";
 
 /** A prompt held for approval. It is one-time use and expires quickly. */
 export interface PreparedRequest {
@@ -24,6 +27,8 @@ export interface PreparedRequest {
   deckId?: string | null;
   count: number | null;
   cardId: string | null;
+  /** The learner's brief, kept so generation can enforce the requested style. */
+  brief?: CreationBrief;
   expiresAt: number;
 }
 

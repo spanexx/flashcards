@@ -9,7 +9,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { apiGet, apiSend } from "@/lib/client/api";
 import type { Card, PackStatus, ProviderStatus } from "@/lib/shared/types";
+import { defaultCreationBrief, type CreationBrief } from "@/lib/shared/creation";
+import ChatPromptEditor from "./ChatPromptEditor";
+import CreationBriefFields from "./CreationBriefFields";
+import PlacementPicker from "./PlacementPicker";
 import {
+  briefForTarget,
+  briefNeedsSubject,
+  briefSubjectDefault,
   errorLines,
   packDecks,
   type CreateMethod,
@@ -35,65 +42,6 @@ interface ImportedAnswer {
   decksAdded: number;
   cardsAdded: number;
   duplicates: number;
-}
-
-/** A pack and deck picker, because deck ids repeat across packs. */
-interface PlacementPickerProps {
-  packs: PackStatus[];
-  packName: string;
-  deckId: string;
-  withDeck: boolean;
-  packLabel: string;
-  deckLabel: string;
-  onPack: (name: string) => void;
-  onDeck: (id: string) => void;
-}
-
-// One parent choice for Deck and Cards. Pack target never renders this.
-function PlacementPicker({
-  packs,
-  packName,
-  deckId,
-  withDeck,
-  packLabel,
-  deckLabel,
-  onPack,
-  onDeck,
-}: PlacementPickerProps) {
-  const readable = packs.filter((pack) => !pack.error);
-  const pack = readable.find((entry) => entry.name === packName);
-  const decks = pack ? packDecks(pack) : [];
-
-  if (readable.length === 0) {
-    return <p className="muted">There is no pack yet. Create or import a pack first.</p>;
-  }
-
-  return (
-    <div className="row">
-      <label className="field-label">
-        {packLabel}
-        <select className="field" value={packName} onChange={(event) => onPack(event.target.value)}>
-          {readable.map((entry) => (
-            <option key={entry.name} value={entry.name}>
-              {entry.name} · v{entry.version}
-            </option>
-          ))}
-        </select>
-      </label>
-      {withDeck ? (
-        <label className="field-label">
-          {deckLabel}
-          <select className="field" value={deckId} onChange={(event) => onDeck(event.target.value)}>
-            {decks.map((deck) => (
-              <option key={deck.id} value={deck.id}>
-                {deck.name}
-              </option>
-            ))}
-          </select>
-        </label>
-      ) : null}
-    </div>
-  );
 }
 
 /** A link that leaves Create mounted, so a half-written draft stays put. */
@@ -142,8 +90,24 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
   });
   const [counts, setCounts] = useState<Record<CreateTarget, number>>({ pack: 10, deck: 5, cards: 5 });
   const [importText, setImportText] = useState("");
-  const [chat, setChat] = useState<{ key: string; prompt: string } | null>(null);
-  const [chatAnswer, setChatAnswer] = useState("");
+  const [brief, setBrief] = useState<CreationBrief>(() => {
+    const wantedTarget = seed?.target ?? "pack";
+    if (wantedTarget === "pack") return defaultCreationBrief();
+    const pack =
+      packs.find((entry) => entry.name === seed?.packName && !entry.error) ??
+      packs.find((entry) => !entry.error);
+    if (!pack) return defaultCreationBrief();
+    const firstDeck = packDecks(pack).find((deck) => deck.id === seed?.deckId) ?? packDecks(pack)[0];
+    return defaultCreationBrief({
+      subject: briefSubjectDefault(packs, wantedTarget, pack.name, firstDeck?.id ?? ""),
+    });
+  });
+  const [chatState, setChatState] = useState<{ key: string; prompt: string } | null>(null);
+  const [chatVersion, setChatVersion] = useState(0);
+  const [chatAnswer, setChatAnswer] = useState<{ key: string; text: string }>({
+    key: "",
+    text: "",
+  });
   const [prepared, setPrepared] = useState<{ requestId: string; prompt: string } | null>(null);
   const [keyNeeded, setKeyNeeded] = useState(false);
   const [freshProvider, setFreshProvider] = useState<ProviderStatus | null>(null);
@@ -159,6 +123,21 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
   const packName = activePack?.name ?? "";
   const activeDecks = activePack ? packDecks(activePack) : [];
   const deckId = activeDecks.some((deck) => deck.id === deckChoice) ? deckChoice : (activeDecks[0]?.id ?? "");
+
+  // Only the target's matching name may reach a prompt; stale fields are stripped.
+  const requestBrief = briefForTarget(brief, target);
+  const subjectNeeded = briefNeedsSubject(requestBrief);
+  const chatTargetReady =
+    target === "pack" || (Boolean(packName) && (target === "deck" || Boolean(deckId)));
+  const chatRequestKey = JSON.stringify({ target, packName, deckId, brief: requestBrief });
+  const chatBuildKey = JSON.stringify({ request: chatRequestKey, version: chatVersion });
+  const chatPrompt = chatState?.key === chatBuildKey ? chatState.prompt : "";
+  const chatLoading =
+    method === "chat" &&
+    chatTargetReady &&
+    !subjectNeeded &&
+    chatState?.key !== chatBuildKey;
+  const chatAnswerText = chatAnswer.key === chatBuildKey ? chatAnswer.text : "";
 
   // The shell's provider read is a snapshot; a fresh one is taken before Generate.
   const liveProvider = freshProvider ?? provider;
@@ -179,6 +158,17 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
   // Changing target keeps the method but drops a prompt that belonged to the old one.
   const chooseTarget = (next: CreateTarget) => {
     setTarget(next);
+    const nextPack = readablePacks.find((pack) => pack.name === packChoice) ?? readablePacks[0];
+    const nextDecks = nextPack ? packDecks(nextPack) : [];
+    const nextDeckId = nextDecks.some((deck) => deck.id === deckChoice)
+      ? deckChoice
+      : (nextDecks[0]?.id ?? "");
+    setBrief((previous) => ({
+      ...previous,
+      subject: briefSubjectDefault(packs, next, nextPack?.name ?? "", nextDeckId),
+      packName: next === "pack" ? previous.packName : "",
+      deckName: next === "deck" ? previous.deckName : "",
+    }));
     setPrepared(null);
     setKeyNeeded(false);
     onError(null);
@@ -192,18 +182,37 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
     onError(null);
   };
 
-  // Changing the pack moves the deck to that pack's first deck.
+  // Changing the pack moves the deck to that pack's first deck and re-prefills
+  // the subject only because the container itself changed.
   const choosePack = (name: string) => {
     setPackChoice(name);
     const pack = packs.find((entry) => entry.name === name);
-    setDeckChoice(pack ? (packDecks(pack)[0]?.id ?? "") : "");
+    const nextDeck = pack ? (packDecks(pack)[0]?.id ?? "") : "";
+    setDeckChoice(nextDeck);
+    setBrief((previous) => ({
+      ...previous,
+      subject: briefSubjectDefault(packs, target, name, nextDeck),
+    }));
     setPrepared(null);
   };
 
   // A different deck invalidates a prepared prompt for the old deck.
   const chooseDeck = (id: string) => {
     setDeckChoice(id);
+    setBrief((previous) => ({
+      ...previous,
+      subject: briefSubjectDefault(packs, target, packName, id),
+    }));
     setPrepared(null);
+  };
+
+  // Every brief edit invalidates a prepared prompt; it described the old brief.
+  // The Chat effect keys off the brief and rebuilds its prompt on its own.
+  const updateBrief = (patch: Partial<CreationBrief>) => {
+    setBrief((previous) => ({ ...previous, ...patch }));
+    setPrepared(null);
+    setKeyNeeded(false);
+    onError(null);
   };
 
   // Every method below needs the same target shape.
@@ -340,35 +349,47 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
     }
   };
 
-  // The prompt belongs to one target and parent. Its key makes an old answer
-  // invisible the moment either changes, without a second render clearing it.
-  const chatKey = target === "pack" ? "pack" : target === "deck" ? `deck:${packName}` : `cards:${packName}:${deckId}`;
-  const chatPrompt = chat?.key === chatKey ? chat.prompt : "";
-
-  // The request runs only for a complete target; an incomplete one shows no prompt.
+  // Build a fresh editable prompt whenever the method, target, parent or brief
+  // changes. A short delay keeps typing in the brief from starting a request on
+  // every keystroke. A response from an old request is ignored, and the key
+  // makes the old prompt and answer invisible until the new one arrives.
   useEffect(() => {
     if (method !== "chat") return;
-    if (target !== "pack" && !packName) return;
-    if (target === "cards" && !deckId) return;
+    if (!chatTargetReady || subjectNeeded) return;
     const wanted =
       target === "pack"
         ? { kind: "pack" as const }
         : target === "deck"
           ? { kind: "deck" as const, packName }
           : { kind: "cards" as const, packName, deckId };
-    const key = chatKey;
+    const requestBrief = briefForTarget(brief, target);
     let alive = true;
-    void apiSend<{ prompt: string }>("/api/authoring/prompt", "POST", { target: wanted })
-      .then((data) => {
-        if (alive) setChat({ key, prompt: data.prompt });
+    const timer = setTimeout(() => {
+      void apiSend<{ prompt: string }>("/api/authoring/prompt", "POST", {
+        target: wanted,
+        brief: requestBrief,
       })
-      .catch((problem: unknown) => {
-        if (alive) showError(problem, "The authoring prompt could not be built.");
-      });
+        .then((data) => {
+          if (!alive) return;
+          setChatState({ key: chatBuildKey, prompt: data.prompt });
+        })
+        .catch((problem: unknown) => {
+          if (!alive) return;
+          setChatState({ key: chatBuildKey, prompt: "" });
+          showError(problem, "The authoring prompt could not be built.");
+        });
+    }, 250);
     return () => {
       alive = false;
+      clearTimeout(timer);
     };
-  }, [method, target, packName, deckId, chatKey, showError]);
+  }, [method, target, packName, deckId, brief, chatTargetReady, subjectNeeded, chatBuildKey, showError]);
+
+  // The learner can ask for a fresh prompt without changing the brief.
+  const rebuildChatPrompt = () => setChatVersion((previous) => previous + 1);
+
+  // An edit belongs to the prompt key that was on screen when it was typed.
+  const editChatPrompt = (prompt: string) => setChatState({ key: chatBuildKey, prompt });
 
   // Copy the exact prompt into any chat. A blocked clipboard is named, not hidden.
   const copyChatPrompt = async () => {
@@ -401,11 +422,11 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
       const wanted = targetPayload();
       if (!wanted) throw new Error("Choose the parent pack and deck first.");
       const data = await apiSend<ImportedAnswer>("/api/packs/import", "POST", {
-        json: chatAnswer,
+        json: chatAnswerText,
         target: wanted,
         namePolicy: "auto-suffix",
       });
-      setChatAnswer("");
+      setChatAnswer({ key: chatBuildKey, text: "" });
       if (data.kind === "pack") {
         finish(
           { kind: "pack", packName: data.packName },
@@ -441,6 +462,7 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
     try {
       const wanted = targetPayload();
       if (!wanted) throw new Error("Choose the parent pack and deck first.");
+      if (subjectNeeded) throw new Error("Write what you want the cards to teach first.");
       const settings = await apiGet<{ provider: ProviderStatus }>("/api/settings");
       setFreshProvider(settings.provider);
       if (!settings.provider.configured) {
@@ -455,6 +477,7 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
       const data = await apiSend<{ requestId: string; prompt: string }>("/api/provider/prepare", "POST", {
         target: wanted,
         count: currentCount,
+        brief: requestBrief,
       });
       setPrepared({ requestId: data.requestId, prompt: data.prompt });
     } catch (problem) {
@@ -514,7 +537,7 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
   const methodChoices: Array<[CreateMethod, string, string, string]> = [
     ["write", "W", "Write", "Fill in the fields yourself."],
     ["generate", "G", "Generate", "Use the saved provider profile."],
-    ["chat", "C", "Chat", "Copy a prompt into any chat, paste the answer."],
+    ["chat", "C", "Chat", "Edit or copy a prompt, then paste the answer."],
     ["import", "I", "Import", "Choose a file or paste plain JSON."],
   ];
 
@@ -806,12 +829,20 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
                 />
               ) : (
                 <div className="notice">
-                  <strong>The provider names the new pack.</strong>
+                  <strong>{requestBrief.packName.trim() ? "Your pack name will be used." : "The AI names the new pack."}</strong>
                   <p style={{ margin: "4px 0" }}>
-                    If the name already exists, the app appends 2, 3, and so on. The provider also decides the decks.
+                    Leave the pack name blank to let the AI choose. If a name already exists, the app appends 2, 3,
+                    and so on. The AI also decides the decks unless you name one.
                   </p>
                 </div>
               )}
+
+              <CreationBriefFields
+                target={target}
+                brief={requestBrief}
+                packs={packs}
+                onChange={updateBrief}
+              />
 
               <label className="field-label" style={{ maxWidth: "10rem" }}>
                 {target === "pack" ? "Total cards" : target === "deck" ? "Cards in the new deck" : "Cards to add"}
@@ -835,7 +866,7 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
                   className="btn primary"
                   type="button"
                   onClick={() => void prepareNow()}
-                  disabled={busy || (target !== "pack" && (!packName || (target === "cards" && !deckId)))}
+                  disabled={busy || !chatTargetReady || subjectNeeded}
                 >
                   Prepare the prompt
                 </button>
@@ -893,28 +924,31 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
                   onDeck={chooseDeck}
                 />
               ) : null}
-              <div className="prompt-box">
-                <div className="row" style={{ justifyContent: "space-between" }}>
-                  <strong>Prompt to copy</strong>
-                  <span className="badge">AI chooses the name</span>
-                </div>
-                {chatPrompt ? <pre className="code-block">{chatPrompt}</pre> : <p className="muted">Building the prompt...</p>}
-              </div>
-              <div className="row">
-                <button className="btn" type="button" onClick={() => void copyChatPrompt()} disabled={!chatPrompt}>
-                  Copy the prompt
-                </button>
-                <button className="btn" type="button" onClick={downloadChatPrompt} disabled={!chatPrompt}>
-                  Download .md
-                </button>
-              </div>
+              <CreationBriefFields
+                target={target}
+                brief={requestBrief}
+                packs={packs}
+                onChange={updateBrief}
+              />
+              <ChatPromptEditor
+                prompt={chatPrompt}
+                loading={chatLoading}
+                needsSubject={subjectNeeded}
+                targetReady={chatTargetReady}
+                onChange={editChatPrompt}
+                onRebuild={rebuildChatPrompt}
+                onCopy={() => void copyChatPrompt()}
+                onDownload={downloadChatPrompt}
+              />
               <label className="field-label">
                 Paste the chat answer
                 <textarea
                   className="answer-input"
                   rows={6}
-                  value={chatAnswer}
-                  onChange={(event) => setChatAnswer(event.target.value)}
+                  value={chatAnswerText}
+                  onChange={(event) =>
+                    setChatAnswer({ key: chatBuildKey, text: event.target.value })
+                  }
                   placeholder="Paste the chat's JSON answer here"
                 />
               </label>
@@ -923,7 +957,7 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
                   className="btn primary"
                   type="button"
                   onClick={() => void importChatAnswer()}
-                  disabled={busy || !chatAnswer.trim()}
+                  disabled={busy || !chatAnswerText.trim()}
                 >
                   Check and save
                 </button>
@@ -1002,8 +1036,12 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
               <strong>Delete is the undo.</strong> Packs and decks can be removed from Packs after typing their name.
             </p>
             <p style={{ margin: 0 }}>
-              <strong>Names:</strong> Write uses your name. Generate and Chat let the AI name it. A collision gets 2, 3,
-              and so on.
+              <strong>Names:</strong> Write uses your name. Generate and Chat use the optional name you type, or let
+              the AI choose when it is blank. A collision gets 2, 3, and so on.
+            </p>
+            <p style={{ margin: 0 }}>
+              <strong>Your brief:</strong> the subject, focus and card style are the request. The AI can name
+              containers, but it cannot quietly replace the learning goal.
             </p>
             <p style={{ margin: 0 }}>
               <strong>Imports are strict.</strong> A pack file under Deck is refused; switch target instead.

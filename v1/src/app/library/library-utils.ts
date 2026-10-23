@@ -6,6 +6,7 @@
 // 2026-10-21 opencode: created during the panel split [pack: library-create-flow]
 
 import type { Card, PackStatus } from "@/lib/shared/types";
+import type { CreationBrief } from "@/lib/shared/creation";
 import { ApiError } from "@/lib/client/api";
 
 /** The three jobs the Library offers. Create is the only one that writes. */
@@ -169,4 +170,38 @@ export function plainText(parts: Card["prompt"]): string {
     .join(" ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+/**
+ * The subject a target starts with. Pack stays blank because the learner is
+ * naming a new subject; Deck and Cards borrow the thing they are extending.
+ */
+export function briefSubjectDefault(
+  packs: PackStatus[],
+  target: CreateTarget,
+  packName: string,
+  deckId: string,
+): string {
+  if (target === "pack") return "";
+  const pack = packs.find((entry) => entry.name === packName && !entry.error);
+  if (!pack) return "";
+  if (target === "deck") return pack.description?.trim() || pack.name;
+  return packDecks(pack).find((deck) => deck.id === deckId)?.name ?? "";
+}
+
+/**
+ * Keep only the optional name that belongs to the target. A stale field from a
+ * previous target must never leak into the prompt.
+ */
+export function briefForTarget(brief: CreationBrief, target: CreateTarget): CreationBrief {
+  return {
+    ...brief,
+    packName: target === "pack" ? brief.packName : "",
+    deckName: target === "deck" ? brief.deckName : "",
+  };
+}
+
+/** A learner has not given the prompt a goal until the subject has words. */
+export function briefNeedsSubject(brief: CreationBrief): boolean {
+  return brief.subjectMode === "learner" && brief.subject.trim().length === 0;
 }

@@ -8,6 +8,9 @@
 import { describe, expect, it } from "vitest";
 import type { Card, PackStatus } from "@/lib/shared/types";
 import {
+  briefForTarget,
+  briefNeedsSubject,
+  briefSubjectDefault,
   cardMatches,
   cardsInFocus,
   createDestination,
@@ -19,6 +22,7 @@ import {
   readDeckValue,
   searchable,
 } from "@/app/library/library-utils";
+import { defaultCreationBrief } from "@/lib/shared/creation";
 import { makeCard } from "./helpers";
 
 function makePack(overrides: Partial<PackStatus> = {}): PackStatus {
@@ -126,5 +130,38 @@ describe("focus and destination", () => {
     expect(
       deleteName({ kind: "deck", packName: "starter", deckId: "basics", deckName: "Basics" }),
     ).toBe("Basics");
+  });
+});
+
+describe("creation brief defaults", () => {
+  it("starts a new pack blank, a deck from its pack, and cards from their deck", () => {
+    const packs = [makePack({ description: "Everyday Polish" })];
+    expect(briefSubjectDefault(packs, "pack", "starter", "basics")).toBe("");
+    expect(briefSubjectDefault(packs, "deck", "starter", "basics")).toBe("Everyday Polish");
+    expect(briefSubjectDefault([makePack()], "deck", "starter", "basics")).toBe("starter");
+    expect(briefSubjectDefault(packs, "cards", "starter", "basics")).toBe("Basics");
+    expect(briefSubjectDefault(packs, "cards", "starter", "gone")).toBe("");
+  });
+
+  it("never borrows a subject from a broken or missing pack", () => {
+    const packs = [makePack({ error: "could not read" })];
+    expect(briefSubjectDefault(packs, "deck", "starter", "basics")).toBe("");
+    expect(briefSubjectDefault(packs, "cards", "missing", "basics")).toBe("");
+  });
+
+  it("keeps only the optional name that belongs to the target", () => {
+    const brief = defaultCreationBrief({ packName: "slow", deckName: "Basics" });
+    expect(briefForTarget(brief, "pack")).toMatchObject({ packName: "slow", deckName: "" });
+    expect(briefForTarget(brief, "deck")).toMatchObject({ packName: "", deckName: "Basics" });
+    expect(briefForTarget(brief, "cards")).toMatchObject({ packName: "", deckName: "" });
+  });
+
+  it("needs a subject only when the learner chooses and has written nothing", () => {
+    expect(briefNeedsSubject(defaultCreationBrief())).toBe(true);
+    expect(briefNeedsSubject(defaultCreationBrief({ subject: "  " }))).toBe(true);
+    expect(briefNeedsSubject(defaultCreationBrief({ subject: "directions" }))).toBe(false);
+    expect(
+      briefNeedsSubject(defaultCreationBrief({ subjectMode: "provider", subject: "" })),
+    ).toBe(false);
   });
 });

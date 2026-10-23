@@ -6,6 +6,9 @@
 // 2026-10-20 opencode: created for the browser-owned build.
 // 2026-10-22 opencode: newId replaces randomUUID so card edits and answer rows
 // work when a static host is opened over plain HTTP. [pack: library-create-flow]
+// 2026-10-22 opencode: the creation brief is validated here and the library is
+// reduced to names, descriptions and deck labels before any prompt sees it.
+// [pack: creation-control]
 
 import type {
   AnswerResult,
@@ -78,6 +81,11 @@ import {
 } from "@/lib/browser/provider";
 import { AUTHORING_SKILL_VERSION, buildAuthoringPrompt } from "@/lib/browser/authoring";
 import { slugFromName } from "@/lib/browser/creation";
+import {
+  libraryInventoryFromPacks,
+  validateCreationBrief,
+  type CreationBrief,
+} from "@/lib/shared/creation";
 
 /** One sentence a screen can show without rewriting it. */
 function fail(message: string, detail?: unknown): never {
@@ -105,6 +113,17 @@ function asNumber(value: unknown, fallback: number, min = 0, max = 86400000): nu
 function asStringArray(value: unknown): string[] | null {
   if (!Array.isArray(value)) return null;
   return value.every((item) => typeof item === "string") ? (value as string[]) : null;
+}
+
+/**
+ * Read the optional creation brief. A request without one keeps the older
+ * behaviour, because the screens are being updated one pack at a time.
+ */
+function optionalBrief(record: Record<string, unknown> | null): CreationBrief | undefined {
+  if (!record || record.brief === undefined) return undefined;
+  const result = validateCreationBrief(record.brief);
+  if (!result.ok) fail(result.message);
+  return result.brief;
 }
 
 /** The library as the old screens knew it: packs, cards and display statuses. */
@@ -685,6 +704,8 @@ export async function localSend<T>(
   if (path === "/api/provider/test") return (await testProvider()) as T;
   if (path === "/api/provider/prepare") {
     if (!record) fail("The request arrived in a shape the app does not understand.");
+    // The brief is checked before any target work, so a nameless request is refused once.
+    const brief = optionalBrief(record);
     const targetRecord = asRecord(record.target);
     const kind = targetRecord ? asString(targetRecord.kind) : null;
     let target: GenerationTarget;
@@ -705,6 +726,7 @@ export async function localSend<T>(
     const prepared = await prepareGeneration({
       target,
       count: asNumber(record.count, kind === "pack" ? 10 : 5, 1, 20),
+      brief,
     });
     const settings = await readSettings();
     return {
@@ -733,23 +755,35 @@ export async function localSend<T>(
   if (path === "/api/authoring/prompt") {
     const target = record ? asRecord(record.target) : null;
     if (!target) fail("Choose what the chat should write for.");
+    // Chat always sees the brief and the allowed library facts when one is sent.
+    const brief = optionalBrief(record);
+    const inventory = libraryInventoryFromPacks(await readPacks());
     const kind = asString(target.kind);
     const packName = asString(target.packName);
     const deckId = asString(target.deckId);
     if (kind === "pack") {
-      return { prompt: buildAuthoringPrompt({ kind: "pack" }), version: AUTHORING_SKILL_VERSION } as T;
+      return {
+        prompt: buildAuthoringPrompt({ kind: "pack" }, undefined, { brief, inventory }),
+        version: AUTHORING_SKILL_VERSION,
+      } as T;
     }
     if (kind === "deck") {
       if (!packName) fail("Choose the pack the chat should add a deck to.");
       const pack = await readPack(packName);
       if (!pack) fail(`There is no pack "${packName}" here.`);
-      return { prompt: buildAuthoringPrompt({ kind: "deck", packName }, pack), version: AUTHORING_SKILL_VERSION } as T;
+      return {
+        prompt: buildAuthoringPrompt({ kind: "deck", packName }, pack, { brief, inventory }),
+        version: AUTHORING_SKILL_VERSION,
+      } as T;
     }
     if (kind === "cards") {
       if (!packName || !deckId) fail("Choose the pack and deck the chat should add cards to.");
       const pack = await readPack(packName);
       if (!pack) fail(`There is no pack "${packName}" here.`);
-      return { prompt: buildAuthoringPrompt({ kind: "cards", packName, deckId }, pack), version: AUTHORING_SKILL_VERSION } as T;
+      return {
+        prompt: buildAuthoringPrompt({ kind: "cards", packName, deckId }, pack, { brief, inventory }),
+        version: AUTHORING_SKILL_VERSION,
+      } as T;
     }
     fail("Choose Pack, Deck or Cards as the chat target.");
   }

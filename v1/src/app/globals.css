@@ -654,6 +654,93 @@ td {
   font-size: 0.88rem;
 }
 
+textarea.field {
+  font: inherit;
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--card);
+  color: var(--ink);
+}
+
+.brief-block {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 10px 12px;
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+
+.brief-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.brief-note {
+  color: var(--quiet);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.brief-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.brief-grid .brief-wide {
+  grid-column: 1 / -1;
+}
+
+.segmented {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  width: fit-content;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+}
+
+.segmented-choice {
+  font: inherit;
+  font-size: 0.84rem;
+  color: var(--quiet);
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+.segmented-choice[aria-pressed="true"] {
+  color: var(--accent-ink);
+  background: var(--accent);
+  font-weight: 600;
+}
+
+.prompt-editor {
+  min-height: 240px;
+  resize: vertical;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 620px) {
+  .brief-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .prompt-editor {
+    min-height: 200px;
+  }
+}
+
 .prompt-box {
   border: 1px solid var(--line);
   border-radius: 9px;

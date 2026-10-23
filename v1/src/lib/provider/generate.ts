@@ -6,17 +6,26 @@
 // 2026-10-20 opencode: pure generation logic, safe in the browser; the batch
 // duplicate check uses card ids, and a deck id can decide identity.
 // [pack: browser-app]
+// 2026-10-22 opencode: a line may ask for cloze, type or hear_type, and a batch
+// that ignores the learner's requested style is refused whole.
+// [pack: creation-control]
 
 import { z } from "zod";
 import type { Card, CardPart, CardSource } from "@/lib/shared/types";
 import { buildCard, deckCardId, generatedCardId } from "@/lib/core/card";
 import type { PackRecord } from "@/lib/packs/types";
 import { extractJson } from "@/lib/provider/client";
+import {
+  GENERATED_CARD_STYLES,
+  type CardStyle,
+  type GeneratedCardStyle,
+} from "@/lib/shared/creation";
 
-/** One full line the model wrote, with the target the app should hide. */
+/** What one generated line says, before the app turns it into a card. */
 export const generatedLineSchema = z.object({
   fullLine: z.string().min(1, "a generated line needs the full correct text"),
   target: z.string().min(1, "a generated line needs a target to hide"),
+  style: z.enum(GENERATED_CARD_STYLES).optional(),
   translation: z.string().optional(),
   topics: z.array(z.string()).optional(),
   tags: z.array(z.string()).optional(),
@@ -49,6 +58,28 @@ export const generatedDeckSchema = z
 
 export type GeneratedLine = z.infer<typeof generatedLineSchema>;
 
+/** The context a line needs beyond its own words: requested style and pack language. */
+export interface GeneratedCardOptions {
+  cardStyle?: CardStyle;
+  language?: string;
+}
+
+/** Read the line style the app must build, refusing anything the learner did not ask for. */
+function chosenStyle(line: GeneratedLine, options: GeneratedCardOptions): GeneratedCardStyle {
+  const requested = options.cardStyle;
+  // A specific request is enforced line by line, because a batch is all or nothing.
+  if (requested && requested !== "mixed") {
+    if (line.style !== requested) {
+      throw new Error(
+        `the learner asked for ${requested} cards, but a line used ${line.style ?? "no style"}`,
+      );
+    }
+    return requested;
+  }
+  // Mixed lets the provider choose; an omitted style keeps the existing cloze default.
+  return line.style ?? "cloze";
+}
+
 /** Find where the target sits. Exact first, then a forgiving second look. */
 function findTarget(fullLine: string, target: string): { index: number; length: number } | null {
   const exact = fullLine.indexOf(target);
@@ -71,27 +102,88 @@ function partsAroundTarget(fullLine: string, found: { index: number; length: num
   return parts;
 }
 
+/** The cloze card keeps the existing hide-the-target behaviour. */
+function clozeCardParts(
+  line: GeneratedLine,
+  found: { index: number; length: number },
+): { prompt: CardPart[]; answerDef: CardSource["answerDef"] } {
+  return {
+    prompt: partsAroundTarget(line.fullLine, found),
+    answerDef: { mode: "cloze", blanks: [{ id: "b1", expected: [line.target] }] },
+  };
+}
+
+/** A type card shows the translation and asks for the whole line. */
+function typeCardParts(line: GeneratedLine, translation: string): {
+  prompt: CardPart[];
+  answerDef: CardSource["answerDef"];
+} {
+  return {
+    prompt: [{ type: "text", text: translation }],
+    answerDef: { mode: "type", expected: [line.fullLine] },
+  };
+}
+
+/** A hear_type card speaks the line and asks the learner to type it back. */
+function hearTypeCardParts(
+  line: GeneratedLine,
+  options: GeneratedCardOptions,
+): { prompt: CardPart[]; answerDef: CardSource["answerDef"] } {
+  const speak: CardPart = {
+    type: "speak",
+    text: line.fullLine,
+    ...(options.language && options.language.length > 0 ? { lang: options.language } : {}),
+    label: "Listen",
+  };
+  return {
+    prompt: [speak],
+    answerDef: { mode: "hear_type", expected: [line.fullLine] },
+  };
+}
+
 /** Turn one checked line into the card source the bundle validator checks. */
-function sourceFromLine(line: GeneratedLine, defaultTopic: string, allowedTopics?: string[]): CardSource {
-  const found = findTarget(line.fullLine, line.target);
-  if (!found) {
-    throw new Error(`the target "${line.target}" is not inside the line "${line.fullLine}"`);
+function sourceFromLine(
+  line: GeneratedLine,
+  defaultTopic: string,
+  allowedTopics?: string[],
+  options: GeneratedCardOptions = {},
+): CardSource {
+  const style = chosenStyle(line, options);
+  const translation = line.translation?.trim() ?? "";
+  // A type card is unanswerable without the translation it shows first.
+  if (style === "type" && translation.length === 0) {
+    throw new Error("a type card needs a translation");
+  }
+
+  // A cloze card is the only style that needs the target found inside the line.
+  let cardParts: { prompt: CardPart[]; answerDef: CardSource["answerDef"] };
+  if (style === "cloze") {
+    const found = findTarget(line.fullLine, line.target);
+    if (!found) {
+      throw new Error(`the target "${line.target}" is not inside the line "${line.fullLine}"`);
+    }
+    cardParts = clozeCardParts(line, found);
+  } else if (style === "type") {
+    cardParts = typeCardParts(line, translation);
+  } else {
+    cardParts = hearTypeCardParts(line, options);
   }
 
   const topics = (line.topics ?? []).filter((topic) => !allowedTopics || allowedTopics.includes(topic));
   const chosenTopics = topics.length > 0 ? topics : [defaultTopic];
   const answerParts: CardPart[] = [{ type: "text", text: line.fullLine }];
-  if (line.translation && line.translation.trim().length > 0) {
-    answerParts.push({ type: "text", text: line.translation.trim(), role: "translation" });
+  // A cloze or heard card may still show the translation on the answer side.
+  if (style !== "type" && translation.length > 0) {
+    answerParts.push({ type: "text", text: translation, role: "translation" });
   }
 
   return {
     summary: line.summary?.trim() || line.fullLine,
     topics: chosenTopics,
     tags: line.tags ?? [],
-    prompt: partsAroundTarget(line.fullLine, found),
+    prompt: cardParts.prompt,
     answer: answerParts,
-    answerDef: { mode: "cloze" as const, blanks: [{ id: "b1", expected: [line.target] }] },
+    answerDef: cardParts.answerDef,
     fullLine: line.fullLine,
   };
 }
@@ -104,8 +196,9 @@ export function deriveCard(
   defaultTopic: string,
   now: string,
   deckId?: string,
+  options: GeneratedCardOptions = {},
 ): Card {
-  const source = sourceFromLine(line, defaultTopic, pack.topics);
+  const source = sourceFromLine(line, defaultTopic, pack.topics, options);
   const id = deckId
     ? deckCardId(pack.name, deckId, source)
     : generatedCardId(pack.name, line.fullLine, line.target);
@@ -125,9 +218,18 @@ export function deriveCard(
   return card;
 }
 
+/** One plain sentence for a line the app refused, never a stack trace. */
+function refusalMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "the provider's answer was not usable";
+}
+
 /** One card in the same shape the bundle validator reads. */
-function bundleCardFromLine(line: GeneratedLine, deck: { id: string; name: string }) {
-  const source = sourceFromLine(line, deck.name);
+function bundleCardFromLine(
+  line: GeneratedLine,
+  deck: { id: string; name: string },
+  options: GeneratedCardOptions,
+) {
+  const source = sourceFromLine(line, deck.name, undefined, options);
   return {
     deckId: deck.id,
     summary: source.summary,
@@ -159,19 +261,25 @@ function readStructured(text: string): { ok: true; value: unknown } | { ok: fals
 /** Read a generated pack reply into a whole-pack bundle. */
 export function generatedPackBundle(
   text: string,
+  options: GeneratedCardOptions = {},
 ): { ok: true; bundle: Record<string, unknown> } | { ok: false; message: string } {
   const json = readStructured(text);
   if (!json.ok) return json;
   const parsed = generatedPackSchema.safeParse(json.value);
   if (!parsed.success) return providerRefusal(parsed.error);
   const decks = new Map(parsed.data.decks.map((deck) => [deck.id, deck]));
+  const language = parsed.data.pack.language?.trim() || options.language;
   const cards = [];
   for (const line of parsed.data.lines) {
     const deck = decks.get(line.deckId);
     if (!deck) {
       return { ok: false, message: `the provider named a deck "${line.deckId}" that it did not define` };
     }
-    cards.push(bundleCardFromLine(line, deck));
+    try {
+      cards.push(bundleCardFromLine(line, deck, { ...options, language }));
+    } catch (error) {
+      return { ok: false, message: refusalMessage(error) };
+    }
   }
   return {
     ok: true,
@@ -187,12 +295,20 @@ export function generatedPackBundle(
 /** Read a generated deck reply into a deck fragment. */
 export function generatedDeckBundle(
   text: string,
+  options: GeneratedCardOptions = {},
 ): { ok: true; bundle: Record<string, unknown> } | { ok: false; message: string } {
   const json = readStructured(text);
   if (!json.ok) return json;
   const parsed = generatedDeckSchema.safeParse(json.value);
   if (!parsed.success) return providerRefusal(parsed.error);
-  const cards = parsed.data.lines.map((line) => bundleCardFromLine(line, parsed.data.deck));
+  const cards = [];
+  for (const line of parsed.data.lines) {
+    try {
+      cards.push(bundleCardFromLine(line, parsed.data.deck, options));
+    } catch (error) {
+      return { ok: false, message: refusalMessage(error) };
+    }
+  }
   return { ok: true, bundle: { decks: [parsed.data.deck], cards } };
 }
 
@@ -200,12 +316,20 @@ export function generatedDeckBundle(
 export function generatedCardsBundle(
   text: string,
   deck: { id: string; name: string },
+  options: GeneratedCardOptions = {},
 ): { ok: true; bundle: Record<string, unknown> } | { ok: false; message: string } {
   const json = readStructured(text);
   if (!json.ok) return json;
   const parsed = generatedLinesSchema.safeParse(json.value);
   if (!parsed.success) return providerRefusal(parsed.error);
-  const cards = parsed.data.lines.map((line) => bundleCardFromLine(line, deck));
+  const cards = [];
+  for (const line of parsed.data.lines) {
+    try {
+      cards.push(bundleCardFromLine(line, deck, options));
+    } catch (error) {
+      return { ok: false, message: refusalMessage(error) };
+    }
+  }
   return { ok: true, bundle: { cards } };
 }
 
@@ -220,6 +344,7 @@ export function generateCardsFromText(
   defaultTopic: string,
   now: string,
   deckId?: string,
+  options: GeneratedCardOptions = {},
 ): Card[] {
   const parsed = generatedLinesSchema.safeParse(extractJson(text));
   if (!parsed.success) {
@@ -230,7 +355,7 @@ export function generateCardsFromText(
   const cards: Card[] = [];
   const seen = new Set<string>();
   for (const line of parsed.data.lines) {
-    const card = deriveCard(pack, requestId, line, defaultTopic, now, deckId);
+    const card = deriveCard(pack, requestId, line, defaultTopic, now, deckId, options);
     if (seen.has(card.id)) continue;
     seen.add(card.id);
     cards.push(card);

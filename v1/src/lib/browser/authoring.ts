@@ -5,17 +5,31 @@
 // PACK: browser-app
 // 2026-10-20 opencode: created for the browser-owned build (ticket 17).
 // 2026-10-21 opencode: target-first Pack/Deck/Cards prompts, skill 2.0.0.
+// 2026-10-22 opencode: the learner's brief and the allowed library facts are now
+// part of every target's prompt, skill 3.0.0. [pack: creation-control]
 
 import type { BrowserPack } from "@/lib/browser/repository";
+import {
+  describeCreationBrief,
+  type CardStyle,
+  type CreationBrief,
+  type LibraryInventory,
+} from "@/lib/shared/creation";
 
 /** Bump when the prompt or the JSON shape it teaches changes. */
-export const AUTHORING_SKILL_VERSION = "2.0.0";
+export const AUTHORING_SKILL_VERSION = "3.0.0";
 
 /** Where the chat is allowed to write. No learner-written name field exists. */
 export type AuthoringTarget =
   | { kind: "pack" }
   | { kind: "deck"; packName: string }
   | { kind: "cards"; packName: string; deckId: string };
+
+/** What the chat may know about the learner's goal and the existing library. */
+export interface AuthoringContext {
+  brief?: CreationBrief | null;
+  inventory?: LibraryInventory;
+}
 
 const COMMON_RULES = `Rules for every card:
 - summary: under six words.
@@ -86,23 +100,71 @@ function exampleDeckId(pack: BrowserPack): string {
   return id;
 }
 
+/** Turn the learner's style choice into card-shape words the chat can follow. */
+function authoringStyleLines(cardStyle: CardStyle): string[] {
+  // Mixed is a request to vary the answer mode, not a mode of its own.
+  if (cardStyle === "mixed") {
+    return [
+      "Card style: mixed. Use a mix of cloze, type and hear_type answer modes across the cards.",
+    ];
+  }
+  const lines = [
+    `Card style: ${cardStyle}. Every card must build a ${cardStyle} answer. A card with another answer mode does not match the learner's request.`,
+  ];
+  // A type card cannot work without the translation it asks the learner to read.
+  if (cardStyle === "type") {
+    lines.push(
+      "Every type card needs a translation part, because the learner sees the translation and types the full line.",
+    );
+  }
+  // A spoken card uses the pack language when one is known.
+  if (cardStyle === "hear_type") {
+    lines.push(
+      "Every hear_type card speaks the full line in the pack language when it is known, and the learner types the full line.",
+    );
+  }
+  return lines;
+}
+
+/**
+ * Turn the brief and inventory into a prompt section. It is empty when no brief
+ * arrived, so an older caller keeps the prompt it already knew.
+ */
+function briefSection(context: AuthoringContext): string {
+  if (!context.brief) return "";
+  const lines = [
+    ...describeCreationBrief(context.brief, context.inventory ?? [], {
+      includeInventory: true,
+    }),
+    ...authoringStyleLines(context.brief.cardStyle),
+  ];
+  return `\n\n${lines.join("\n")}`;
+}
+
 /**
  * Build the whole prompt for one target. Parent ids are written in, so the chat
  * never has to invent an existing identity; names for a new pack or deck are
  * the chat's choice and may be suffixed by the app on a collision.
  */
-export function buildAuthoringPrompt(target: AuthoringTarget, pack?: BrowserPack | null): string {
+export function buildAuthoringPrompt(
+  target: AuthoringTarget,
+  pack?: BrowserPack | null,
+  context: AuthoringContext = {},
+): string {
   const header = `# Flashcards authoring skill ${AUTHORING_SKILL_VERSION}
 
 You are writing content for a flashcards app. Answer with one JSON object and nothing else: no markdown fence, no explanation, no comments.
 
-The app will check every card before it saves anything. If one card is wrong, the whole import is refused, so follow the shape exactly.`;
+The app will check every card before it saves anything. If one card is wrong, the whole import is refused, so follow the shape exactly.${briefSection(context)}`;
 
   if (target.kind === "pack") {
+    const nameRule = context.brief?.packName
+      ? "Use the learner's requested pack name. The app may append -2 if that name is already here."
+      : "Choose a short lowercase pack name from the content. The app may append -2 if that name is already here.";
     return `${header}
 
 Target: a new pack.
-Choose a short lowercase pack name from the content. The app may append -2 if that name is already here.
+${nameRule}
 Make at least one deck. Deck ids use lowercase letters, numbers and dashes only. Every card names its deck with "deckId".
 
 ${COMMON_RULES}
@@ -120,13 +182,16 @@ Before you answer, check: every deck id is lowercase; every card has a deckId th
 
   if (target.kind === "deck") {
     const id = exampleDeckId(pack);
+    const nameRule = context.brief?.deckName
+      ? "Use the learner's requested deck name, with a lowercase id made from it. The app may append -2 to a colliding id and label."
+      : "Choose short lowercase deck ids and labels for the new decks. The app may append -2 to a colliding id and label.";
     return `${header}
 
 Target: add one or more new decks to the existing pack "${pack.name}", version ${pack.version}.
 Its decks are:
 ${deckList || "- (none yet)"}
 
-Choose short lowercase deck ids and labels for the new decks. The app may append -2 to a colliding id and label.
+${nameRule}
 Return only the new decks and their cards. Do not include a "pack" header, and do not reuse an existing deck id.
 
 ${COMMON_RULES}

@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flashcards - Creation control design simulation</title>
+<!--
+WHY: Design-time simulation for the learner brief, provider-choice mode and
+editable Chat prompt. It mirrors the locked GRILL, uses hardcoded data and
+saves nothing. The five scenarios are the PRD simulation contract.
+PACK: creation-control
+2026-10-22 opencode: created before the implementation [pack: creation-control]
+-->
+<style>
+  :root {
+    --bg: #11100e;
+    --panel: #1a1917;
+    --panel-2: #211f1c;
+    --border: #38342e;
+    --text: #f4efe7;
+    --muted: #a9a097;
+    --accent: #9ec7b6;
+    --accent-ink: #10201a;
+    --danger: #e08374;
+    --warn: #d8b56f;
+    --shadow: 0 18px 50px rgba(0,0,0,.28);
+    --radius: 16px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); }
+  body { font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  button, input, select, textarea { font: inherit; }
+  button { cursor: pointer; }
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between; gap: 18px;
+    padding: 14px 22px; border-bottom: 1px solid var(--border); background: #151411;
+    position: sticky; top: 0; z-index: 20;
+  }
+  .brand { font-weight: 750; letter-spacing: .02em; }
+  .brand span { color: var(--accent); }
+  .tag { color: var(--muted); font-size: 12px; border: 1px solid var(--border); border-radius: 999px; padding: 5px 9px; }
+  .banner {
+    background: #201e18; border-bottom: 1px solid var(--border); color: #d8cfc2;
+    padding: 9px 22px; font-size: 12px;
+  }
+  .banner strong { color: var(--warn); }
+  .shell { width: min(1180px, calc(100% - 36px)); margin: 0 auto; padding: 26px 0 80px; }
+  .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 18px; }
+  h1 { margin: 0; font-size: 32px; line-height: 1.1; letter-spacing: -.02em; }
+  h2 { margin: 0; font-size: 18px; letter-spacing: -.01em; }
+  h3 { margin: 0; font-size: 14px; }
+  .lead { color: var(--muted); margin: 7px 0 0; max-width: 720px; }
+  .scenario-nav { display: flex; flex-wrap: wrap; gap: 6px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+  .scenario-tab {
+    background: transparent; color: var(--muted); border: 0; border-bottom: 2px solid transparent;
+    padding: 11px 12px; font-weight: 650;
+  }
+  .scenario-tab[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); }
+  .scenario-tab:hover { color: var(--text); }
+  .scenario { display: none; }
+  .scenario.active { display: block; }
+  .scenario-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+  .num {
+    display: grid; place-items: center; width: 30px; height: 30px; flex: 0 0 30px;
+    border-radius: 50%; background: var(--accent); color: var(--accent-ink); font-weight: 750;
+  }
+  .grid { display: grid; gap: 14px; }
+  .two { grid-template-columns: minmax(0, 1.15fr) minmax(300px, .85fr); }
+  .three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  @media (max-width: 900px) { .two, .three { grid-template-columns: 1fr; } }
+  @media (max-width: 620px) {
+    .page-head { align-items: flex-start; flex-direction: column; }
+    h1 { font-size: 27px; }
+    .shell { width: min(100% - 24px, 1180px); }
+  }
+  .card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 17px; box-shadow: var(--shadow);
+  }
+  .card.flat { box-shadow: none; }
+  .muted { color: var(--muted); }
+  .small { font-size: 12px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .field-label { display: block; margin-top: 10px; color: var(--muted); font-size: 12px; font-weight: 650; }
+  .field {
+    display: block; width: 100%; margin-top: 5px; padding: 10px 11px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--panel-2); color: var(--text);
+  }
+  .field:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .segmented { display: flex; gap: 4px; margin-top: 5px; padding: 3px; border: 1px solid var(--border); border-radius: 10px; background: var(--panel-2); }
+  .segmented button {
+    flex: 1; border: 0; border-radius: 7px; padding: 7px 8px; background: transparent; color: var(--muted); font-weight: 650;
+  }
+  .segmented button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+  .btn { border: 1px solid var(--border); border-radius: 9px; padding: 8px 12px; background: var(--panel-2); color: var(--text); font-weight: 650; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .btn:hover { filter: brightness(1.06); }
+  .badge { display: inline-block; border: 1px solid var(--border); border-radius: 999px; padding: 3px 8px; font-size: 11px; color: var(--muted); }
+  .badge.ok { color: var(--accent); border-color: #42685c; }
+  .badge.bad { color: var(--danger); border-color: #6b3b35; }
+  .prompt-box { border: 1px solid var(--border); border-radius: 12px; background: #141311; padding: 12px; }
+  pre.code {
+    margin: 10px 0 0; padding: 12px; border-radius: 10px; border: 1px solid var(--border);
+    background: #0d0c0b; color: #d9d1c6; white-space: pre-wrap; word-break: break-word;
+    font: 12px/1.55 ui-monospace, SFMono-Regular, Consolas, monospace;
+  }
+  .note { margin: 8px 0 0; color: var(--muted); font-size: 12px; }
+  .notice { border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; background: var(--panel-2); }
+  .notice.error { border-color: #6b3b35; background: #241715; color: #f1b3a8; }
+  .notice.good { border-color: #42685c; background: #15201c; color: #b8d8cb; }
+  .inventory { margin: 8px 0 0; padding-left: 18px; color: var(--muted); font-size: 13px; }
+  .inventory strong { color: var(--text); }
+  .chip { display: inline-block; border: 1px solid var(--border); border-radius: 999px; padding: 4px 9px; font-size: 12px; color: var(--muted); }
+  .timeline { display: grid; gap: 10px; margin-top: 10px; }
+  .step { display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: start; }
+  .step .dot { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--panel-2); border: 1px solid var(--border); font-size: 12px; font-weight: 750; }
+  .step.done .dot { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .step h3 { margin-bottom: 2px; }
+  .card-preview { border: 1px solid var(--border); border-radius: 12px; padding: 14px; background: var(--panel-2); }
+  .card-preview .front { font-size: 18px; margin: 8px 0 6px; }
+  .card-preview .answer { color: var(--accent); }
+  .footer { margin-top: 22px; color: var(--muted); font-size: 12px; }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">Flashcards <span>/ creation control</span></div>
+  <span class="tag">Design simulation · pre-implementation</span>
+</header>
+<div class="banner"><strong>Hardcoded placeholder data.</strong> This page saves nothing and talks to no provider. It shows the five promises the built app must keep.</div>
+<main class="shell">
+  <div class="page-head">
+    <div>
+      <h1>What should the cards teach?</h1>
+      <p class="lead">The same learner brief reaches Generate and Chat. The learner can always edit the Chat request, but the importer still checks the answer.</p>
+    </div>
+    <span class="badge ok">Five scenarios</span>
+  </div>
+
+  <nav class="scenario-nav" role="tablist" aria-label="Simulation scenarios">
+    <button class="scenario-tab" role="tab" aria-selected="true" data-scenario="one">1. Learner subject</button>
+    <button class="scenario-tab" role="tab" aria-selected="false" data-scenario="two">2. AI chooses</button>
+    <button class="scenario-tab" role="tab" aria-selected="false" data-scenario="three">3. Editable Chat</button>
+    <button class="scenario-tab" role="tab" aria-selected="false" data-scenario="four">4. Card style</button>
+    <button class="scenario-tab" role="tab" aria-selected="false" data-scenario="five">5. Empty container</button>
+  </nav>
+
+  <section class="scenario active" id="scenario-one" role="tabpanel">
+    <div class="scenario-head">
+      <span class="num">1</span>
+      <div>
+        <h2>A learner chooses a pack and types a subject</h2>
+        <p class="lead">The subject and focus appear in the prepared prompt. Nothing is sent until the learner presses send.</p>
+      </div>
+    </div>
+    <div class="grid two">
+      <div class="card">
+        <div class="row" style="justify-content:space-between"><h3>Create → Generate</h3><span class="badge">New pack</span></div>
+        <label class="field-label">Who chooses what to learn?
+          <span class="segmented">
+            <button type="button" aria-pressed="true">I choose</button>
+            <button type="button" aria-pressed="false">AI chooses</button>
+          </span>
+        </label>
+        <label class="field-label">Subject
+          <input class="field" id="subject-one" value="ordering coffee and asking for the bill">
+        </label>
+        <label class="field-label">Deck focus (optional)
+          <input class="field" id="focus-one" value="cafes, paying">
+        </label>
+        <label class="field-label">Card style
+          <select class="field" id="style-one">
+            <option selected>Mixed — the AI varies the exercise</option>
+            <option>Fill the blank</option>
+            <option>Type the answer</option>
+            <option>Listen and type</option>
+          </select>
+        </label>
+        <label class="field-label">Pack name (optional)
+          <input class="field" value="" placeholder="Leave blank and the AI names it">
+        </label>
+        <div class="row" style="margin-top:12px">
+          <button class="btn primary" type="button" id="prepare-one">Prepare the prompt</button>
+          <span class="badge ok">Ready</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between"><h3>Prepared prompt</h3><span class="badge">Nothing sent</span></div>
+        <pre class="code" id="prompt-one"></pre>
+        <p class="note">The prompt is a preview. Pressing send is the only network action.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="scenario" id="scenario-two" role="tabpanel">
+    <div class="scenario-head">
+      <span class="num">2</span>
+      <div>
+        <h2>AI chooses from the library</h2>
+        <p class="lead">The prompt names existing packs, descriptions and deck labels, then asks for a useful gap. Card text is never included.</p>
+      </div>
+    </div>
+    <div class="grid two">
+      <div class="card">
+        <div class="row" style="justify-content:space-between"><h3>Create → Generate</h3><span class="badge">New pack</span></div>
+        <div class="row" style="margin-top:8px">
+          <span class="segmented" style="margin-top:0">
+            <button type="button" aria-pressed="false">I choose</button>
+            <button type="button" aria-pressed="true">AI chooses</button>
+          </span>
+        </div>
+        <label class="field-label">Subject
+          <input class="field" value="" placeholder="The AI will choose from your packs and decks" disabled>
+        </label>
+        <div class="notice" style="margin-top:10px">
+          <strong>Your library</strong>
+          <ul class="inventory">
+            <li><strong>starter</strong> — Everyday Polish<ul><li>Basics</li><li>Cases</li></ul></li>
+            <li><strong>travel</strong> — Stations and directions<ul><li>Trains</li><li>Walking</li></ul></li>
+          </ul>
+        </div>
+        <p class="note">The disabled subject text is deliberately dropped, not sent.</p>
+      </div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between"><h3>Prompt fragment</h3><span class="badge ok">Gap requested</span></div>
+        <pre class="code">You are helping a learner choose what to study next.
+
+Library:
+- starter — Everyday Polish
+  - Basics
+  - Cases
+- travel — Stations and directions
+  - Trains
+  - Walking
+
+Choose a useful gap that is not already covered.
+Return JSON shaped like this:
+{
+  "pack": { "name": "short-name", "version": "1.0.0", "language": "pl" },
+  "decks": [{ "id": "short-id", "name": "Deck name" }],
+  "lines": [{ "deckId": "short-id", "fullLine": "…", "target": "…" }]
+}</pre>
+        <p class="note">No card text, evidence, settings or key is in the inventory.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="scenario" id="scenario-three" role="tabpanel">
+    <div class="scenario-head">
+      <span class="num">3</span>
+      <div>
+        <h2>Chat shows an editable prompt</h2>
+        <p class="lead">The learner can correct the request. Copy and download use the edited text. The pasted answer still passes the strict importer.</p>
+      </div>
+    </div>
+    <div class="grid two">
+      <div class="card">
+        <div class="row" style="justify-content:space-between"><h3>Chat → New cards</h3><span class="badge">Cases</span></div>
+        <label class="field-label">Subject
+          <input class="field" value="ordering coffee and asking for the bill">
+        </label>
+        <div class="prompt-box" style="margin-top:12px">
+          <div class="row" style="justify-content:space-between"><strong>Editable prompt</strong><span class="badge">You can edit this</span></div>
+          <label class="field-label">Prompt
+            <textarea class="field" id="chat-prompt" rows="14" spellcheck="false">You are helping a learner add cards to Cases in starter (Everyday Polish).
+
+Subject: ordering coffee and asking for the bill
+Focus: cafes, paying
+Style: mixed — use a mix of fill-the-blank, type and listening.
+
+Return only cards for the target deck. Every card needs a prompt, an answer and a valid answerDef.</textarea>
+          </label>
+          <div class="row" style="margin-top:8px">
+            <button class="btn" type="button" id="rebuild-chat">Rebuild prompt</button>
+            <button class="btn" type="button" id="copy-chat">Copy the prompt</button>
+            <button class="btn" type="button" id="download-chat">Download .md</button>
+          </div>
+          <p class="note" id="chat-status">Copy and download use the edited text. Validation happens after the answer comes back.</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between"><h3>Paste the answer</h3><span class="badge">Strict</span></div>
+        <textarea class="field" id="chat-answer" rows="7" spellcheck="false">{
+  "cards": [
+    {
+      "deckId": "cases",
+      "summary": "Zamawiam kawę",
+      "prompt": [{ "type": "text", "text": "I am ordering coffee." }],
+      "answer": [{ "type": "text", "text": "Zamawiam kawę." }],
+      "answerDef": { "mode": "type", "expected": ["Zamawiam kawę."] }
+    }
+  ]
+}</textarea>
+        <div class="row" style="margin-top:8px">
+          <button class="btn primary" type="button" id="check-ok">Check and save</button>
+          <button class="btn" type="button" id="check-bad">Paste a bad answer</button>
+        </div>
+        <div class="notice good" id="chat-result" style="margin-top:10px">Ready. Editing the prompt does not skip the import check.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="scenario" id="scenario-four" role="tabpanel">
+    <div class="scenario-head">
+      <span class="num">4</span>
+      <div>
+        <h2>A specific card style is built, or the whole batch is refused</h2>
+        <p class="lead">“Mixed” lets the provider vary the exercise. A specific style must match every line.</p>
+      </div>
+    </div>
+    <div class="grid two">
+      <div class="card">
+        <h3>Requested style</h3>
+        <label class="field-label">Card style
+          <select class="field" id="style-four">
+            <option value="mixed">Mixed — the AI varies the exercise</option>
+            <option value="cloze">Fill the blank</option>
+            <option value="type" selected>Type the answer</option>
+            <option value="hear_type">Listen and type</option>
+          </select>
+        </label>
+        <div class="row" style="margin-top:10px">
+          <button class="btn primary" type="button" id="style-match">Provider returns the requested style</button>
+          <button class="btn" type="button" id="style-wrong">Provider returns a different style</button>
+        </div>
+        <p class="note">One wrong line refuses the whole batch and saves nothing.</p>
+      </div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between"><h3>Result</h3><span class="badge ok" id="style-badge">Accepted</span></div>
+        <div class="notice good" id="style-notice" style="margin-top:10px">The batch matches “type”.</div>
+        <div class="card-preview" style="margin-top:10px">
+          <span class="chip" id="style-chip">type</span>
+          <div class="front" id="style-front">I am drinking coffee.</div>
+          <div class="answer" id="style-answer">Piję kawę.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="scenario" id="scenario-five" role="tabpanel">
+    <div class="scenario-head">
+      <span class="num">5</span>
+      <div>
+        <h2>A newly written empty pack is ready for Generate and Chat</h2>
+        <p class="lead">Writing the container and asking for cards are two steps, not two creation paths. The same pack and deck stay selected.</p>
+      </div>
+    </div>
+    <div class="grid two">
+      <div class="card">
+        <h3>Timeline</h3>
+        <div class="timeline">
+          <div class="step done"><span class="dot">1</span><div><h3>Write a pack</h3><p class="note">“Empty Sim” with one deck, “First”. Zero cards.</p></div></div>
+          <div class="step done"><span class="dot">2</span><div><h3>Generate into it</h3><p class="note">Cards go into empty-sim / First. No second pack or deck is made.</p></div></div>
+          <div class="step done"><span class="dot">3</span><div><h3>Write a second empty deck</h3><p class="note">“Second” joins the same pack.</p></div></div>
+          <div class="step done"><span class="dot">4</span><div><h3>Chat into that deck</h3><p class="note">The prompt names empty-sim and Second; the subject stays “pets”.</p></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between"><h3>Chat prompt fragment</h3><span class="badge ok">Same path</span></div>
+        <pre class="code">You are helping a learner add cards to Second in empty-sim.
+
+Subject: pets
+Focus: animals
+Style: mixed
+
+Return only cards for the target deck. Use "second" as the deckId.
+Do not create a new pack or deck.</pre>
+        <p class="note">The chat answer imports into the deck the learner just wrote.</p>
+      </div>
+    </div>
+  </section>
+
+  <p class="footer">Design simulation only. The post-implementation rehearsal is <code>tests/simulate-creation-control.test.ts</code>.</p>
+</main>
+
+<script>
+  const tabs = Array.from(document.querySelectorAll(".scenario-tab"));
+  const panels = Array.from(document.querySelectorAll(".scenario"));
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      tabs.forEach((entry) => entry.setAttribute("aria-selected", String(entry === tab)));
+      panels.forEach((panel) => panel.classList.toggle("active", panel.id === "scenario-" + tab.dataset.scenario));
+    });
+  });
+
+  const subjectOne = document.getElementById("subject-one");
+  const focusOne = document.getElementById("focus-one");
+  const styleOne = document.getElementById("style-one");
+  const promptOne = document.getElementById("prompt-one");
+
+  function styleSentence(value) {
+    if (value.startsWith("Fill")) return "Every line must be a cloze line with one hidden word.";
+    if (value.startsWith("Type")) return "Every line must be a type line and needs a translation.";
+    if (value.startsWith("Listen")) return "Every line must be a listen-and-type line.";
+    return "Use a mix of fill-the-blank, type and listening.";
+  }
+
+  function renderOne() {
+    const subject = subjectOne.value.trim() || "(a learner subject is required)";
+    const focus = focusOne.value.trim() || "(no deck focus)";
+    promptOne.textContent =
+      "You are helping a learner create a new pack.\n\n" +
+      "Subject: " + subject + "\n" +
+      "Focus: " + focus + "\n" +
+      "Style: " + styleSentence(styleOne.value) + "\n\n" +
+      "Return JSON shaped like this:\n" +
+      "{\n" +
+      '  "pack": { "name": "short-name", "version": "1.0.0", "language": "pl" },\n' +
+      '  "decks": [{ "id": "short-id", "name": "Deck name" }],\n' +
+      '  "lines": [{ "deckId": "short-id", "fullLine": "…", "target": "…" }]\n' +
+      "}";
+  }
+  [subjectOne, focusOne, styleOne].forEach((field) => field.addEventListener("input", renderOne));
+  document.getElementById("prepare-one").addEventListener("click", renderOne);
+  renderOne();
+
+  const chatPrompt = document.getElementById("chat-prompt");
+  const chatStatus = document.getElementById("chat-status");
+  const chatResult = document.getElementById("chat-result");
+  const originalChat = chatPrompt.value;
+
+  document.getElementById("rebuild-chat").addEventListener("click", () => {
+    chatPrompt.value = originalChat;
+    chatStatus.textContent = "Prompt rebuilt from the brief. Copy and download use this text.";
+  });
+  document.getElementById("copy-chat").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(chatPrompt.value);
+      chatStatus.textContent = "Copied " + chatPrompt.value.length + " edited characters. The edit survived copy.";
+    } catch {
+      chatStatus.textContent = "Clipboard blocked. Select the text and copy by hand.";
+    }
+  });
+  document.getElementById("download-chat").addEventListener("click", () => {
+    const blob = new Blob([chatPrompt.value], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "flashcards-authoring-prompt.md";
+    anchor.click();
+    URL.revokeObjectURL(url);
+    chatStatus.textContent = "Downloaded " + chatPrompt.value.length + " edited characters.";
+  });
+  document.getElementById("check-ok").addEventListener("click", () => {
+    chatResult.className = "notice good";
+    chatResult.textContent = "Imported 1 card into Cases. Editing the prompt did not bypass validation.";
+  });
+  document.getElementById("check-bad").addEventListener("click", () => {
+    chatResult.className = "notice error";
+    chatResult.textContent = "Refused: the answer has no prompt, no answer and no answerDef. Nothing was saved.";
+  });
+
+  const styleFour = document.getElementById("style-four");
+  const styleBadge = document.getElementById("style-badge");
+  const styleNotice = document.getElementById("style-notice");
+  const styleChip = document.getElementById("style-chip");
+  const styleFront = document.getElementById("style-front");
+  const styleAnswer = document.getElementById("style-answer");
+
+  function styleLabel(value) {
+    return value === "hear_type" ? "hear_type" : value;
+  }
+
+  function renderStyle(match) {
+    const requested = styleFour.value;
+    const shown = match ? (requested === "mixed" ? "type" : requested) : requested === "type" ? "cloze" : "type";
+    styleChip.textContent = styleLabel(shown);
+    styleFront.textContent = shown === "cloze" ? "Piję ____." : shown === "hear_type" ? "Listen to the line." : "I am drinking coffee.";
+    styleAnswer.textContent = shown === "cloze" ? "kawę" : "Piję kawę.";
+    if (match || requested === "mixed") {
+      styleBadge.className = "badge ok";
+      styleBadge.textContent = "Accepted";
+      styleNotice.className = "notice good";
+      styleNotice.textContent = requested === "mixed" || shown === requested
+        ? "The batch matches “" + requested + "”."
+        : "The batch matches “mixed”.";
+    } else {
+      styleBadge.className = "badge bad";
+      styleBadge.textContent = "Refused";
+      styleNotice.className = "notice error";
+      styleNotice.textContent = "Requested “" + requested + "” but the provider returned “" + shown + "”. The whole batch is refused and nothing is saved.";
+    }
+  }
+  document.getElementById("style-match").addEventListener("click", () => renderStyle(true));
+  document.getElementById("style-wrong").addEventListener("click", () => renderStyle(false));
+  styleFour.addEventListener("change", () => renderStyle(true));
+  renderStyle(true);
+</script>
+</body>
+</html>

@@ -3,6 +3,9 @@
 // prompt is shown before it leaves, and every outbound prompt is logged locally.
 // PACK: browser-app
 // 2026-10-20 opencode: created for the browser-owned build.
+// 2026-10-22 opencode: the learner's brief reaches every generation prompt, and
+// the requested style and pack language reach the generated card builder.
+// [pack: creation-control]
 
 import type { Card, ProviderStatus } from "@/lib/shared/types";
 import { callProvider } from "@/lib/provider/client";
@@ -21,6 +24,10 @@ import {
 } from "@/lib/provider/prompt";
 import type { ProviderConfig } from "@/lib/provider/types";
 import { deriveWeakTopics } from "@/lib/core/progress";
+import {
+  libraryInventoryFromPacks,
+  type CreationBrief,
+} from "@/lib/shared/creation";
 import {
   appendPrompt,
   readCards,
@@ -140,16 +147,22 @@ function generationCount(value: number | undefined, fallback: number): number {
 export async function prepareGeneration(body: {
   target?: GenerationTarget;
   count?: number;
+  brief?: CreationBrief;
 }): Promise<{ requestId: string; prompt: string; expiresAt: number }> {
-  if (!body.target) throw new Error("Choose what the provider should make.");
+  const target = body.target;
+  if (!target) throw new Error("Choose what the provider should make.");
   const cards = await readCards();
   const slots = await profileSlots(cards);
+  // The prompt may name the library, so it is read once in the allowed shape.
+  const packs = await readPacks();
+  const inventory = libraryInventoryFromPacks(packs);
 
-  if (body.target.kind === "pack") {
+  if (target.kind === "pack") {
     const count = generationCount(body.count, 10);
-    const packs = await readPacks();
-    const knownTopics = [...new Set(packs.flatMap((pack) => pack.decks.map((deck) => deck.name)))];
-    const prompt = buildPackGenerationPrompt(slots, count, knownTopics);
+    const prompt = buildPackGenerationPrompt(slots, count, {
+      brief: body.brief,
+      inventory,
+    });
     const prepared = holdPrepared({
       kind: "generation",
       display: prompt.display,
@@ -160,16 +173,20 @@ export async function prepareGeneration(body: {
       deckId: null,
       count,
       cardId: null,
+      brief: body.brief,
     });
     return { requestId: prepared.id, prompt: prompt.display, expiresAt: prepared.expiresAt };
   }
 
-  const pack = await readPack(body.target.packName);
+  const pack = packs.find((entry) => entry.name === target.packName) ?? null;
   if (!pack) throw new Error("That pack is not here.");
 
-  if (body.target.kind === "deck") {
+  if (target.kind === "deck") {
     const count = generationCount(body.count, 5);
-    const prompt = buildDeckGenerationPrompt(packRecord(pack), slots, count);
+    const prompt = buildDeckGenerationPrompt(packRecord(pack), slots, count, {
+      brief: body.brief,
+      inventory,
+    });
     const prepared = holdPrepared({
       kind: "generation",
       display: prompt.display,
@@ -180,15 +197,21 @@ export async function prepareGeneration(body: {
       deckId: null,
       count,
       cardId: null,
+      brief: body.brief,
     });
     return { requestId: prepared.id, prompt: prompt.display, expiresAt: prepared.expiresAt };
   }
 
-  const wantedDeck = body.target.deckId;
+  const wantedDeck = target.deckId;
   const deck = pack.decks.find((entry) => entry.id === wantedDeck);
   if (!deck) throw new Error(`That deck is not in ${pack.name}.`);
   const count = generationCount(body.count, 5);
-  const prompt = buildGenerationPrompt(packRecord(pack), slots, { topic: deck.name, count });
+  const prompt = buildGenerationPrompt(packRecord(pack), slots, {
+    topic: deck.name,
+    count,
+    brief: body.brief,
+    inventory,
+  });
   const prepared = holdPrepared({
     kind: "generation",
     display: prompt.display,
@@ -199,6 +222,7 @@ export async function prepareGeneration(body: {
     deckId: deck.id,
     count,
     cardId: null,
+    brief: body.brief,
   });
   return { requestId: prepared.id, prompt: prompt.display, expiresAt: prepared.expiresAt };
 }
@@ -231,8 +255,11 @@ export async function generatePrepared(requestId: string): Promise<GenerationRes
   });
   if (!result.ok) throw new Error(result.message);
 
+  // The brief decides which style every line must use, so it travels with the hold.
+  const cardStyle = prepared.brief?.cardStyle;
+
   if (prepared.targetKind === "pack") {
-    const read = generatedPackBundle(result.text);
+    const read = generatedPackBundle(result.text, { cardStyle });
     if (!read.ok) throw new Error(`Nothing was saved, because ${read.message}.`);
     const imported = await importBundle(JSON.stringify(read.bundle), { kind: "pack" }, {
       namePolicy: "auto-suffix",
@@ -249,7 +276,8 @@ export async function generatePrepared(requestId: string): Promise<GenerationRes
 
   if (prepared.targetKind === "deck") {
     if (!prepared.packName) throw new Error("That pack is no longer here.");
-    const read = generatedDeckBundle(result.text);
+    const parent = await readPack(prepared.packName);
+    const read = generatedDeckBundle(result.text, { cardStyle, language: parent?.language });
     if (!read.ok) throw new Error(`Nothing was saved, because ${read.message}.`);
     const imported = await importBundle(JSON.stringify(read.bundle), {
       kind: "deck",
@@ -272,7 +300,7 @@ export async function generatePrepared(requestId: string): Promise<GenerationRes
   const pack = await readPack(prepared.packName);
   const deck = pack?.decks.find((entry) => entry.id === prepared.deckId);
   if (!deck) throw new Error("The deck for these cards is gone.");
-  const read = generatedCardsBundle(result.text, deck);
+  const read = generatedCardsBundle(result.text, deck, { cardStyle, language: pack?.language });
   if (!read.ok) throw new Error(`Nothing was saved, because ${read.message}.`);
   const imported = await importBundle(JSON.stringify(read.bundle), {
     kind: "cards",

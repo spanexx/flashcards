@@ -13,7 +13,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "simulate:browser": "node scripts/simulate-browser.mjs",
-    "simulate:create-flow": "node scripts/simulate-create-flow.mjs"
+    "simulate:create-flow": "node scripts/simulate-create-flow.mjs",
+    "simulate:creation-control": "node scripts/simulate-creation-control.mjs"
   },
   "dependencies": {
     "next": "16.4.2",

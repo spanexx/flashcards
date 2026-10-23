@@ -3,6 +3,8 @@
 // URL-shaped calls, with no server and no IndexedDB.
 // PACK: browser-app
 // 2026-10-20 opencode: created for the browser-owned build.
+// 2026-10-22 opencode: the creation brief and requested card style are checked
+// through this same seam. [pack: creation-control]
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryStore, setBrowserStore, type Store } from "@/lib/browser/store";
@@ -669,5 +671,182 @@ describe("provider calls", () => {
     });
     expect(hint.source).toBe("pack");
     expect(hint.text).toBe("Accusative.");
+  });
+});
+
+describe("creation brief through the router", () => {
+  /** Import the starter pack so every target has a real parent. */
+  async function seedStarter(): Promise<void> {
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
+  }
+
+  /** Turn a provider on and store a key, without making a real network call. */
+  async function seedProvider(): Promise<void> {
+    await localSend("/api/settings", "PATCH", {
+      provider: { url: "https://provider.test/v1", model: "test-model" },
+    });
+    await localSend("/api/provider/key", "POST", { key: "secret" });
+  }
+
+  /** Answer the next provider call with one JSON object. */
+  function providerReply(content: unknown): void {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify(content) } }] }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+      ),
+    );
+  }
+
+  /** A learner-written brief with the fields the screen sends. */
+  function learnerBrief(overrides: Record<string, unknown> = {}) {
+    return {
+      subjectMode: "learner",
+      subject: "ordering coffee",
+      deckFocus: "cafes, paying",
+      cardStyle: "mixed",
+      packName: "",
+      deckName: "",
+      ...overrides,
+    };
+  }
+
+  it("puts a learner brief and the library into all three Chat prompts", async () => {
+    await seedStarter();
+    for (const target of [
+      { kind: "pack" },
+      { kind: "deck", packName: "starter" },
+      { kind: "cards", packName: "starter", deckId: "cases" },
+    ]) {
+      const result = await localSend<{ prompt: string }>("/api/authoring/prompt", "POST", {
+        target,
+        brief: learnerBrief(),
+      });
+      expect(result.prompt).toContain("ordering coffee");
+      expect(result.prompt).toContain("cafes, paying");
+      expect(result.prompt).toContain("starter");
+      expect(result.prompt).toContain("Basics");
+      expect(result.prompt).toContain("Cases");
+    }
+  });
+
+  it("lets the provider choose from the library in Generate and Chat", async () => {
+    await seedStarter();
+    const providerBrief = {
+      subjectMode: "provider",
+      subject: "this must not reach a prompt",
+      deckFocus: "",
+      cardStyle: "mixed",
+      packName: "",
+      deckName: "",
+    };
+    const prepared = await localSend<{ prompt: string }>("/api/provider/prepare", "POST", {
+      target: { kind: "pack" },
+      count: 2,
+      brief: providerBrief,
+    });
+    expect(prepared.prompt).toMatch(/gap/i);
+    expect(prepared.prompt).toContain("starter");
+    expect(prepared.prompt).toContain("Basics");
+    expect(prepared.prompt).not.toContain("this must not reach a prompt");
+
+    const chat = await localSend<{ prompt: string }>("/api/authoring/prompt", "POST", {
+      target: { kind: "pack" },
+      brief: providerBrief,
+    });
+    expect(chat.prompt).toMatch(/gap/i);
+    expect(chat.prompt).toContain("starter");
+    expect(chat.prompt).not.toContain("this must not reach a prompt");
+  });
+
+  it("refuses a learner brief with no subject and an unknown style", async () => {
+    await seedStarter();
+    await expect(
+      localSend("/api/provider/prepare", "POST", {
+        target: { kind: "pack" },
+        brief: learnerBrief({ subject: "  " }),
+      }),
+    ).rejects.toThrow(/subject/i);
+    await expect(
+      localSend("/api/authoring/prompt", "POST", {
+        target: { kind: "pack" },
+        brief: learnerBrief({ subject: "  " }),
+      }),
+    ).rejects.toThrow(/subject/i);
+    await expect(
+      localSend("/api/provider/prepare", "POST", {
+        target: { kind: "pack" },
+        brief: learnerBrief({ cardStyle: "picks" }),
+      }),
+    ).rejects.toThrow(/style/i);
+  });
+
+  it("refuses a batch that ignores the requested style and saves nothing", async () => {
+    await seedStarter();
+    await seedProvider();
+    providerReply({
+      lines: [
+        {
+          style: "type",
+          fullLine: "Piję kawę.",
+          target: "kawę",
+          translation: "I am drinking coffee.",
+        },
+      ],
+    });
+    const prepared = await localSend<{ requestId: string }>("/api/provider/prepare", "POST", {
+      target: { kind: "cards", packName: "starter", deckId: "cases" },
+      count: 1,
+      brief: learnerBrief({ cardStyle: "cloze" }),
+    });
+    await expect(
+      localSend("/api/provider/generate", "POST", { requestId: prepared.requestId }),
+    ).rejects.toThrow(/cloze/i);
+    expect((await localGet<{ cards: Card[] }>("/api/cards")).cards).toHaveLength(1);
+  });
+
+  it("builds a type card and a hear_type card from a requested style", async () => {
+    await seedStarter();
+    await seedProvider();
+
+    providerReply({
+      lines: [
+        {
+          style: "type",
+          fullLine: "Piję kawę.",
+          target: "kawę",
+          translation: "I am drinking coffee.",
+        },
+      ],
+    });
+    const typePrepared = await localSend<{ requestId: string }>("/api/provider/prepare", "POST", {
+      target: { kind: "cards", packName: "starter", deckId: "cases" },
+      count: 1,
+      brief: learnerBrief({ cardStyle: "type" }),
+    });
+    const typed = await localSend<{ cards: Card[] }>("/api/provider/generate", "POST", {
+      requestId: typePrepared.requestId,
+    });
+    expect(typed.cards[0].answerDef).toEqual({ mode: "type", expected: ["Piję kawę."] });
+    expect(typed.cards[0].prompt).toEqual([{ type: "text", text: "I am drinking coffee." }]);
+
+    providerReply({
+      lines: [{ style: "hear_type", fullLine: "Mam kota.", target: "kota" }],
+    });
+    const hearPrepared = await localSend<{ requestId: string }>("/api/provider/prepare", "POST", {
+      target: { kind: "cards", packName: "starter", deckId: "cases" },
+      count: 1,
+      brief: learnerBrief({ cardStyle: "hear_type" }),
+    });
+    const heard = await localSend<{ cards: Card[] }>("/api/provider/generate", "POST", {
+      requestId: hearPrepared.requestId,
+    });
+    expect(heard.cards[0].answerDef).toEqual({ mode: "hear_type", expected: ["Mam kota."] });
+    expect(heard.cards[0].prompt).toEqual([
+      { type: "speak", text: "Mam kota.", lang: "pl", label: "Listen" },
+    ]);
   });
 });
