@@ -1,0 +1,88 @@
+# WHY: GitHub Pages needs a real deploy job, not a branch folder. This workflow
+# builds the static app under its project subpath, runs the hard checks, then
+# publishes only the finished `v1/out` artifact and proves the live address.
+# PACK: pwa-deploy
+# 2026-10-23 opencode: created for the pwa-deploy pack [pack: pwa-deploy]
+
+name: Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_BASE_PATH: /flashcards
+    defaults:
+      run:
+        working-directory: v1
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: v1/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build and validate
+        run: npm run build
+
+      - name: Test
+        run: npm test
+
+      - name: Validate the exported app
+        run: npm run check:pwa
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: v1/out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Prove the live app, manifest and worker
+        run: |
+          base="${{ steps.deployment.outputs.page_url }}"
+          base="${base%/}/"
+          for attempt in 1 2 3 4 5 6; do
+            code="$(curl -sL -o /dev/null -w "%{http_code}" "$base")"
+            if [ "$code" = "200" ]; then
+              curl -fsSL "${base}manifest.webmanifest" > /dev/null
+              curl -fsSL "${base}sw.js" > /dev/null
+              echo "live: $base"
+              exit 0
+            fi
+            echo "attempt $attempt: $code"
+            sleep 10
+          done
+          echo "the live page did not answer with 200"
+          exit 1

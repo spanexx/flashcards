@@ -113,6 +113,7 @@ body {
 @media (max-width: 860px) {
   .shell {
     grid-template-columns: 1fr;
+    align-content: start;
   }
 
   .sidebar {
@@ -473,8 +474,13 @@ td {
 
 .scroll-area {
   max-height: 300px;
+  overflow-x: auto;
   overflow-y: auto;
   padding-right: 4px;
+}
+
+.scroll-area table {
+  min-width: 620px;
 }
 
 .scroll-area.tall {
@@ -1380,5 +1386,118 @@ textarea.field {
   .job-toast-stack {
     top: 12px;
     right: 14px;
+  }
+}
+
+/* WHY: The install control belongs at the top right on every screen, while the
+   job toasts keep their own corner below it. On a phone the sidebar reserves
+   the same corner so the nav never slides under the button.
+   PACK: pwa-deploy
+   2026-10-23 opencode: added for the pwa-deploy pack [pack: pwa-deploy] */
+.install-wrap {
+  position: fixed;
+  top: 16px;
+  right: 18px;
+  z-index: 46;
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+}
+
+.install-fab {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.16);
+  cursor: pointer;
+}
+
+.install-fab:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.install-fab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.install-fab svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.install-hint {
+  width: min(250px, calc(100vw - 36px));
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--quiet);
+  font-size: 0.82rem;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.16);
+}
+
+.job-toast-stack {
+  top: 74px;
+}
+
+@media (display-mode: standalone) {
+  .install-wrap {
+    display: none;
+  }
+}
+
+@media (max-width: 860px) {
+  .sidebar {
+    padding-right: 70px;
+  }
+}
+
+@media (max-width: 620px) {
+  .install-wrap {
+    top: 12px;
+    right: 14px;
+  }
+
+  .install-fab {
+    width: 40px;
+    height: 40px;
+  }
+
+  .job-toast-stack {
+    top: 66px;
+    right: 14px;
+  }
+
+  .pack-row,
+  .deck-row {
+    flex-wrap: wrap;
+  }
+
+  .deck-row {
+    padding-left: 18px;
+  }
+
+  .pack-row > .row,
+  .deck-row > .row {
+    width: 100%;
+    padding-left: 30px;
+  }
+
+  .deck-row > .row {
+    padding-left: 0;
   }
 }

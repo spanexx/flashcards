@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flashcards - PWA deploy design simulation</title>
+<!--
+WHY: Design-time simulation for the PWA deploy pack. It shows the promises
+before the implementation: one phone layout, a top-right install control, an
+offline shell and a checked GitHub Pages deploy. Hardcoded data; saves nothing.
+PACK: pwa-deploy
+2026-10-23 opencode: created with the pack design [pack: pwa-deploy]
+-->
+<style>
+  :root {
+    --bg: #f7f6f3; --card: #fff; --ink: #23211d; --quiet: #6d6a63;
+    --line: #dedbd3; --accent: #2f5d50; --accent-ink: #fff;
+    --good: #2f6d3f; --near: #8a6d1f; --miss: #8a3b2f;
+    --shadow: 0 18px 44px rgba(35, 33, 29, .15);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #191816; --card: #232220; --ink: #ece9e2; --quiet: #a5a199;
+      --line: #3a3833; --accent: #7fb3a2; --accent-ink: #10120f;
+      --good: #8ec79b; --near: #d9bc6a; --miss: #e0968a;
+      --shadow: 0 18px 44px rgba(0, 0, 0, .36);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); }
+  body { font: 15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  button, select, input { font: inherit; }
+  button { cursor: pointer; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 22px; border-bottom: 1px solid var(--line); background: var(--card); position: sticky; top: 0; z-index: 10; }
+  .brand { font-weight: 750; letter-spacing: -.01em; }
+  .brand span { color: var(--accent); }
+  .tag { color: var(--quiet); font-size: 12px; border: 1px solid var(--line); border-radius: 999px; padding: 4px 9px; }
+  .install { display: grid; place-items: center; width: 42px; height: 42px; border: 1px solid var(--line); border-radius: 999px; background: var(--card); color: var(--ink); box-shadow: 0 8px 22px rgba(0,0,0,.14); }
+  .install svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .shell { width: min(980px, calc(100% - 32px)); margin: 0 auto; padding: 24px 0 80px; }
+  h1 { margin: 0; font-size: 30px; letter-spacing: -.025em; }
+  h2 { margin: 0; font-size: 17px; }
+  h3 { margin: 0; font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--quiet); }
+  p { margin: 6px 0 0; }
+  .lead { color: var(--quiet); max-width: 720px; }
+  .nav { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--line); margin: 18px 0; }
+  .nav button { background: transparent; color: var(--quiet); border: 0; border-bottom: 2px solid transparent; padding: 10px 12px; font-weight: 650; }
+  .nav button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+  .scenario { display: none; }
+  .scenario.active { display: block; }
+  .head { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 14px; }
+  .num { display: grid; place-items: center; width: 28px; height: 28px; flex: 0 0 28px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font-weight: 750; }
+  .grid { display: grid; gap: 14px; }
+  .two { grid-template-columns: minmax(0, 1.1fr) minmax(300px, .9fr); }
+  @media (max-width: 860px) { .two { grid-template-columns: 1fr; } }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
+  .raised { box-shadow: var(--shadow); }
+  .muted { color: var(--quiet); }
+  .small { font-size: 12px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .grow { flex: 1; }
+  .btn { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 9px; padding: 8px 11px; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 650; }
+  .btn.small { padding: 4px 9px; font-size: 12px; }
+  .select { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 9px; padding: 8px 10px; }
+  .phone { width: 340px; max-width: 100%; margin: 0 auto; border: 8px solid #2a2926; border-radius: 32px; background: var(--bg); overflow: hidden; box-shadow: var(--shadow); }
+  .phone .bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--line); background: var(--card); }
+  .phone .bar b { font-size: 14px; }
+  .phone .nav2 { display: flex; flex-wrap: wrap; gap: 2px; padding: 6px 8px; border-bottom: 1px solid var(--line); background: var(--card); font-size: 12px; }
+  .phone .nav2 span { padding: 4px 7px; border-radius: 7px; color: var(--quiet); }
+  .phone .nav2 span.on { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--ink); font-weight: 650; }
+  .phone .body { padding: 12px; }
+  .phone h4 { margin: 0; font-size: 19px; }
+  .phone .tiny { color: var(--quiet); font-size: 12px; }
+  .box { border: 1px solid var(--line); border-radius: 10px; padding: 10px; margin-top: 10px; background: var(--card); }
+  .offline { border-left: 3px solid var(--near); background: color-mix(in srgb, var(--near) 10%, var(--card)); }
+  .good { border-left: 3px solid var(--good); background: color-mix(in srgb, var(--good) 9%, var(--card)); }
+  .bad { border-left: 3px solid var(--miss); background: color-mix(in srgb, var(--miss) 9%, var(--card)); }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .86em; background: color-mix(in srgb, var(--line) 40%, transparent); border-radius: 5px; padding: 1px 4px; }
+  ul { margin: 6px 0; padding-left: 20px; }
+  .checks { display: grid; gap: 6px; }
+  .checks div { display: flex; gap: 8px; align-items: flex-start; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; margin-top: 6px; flex: 0 0 9px; background: var(--good); }
+  .dot.warn { background: var(--near); }
+  .hint { margin-top: 8px; border: 1px solid var(--line); border-radius: 9px; padding: 7px 9px; background: var(--card); color: var(--quiet); font-size: 12px; }
+  @media (max-width: 560px) {
+    .shell { width: min(100% - 20px, 980px); padding-top: 16px; }
+    h1 { font-size: 24px; }
+    .phone { width: 100%; border-width: 5px; border-radius: 22px; }
+  }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">Flash<span>cards</span></div>
+  <span class="tag">pwa-deploy · design simulation</span>
+</header>
+<main class="shell">
+  <h1>Fit every screen. Install it. Deploy it checked.</h1>
+  <p class="lead">Four scenarios show the promises: a phone layout without sideways scroll, a top-right install control, an offline shell, and a GitHub Pages deploy that refuses a broken export.</p>
+
+  <nav class="nav" aria-label="Scenarios">
+    <button type="button" aria-selected="true" data-tab="one">1 · Phone layout</button>
+    <button type="button" aria-selected="false" data-tab="two">2 · Install</button>
+    <button type="button" aria-selected="false" data-tab="three">3 · Offline</button>
+    <button type="button" aria-selected="false" data-tab="four">4 · Checked deploy</button>
+  </nav>
+
+  <section class="scenario active" id="one">
+    <div class="head"><span class="num">1</span><div><h2>One column, no sideways scroll</h2><p class="muted">The sidebar becomes a compact top bar. Wide tables scroll inside their card.</p></div></div>
+    <div class="two grid">
+      <div class="phone raised">
+        <div class="bar"><b>Flashcards</b><span class="install" aria-label="Install app"><svg viewBox="0 0 24 24"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 17v2h14v-2"/></svg></span></div>
+        <div class="nav2"><span class="on">Study</span><span>Library</span><span>Progress</span><span>Settings</span></div>
+        <div class="body">
+          <h4>Today's session</h4>
+          <p class="tiny">20 cards from the whole library are laid out.</p>
+          <div class="box"><div class="tiny">Study from</div><select class="select" style="width:100%;margin-top:4px"><option>All cards</option></select></div>
+          <div class="box"><div class="row"><span>Cards offered:</span><input class="select" value="20" style="width:5rem"><button class="btn">Rebuild</button></div><div class="row" style="justify-content:flex-end;margin-top:8px"><button class="btn primary">Start</button></div></div>
+          <div class="box">▸ Why these cards</div>
+          <div class="box">▸ Hints</div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>What changes</h3>
+        <ul>
+          <li>At 860px the shell is one grid column and packs at the top.</li>
+          <li>The top bar reserves room for the install button.</li>
+          <li>Pack and deck action rows wrap on a phone.</li>
+          <li>The progress table gets its own horizontal scroll.</li>
+          <li>The study card keeps its Pack 3 phone shape.</li>
+        </ul>
+        <div class="good box"><strong>Pass:</strong> at 390px <code>document.documentElement.scrollWidth</code> is not wider than the viewport on Study, Library, Progress, Settings or Create.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="scenario" id="two">
+    <div class="head"><span class="num">2</span><div><h2>Install from the top right</h2><p class="muted">The browser prompt when it exists; a plain hint when it does not.</p></div></div>
+    <div class="two grid">
+      <div class="card">
+        <h3>The control</h3>
+        <div class="row" style="margin-top:10px"><span class="install" aria-label="Install app"><svg viewBox="0 0 24 24"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 17v2h14v-2"/></svg></span><span class="muted">Fixed at the top right on every screen.</span></div>
+        <div class="hint">Use the browser menu or Share → Add to Home Screen.</div>
+        <h3 style="margin-top:16px">The manifest</h3>
+        <ul>
+          <li><code>name</code>: Flashcards</li>
+          <li><code>display</code>: standalone</li>
+          <li><code>start_url</code> and <code>scope</code>: <code>./</code></li>
+          <li>192 any, 512 any, 512 maskable</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>States</h3>
+        <div class="checks">
+          <div><span class="dot"></span><span><strong>Prompt ready:</strong> clicking opens the browser install dialog.</span></div>
+          <div><span class="dot"></span><span><strong>No prompt:</strong> clicking shows the manual hint.</span></div>
+          <div><span class="dot"></span><span><strong>Installed:</strong> the button disappears.</span></div>
+          <div><span class="dot"></span><span><strong>Standalone:</strong> CSS hides the button.</span></div>
+        </div>
+        <div class="offline box" style="margin-top:14px">The button is never the only route; the browser menu still works.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="scenario" id="three">
+    <div class="head"><span class="num">3</span><div><h2>The shell opens without the network</h2><p class="muted">One online visit fills a scoped cache. A reload then renders the app.</p></div></div>
+    <div class="two grid">
+      <div class="card">
+        <h3>Worker behaviour</h3>
+        <ul>
+          <li>Install precaches every route, page payload, icon, pack and hashed asset.</li>
+          <li>Navigation: network first, then cache, then the shell, then a plain 503.</li>
+          <li>Other same-origin GETs: cache first.</li>
+          <li>Cache name: <code>flashcards:&lt;scope&gt;:&lt;hash&gt;</code>.</li>
+          <li>A new worker waits; it does not delete assets under an open page.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Rehearsal</h3>
+        <div class="good box"><strong>Online:</strong> the seeded plan appears and the worker reports 49 cached files.</div>
+        <div class="offline box" style="margin-top:10px"><strong>Offline:</strong> reload still shows "Today's session" and the shell.</div>
+        <div class="bad box" style="margin-top:10px"><strong>First visit offline:</strong> the browser's own offline page. The app cannot cache before it has been fetched once.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="scenario" id="four">
+    <div class="head"><span class="num">4</span><div><h2>A checked Pages deploy</h2><p class="muted">The build refuses an export that would break at /flashcards/.</p></div></div>
+    <div class="two grid">
+      <div class="card">
+        <h3>Pipeline</h3>
+        <ol>
+          <li>Checkout and Node 22.</li>
+          <li><code>npm ci</code> in <code>v1/</code>.</li>
+          <li>Typecheck, lint, build with <code>NEXT_PUBLIC_BASE_PATH=/flashcards</code>.</li>
+          <li>Full test suite.</li>
+          <li><code>check:pwa</code> on <code>v1/out</code>.</li>
+          <li>Upload the artifact and deploy with Pages.</li>
+          <li>Curl the live page, manifest and worker.</li>
+        </ol>
+      </div>
+      <div class="card">
+        <h3>The hard gate</h3>
+        <div class="checks">
+          <div><span class="dot"></span><span>Routes, 404 page and built assets exist.</span></div>
+          <div><span class="dot"></span><span>Manifest fields and exact PNG pixel sizes.</span></div>
+          <div><span class="dot"></span><span>Every local link is under the base path and exists.</span></div>
+          <div><span class="dot"></span><span>Worker handlers, scoped cache, relative precache.</span></div>
+          <div><span class="dot"></span><span>Every <code>_next/static</code> asset is precached.</span></div>
+        </div>
+        <div class="offline box" style="margin-top:14px">The live address is <code>https://spanexx.github.io/flashcards/</code>.</div>
+      </div>
+    </div>
+  </section>
+</main>
+<script>
+  const buttons = [...document.querySelectorAll(".nav button")];
+  for (const button of buttons) {
+    button.addEventListener("click", () => {
+      for (const other of buttons) other.setAttribute("aria-selected", String(other === button));
+      for (const section of document.querySelectorAll(".scenario")) {
+        section.classList.toggle("active", section.id === button.dataset.tab);
+      }
+    });
+  }
+</script>
+</body>
+</html>

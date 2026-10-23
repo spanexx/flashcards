@@ -1,0 +1,68 @@
+GRILL: PWA deploy
+Status: Locked
+Date: 2026-10-23
+Pack: pwa-deploy
+Authority: delegated by the learner on 2026-10-22. No interactive approval.
+
+Source questions, quoted from the learner:
+- "Style the whole system to be very responsive to all screen sizes including
+  phone. Make this ap PWA and add a download icon at the top right."
+- "deploy to git pages,i have turned that on for you to use git action to
+  configure it and add very hard validation so the app never breaks."
+
+Q1. What does "responsive to all screen sizes" mean here?
+A1. Every screen (Study, Library, Progress, Settings and Create) must fit a
+    phone without horizontal scrolling. The shell becomes one column at 860px,
+    the sidebar becomes a compact top bar, wide tables scroll inside their own
+    box, and rows wrap instead of pushing the page sideways. Tablet and desktop
+    keep the sidebar.
+
+Q2. What makes the app a PWA?
+A2. A web app manifest, 192px and 512px icons plus a maskable icon, a service
+    worker that precaches the exported routes and assets, and an install button
+    fixed at the top right on every screen. The app opens standalone after
+    install and still shows its shell when the network is gone.
+
+Q3. What does the download icon do?
+A3. It uses the browser's install prompt when the browser offers one. When the
+    browser has no prompt (or the app is already installed), it shows a short
+    plain hint: use the browser menu or Share -> Add to Home Screen. The button
+    hides itself when the app is already running standalone.
+
+Q4. How does the app work from a GitHub Pages project path?
+A4. The Pages site is https://spanexx.github.io/flashcards/. The build uses
+    NEXT_PUBLIC_BASE_PATH=/flashcards. Next's basePath handles its own links and
+    assets. A small helper prefixes the few plain links and fetches the app
+    writes itself. The manifest and worker use relative URLs so the same export
+    also works at the root.
+
+Q5. What does the worker cache and when?
+A5. A post-build script walks out/, writes sw.js and precaches every route,
+    page payload, icon, pack and hashed asset. Navigation is network-first with
+    a cached shell fallback; other same-origin files are cache-first. A new
+    worker waits instead of taking over an open page, so a deploy cannot swap
+    assets under a running session. Cache names are scoped to the app path.
+
+Q6. What deploys it?
+A6. A GitHub Actions workflow on main: install, typecheck, lint, build with the
+    project base path, test, validate the export, upload v1/out as the Pages
+    artifact, deploy, then curl the live page, manifest and worker.
+
+Q7. What is the "very hard validation"?
+A7. The build itself fails if the export is not deployable. A checker verifies
+    the four routes, 404 page, manifest fields, icon files and exact pixel
+    sizes, every root-relative link in every HTML file, the base-path prefix,
+    the worker handlers, a scoped cache name, and a precache entry for every
+    built asset and route. The workflow repeats that check after tests.
+
+Q8. What does not change?
+A8. No data model, API, judge, session, provider or storage change. No new
+    runtime dependency. The app stays a static, browser-owned build.
+
+Locked decisions:
+- One column at 860px; no horizontal page scroll at 390px.
+- Install button fixed at the top right, with prompt and manual hint paths.
+- Manifest + 192/512/maskable icons + generated service worker.
+- Relative manifest and worker URLs; /flashcards build base path.
+- GitHub Actions Pages deploy from v1/out, with a live curl gate.
+- Hard export validation runs inside npm run build and again in CI.

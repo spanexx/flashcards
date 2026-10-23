@@ -13,6 +13,7 @@ import { apiGet, apiSend } from "@/lib/client/api";
 import type { JobView } from "@/lib/browser/jobs";
 import type { PackStatus, ProviderStatus } from "@/lib/shared/types";
 import { defaultCreationBrief, type CreationBrief } from "@/lib/shared/creation";
+import { withBasePath } from "@/lib/shared/paths";
 import ChatPromptEditor from "./ChatPromptEditor";
 import CreationBriefFields from "./CreationBriefFields";
 import PlacementPicker from "./PlacementPicker";
@@ -31,7 +32,7 @@ import {
 /** A link that leaves Create mounted, so a half-written draft stays put. */
 function SettingsPath() {
   return (
-    <a href="/settings" target="_blank" rel="noreferrer">
+    <a href={withBasePath("/settings")} target="_blank" rel="noreferrer">
       Open Settings in a new tab
     </a>
   );

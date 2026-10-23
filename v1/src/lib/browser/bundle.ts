@@ -14,6 +14,7 @@ import {
   type ValidationIssue,
 } from "@/lib/core/schema";
 import { normalizeSettings } from "@/lib/core/settings-shape";
+import { withBasePath } from "@/lib/shared/paths";
 import { markChanged, resumeChanges, suspendChanges } from "@/lib/browser/changes";
 import { uniqueDeckIdentity, uniquePackName } from "@/lib/browser/creation";
 import {
@@ -738,7 +739,7 @@ export async function ensureSeeded(): Promise<void> {
     return;
   }
   try {
-    const response = await fetch("/packs/polish-starter.json", { cache: "no-store" });
+    const response = await fetch(withBasePath("/packs/polish-starter.json"), { cache: "no-store" });
     if (!response.ok) return;
     const text = await response.text();
     const result = await importBundle(text, { kind: "pack" });
