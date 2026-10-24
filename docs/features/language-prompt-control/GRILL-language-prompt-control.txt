@@ -1,0 +1,123 @@
+GRILL: Language and prompt control
+Status: Locked
+Date: 2026-10-23
+Pack: language-prompt-control
+Authority: delegated by the learner on 2026-10-23. No interactive approval.
+
+Source report, quoted from the learner:
+- "System thinks that I am overall only learning Polish"
+- "I was hoping to learn English Adjective"
+- "I created a deck called Minim ... generated some of the cards to be in Polish"
+- "This card is telling me ... Do you want me to type it in English?"
+- "when I click Ask for hint, It looks like it is continuing to ... give me hints in the next card after the card that I asked for hints"
+- "Sometimes I might be somewhere that I can't listen to the voice. And I would prefer if there is a way to change it into text."
+- "Everything should be learned through English ... we should allow the user to choose. What language do they want to learn from?"
+- "Any pack should have an option of the language that the user wants to learn from."
+- "when we are creating a pack, we should give a little bit of instruction of what's ... briefly give a user what exactly do you want the user to do"
+- "we should give the user the opportunity to edit these prompts. The prompts are currently hard coded. allow the user to be able to edit them."
+
+Q1. How does a pack say which language it teaches and which language asks the question?
+A1. Keep `language` as the language being learned, for every existing pack and
+    bundle. Add `sourceLanguage` for the language of the question, translation
+    and explanation. A new pack must choose its target language; the source
+    language defaults to English but can be changed. Deck and card creation
+    inherit the parent pack's pair and never set a second pair.
+    [agent decision]
+
+Q2. What happens to old packs that have no source language?
+A2. They load unchanged. `sourceLanguage` is optional in files and storage. The
+    Polish starter pack is explicitly marked source `en`. An old pack with no
+    source language gets neutral instructions ("the line") instead of a guessed
+    language. The learner can set it in the pack editor.
+    [agent decision]
+
+Q3. What exactly does a card tell the learner to do?
+A3. The pack may carry one short `studyInstruction`. If it is present, the card
+    shows it verbatim. If it is absent, the app writes one from the answer mode
+    and the pack's pair:
+    - cloze: "Fill the blank in the Polish line."
+    - type: "Read the English line, then type the full Polish line."
+    - hear_type: "Listen, then type the full Polish line."
+    - picks: "Choose the correct English meaning."
+    When a language is unknown or both languages are the same, the neutral form
+    is used ("Type the full line", "Fill the blank in the line"). The summary
+    never returns to the top of the card.
+    [agent decision]
+
+Q4. How does a listening card work when sound is unavailable?
+A4. The card keeps one play control. A second control, "Show the text", reveals
+    the full line on request. It never reveals automatically. It is an
+    accessibility fallback, not a hint: it does not cap the answer at Nearly.
+    The card says that showing the text turns the listening check into a reading
+    check. This deliberately replaces locked study-experience Q2, which hid all
+    text.
+    [agent decision; reversal recorded because the learner asked for it]
+
+Q5. How do hints stop leaking onto the next card?
+A5. Every hint request belongs to the card that started it. Moving to another
+    card, starting a session or rebuilding the plan invalidates pending hint
+    work. A late answer is discarded, and its busy state cannot overwrite the
+    new card. Automatic and manual hints use the same rule.
+    [agent decision]
+
+Q6. Where can the learner edit prompts?
+A6. Each pack gets an "Edit pack" panel in Packs. It edits the target language,
+    source language, study instruction, generation system, generation template,
+    tutor system and tutor hint template. The panel shows the app defaults and
+    has "Customize prompts" and "Reset to app defaults". A saved override lives
+    on the pack and travels in export, import and backup. Chat's authoring
+    prompt stays editable where it already is. There is no global prompt editor.
+    [agent decision]
+
+Q7. Where does the study instruction come from during creation?
+A7. A new pack has an optional study instruction field in the creation brief and
+    the Write pack form. Generate and Chat receive it and must store it on the
+    pack. Deck and card creation show the parent pack's pair and instruction as
+    read-only facts. The pack editor is the one place to change them later.
+    [agent decision]
+
+Q8. How do generated and chat packs stop defaulting to Polish?
+A8. The generic generation and authoring prompts name the chosen pair and use an
+    example in the target language. Polish examples and Polish-only rules remain
+    only in the Polish starter pack's own prompts. A generated pack carries the
+    pair and instruction chosen in the brief; a provider that omits them cannot
+    erase them.
+    [agent decision]
+
+Q9. What language values are accepted?
+A9. Common language names are normalised to their codes ("English" -> `en`,
+    "Polish" -> `pl`). A two- or three-letter code is accepted as written.
+    Unknown text is kept, lowercased, rather than rejected, so a learner is not
+    blocked by a language the app does not list. Display uses the readable name
+    when known.
+    [agent decision]
+
+Q10. What does not change?
+A10. The four outcome words, the judge, the one-return rule, the session offer,
+     the no-score ending, the card schema and the provider request shape stay
+     untouched. No cards are translated or rewritten in bulk. No global
+     language setting is added. No new dependency is added.
+     [agent decision]
+
+Q11. What proves it?
+A11. Unit tests for language normalisation, prompt pair text, study
+     instructions, bundle fields and pack editing; router tests for PATCH and
+     generated pack inheritance; a built-output browser lane that creates an
+     English/English pack, sees no Polish in its prompt, checks the type and
+     listening instructions, reveals listening text, and moves cards while a
+     hint is pending. Typecheck, lint, build and the full suite stay green.
+     [agent decision]
+
+Locked decisions:
+- `language` is the target; `sourceLanguage` is the question language.
+- New packs choose a target; source defaults to English.
+- Every card shows a pack instruction or a pair-aware automatic instruction.
+- Listening cards can reveal their text on request; no automatic reveal.
+- Pending hints are cancelled when the card changes.
+- Pack prompts and language pair are editable in one pack editor.
+- Study instruction is a pack-level creation field.
+- Generic prompts never assume Polish.
+- Existing packs and bundles load without migration.
+- No global language setting, bulk translation, or new dependency.
+
+No remaining open questions

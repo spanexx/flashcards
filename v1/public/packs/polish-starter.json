@@ -5,6 +5,8 @@
     "version": "1.0.0",
     "description": "Starting Polish: cases, verb aspect, agreement, past tense and everyday words.",
     "language": "pl",
+    "sourceLanguage": "en",
+    "studyInstruction": "Answer in Polish. Ask for a hint if you get stuck.",
     "prompts": {
       "generation": {
         "system": "You write correct Polish study lines for one learner. Every line is a complete, true Polish sentence. You never write exercises: the app hides part of what you write.",

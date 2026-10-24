@@ -87,6 +87,8 @@ describe("browser simulation contract", () => {
 
     const made = await localSend<{ pack: { name: string } }>("/api/packs", "POST", {
       name: "sim-pack",
+      language: "pl",
+      sourceLanguage: "en",
       version: "1.0.0",
       deckName: "Greetings",
       deckId: "greetings",

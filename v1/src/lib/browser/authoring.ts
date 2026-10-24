@@ -15,9 +15,10 @@ import {
   type CreationBrief,
   type LibraryInventory,
 } from "@/lib/shared/creation";
+import { packLanguagePair, type PackLanguagePair } from "@/lib/shared/language";
 
 /** Bump when the prompt or the JSON shape it teaches changes. */
-export const AUTHORING_SKILL_VERSION = "3.0.0";
+export const AUTHORING_SKILL_VERSION = "4.0.0";
 
 /** Where the chat is allowed to write. No learner-written name field exists. */
 export type AuthoringTarget =
@@ -31,9 +32,29 @@ export interface AuthoringContext {
   inventory?: LibraryInventory;
 }
 
-const COMMON_RULES = `Rules for every card:
+/** A short concrete line in the target language, translated into the source. */
+function exampleLine(pair: PackLanguagePair): {
+  fullLine: string;
+  target: string;
+  translation: string;
+} {
+  const examples: Record<string, { fullLine: string; target: string }> = {
+    de: { fullLine: "Der Apfel ist süß.", target: "süß" },
+    en: { fullLine: "The red apple is sweet.", target: "sweet" },
+    es: { fullLine: "La manzana es dulce.", target: "dulce" },
+    fr: { fullLine: "La pomme est sucrée.", target: "sucrée" },
+    pl: { fullLine: "Czerwone jabłko jest słodkie.", target: "słodkie" },
+  };
+  const target = examples[pair.target.split("-")[0]] ?? examples.en;
+  const source = examples[pair.source.split("-")[0]] ?? target;
+  return { fullLine: target.fullLine, target: target.target, translation: source.fullLine };
+}
+
+function commonRules(pair: PackLanguagePair): string {
+  const speakLang = pair.target || "the target language code";
+  return `Rules for every card:
 - summary: under six words.
-- prompt: an array of parts. Use {"type":"text","text":"..."} and, for a blank, {"type":"blank","id":"b1"}. For a listening card use {"type":"speak","text":"...","lang":"pl","label":"Listen"}.
+- prompt: an array of parts. Use {"type":"text","text":"..."} and, for a blank, {"type":"blank","id":"b1"}. For a listening card use {"type":"speak","text":"...","lang":"${speakLang}","label":"Listen"}.
 - answer: an array of parts. Start with the full answer as {"type":"text","text":"..."}; add a translation as {"type":"text","text":"...","role":"translation"}.
 - answerDef: one of:
   {"mode":"cloze","blanks":[{"id":"b1","expected":["..."]}]}
@@ -44,47 +65,70 @@ const COMMON_RULES = `Rules for every card:
 - fullLine: the complete sentence or phrase the card is built from.
 - Never include a "topics" field. The deck decides the topic.
 - Never include learner evidence, settings, a provider key, or a backup.`;
+}
 
-function exampleCard(deckId: string): string {
+function exampleCard(deckId: string, pair: PackLanguagePair): string {
+  const line = exampleLine(pair);
+  const before = line.fullLine.slice(0, line.fullLine.indexOf(line.target));
+  const after = line.fullLine.slice(
+    line.fullLine.indexOf(line.target) + line.target.length,
+  );
   return `{
-      "deckId": "${deckId}",
-      "summary": "Piję kawę",
-      "prompt": [{"type":"text","text":"Piję "},{"type":"blank","id":"b1"},{"type":"text","text":" (kawa)."}],
-      "answer": [{"type":"text","text":"Piję kawę."},{"type":"text","text":"I am drinking coffee.","role":"translation"}],
-      "answerDef": {"mode":"cloze","blanks":[{"id":"b1","expected":["kawę"]}]},
-      "hints": ["Drinking takes the accusative. Feminine -a turns into -ę."],
-      "fullLine": "Piję kawę."
+      "deckId": ${JSON.stringify(deckId)},
+      "summary": "A sweet fruit",
+      "prompt": [{"type":"text","text":${JSON.stringify(before)}},{"type":"blank","id":"b1"},{"type":"text","text":${JSON.stringify(after)}}],
+      "answer": [{"type":"text","text":${JSON.stringify(line.fullLine)}},{"type":"text","text":${JSON.stringify(line.translation)},"role":"translation"}],
+      "answerDef": {"mode":"cloze","blanks":[{"id":"b1","expected":[${JSON.stringify(line.target)}]}]},
+      "hints": ["Name the grammar rule, not the missing word."],
+      "fullLine": ${JSON.stringify(line.fullLine)}
     }`;
 }
 
-function shapeForPack(deckId: string, deckName: string): string {
+function packHeader(pair: PackLanguagePair, studyInstruction = ""): Record<string, string> {
+  const pack: Record<string, string> = { name: "study-pack", version: "1.0.0" };
+  if (pair.target.length > 0) pack.language = pair.target;
+  if (pair.source.length > 0) pack.sourceLanguage = pair.source;
+  if (studyInstruction.trim().length > 0) pack.studyInstruction = studyInstruction.trim();
+  return pack;
+}
+
+function shapeForPack(
+  deckId: string,
+  deckName: string,
+  pair: PackLanguagePair,
+  studyInstruction = "",
+): string {
   return `{
   "schema": "flashcards.pack/v1",
-  "pack": { "name": "slow-polish", "version": "1.0.0" },
+  "pack": ${JSON.stringify(packHeader(pair, studyInstruction))},
   "decks": [
-    { "id": "${deckId}", "name": "${deckName}" }
+    { "id": ${JSON.stringify(deckId)}, "name": ${JSON.stringify(deckName)} }
   ],
   "cards": [
-    ${exampleCard(deckId)}
+    ${exampleCard(deckId, pair)}
   ]
 }`;
 }
 
-function shapeForDeck(deckId: string, deckName: string): string {
+function shapeForDeck(
+  deckId: string,
+  deckName: string,
+  pair: PackLanguagePair,
+): string {
   return `{
   "decks": [
-    { "id": "${deckId}", "name": "${deckName}" }
+    { "id": ${JSON.stringify(deckId)}, "name": ${JSON.stringify(deckName)} }
   ],
   "cards": [
-    ${exampleCard(deckId)}
+    ${exampleCard(deckId, pair)}
   ]
 }`;
 }
 
-function shapeForCards(deckId: string): string {
+function shapeForCards(deckId: string, pair: PackLanguagePair): string {
   return `{
   "cards": [
-    ${exampleCard(deckId)}
+    ${exampleCard(deckId, pair)}
   ]
 }`;
 }
@@ -101,7 +145,7 @@ function exampleDeckId(pack: BrowserPack): string {
 }
 
 /** Turn the learner's style choice into card-shape words the chat can follow. */
-function authoringStyleLines(cardStyle: CardStyle): string[] {
+function authoringStyleLines(cardStyle: CardStyle, pair: PackLanguagePair): string[] {
   // Mixed is a request to vary the answer mode, not a mode of its own.
   if (cardStyle === "mixed") {
     return [
@@ -114,29 +158,46 @@ function authoringStyleLines(cardStyle: CardStyle): string[] {
   // A type card cannot work without the translation it asks the learner to read.
   if (cardStyle === "type") {
     lines.push(
-      "Every type card needs a translation part, because the learner sees the translation and types the full line.",
+      pair.known && !pair.same
+        ? `Every type card needs a translation part in ${pair.sourceName}, because the learner reads it and types the full ${pair.targetName} line.`
+        : "Every type card needs a translation part, because the learner sees the translation and types the full line.",
     );
   }
   // A spoken card uses the pack language when one is known.
   if (cardStyle === "hear_type") {
     lines.push(
-      "Every hear_type card speaks the full line in the pack language when it is known, and the learner types the full line.",
+      pair.target.length > 0
+        ? `Every hear_type card speaks the full line in ${pair.targetName}, and the learner types the full ${pair.targetName} line.`
+        : "Every hear_type card speaks the full line in the pack language when it is known, and the learner types the full line.",
     );
   }
   return lines;
+}
+
+/** The pair a brief asks for, or the pair the existing pack already declares. */
+function promptPair(
+  pack: BrowserPack | null | undefined,
+  brief: CreationBrief | null | undefined,
+): PackLanguagePair {
+  const declared = packLanguagePair(pack);
+  if (declared.target.length > 0 || declared.source.length > 0) return declared;
+  return packLanguagePair({
+    language: brief?.targetLanguage,
+    sourceLanguage: brief?.sourceLanguage,
+  });
 }
 
 /**
  * Turn the brief and inventory into a prompt section. It is empty when no brief
  * arrived, so an older caller keeps the prompt it already knew.
  */
-function briefSection(context: AuthoringContext): string {
+function briefSection(context: AuthoringContext, pair: PackLanguagePair): string {
   if (!context.brief) return "";
   const lines = [
     ...describeCreationBrief(context.brief, context.inventory ?? [], {
       includeInventory: true,
     }),
-    ...authoringStyleLines(context.brief.cardStyle),
+    ...authoringStyleLines(context.brief.cardStyle, pair),
   ];
   return `\n\n${lines.join("\n")}`;
 }
@@ -151,11 +212,27 @@ export function buildAuthoringPrompt(
   pack?: BrowserPack | null,
   context: AuthoringContext = {},
 ): string {
+  const pair = promptPair(pack, context.brief);
+  const studyInstruction = context.brief?.studyInstruction ?? pack?.studyInstruction ?? "";
+  const pairSection = context.brief
+    ? ""
+    : [
+        pair.target.length > 0 ? `The learner is learning ${pair.targetName}.` : "",
+        pair.source.length > 0
+          ? `Questions, translations and explanations are in ${pair.sourceName}.`
+          : "",
+        studyInstruction.trim().length > 0
+          ? `Store this study instruction on the pack: "${studyInstruction.trim()}"`
+          : "",
+      ]
+        .filter((line) => line.length > 0)
+        .join("\n");
   const header = `# Flashcards authoring skill ${AUTHORING_SKILL_VERSION}
 
 You are writing content for a flashcards app. Answer with one JSON object and nothing else: no markdown fence, no explanation, no comments.
 
-The app will check every card before it saves anything. If one card is wrong, the whole import is refused, so follow the shape exactly.${briefSection(context)}`;
+The app will check every card before it saves anything. If one card is wrong, the whole import is refused, so follow the shape exactly.${briefSection(context, pair)}${pairSection ? `\n\n${pairSection}` : ""}`;
+  const rules = commonRules(pair);
 
   if (target.kind === "pack") {
     const nameRule = context.brief?.packName
@@ -167,10 +244,10 @@ Target: a new pack.
 ${nameRule}
 Make at least one deck. Deck ids use lowercase letters, numbers and dashes only. Every card names its deck with "deckId".
 
-${COMMON_RULES}
+${rules}
 
 Return JSON shaped like this:
-${shapeForPack("basics", "Everyday basics")}
+${shapeForPack("basics", "Everyday basics", pair, studyInstruction)}
 
 Before you answer, check: every deck id is lowercase; every card has a deckId that exists in "decks"; every blank has one expected answer; every picks card has "correct" inside "options"; there is no "topics" field.`;
   }
@@ -194,10 +271,10 @@ ${deckList || "- (none yet)"}
 ${nameRule}
 Return only the new decks and their cards. Do not include a "pack" header, and do not reuse an existing deck id.
 
-${COMMON_RULES}
+${rules}
 
 Return JSON shaped like this:
-${shapeForDeck(id, "Extra deck")}`;
+${shapeForDeck(id, "Extra deck", pair)}`;
   }
 
   const deck = pack.decks.find((entry) => entry.id === target.deckId);
@@ -211,8 +288,8 @@ ${deckList}
 
 Return only cards for the target deck. Do not include a "pack" header or a "decks" key. Every card must have "deckId": "${deck.id}".
 
-${COMMON_RULES}
+${rules}
 
 Return JSON shaped like this:
-${shapeForCards(deck.id)}`;
+${shapeForCards(deck.id, pair)}`;
 }

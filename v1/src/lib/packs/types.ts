@@ -19,6 +19,8 @@ export interface PackRecord {
   folder: string;
   description?: string;
   language?: string;
+  sourceLanguage?: string;
+  studyInstruction?: string;
   topics: string[];
   topicLabels: Record<string, string>;
   cards: CardSource[];

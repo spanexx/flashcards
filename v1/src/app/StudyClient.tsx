@@ -14,9 +14,9 @@ import Link from "next/link";
 import { apiGet, apiSend, ApiError } from "@/lib/client/api";
 import { isWrong, OUTCOME_LABELS, OUTCOME_MEANINGS, worstOutcome } from "@/lib/core/outcome";
 import {
-  LISTEN_INSTRUCTION,
   listenPrompt,
   shouldAutoHint,
+  studyCardInstruction,
   studyModeLabel,
 } from "@/lib/client/study-view";
 import type {
@@ -209,18 +209,23 @@ export default function StudyClient() {
   const [scopePack, setScopePack] = useState("");
   const [scopeDeck, setScopeDeck] = useState("");
   const [hintSource, setHintSource] = useState<string | null>(null);
+  const [showListeningText, setShowListeningText] = useState(false);
 
   const returnedRef = useRef<Set<string>>(new Set());
   const [returnedIds, setReturnedIds] = useState<string[]>([]);
   const startedRef = useRef<number>(0);
   const attemptsRef = useRef(0);
   const autoHintedRef = useRef<Set<string>>(new Set());
+  const hintTokenRef = useRef(0);
 
   const card = queue[index] ?? null;
   const result = card ? results[card.id] : undefined;
 
   /** Load a fresh plan; the offer and the chosen pack/deck may be adjusted. */
   const loadPlan = useCallback(async (offer?: number, packName = "", deckId = "") => {
+    hintTokenRef.current += 1;
+    setHintBusy(false);
+    setShowListeningText(false);
     setPhase("loading");
     setMessage(null);
     try {
@@ -291,17 +296,25 @@ export default function StudyClient() {
     setHintSource(null);
     setHintUsed(false);
     setWorking("");
+    setShowListeningText(false);
+    hintTokenRef.current += 1;
+    setHintBusy(false);
     autoHintedRef.current = new Set();
     setPhase("running");
   }, [plan]);
 
   const resetCardState = useCallback(() => {
+    // WHY: A hint answer belongs to the card that asked. Bumping the token
+    // makes every older response invisible, and clears its busy state here.
+    hintTokenRef.current += 1;
+    setHintBusy(false);
     setAnswers({});
     setHintTexts([]);
     setHintMessage(null);
     setHintSource(null);
     setHintUsed(false);
     setWorking("");
+    setShowListeningText(false);
   }, []);
 
   const finish = useCallback(
@@ -334,6 +347,9 @@ export default function StudyClient() {
   const requestHint = useCallback(
     async (outcomeCategory?: string, automatic = false) => {
       if (!card || hintBusy) return;
+      const token = ++hintTokenRef.current;
+      const requestedCard = card.id;
+      const current = () => token === hintTokenRef.current && card.id === requestedCard;
       setHintBusy(true);
       setHintMessage(null);
       try {
@@ -343,13 +359,14 @@ export default function StudyClient() {
           prompt: string | null;
           providerMessage: string | null;
         }>("/api/provider/hint", "POST", {
-          cardId: card.id,
+          cardId: requestedCard,
           approved: approved === "yes",
           usedHints: hintTexts,
           outcomeCategory:
             outcomeCategory ??
             (result ? OUTCOME_LABELS[result.cardOutcome] : "not answered yet"),
         });
+        if (!current()) return;
         if (data.text) {
           setHintTexts((previous) => [...previous, data.text as string]);
           setHintSource(data.source);
@@ -362,9 +379,12 @@ export default function StudyClient() {
           );
         }
       } catch (error) {
+        if (!current()) return;
         setHintMessage(error instanceof Error ? error.message : "The hint could not be asked for.");
       } finally {
-        setHintBusy(false);
+        // A late hint must not clear the busy state of the card the learner
+        // moved to, because that card may be waiting on its own request.
+        if (token === hintTokenRef.current) setHintBusy(false);
       }
     },
     [approved, card, hintBusy, hintTexts, result],
@@ -666,6 +686,8 @@ export default function StudyClient() {
     const regionLabel = (region: string | null) =>
       region === null ? "The answer" : `Blank ${blanks.findIndex((part) => part.id === region) + 1}`;
     const listen = mode === "hear_type" ? listenPrompt(card) : null;
+    const cardPack = packs.find((pack) => pack.name === card.packName) ?? null;
+    const instruction = studyCardInstruction(card, cardPack);
     const progress = queue.length > 0 ? ((index + (result ? 1 : 0)) / queue.length) * 100 : 0;
 
     return (
@@ -703,6 +725,8 @@ export default function StudyClient() {
             </button>
           </div>
 
+          <p className="muted study-instruction">{instruction}</p>
+
           {returnedIds.includes(card.id) ? (
             <p className="muted study-returned">
               This one is marked to return once — it was missed in this session.
@@ -718,7 +742,18 @@ export default function StudyClient() {
               >
                 Play the line
               </button>
-              <p className="muted">{LISTEN_INSTRUCTION}</p>
+              {showListeningText ? (
+                <p className="study-listen-text">{listen.text}</p>
+              ) : (
+                <button
+                  className="btn small"
+                  type="button"
+                  onClick={() => setShowListeningText(true)}
+                >
+                  Show the text
+                </button>
+              )}
+              <p className="muted">Showing the text turns this listening check into a reading check.</p>
             </div>
           ) : (
             <Side

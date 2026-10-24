@@ -100,7 +100,7 @@ describe("library reads and writes", () => {
     const made = await localSend<{ pack: { name: string; version: string; decks: Array<{ id: string; name: string }> } }>(
       "/api/packs",
       "POST",
-      { name: "other", version: "1.0.0", deckName: "Basics", deckId: "basics" },
+      { name: "other", language: "pl", version: "1.0.0", deckName: "Basics", deckId: "basics" },
     );
     expect(made.pack.name).toBe("other");
     expect(made.pack.decks).toEqual([{ id: "basics", name: "Basics" }]);
@@ -133,7 +133,7 @@ describe("library reads and writes", () => {
 
   it("imports flat cards into the pack-qualified deck, not a same-id deck elsewhere", async () => {
     await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
-    await localSend("/api/packs", "POST", { name: "other", version: "1.0.0", deckName: "Other basics", deckId: "basics" });
+    await localSend("/api/packs", "POST", { name: "other", language: "pl", version: "1.0.0", deckName: "Other basics", deckId: "basics" });
     await localSend("/api/cards/import", "POST", {
       json: JSON.stringify([{ front: "Dzień dobry", back: "Good morning" }]),
       packName: "other",
@@ -176,18 +176,61 @@ describe("library reads and writes", () => {
   });
 
   it("creates packs and refuses duplicates, missing names and bad shapes", async () => {
-    const created = await localSend<{ pack: { name: string; decks: Array<{ id: string }> } }>("/api/packs", "POST", {
+    const created = await localSend<{ pack: { name: string; language: string; sourceLanguage: string; decks: Array<{ id: string }> } }>("/api/packs", "POST", {
       name: "new-pack",
+      language: "pl",
+      sourceLanguage: "en",
       deckName: "First deck",
       deckId: "first",
     });
-    expect(created.pack.name).toBe("new-pack");
+    expect(created.pack).toMatchObject({ name: "new-pack", language: "pl", sourceLanguage: "en" });
     expect(created.pack.decks).toHaveLength(1);
 
     await expect(localSend("/api/packs", "POST", { name: "new-pack" })).rejects.toThrow("already here");
     await expect(localSend("/api/packs", "POST", {})).rejects.toThrow("Give the pack a name");
-    const slugged = await localSend<{ pack: { name: string } }>("/api/packs", "POST", { name: "Bad Name" });
+    await expect(localSend("/api/packs", "POST", { name: "no-language" })).rejects.toThrow("Choose the language");
+    const slugged = await localSend<{ pack: { name: string } }>("/api/packs", "POST", { name: "Bad Name", language: "es" });
     expect(slugged.pack.name).toBe("bad-name");
+  });
+
+  it("edits a pack language, instruction and prompts, then resets prompts", async () => {
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
+    const prompts = {
+      generation: { system: "You build cards.", template: "Teach {{language}}." },
+      tutor: { system: "You are a tutor.", hintTemplate: "Hint for {{fullLine}}." },
+    };
+    const patched = await localSend<{
+      pack: { language: string; sourceLanguage: string; studyInstruction?: string; prompts: typeof prompts | null };
+    }>("/api/packs/starter", "PATCH", {
+      targetLanguage: "ES",
+      sourceLanguage: "",
+      studyInstruction: "  Keep it short.  ",
+      prompts,
+    });
+    expect(patched.pack).toMatchObject({
+      language: "es",
+      studyInstruction: "Keep it short.",
+      prompts,
+    });
+    expect(patched.pack.sourceLanguage).toBeUndefined();
+
+    const listed = await localGet<{ packs: Array<{ name: string; language?: string; prompts: typeof prompts | null }> }>(
+      "/api/packs",
+    );
+    expect(listed.packs[0]).toMatchObject({ name: "starter", language: "es", prompts });
+
+    const reset = await localSend<{ pack: { prompts: typeof prompts | null } }>("/api/packs/starter", "PATCH", {
+      prompts: null,
+    });
+    expect(reset.pack.prompts).toBeNull();
+
+    await expect(localSend("/api/packs/starter", "PATCH", { targetLanguage: "" })).rejects.toThrow(
+      "Choose the language",
+    );
+    await expect(
+      localSend("/api/packs/starter", "PATCH", { prompts: { generation: { system: "", template: "x" } } }),
+    ).rejects.toThrow("prompt text");
+    await expect(localSend("/api/packs/gone", "PATCH", { targetLanguage: "pl" })).rejects.toThrow("There is no pack");
   });
 
   it("adds a deck to an existing pack through the deck target", async () => {
@@ -225,7 +268,7 @@ describe("library reads and writes", () => {
     expect((await localGet<{ cards: Card[] }>("/api/cards")).cards.some((entry) => entry.id === card.card.id)).toBe(false);
     await expect(localSend("/api/packs/starter/decks/gone", "DELETE")).rejects.toThrow("There is no deck");
 
-    await localSend("/api/packs", "POST", { name: "solo", deckName: "Only" });
+    await localSend("/api/packs", "POST", { name: "solo", language: "pl", deckName: "Only" });
     await expect(localSend("/api/packs/solo/decks/only", "DELETE")).rejects.toThrow("must keep at least one deck");
     const removedPack = await localSend<{ removedDecks: number }>("/api/packs/solo", "DELETE");
     expect(removedPack.removedDecks).toBe(1);
@@ -336,6 +379,7 @@ describe("plan, answer and progress", () => {
     await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
     await localSend("/api/packs", "POST", {
       name: "other",
+      language: "pl",
       version: "1.0.0",
       deckName: "Basics",
       deckId: "basics",
@@ -354,6 +398,7 @@ describe("plan, answer and progress", () => {
     });
     await localSend("/api/packs", "POST", {
       name: "empty",
+      language: "pl",
       version: "1.0.0",
       deckName: "Only",
       deckId: "only",
@@ -784,6 +829,8 @@ describe("creation brief through the router", () => {
       cardStyle: "mixed",
       packName: "",
       deckName: "",
+      targetLanguage: "pl",
+      sourceLanguage: "en",
       ...overrides,
     };
   }
@@ -816,6 +863,8 @@ describe("creation brief through the router", () => {
       cardStyle: "mixed",
       packName: "",
       deckName: "",
+      targetLanguage: "pl",
+      sourceLanguage: "en",
     };
     const prepared = await localSend<{ prompt: string }>("/api/provider/prepare", "POST", {
       target: { kind: "pack" },

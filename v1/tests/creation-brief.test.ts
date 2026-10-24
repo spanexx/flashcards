@@ -12,6 +12,7 @@ import {
   isCardStyle,
   libraryInventoryFromPacks,
   validateCreationBrief,
+  withBriefOnPackText,
 } from "@/lib/shared/creation";
 
 describe("creation brief defaults", () => {
@@ -23,6 +24,9 @@ describe("creation brief defaults", () => {
       cardStyle: "mixed",
       packName: "",
       deckName: "",
+      targetLanguage: "",
+      sourceLanguage: "en",
+      studyInstruction: "",
     });
     expect(defaultCreationBrief({ subject: "ordering coffee" }).subject).toBe("ordering coffee");
     expect(defaultCreationBrief({ subject: "x" }).subjectMode).toBe("learner");
@@ -47,6 +51,9 @@ describe("validateCreationBrief", () => {
       cardStyle: "type",
       packName: " cafe ",
       deckName: " ordering ",
+      targetLanguage: " Polish ",
+      sourceLanguage: " English ",
+      studyInstruction: " Read the English line. ",
     });
     expect(result.ok).toBe(true);
     if (!result.ok) return;
@@ -57,6 +64,9 @@ describe("validateCreationBrief", () => {
       cardStyle: "type",
       packName: "cafe",
       deckName: "ordering",
+      targetLanguage: "pl",
+      sourceLanguage: "en",
+      studyInstruction: "Read the English line.",
     });
   });
 
@@ -68,6 +78,8 @@ describe("validateCreationBrief", () => {
       cardStyle: "mixed",
       packName: "",
       deckName: "",
+      targetLanguage: "pl",
+      sourceLanguage: "en",
     });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.message).toMatch(/subject/i);
@@ -81,6 +93,8 @@ describe("validateCreationBrief", () => {
       cardStyle: "mixed",
       packName: "",
       deckName: "",
+      targetLanguage: "pl",
+      sourceLanguage: "en",
     });
     expect(result.ok).toBe(true);
     if (result.ok) expect(result.brief.subject).toBe("");
@@ -90,6 +104,7 @@ describe("validateCreationBrief", () => {
     const omitted = validateCreationBrief({
       subjectMode: "learner",
       subject: "verbs",
+      targetLanguage: "pl",
     });
     expect(omitted.ok).toBe(true);
     if (omitted.ok) expect(omitted.brief.cardStyle).toBe("mixed");
@@ -97,6 +112,7 @@ describe("validateCreationBrief", () => {
     const unknown = validateCreationBrief({
       subjectMode: "learner",
       subject: "verbs",
+      targetLanguage: "pl",
       cardStyle: "picks",
     });
     expect(unknown.ok).toBe(false);
@@ -108,6 +124,47 @@ describe("validateCreationBrief", () => {
     expect(validateCreationBrief(null).ok).toBe(false);
     expect(validateCreationBrief("learner").ok).toBe(false);
   });
+
+  it("keeps an omitted source unknown instead of guessing English", () => {
+    const result = validateCreationBrief({
+      subjectMode: "learner",
+      subject: "verbs",
+      targetLanguage: "pl",
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.brief.sourceLanguage).toBe("");
+  });
+});
+
+describe("withBriefOnPackText", () => {
+  const brief = defaultCreationBrief({
+    targetLanguage: "en",
+    sourceLanguage: "en",
+    studyInstruction: "Say the line before typing.",
+  });
+
+  it("puts the brief's pair and instruction on a Chat pack", () => {
+    const text = JSON.stringify({
+      pack: { name: "chat-pack", version: "1.0.0", language: "pl", sourceLanguage: "pl" },
+      decks: [{ id: "basics", name: "Basics" }],
+      cards: [],
+    });
+    const parsed = JSON.parse(withBriefOnPackText(text, brief));
+    expect(parsed.pack).toMatchObject({
+      name: "chat-pack",
+      language: "en",
+      sourceLanguage: "en",
+      studyInstruction: "Say the line before typing.",
+    });
+    expect(parsed.cards).toEqual([]);
+  });
+
+  it("leaves invalid or non-pack text for the normal import error", () => {
+    expect(withBriefOnPackText("not json", brief)).toBe("not json");
+    expect(withBriefOnPackText(JSON.stringify({ decks: [] }), brief)).toBe(
+      JSON.stringify({ decks: [] }),
+    );
+  });
 });
 
 describe("library inventory", () => {
@@ -117,6 +174,7 @@ describe("library inventory", () => {
         name: "starter",
         description: "Everyday Polish",
         language: "pl",
+        sourceLanguage: "en",
         decks: [{ name: "Basics" }, { name: "Cases" }],
       },
       {
@@ -129,14 +187,16 @@ describe("library inventory", () => {
         name: "starter",
         description: "Everyday Polish",
         language: "pl",
+        sourceLanguage: "en",
         decks: ["Basics", "Cases"],
       },
-      { name: "empty", description: "", language: "", decks: [] },
+      { name: "empty", description: "", language: "", sourceLanguage: "", decks: [] },
     ]);
     const text = describeLibraryInventory(inventory);
     expect(text).toContain("starter");
     expect(text).toContain("Everyday Polish");
-    expect(text).toContain("pl");
+    expect(text).toContain("Polish");
+    expect(text).toContain("English");
     expect(text).toContain("Basics, Cases");
     expect(text).toContain("empty");
     expect(text).not.toContain("card");

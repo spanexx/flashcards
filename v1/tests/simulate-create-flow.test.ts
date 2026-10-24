@@ -103,15 +103,18 @@ describe("create flow simulation", () => {
 
     const made = await localSend<{ pack: BrowserPack }>("/api/packs", "POST", {
       name: "Sim Create",
+      language: "pl",
+      sourceLanguage: "en",
       version: "1.0.0",
       deckName: "First",
     });
-    expect(made.pack.name).toBe("sim-create");
+    expect(made.pack).toMatchObject({ name: "sim-create", language: "pl", sourceLanguage: "en" });
     expect(made.pack.decks.map((deck) => deck.id)).toEqual(["first"]);
     expect(made.pack.decks[0].name).toBe("First");
     const duplicate = await errorText(
       localSend("/api/packs", "POST", {
         name: "Sim Create",
+        language: "pl",
         version: "1.0.0",
         deckName: "Again",
       }),
@@ -207,7 +210,7 @@ describe("create flow simulation", () => {
     line("Generate Pack/Deck/Cards with a fake provider -> all-or-nothing");
 
     const suffixError = await errorText(
-      localSend("/api/packs", "POST", { name: "sim-create", version: "1.0.0", deckName: "Again" }),
+      localSend("/api/packs", "POST", { name: "sim-create", language: "pl", version: "1.0.0", deckName: "Again" }),
     );
     expect(suffixError).toContain("already here");
     line("generated collision gets -2 (and -3); deck label/id stay paired");
@@ -312,7 +315,7 @@ describe("create flow simulation", () => {
     const afterDeckDelete = await readPack("sim-create", store);
     expect(afterDeckDelete?.decks.some((deck) => deck.id === "first")).toBe(false);
 
-    await localSend("/api/packs", "POST", { name: "solo", version: "1.0.0", deckName: "Basics" });
+    await localSend("/api/packs", "POST", { name: "solo", language: "pl", version: "1.0.0", deckName: "Basics" });
     const lastDeck = await errorText(localSend("/api/packs/solo/decks/basics", "DELETE"));
     expect(lastDeck).toContain("must keep at least one deck");
     line("Delete deck removes its cards + evidence; last deck refused");

@@ -9,6 +9,7 @@ import { describe, expect, it } from "vitest";
 import type { Card, PackStatus } from "@/lib/shared/types";
 import {
   briefForTarget,
+  briefNeedsLanguage,
   briefNeedsSubject,
   briefSubjectDefault,
   cardMatches,
@@ -154,6 +155,47 @@ describe("creation brief defaults", () => {
     expect(briefForTarget(brief, "pack")).toMatchObject({ packName: "slow", deckName: "" });
     expect(briefForTarget(brief, "deck")).toMatchObject({ packName: "", deckName: "Basics" });
     expect(briefForTarget(brief, "cards")).toMatchObject({ packName: "", deckName: "" });
+  });
+
+  it("takes the pair and instruction from the parent pack, not a stale draft", () => {
+    const brief = defaultCreationBrief({
+      targetLanguage: "es",
+      sourceLanguage: "fr",
+      studyInstruction: "A stale instruction.",
+    });
+    const pack = makePack({
+      language: "pl",
+      sourceLanguage: "en",
+      studyInstruction: "Read it before typing.",
+    });
+    expect(briefForTarget(brief, "deck", pack)).toMatchObject({
+      targetLanguage: "pl",
+      sourceLanguage: "en",
+      studyInstruction: "Read it before typing.",
+    });
+    expect(briefForTarget(brief, "cards", pack)).toMatchObject({
+      targetLanguage: "pl",
+      sourceLanguage: "en",
+      studyInstruction: "Read it before typing.",
+    });
+  });
+
+  it("does not invent a pair for an old pack", () => {
+    const brief = defaultCreationBrief({ targetLanguage: "es" });
+    expect(briefForTarget(brief, "deck", makePack())).toMatchObject({
+      targetLanguage: "",
+      sourceLanguage: "",
+      studyInstruction: "",
+    });
+    expect(briefForTarget(brief, "pack", makePack())).toMatchObject({ targetLanguage: "es" });
+    expect(
+      briefForTarget(defaultCreationBrief({ targetLanguage: "es", sourceLanguage: "" }), "pack", makePack()),
+    ).toMatchObject({ sourceLanguage: "en" });
+  });
+
+  it("needs a language only for a new pack", () => {
+    expect(briefNeedsLanguage(defaultCreationBrief())).toBe(true);
+    expect(briefNeedsLanguage(defaultCreationBrief({ targetLanguage: "Polish" }))).toBe(false);
   });
 
   it("needs a subject only when the learner chooses and has written nothing", () => {

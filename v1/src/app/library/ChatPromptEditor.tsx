@@ -38,8 +38,8 @@ export default function ChatPromptEditor({
 
       {needsSubject ? (
         <p className="muted" style={{ margin: "8px 0 0" }}>
-          Write what you want the cards to teach. The prompt appears here once the brief has a
-          subject.
+          Write what you want the cards to teach and choose the language. The prompt appears
+          here once the brief has both.
         </p>
       ) : !targetReady ? (
         <p className="muted" style={{ margin: "8px 0 0" }}>

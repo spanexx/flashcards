@@ -33,7 +33,7 @@ import {
   simpleCardSchema,
   simpleCardToSource,
 } from "@/lib/core/card";
-import { cardSourceSchema, issuesFromZod } from "@/lib/core/schema";
+import { cardSourceSchema, issuesFromZod, packPromptsSchema } from "@/lib/core/schema";
 import { countSeenBefore, groupAttempts, makeAnswerRows, makeCorrectionRow } from "@/lib/core/evidence";
 import { judgeCard } from "@/lib/core/judge";
 import { buildPlan } from "@/lib/core/plan";
@@ -60,6 +60,7 @@ import {
   readSettings,
   recordAlgorithmRun,
   upsertCards,
+  writePack,
   type BrowserPack,
 } from "@/lib/browser/repository";
 import {
@@ -97,6 +98,7 @@ import {
   validateCreationBrief,
   type CreationBrief,
 } from "@/lib/shared/creation";
+import { normalizeLanguage } from "@/lib/shared/language";
 
 /** One sentence a screen can show without rewriting it. */
 function fail(message: string, detail?: unknown): never {
@@ -163,6 +165,15 @@ function optionalBrief(record: Record<string, unknown> | null): CreationBrief | 
   const result = validateCreationBrief(record.brief);
   if (!result.ok) fail(result.message);
   return result.brief;
+}
+
+/** A whole new pack starts with English questions; an existing pack keeps its pair. */
+function optionalBriefFor(record: Record<string, unknown> | null, kind: string | null): CreationBrief | undefined {
+  const brief = optionalBrief(record);
+  if (brief && kind === "pack" && brief.sourceLanguage.length === 0) {
+    return { ...brief, sourceLanguage: "en" };
+  }
+  return brief;
 }
 
 /** The library as the old screens knew it: packs, cards and display statuses. */
@@ -350,6 +361,8 @@ async function createPack(body: Record<string, unknown>) {
   const name = slugFromName(asString(body.name)?.trim() || "", "");
   if (!name) fail("Give the pack a name.");
   if (await readPack(name)) fail(`A pack named "${name}" is already here.`);
+  const language = normalizeLanguage(asString(body.language) ?? "");
+  if (!language) fail("Choose the language these cards teach.");
   const version = asString(body.version)?.trim() || "1.0.0";
   const deckName = asString(body.deckName)?.trim() || "Basics";
   const deckId = asString(body.deckId)?.trim() || slugFromName(deckName, "deck");
@@ -359,7 +372,9 @@ async function createPack(body: Record<string, unknown>) {
       name,
       version,
       description: asString(body.description)?.trim() || undefined,
-      language: asString(body.language)?.trim() || undefined,
+      language,
+      sourceLanguage: normalizeLanguage(asString(body.sourceLanguage) ?? "") || "en",
+      studyInstruction: asString(body.studyInstruction)?.trim() || undefined,
     },
     decks: [{ id: deckId, name: deckName }],
     cards: [],
@@ -368,6 +383,47 @@ async function createPack(body: Record<string, unknown>) {
   if (!result.ok) fail("The pack needs fixing before it can be saved.", result.issues);
   const pack = await readPack(name);
   return { pack };
+}
+
+/** Change only the pack fields the editor sent; every field is checked here. */
+async function updatePack(packName: string, body: Record<string, unknown>) {
+  const pack = await readPack(packName);
+  if (!pack) fail(`There is no pack "${packName}" here.`);
+
+  const next: BrowserPack = { ...pack };
+  if (body.targetLanguage !== undefined) {
+    const targetLanguage = asString(body.targetLanguage);
+    if (targetLanguage === null) fail("The card language must be text.");
+    const normalized = normalizeLanguage(targetLanguage);
+    if (normalized.length === 0) fail("Choose the language these cards teach.");
+    next.language = normalized;
+  }
+  if (body.sourceLanguage !== undefined) {
+    const sourceLanguage = asString(body.sourceLanguage);
+    if (sourceLanguage === null) fail("The question language must be text.");
+    // A blank field removes the source instead of guessing English, so an old
+    // pack stays neutral until the learner actually names its question language.
+    next.sourceLanguage = normalizeLanguage(sourceLanguage) || undefined;
+  }
+  if (body.studyInstruction !== undefined) {
+    const studyInstruction = asString(body.studyInstruction);
+    if (studyInstruction === null) fail("The study instruction must be text.");
+    next.studyInstruction = studyInstruction.trim() || undefined;
+  }
+  if (body.prompts !== undefined) {
+    if (body.prompts === null) {
+      next.prompts = null;
+    } else {
+      const parsed = packPromptsSchema.safeParse(body.prompts);
+      if (!parsed.success) fail("The prompt text needs fixing.", issuesFromZod(parsed.error, 0));
+      next.prompts = parsed.data;
+    }
+  }
+
+  const updatedAt = new Date().toISOString();
+  const saved = { ...next, updatedAt };
+  await writePack(saved);
+  return { pack: saved };
 }
 
 /** Add one deck to an existing pack. The learner writes the label, not the id. */
@@ -690,6 +746,10 @@ export async function localSend<T>(
     return (await createPack(record)) as T;
   }
   const packPath = /^\/api\/packs\/([^/]+)$/.exec(path);
+  if (packPath && method === "PATCH") {
+    if (!record) fail("The pack edit arrived in a shape the app does not understand.");
+    return (await updatePack(decodeURIComponent(packPath[1]), record)) as T;
+  }
   if (packPath && method === "DELETE") {
     const name = decodeURIComponent(packPath[1]);
     const result = await deletePack(name);
@@ -786,10 +846,10 @@ export async function localSend<T>(
   if (path === "/api/provider/test") return (await testProvider()) as T;
   if (path === "/api/provider/prepare") {
     if (!record) fail("The request arrived in a shape the app does not understand.");
-    // The brief is checked before any target work, so a nameless request is refused once.
-    const brief = optionalBrief(record);
     const targetRecord = asRecord(record.target);
     const kind = targetRecord ? asString(targetRecord.kind) : null;
+    // The brief is checked before any target work, so a nameless request is refused once.
+    const brief = optionalBriefFor(record, kind);
     let target: GenerationTarget;
     if (kind === "pack") {
       target = { kind: "pack" };
@@ -837,10 +897,10 @@ export async function localSend<T>(
   if (path === "/api/authoring/prompt") {
     const target = record ? asRecord(record.target) : null;
     if (!target) fail("Choose what the chat should write for.");
-    // Chat always sees the brief and the allowed library facts when one is sent.
-    const brief = optionalBrief(record);
-    const inventory = libraryInventoryFromPacks(await readPacks());
     const kind = asString(target.kind);
+    // Chat always sees the brief and the allowed library facts when one is sent.
+    const brief = optionalBriefFor(record, kind);
+    const inventory = libraryInventoryFromPacks(await readPacks());
     const packName = asString(target.packName);
     const deckId = asString(target.deckId);
     if (kind === "pack") {

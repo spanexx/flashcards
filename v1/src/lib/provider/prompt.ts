@@ -9,7 +9,7 @@
 // the requested style and the allowed library facts. [pack: creation-control]
 
 import type { Card } from "@/lib/shared/types";
-import type { PackRecord } from "@/lib/packs/types";
+import type { PackPrompts, PackRecord } from "@/lib/packs/types";
 import type { ChatMessage } from "@/lib/provider/client";
 import {
   describeCreationBrief,
@@ -17,6 +17,7 @@ import {
   type CreationBrief,
   type LibraryInventory,
 } from "@/lib/shared/creation";
+import { packLanguagePair, type PackLanguagePair } from "@/lib/shared/language";
 
 /** The learner categories the app owns. Packs may not add slots. */
 export interface ProfileSlots {
@@ -36,11 +37,12 @@ export function renderTemplate(template: string, values: Record<string, string>)
   return template.replace(/\{\{([a-zA-Z0-9_]+)\}\}/g, (_match, key: string) => values[key] ?? "");
 }
 
-const DEFAULT_GENERATION_SYSTEM =
+export const DEFAULT_GENERATION_SYSTEM =
   "You write complete, correct study lines for one learner. You never write exercises: you write truth, and the app hides part of it.";
 
-const DEFAULT_GENERATION_TEMPLATE = [
-  "Write {{count}} complete, correct lines about {{topic}}.",
+export const DEFAULT_GENERATION_TEMPLATE = [
+  "Write {{count}} complete, correct lines in {{targetLanguage}} about {{topic}}.",
+  "Questions, translations and explanations are in {{sourceLanguage}}.",
   "Learner level: {{level}}. Preferred learning style: {{learningStyle}}.",
   "Weak topic categories (labels only): {{weakTopics}}.",
   "Do not mention the learner or repeat their words.",
@@ -49,16 +51,24 @@ const DEFAULT_GENERATION_TEMPLATE = [
   '{"lines":[{"style":"cloze","fullLine":"the complete correct line","target":"the exact word or phrase the app should hide","translation":"a plain translation","topics":["{{topic}}"],"tags":[],"summary":"one short plain sentence"}]}',
 ].join("\n");
 
-const DEFAULT_TUTOR_SYSTEM =
+export const DEFAULT_TUTOR_SYSTEM =
   "You are a patient tutor inside a flashcard session. You give one short hint. You never give the full answer, and you never scold.";
 
-const DEFAULT_HINT_TEMPLATE = [
+export const DEFAULT_HINT_TEMPLATE = [
   "The learner is looking at this card:",
   "{{cardText}}",
   "Topic: {{topic}}. Level: {{level}}. Learning style: {{learningStyle}}.",
   "How the last answer went: {{outcomeCategory}}.",
   "Give one short hint, one or two sentences, that nudges without revealing the answer.",
 ].join("\n");
+
+/** The four defaults a pack editor shows before the learner customises them. */
+export function defaultPackPrompts(): PackPrompts {
+  return {
+    generation: { system: DEFAULT_GENERATION_SYSTEM, template: DEFAULT_GENERATION_TEMPLATE },
+    tutor: { system: DEFAULT_TUTOR_SYSTEM, hintTemplate: DEFAULT_HINT_TEMPLATE },
+  };
+}
 
 /** What a structured generation prompt may know about the learner's request. */
 export interface GenerationPromptContext {
@@ -78,12 +88,15 @@ export function buildGenerationPrompt(
 ): BuiltPrompt {
   const system = pack.prompts?.generation.system ?? DEFAULT_GENERATION_SYSTEM;
   const template = pack.prompts?.generation.template ?? DEFAULT_GENERATION_TEMPLATE;
+  const pair = pairForPack(pack, input.brief);
   const values = {
     topic: input.topic,
     count: String(input.count),
     level: slots.level,
     learningStyle: slots.learningStyle,
     weakTopics: slots.weakTopics.length > 0 ? slots.weakTopics.join(", ") : "none known",
+    targetLanguage: pair.targetName || "the target language",
+    sourceLanguage: pair.sourceName || "the question language",
   };
   let user = renderTemplate(template, values);
 
@@ -92,9 +105,12 @@ export function buildGenerationPrompt(
   if (input.brief) {
     const extra = [
       ...describeCreationBrief(input.brief, input.inventory ?? []),
-      ...cardStylePromptLines(input.brief.cardStyle),
+      ...cardStylePromptLines(input.brief.cardStyle, pair),
     ];
     user = `${user}\n\n${extra.join("\n")}`;
+  } else {
+    const pairLines = pairPromptLines(pair, pack.studyInstruction ?? "");
+    if (pairLines.length > 0) user = `${user}\n\n${pairLines.join("\n")}`;
   }
 
   return {
@@ -114,18 +130,123 @@ function exampleStyle(cardStyle: CardStyle): string {
   return cardStyle === "mixed" ? "cloze" : cardStyle;
 }
 
+/** The pair a brief asks for, with no guess when the learner left it blank. */
+function pairForBrief(brief: CreationBrief | null | undefined): PackLanguagePair {
+  return packLanguagePair({
+    language: brief?.targetLanguage,
+    sourceLanguage: brief?.sourceLanguage,
+  });
+}
+
+/** A pack's own pair wins; a brief only fills a pair the pack never declared. */
+function pairForPack(
+  pack: PackRecord,
+  brief: CreationBrief | null | undefined,
+): PackLanguagePair {
+  const declared = packLanguagePair(pack);
+  if (declared.target.length > 0 || declared.source.length > 0) return declared;
+  return pairForBrief(brief);
+}
+
+/** Plain words that keep the pair and the pack instruction in every prompt. */
+function pairPromptLines(pair: PackLanguagePair, studyInstruction = ""): string[] {
+  const lines: string[] = [];
+  if (pair.target.length > 0) {
+    lines.push(`The learner is learning ${pair.targetName} (${pair.target}).`);
+  }
+  if (pair.source.length > 0) {
+    lines.push(
+      `Questions, translations and explanations are in ${pair.sourceName} (${pair.source}).`,
+    );
+  }
+  if (pair.known && !pair.same) {
+    lines.push(
+      `Write full lines in ${pair.targetName}; write translations in ${pair.sourceName}.`,
+    );
+  } else if (pair.known) {
+    lines.push(`Write full lines and translations in ${pair.targetName}.`);
+  }
+  if (studyInstruction.trim().length > 0) {
+    lines.push(`Store this study instruction on the pack: "${studyInstruction.trim()}"`);
+  }
+  return lines;
+}
+
+/** A short concrete line in the target language, translated into the source. */
+function exampleLine(pair: PackLanguagePair): {
+  fullLine: string;
+  target: string;
+  translation: string;
+} {
+  const examples: Record<string, { fullLine: string; target: string }> = {
+    de: { fullLine: "Der Apfel ist süß.", target: "süß" },
+    en: { fullLine: "The red apple is sweet.", target: "sweet" },
+    es: { fullLine: "La manzana es dulce.", target: "dulce" },
+    fr: { fullLine: "La pomme est sucrée.", target: "sucrée" },
+    pl: { fullLine: "Czerwone jabłko jest słodkie.", target: "słodkie" },
+  };
+  const target = examples[pair.target.split("-")[0]] ?? examples.en;
+  const source = examples[pair.source.split("-")[0]] ?? target;
+  return { fullLine: target.fullLine, target: target.target, translation: source.fullLine };
+}
+
 /** The whole-pack example, with a style the provider can copy. */
-function packShape(cardStyle: CardStyle): string {
-  return `{"pack":{"name":"slow-polish","version":"1.0.0","description":"Everyday Polish","language":"pl"},"decks":[{"id":"basics","name":"Basics"}],"lines":[{"deckId":"basics","style":"${exampleStyle(cardStyle)}","fullLine":"Piję kawę.","target":"kawę","translation":"I am drinking coffee.","topics":["Basics"],"tags":[],"summary":"Drinking coffee"}]}`;
+function packShape(
+  cardStyle: CardStyle,
+  pair: PackLanguagePair,
+  studyInstruction = "",
+): string {
+  const line = exampleLine(pair);
+  const pack: Record<string, unknown> = {
+    name: "study-pack",
+    version: "1.0.0",
+    description: "A short useful pack",
+  };
+  if (pair.target.length > 0) pack.language = pair.target;
+  if (pair.source.length > 0) pack.sourceLanguage = pair.source;
+  if (studyInstruction.trim().length > 0) pack.studyInstruction = studyInstruction.trim();
+  return JSON.stringify({
+    pack,
+    decks: [{ id: "basics", name: "Basics" }],
+    lines: [
+      {
+        deckId: "basics",
+        style: exampleStyle(cardStyle),
+        fullLine: line.fullLine,
+        target: line.target,
+        translation: line.translation,
+        topics: ["Basics"],
+        tags: [],
+        summary: "A sweet fruit",
+      },
+    ],
+  });
 }
 
 /** The one-new-deck example, with a style the provider can copy. */
-function deckShape(cardStyle: CardStyle): string {
-  return `{"deck":{"id":"extra","name":"Extra"},"lines":[{"style":"${exampleStyle(cardStyle)}","fullLine":"Piję kawę.","target":"kawę","translation":"I am drinking coffee.","topics":["Extra"],"tags":[],"summary":"Drinking coffee"}]}`;
+function deckShape(cardStyle: CardStyle, pair: PackLanguagePair): string {
+  const line = exampleLine(pair);
+  return JSON.stringify({
+    deck: { id: "extra", name: "Extra" },
+    lines: [
+      {
+        style: exampleStyle(cardStyle),
+        fullLine: line.fullLine,
+        target: line.target,
+        translation: line.translation,
+        topics: ["Extra"],
+        tags: [],
+        summary: "A sweet fruit",
+      },
+    ],
+  });
 }
 
 /** Plain style rules every structured prompt repeats, because the validator enforces them. */
-function cardStylePromptLines(cardStyle: CardStyle): string[] {
+function cardStylePromptLines(
+  cardStyle: CardStyle,
+  pair: PackLanguagePair = packLanguagePair(null),
+): string[] {
   if (cardStyle === "mixed") {
     return [
       'Card style: mixed. Set "style" on each line to "cloze", "type" or "hear_type". A line with no style becomes a cloze card.',
@@ -136,12 +257,16 @@ function cardStylePromptLines(cardStyle: CardStyle): string[] {
   ];
   if (cardStyle === "type") {
     lines.push(
-      "Every type line must include a translation, because the learner sees the translation and types the full line.",
+      pair.known && !pair.same
+        ? `Every type line must include a translation in ${pair.sourceName}, because the learner reads it and types the full ${pair.targetName} line.`
+        : "Every type line must include a translation, because the learner sees the translation and types the full line.",
     );
   }
   if (cardStyle === "hear_type") {
     lines.push(
-      "Every hear_type line is spoken in the pack language when it is known, and the learner types the full line.",
+      pair.target.length > 0
+        ? `Every hear_type line is spoken in ${pair.targetName}, and the learner types the full ${pair.targetName} line.`
+        : "Every hear_type line is spoken in the pack language when it is known, and the learner types the full line.",
     );
   }
   return lines;
@@ -155,6 +280,8 @@ export function buildPackGenerationPrompt(
 ): BuiltPrompt {
   const brief = context.brief ?? null;
   const inventory = context.inventory ?? [];
+  const pair = pairForBrief(brief);
+  const studyInstruction = brief?.studyInstruction ?? "";
   const userLines = [
     `Write ${count} complete, correct study lines for a new pack.`,
     brief?.packName
@@ -164,7 +291,7 @@ export function buildPackGenerationPrompt(
 
   if (brief) {
     userLines.push(...describeCreationBrief(brief, inventory));
-    userLines.push(...cardStylePromptLines(brief.cardStyle));
+    userLines.push(...cardStylePromptLines(brief.cardStyle, pair));
   } else {
     // Legacy requests keep the old hint that keeps a pack near the learner's topics.
     const knownTopics = [...new Set(inventory.flatMap((pack) => pack.decks))];
@@ -179,7 +306,7 @@ export function buildPackGenerationPrompt(
     `Learner level: ${slots.level}. Preferred learning style: ${slots.learningStyle}.`,
     "Every line must name one of your decks with deckId. The app turns each line into its exercise.",
     "Return JSON only, shaped like:",
-    packShape(brief?.cardStyle ?? "mixed"),
+    packShape(brief?.cardStyle ?? "mixed", pair, studyInstruction),
   );
   const user = userLines.join("\n");
   return {
@@ -200,6 +327,7 @@ export function buildDeckGenerationPrompt(
 ): BuiltPrompt {
   const brief = context.brief ?? null;
   const inventory = context.inventory ?? [];
+  const pair = pairForPack(pack, brief);
   const deckList = pack.topics.length > 0 ? pack.topics.join(", ") : "none yet";
   const userLines = [
     `Write ${count} complete, correct study lines for one new deck inside the existing pack "${pack.name}".`,
@@ -211,14 +339,17 @@ export function buildDeckGenerationPrompt(
 
   if (brief) {
     userLines.push(...describeCreationBrief(brief, inventory));
-    userLines.push(...cardStylePromptLines(brief.cardStyle));
+    userLines.push(...cardStylePromptLines(brief.cardStyle, pair));
+  } else {
+    const pairLines = pairPromptLines(pair, pack.studyInstruction ?? "");
+    if (pairLines.length > 0) userLines.push(...pairLines);
   }
 
   userLines.push(
     `Learner level: ${slots.level}. Preferred learning style: ${slots.learningStyle}.`,
     "The app turns each line into its exercise.",
     "Return JSON only, shaped like:",
-    deckShape(brief?.cardStyle ?? "mixed"),
+    deckShape(brief?.cardStyle ?? "mixed", pair),
   );
   const user = userLines.join("\n");
   return {

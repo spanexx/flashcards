@@ -17,6 +17,8 @@ export interface BrowserPack extends StoredValue {
   version: string;
   description?: string;
   language?: string;
+  sourceLanguage?: string;
+  studyInstruction?: string;
   decks: Array<{ id: string; name: string }>;
   prompts: PackPrompts | null;
   createdAt: string;
@@ -294,6 +296,9 @@ export function packStatus(pack: BrowserPack, cards: Card[]): PackStatus {
     folder: "This browser",
     description: pack.description,
     language: pack.language,
+    sourceLanguage: pack.sourceLanguage,
+    studyInstruction: pack.studyInstruction,
+    prompts: pack.prompts,
     decks: pack.decks,
     topics: deckNames,
     topicLabels: {},
@@ -309,6 +314,8 @@ export function packRecord(pack: BrowserPack) {
     folder: "This browser",
     description: pack.description,
     language: pack.language,
+    sourceLanguage: pack.sourceLanguage,
+    studyInstruction: pack.studyInstruction,
     topics: pack.decks.map((deck) => deck.name),
     topicLabels: {},
     cards: [],

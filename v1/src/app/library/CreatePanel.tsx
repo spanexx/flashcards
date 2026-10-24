@@ -12,13 +12,19 @@ import { useCallback, useEffect, useState } from "react";
 import { apiGet, apiSend } from "@/lib/client/api";
 import type { JobView } from "@/lib/browser/jobs";
 import type { PackStatus, ProviderStatus } from "@/lib/shared/types";
-import { defaultCreationBrief, type CreationBrief } from "@/lib/shared/creation";
+import {
+  defaultCreationBrief,
+  withBriefOnPackText,
+  type CreationBrief,
+} from "@/lib/shared/creation";
+import { COMMON_LANGUAGES, languagePairLabel } from "@/lib/shared/language";
 import { withBasePath } from "@/lib/shared/paths";
 import ChatPromptEditor from "./ChatPromptEditor";
 import CreationBriefFields from "./CreationBriefFields";
 import PlacementPicker from "./PlacementPicker";
 import {
   briefForTarget,
+  briefNeedsLanguage,
   briefNeedsSubject,
   briefSubjectDefault,
   errorLines,
@@ -38,6 +44,24 @@ function SettingsPath() {
   );
 }
 
+/** The pair and instruction a new deck or card receives from its pack. */
+function InheritedPackFacts({ target, pack }: { target: "deck" | "cards"; pack: PackStatus | undefined }) {
+  if (!pack) return null;
+  const instruction = pack.studyInstruction?.trim() ?? "";
+  return (
+    <div className="notice">
+      <strong>{languagePairLabel(pack)}</strong>
+      <p className="muted" style={{ margin: "4px 0" }}>
+        This pack owns the language pair and study instruction. New {target === "deck" ? "decks" : "cards"} inherit
+        them; change them later in Packs → Edit.
+      </p>
+      <p style={{ margin: 0 }}>
+        {instruction.length > 0 ? instruction : "No study instruction is set for this pack."}
+      </p>
+    </div>
+  );
+}
+
 /** What the Create panel needs from the shell and its loaded library. */
 interface CreatePanelProps {
   packs: PackStatus[];
@@ -53,7 +77,14 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
   const [method, setMethod] = useState<CreateMethod>(seed?.method ?? "write");
   const [packChoice, setPackChoice] = useState(seed?.packName ?? "");
   const [deckChoice, setDeckChoice] = useState(seed?.deckId ?? "");
-  const [writePack, setWritePack] = useState({ name: "", version: "1.0.0", deckName: "Basics" });
+  const [writePack, setWritePack] = useState({
+    name: "",
+    version: "1.0.0",
+    deckName: "Basics",
+    targetLanguage: "",
+    sourceLanguage: "en",
+    studyInstruction: "",
+  });
   const [deckName, setDeckName] = useState("");
   const [cardDraft, setCardDraft] = useState({
     front: "",
@@ -99,8 +130,11 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
   const deckId = activeDecks.some((deck) => deck.id === deckChoice) ? deckChoice : (activeDecks[0]?.id ?? "");
 
   // Only the target's matching name may reach a prompt; stale fields are stripped.
-  const requestBrief = briefForTarget(brief, target);
+  // A deck or cards target inherits its pack's pair and instruction.
+  const requestBrief = briefForTarget(brief, target, activePack);
   const subjectNeeded = briefNeedsSubject(requestBrief);
+  const languageNeeded = target === "pack" && briefNeedsLanguage(requestBrief);
+  const briefIncomplete = subjectNeeded || languageNeeded;
   const chatTargetReady =
     target === "pack" || (Boolean(packName) && (target === "deck" || Boolean(deckId)));
   const chatRequestKey = JSON.stringify({ target, packName, deckId, brief: requestBrief });
@@ -109,7 +143,7 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
   const chatLoading =
     method === "chat" &&
     chatTargetReady &&
-    !subjectNeeded &&
+    !briefIncomplete &&
     chatState?.key !== chatBuildKey;
   const chatAnswerText = chatAnswer.key === chatBuildKey ? chatAnswer.text : "";
 
@@ -219,9 +253,19 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
         name: writePack.name,
         version: writePack.version,
         deckName: writePack.deckName,
+        language: writePack.targetLanguage,
+        sourceLanguage: writePack.sourceLanguage,
+        studyInstruction: writePack.studyInstruction,
       });
       const name = data.pack.name;
-      setWritePack({ name: "", version: "1.0.0", deckName: "Basics" });
+      setWritePack({
+        name: "",
+        version: "1.0.0",
+        deckName: "Basics",
+        targetLanguage: "",
+        sourceLanguage: "en",
+        studyInstruction: "",
+      });
       finish({ kind: "pack", packName: name }, `The pack "${name}" was created with one deck.`);
     } catch (problem) {
       showError(problem, "The pack could not be created.");
@@ -314,14 +358,14 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
   // makes the old prompt and answer invisible until the new one arrives.
   useEffect(() => {
     if (method !== "chat") return;
-    if (!chatTargetReady || subjectNeeded) return;
+    if (!chatTargetReady || briefIncomplete) return;
     const wanted =
       target === "pack"
         ? { kind: "pack" as const }
         : target === "deck"
           ? { kind: "deck" as const, packName }
           : { kind: "cards" as const, packName, deckId };
-    const requestBrief = briefForTarget(brief, target);
+    const requestBrief = briefForTarget(brief, target, activePack);
     let alive = true;
     const timer = setTimeout(() => {
       void apiSend<{ prompt: string }>("/api/authoring/prompt", "POST", {
@@ -342,7 +386,7 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
       alive = false;
       clearTimeout(timer);
     };
-  }, [method, target, packName, deckId, brief, chatTargetReady, subjectNeeded, chatBuildKey, showError]);
+  }, [method, target, packName, deckId, brief, activePack, chatTargetReady, briefIncomplete, chatBuildKey, showError]);
 
   // The learner can ask for a fresh prompt without changing the brief.
   const rebuildChatPrompt = () => setChatVersion((previous) => previous + 1);
@@ -381,9 +425,12 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
     try {
       const wanted = targetPayload();
       if (!wanted) throw new Error("Choose the parent pack and deck first.");
+      // Chat's answer is a whole pack only when the target is Pack. The brief
+      // owns its pair and instruction even if the provider left them out.
+      const text = wanted.kind === "pack" ? withBriefOnPackText(chatAnswerText, requestBrief) : chatAnswerText;
       await apiSend<{ job: JobView }>("/api/jobs", "POST", {
         kind: "import",
-        text: chatAnswerText,
+        text,
         target: wanted,
         namePolicy: "auto-suffix",
         source: "chat",
@@ -406,6 +453,7 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
       const wanted = targetPayload();
       if (!wanted) throw new Error("Choose the parent pack and deck first.");
       if (subjectNeeded) throw new Error("Write what you want the cards to teach first.");
+      if (languageNeeded) throw new Error("Choose the language the cards should teach first.");
       const settings = await apiGet<{ provider: ProviderStatus }>("/api/settings");
       setFreshProvider(settings.provider);
       if (!settings.provider.configured) {
@@ -579,6 +627,48 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
                   placeholder="Basics"
                 />
               </label>
+              <label className="field-label">
+                Cards teach
+                <input
+                  className="field"
+                  list="write-language-options"
+                  value={writePack.targetLanguage}
+                  onChange={(event) =>
+                    setWritePack((previous) => ({ ...previous, targetLanguage: event.target.value }))
+                  }
+                  placeholder="e.g. Polish"
+                  required
+                />
+              </label>
+              <label className="field-label">
+                Questions in
+                <input
+                  className="field"
+                  list="write-language-options"
+                  value={writePack.sourceLanguage}
+                  onChange={(event) =>
+                    setWritePack((previous) => ({ ...previous, sourceLanguage: event.target.value }))
+                  }
+                  placeholder="e.g. English"
+                />
+              </label>
+              <datalist id="write-language-options">
+                {COMMON_LANGUAGES.map((language) => (
+                  <option key={language.code} value={language.name} />
+                ))}
+              </datalist>
+              <label className="field-label">
+                Study instruction (optional)
+                <textarea
+                  className="field"
+                  rows={2}
+                  value={writePack.studyInstruction}
+                  onChange={(event) =>
+                    setWritePack((previous) => ({ ...previous, studyInstruction: event.target.value }))
+                  }
+                  placeholder="e.g. Read the English line, then type the full Polish line."
+                />
+              </label>
               <p className="muted" style={{ margin: 0 }}>
                 The deck can start empty. Cards come later through Create → Cards. A name that is already here is
                 refused; learner-written names do not auto-number.
@@ -588,7 +678,7 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
                   className="btn primary"
                   type="button"
                   onClick={() => void writePackNow()}
-                  disabled={busy || !writePack.name.trim()}
+                  disabled={busy || !writePack.name.trim() || !writePack.targetLanguage.trim()}
                 >
                   Create empty pack
                 </button>
@@ -608,6 +698,7 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
                 onPack={choosePack}
                 onDeck={chooseDeck}
               />
+              <InheritedPackFacts target="deck" pack={activePack} />
               <label className="field-label">
                 Deck name
                 <input
@@ -645,6 +736,7 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
                 onPack={choosePack}
                 onDeck={chooseDeck}
               />
+              <InheritedPackFacts target="cards" pack={activePack} />
               <label className="field-label">
                 Front
                 <input
@@ -792,7 +884,7 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
                   className="btn primary"
                   type="button"
                   onClick={() => void prepareNow()}
-                  disabled={busy || !chatTargetReady || subjectNeeded}
+                  disabled={busy || !chatTargetReady || briefIncomplete}
                 >
                   Prepare the prompt
                 </button>
@@ -859,7 +951,7 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
               <ChatPromptEditor
                 prompt={chatPrompt}
                 loading={chatLoading}
-                needsSubject={subjectNeeded}
+                needsSubject={briefIncomplete}
                 targetReady={chatTargetReady}
                 onChange={editChatPrompt}
                 onRebuild={rebuildChatPrompt}

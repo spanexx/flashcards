@@ -203,6 +203,9 @@ export interface PackStatus {
   folder: string;
   description?: string;
   language?: string;
+  sourceLanguage?: string;
+  studyInstruction?: string;
+  prompts?: import("@/lib/packs/types").PackPrompts | null;
   decks?: Deck[];
   topics: string[];
   topicLabels: Record<string, string>;

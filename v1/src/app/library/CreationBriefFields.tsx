@@ -6,6 +6,7 @@
 
 import type { PackStatus } from "@/lib/shared/types";
 import type { CardStyle, CreationBrief, SubjectMode } from "@/lib/shared/creation";
+import { COMMON_LANGUAGES, languagePairLabel } from "@/lib/shared/language";
 import type { CreateTarget } from "./library-utils";
 
 /** One label and one plain sentence for each style the learner may request. */
@@ -56,6 +57,7 @@ export default function CreationBriefFields({
   const hasReadablePack = packs.some((pack) => !pack.error);
   const style = STYLE_OPTIONS.find((option) => option.value === brief.cardStyle) ?? STYLE_OPTIONS[0];
   const focusLabel = target === "cards" ? "Card focus" : "Deck focus";
+  const pairLocked = target !== "pack";
 
   return (
     <section className="brief-block">
@@ -141,6 +143,58 @@ export default function CreationBriefFields({
 
         <p className="brief-note brief-wide" style={{ margin: 0 }}>
           {style.note}
+        </p>
+
+        <label className="field-label">
+          Cards teach
+          <input
+            className="field"
+            list="creation-language-options"
+            value={brief.targetLanguage}
+            onChange={(event) => onChange({ targetLanguage: event.target.value })}
+            placeholder="e.g. Polish"
+            disabled={pairLocked}
+            required
+          />
+        </label>
+
+        <label className="field-label">
+          Questions in
+          <input
+            className="field"
+            list="creation-language-options"
+            value={brief.sourceLanguage}
+            onChange={(event) => onChange({ sourceLanguage: event.target.value })}
+            placeholder="e.g. English"
+            disabled={pairLocked}
+          />
+        </label>
+
+        <datalist id="creation-language-options">
+          {COMMON_LANGUAGES.map((language) => (
+            <option key={language.code} value={language.name} />
+          ))}
+        </datalist>
+
+        <label className="field-label brief-wide">
+          Study instruction (optional)
+          <textarea
+            className="field"
+            rows={2}
+            value={brief.studyInstruction}
+            onChange={(event) => onChange({ studyInstruction: event.target.value })}
+            placeholder="e.g. Read the English line, then type the full Polish line."
+            disabled={pairLocked}
+          />
+        </label>
+
+        <p className="brief-note brief-wide" style={{ margin: 0 }}>
+          {pairLocked
+            ? `This target uses ${languagePairLabel({
+                language: brief.targetLanguage,
+                sourceLanguage: brief.sourceLanguage,
+              })}. The pack owns its language pair and instruction.`
+            : "The pack stores this pair and instruction. Every deck and card inherits them."}
         </p>
 
         {target === "pack" ? (

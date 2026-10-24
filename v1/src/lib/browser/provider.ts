@@ -275,7 +275,12 @@ export async function generateFromPrepared(prepared: PreparedRequest): Promise<G
   const cardStyle = prepared.brief?.cardStyle;
 
   if (prepared.targetKind === "pack") {
-    const read = generatedPackBundle(result.text, { cardStyle });
+    const read = generatedPackBundle(result.text, {
+      cardStyle,
+      language: prepared.brief?.targetLanguage,
+      sourceLanguage: prepared.brief?.sourceLanguage,
+      studyInstruction: prepared.brief?.studyInstruction,
+    });
     if (!read.ok) throw new Error(`Nothing was saved, because ${read.message}.`);
     const imported = await importBundle(JSON.stringify(read.bundle), { kind: "pack" }, {
       namePolicy: "auto-suffix",
@@ -293,7 +298,11 @@ export async function generateFromPrepared(prepared: PreparedRequest): Promise<G
   if (prepared.targetKind === "deck") {
     if (!prepared.packName) throw new Error("That pack is no longer here.");
     const parent = await readPack(prepared.packName);
-    const read = generatedDeckBundle(result.text, { cardStyle, language: parent?.language });
+    const read = generatedDeckBundle(result.text, {
+      cardStyle,
+      language: parent?.language,
+      sourceLanguage: parent?.sourceLanguage,
+    });
     if (!read.ok) throw new Error(`Nothing was saved, because ${read.message}.`);
     const imported = await importBundle(JSON.stringify(read.bundle), {
       kind: "deck",
@@ -316,7 +325,11 @@ export async function generateFromPrepared(prepared: PreparedRequest): Promise<G
   const pack = await readPack(prepared.packName);
   const deck = pack?.decks.find((entry) => entry.id === prepared.deckId);
   if (!deck) throw new Error("The deck for these cards is gone.");
-  const read = generatedCardsBundle(result.text, deck, { cardStyle, language: pack?.language });
+  const read = generatedCardsBundle(result.text, deck, {
+    cardStyle,
+    language: pack?.language,
+    sourceLanguage: pack?.sourceLanguage,
+  });
   if (!read.ok) throw new Error(`Nothing was saved, because ${read.message}.`);
   const imported = await importBundle(JSON.stringify(read.bundle), {
     kind: "cards",

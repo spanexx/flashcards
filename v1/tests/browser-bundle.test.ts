@@ -330,6 +330,48 @@ describe("export and backup", () => {
     expect((await exportPackBundle("gone")).ok).toBe(false);
   });
 
+  it("carries the language pair, instruction and prompts through export and backup", async () => {
+    const prompts = {
+      generation: { system: "You build Spanish cards.", template: "Write {{count}} lines." },
+      tutor: { system: "You are a tutor.", hintTemplate: "Hint for {{cardText}}." },
+    };
+    const custom = JSON.stringify({
+      schema: PACK_BUNDLE_SCHEMA,
+      pack: {
+        name: "custom",
+        version: "1.0.0",
+        language: "es",
+        sourceLanguage: "en",
+        studyInstruction: "Say it aloud first.",
+        prompts,
+      },
+      decks: [{ id: "basics", name: "Basics" }],
+      cards: [],
+    });
+    await importBundle(custom, { kind: "pack" });
+
+    const exported = await exportPackBundle("custom");
+    expect(exported.ok).toBe(true);
+    if (exported.ok) {
+      expect(JSON.parse(exported.json).pack).toMatchObject({
+        language: "es",
+        sourceLanguage: "en",
+        studyInstruction: "Say it aloud first.",
+        prompts,
+      });
+    }
+
+    const backup = await exportBackup();
+    const restored = await restoreBackup(backup);
+    expect(restored.ok).toBe(true);
+    expect(await readPack("custom", store)).toMatchObject({
+      language: "es",
+      sourceLanguage: "en",
+      studyInstruction: "Say it aloud first.",
+      prompts,
+    });
+  });
+
   it("exports a backup without the provider key", async () => {
     await importBundle(bundle(), { kind: "pack" });
     await writeProviderKey("secret", store);

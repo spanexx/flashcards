@@ -179,6 +179,31 @@ describe("structured generation prompts", () => {
     }
   });
 
+  it("puts the target language, question language and study instruction in all three", () => {
+    const built = allGenerationPrompts(
+      learnerBrief({
+        targetLanguage: "es",
+        sourceLanguage: "en",
+        studyInstruction: "Keep each line under six words.",
+      }),
+    );
+    for (const prompt of [built.pack, built.deck, built.cards]) {
+      expect(prompt.messages[1].content).toContain("Spanish (es)");
+      expect(prompt.messages[1].content).toContain("English (en)");
+      expect(prompt.messages[1].content).toContain("Keep each line under six words.");
+    }
+  });
+
+  it("uses neutral words for an old pack and never assumes Polish", () => {
+    const cards = buildGenerationPrompt(makePack(), slots, { topic: "cases", count: 3 });
+    expect(cards.messages[1].content).toContain("the target language");
+    expect(cards.messages[1].content).toContain("the question language");
+    expect(cards.messages[1].content).not.toContain("Polish");
+    const packPrompt = buildPackGenerationPrompt(slots, 3, {});
+    expect(packPrompt.messages[1].content).not.toContain("Polish");
+    expect(packPrompt.messages[1].content).toContain("The red apple is sweet.");
+  });
+
   it("lets a mixed brief reuse an omitted style as cloze", () => {
     const built = allGenerationPrompts(learnerBrief({ cardStyle: "mixed" }));
     for (const prompt of [built.pack, built.deck, built.cards]) {

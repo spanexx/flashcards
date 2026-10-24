@@ -80,6 +80,8 @@ export async function readPackFolder(folder: string): Promise<PackRecord> {
       folder,
       description: data.description,
       language: data.language,
+      sourceLanguage: data.sourceLanguage,
+      studyInstruction: data.studyInstruction,
       topics: data.topics,
       topicLabels: data.topicLabels,
       cards: [],

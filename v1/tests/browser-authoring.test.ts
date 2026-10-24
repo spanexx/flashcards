@@ -58,10 +58,55 @@ describe("buildAuthoringPrompt", () => {
     const prompt = buildAuthoringPrompt({ kind: "pack" });
     expect(prompt).toContain(AUTHORING_SKILL_VERSION);
     expect(prompt).toContain("Choose a short lowercase pack name");
-    expect(prompt).toContain("slow-polish");
+    expect(prompt).toContain("study-pack");
     expect(prompt).toContain("flashcards.pack/v1");
     const result = parseBundle(example(prompt));
     expect(result.ok, JSON.stringify(result)).toBe(true);
+  });
+
+  it("does not assume Polish when neither a pack nor a brief declares one", () => {
+    const prompt = buildAuthoringPrompt({ kind: "pack" });
+    expect(prompt).toContain("study-pack");
+    expect(prompt).not.toContain("Polish");
+    expect(parseBundle(example(prompt)).ok).toBe(true);
+  });
+
+  it("uses the learner's pair and instruction for a new pack", () => {
+    const prompt = buildAuthoringPrompt(
+      { kind: "pack" },
+      null,
+      {
+        brief: defaultCreationBrief({
+          subject: "ordering coffee",
+          targetLanguage: "es",
+          sourceLanguage: "en",
+          studyInstruction: "Say each line aloud first.",
+        }),
+      },
+    );
+    expect(prompt).toContain("Spanish");
+    expect(prompt).toContain("English");
+    expect(prompt).toContain("Say each line aloud first.");
+    const parsed = parseBundle(example(prompt));
+    expect(parsed.ok, JSON.stringify(parsed)).toBe(true);
+    if (parsed.ok) {
+      expect(parsed.bundle.pack).toMatchObject({ language: "es", sourceLanguage: "en" });
+      expect(parsed.bundle.pack.studyInstruction).toBe("Say each line aloud first.");
+    }
+  });
+
+  it("reads the pair and instruction from an existing pack", () => {
+    const polishPack: BrowserPack = {
+      ...pack,
+      language: "pl",
+      sourceLanguage: "en",
+      studyInstruction: "Read the whole line before typing.",
+    };
+    const prompt = buildAuthoringPrompt({ kind: "cards", packName: "starter", deckId: "cases" }, polishPack);
+    expect(prompt).toContain("Polish");
+    expect(prompt).toContain("English");
+    expect(prompt).toContain("Read the whole line before typing.");
+    expect(parseCardsBundle(example(prompt)).ok).toBe(true);
   });
 
   it("names the existing pack and asks for new decks only", () => {

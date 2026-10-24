@@ -5,10 +5,47 @@
 // 2026-10-23 opencode: created for the study experience pack [pack: study-experience]
 
 import { isWrong } from "@/lib/core/outcome";
+import { packLanguagePair } from "@/lib/shared/language";
 import type { AnswerMode, Card, Outcome } from "@/lib/shared/types";
 
-/** The one instruction a listening card shows before the answer. */
+/** A neutral listening line for an old pack that knows no language pair. */
 export const LISTEN_INSTRUCTION = "Listen, then type what you hear.";
+
+/** A pack's pair and its optional instruction, as the card needs them. */
+export interface StudyPackInstruction {
+  language?: string;
+  sourceLanguage?: string;
+  studyInstruction?: string;
+}
+
+/** The pack's own words when it has them, otherwise a plain mode-aware line. */
+export function studyCardInstruction(
+  card: Pick<Card, "answerDef">,
+  pack?: StudyPackInstruction | null,
+): string {
+  const own = pack?.studyInstruction?.trim();
+  if (own) return own;
+  const pair = packLanguagePair(pack);
+  const mode = card.answerDef.mode;
+  if (mode === "cloze") {
+    return pair.known && !pair.same
+      ? `Fill the blank in the ${pair.targetName} line.`
+      : "Fill the blank in the line.";
+  }
+  if (mode === "type") {
+    return pair.known && !pair.same
+      ? `Read the ${pair.sourceName} line, then type the full ${pair.targetName} line.`
+      : "Type the full line.";
+  }
+  if (mode === "hear_type") {
+    return pair.known && !pair.same
+      ? `Listen, then type the full ${pair.targetName} line.`
+      : "Listen, then type the full line.";
+  }
+  return pair.known && !pair.same
+    ? `Choose the correct ${pair.sourceName} meaning.`
+    : "Choose the correct meaning.";
+}
 
 /** A neutral label for the kind of card, never the card's summary. */
 export function studyModeLabel(mode: AnswerMode): string {

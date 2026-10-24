@@ -329,6 +329,26 @@ describe("structured generation bundles", () => {
     }
   });
 
+  it("keeps the brief's pair and instruction when the provider names another", () => {
+    const text = JSON.stringify({
+      pack: { name: "slow-polish", version: "1.0.0", language: "pl", sourceLanguage: "pl" },
+      decks: [{ id: "basics", name: "Basics" }],
+      lines: [{ deckId: "basics", fullLine: "The cat is black.", target: "black" }],
+    });
+    const read = generatedPackBundle(text, {
+      language: "en",
+      sourceLanguage: "en",
+      studyInstruction: "Say the line before typing.",
+    });
+    expect(read.ok).toBe(true);
+    if (!read.ok) return;
+    expect(read.bundle.pack).toMatchObject({
+      language: "en",
+      sourceLanguage: "en",
+      studyInstruction: "Say the line before typing.",
+    });
+  });
+
   it("builds the requested type style inside a generated pack bundle", () => {
     const text = JSON.stringify({
       pack: { name: "slow-polish", version: "1.0.0", language: "pl" },

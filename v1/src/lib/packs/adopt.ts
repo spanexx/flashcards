@@ -86,6 +86,8 @@ export function adoptPacks(
       folder: pack.folder,
       description: pack.description,
       language: pack.language,
+      sourceLanguage: pack.sourceLanguage,
+      studyInstruction: pack.studyInstruction,
       topics: pack.topics,
       topicLabels: pack.topicLabels,
       cardCount,

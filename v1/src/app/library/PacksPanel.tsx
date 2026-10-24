@@ -8,7 +8,9 @@
 
 import { useState } from "react";
 import { apiGet } from "@/lib/client/api";
+import { languagePairLabel } from "@/lib/shared/language";
 import type { Card, PackStatus } from "@/lib/shared/types";
+import PackEditor from "./PackEditor";
 import { packDecks, packMatches, searchable, type DeleteTarget } from "./library-utils";
 
 /** What the Packs panel needs from the shell and its current packs. */
@@ -42,6 +44,7 @@ export default function PacksPanel({
     initialOpen ? new Set([initialOpen]) : new Set(),
   );
   const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState<string | null>(null);
 
   // A create result mounts this panel with that pack already open; the shell's
   // token is the signal, so the panel never has to correct itself after paint.
@@ -151,12 +154,21 @@ export default function PacksPanel({
                   <div className="pack-main">
                     <strong>{pack.name}</strong>
                     <div className="muted">
-                      v{pack.version} · {count === 1 ? "1 deck" : `${count} decks`} · {pack.cardCount} cards
+                      v{pack.version} · {count === 1 ? "1 deck" : `${count} decks`} · {pack.cardCount} cards ·{" "}
+                      {languagePairLabel(pack)}
                     </div>
                     {pack.description ? <div className="muted">{pack.description}</div> : null}
                     {pack.error ? <div className="muted">Could not load: {pack.error}</div> : null}
                   </div>
                   <div className="row">
+                    <button
+                      className="btn small"
+                      type="button"
+                      onClick={() => setEditing((current) => (current === pack.name ? null : pack.name))}
+                      disabled={Boolean(pack.error)}
+                    >
+                      {editing === pack.name ? "Close editor" : "Edit"}
+                    </button>
                     <button className="btn small" type="button" onClick={() => void exportPack(pack.name)} disabled={busy || Boolean(pack.error)}>
                       Export
                     </button>
@@ -165,6 +177,19 @@ export default function PacksPanel({
                     </button>
                   </div>
                 </div>
+
+                {editing === pack.name ? (
+                  <PackEditor
+                    pack={pack}
+                    onSaved={async () => {
+                      await onRefresh();
+                      setEditing(null);
+                    }}
+                    onClose={() => setEditing(null)}
+                    onError={onError}
+                    onNotice={onNotice}
+                  />
+                ) : null}
 
                 {open ? (
                   <div className="deck-list">

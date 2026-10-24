@@ -7,6 +7,7 @@
 
 import type { Card, PackStatus } from "@/lib/shared/types";
 import type { CreationBrief } from "@/lib/shared/creation";
+import { normalizeLanguage } from "@/lib/shared/language";
 import { ApiError } from "@/lib/client/api";
 
 /** The three jobs the Library offers. Create is the only one that writes. */
@@ -191,17 +192,39 @@ export function briefSubjectDefault(
 
 /**
  * Keep only the optional name that belongs to the target. A stale field from a
- * previous target must never leak into the prompt.
+ * previous target must never leak into the prompt. A deck or cards target asks
+ * for the pair its pack already uses; only a new pack chooses a new pair.
  */
-export function briefForTarget(brief: CreationBrief, target: CreateTarget): CreationBrief {
+export function briefForTarget(
+  brief: CreationBrief,
+  target: CreateTarget,
+  pack?: PackStatus | null,
+): CreationBrief {
+  if (target !== "pack" && pack) {
+    return {
+      ...brief,
+      packName: "",
+      deckName: target === "deck" ? brief.deckName : "",
+      targetLanguage: normalizeLanguage(pack.language),
+      sourceLanguage: normalizeLanguage(pack.sourceLanguage),
+      studyInstruction: pack.studyInstruction ?? "",
+    };
+  }
   return {
     ...brief,
     packName: target === "pack" ? brief.packName : "",
     deckName: target === "deck" ? brief.deckName : "",
+    // A new pack starts with English questions; only an old pack may be unknown.
+    sourceLanguage: normalizeLanguage(brief.sourceLanguage) || "en",
   };
 }
 
 /** A learner has not given the prompt a goal until the subject has words. */
 export function briefNeedsSubject(brief: CreationBrief): boolean {
   return brief.subjectMode === "learner" && brief.subject.trim().length === 0;
+}
+
+/** A new pack cannot be generated or chatted into existence without a target. */
+export function briefNeedsLanguage(brief: CreationBrief): boolean {
+  return normalizeLanguage(brief.targetLanguage).length === 0;
 }

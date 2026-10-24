@@ -31,6 +31,8 @@ function learnerBrief(overrides: Record<string, unknown> = {}) {
     cardStyle: "mixed",
     packName: "",
     deckName: "",
+    targetLanguage: "pl",
+    sourceLanguage: "en",
     ...overrides,
   };
 }
@@ -233,6 +235,8 @@ describe("creation control simulation", () => {
     // 5. A freshly written empty pack is usable by both Generate and Chat.
     const made = await localSend<{ pack: { name: string } }>("/api/packs", "POST", {
       name: "Empty Sim",
+      language: "pl",
+      sourceLanguage: "en",
       version: "1.0.0",
       deckName: "First",
     });

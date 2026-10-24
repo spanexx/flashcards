@@ -83,6 +83,8 @@ export const packManifestSchema = z.object({
   description: z.string().optional(),
   coreRange: z.string().default("*"),
   language: z.string().optional(),
+  sourceLanguage: z.string().optional(),
+  studyInstruction: z.string().optional(),
   topics: z.array(z.string().min(1)).min(1, "a pack needs at least one topic"),
   topicLabels: z.record(z.string(), z.string()).default({}),
 });

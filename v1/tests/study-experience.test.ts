@@ -9,6 +9,7 @@ import {
   LISTEN_INSTRUCTION,
   listenPrompt,
   shouldAutoHint,
+  studyCardInstruction,
   studyModeLabel,
 } from "@/lib/client/study-view";
 import type { Card } from "@/lib/shared/types";
@@ -64,6 +65,55 @@ describe("study view decisions", () => {
         fullLine: undefined,
       }),
     ).toEqual({ text: "Gdzie jest dworzec?" });
+  });
+
+  it("speaks and types in the pack's target language", () => {
+    const pack = { language: "pl", sourceLanguage: "en" };
+    expect(studyCardInstruction({ answerDef: { mode: "cloze" } }, pack)).toBe(
+      "Fill the blank in the Polish line.",
+    );
+    expect(studyCardInstruction({ answerDef: { mode: "type" } }, pack)).toBe(
+      "Read the English line, then type the full Polish line.",
+    );
+    expect(studyCardInstruction(listeningCard, pack)).toBe("Listen, then type the full Polish line.");
+    expect(studyCardInstruction({ answerDef: { mode: "picks" } }, pack)).toBe(
+      "Choose the correct English meaning.",
+    );
+  });
+
+  it("keeps neutral words for an old pack and lets its instruction win", () => {
+    expect(studyCardInstruction({ answerDef: { mode: "type" } })).toBe("Type the full line.");
+    expect(studyCardInstruction(listeningCard)).toBe("Listen, then type the full line.");
+    expect(studyCardInstruction({ answerDef: { mode: "picks" } })).toBe("Choose the correct meaning.");
+    expect(
+      studyCardInstruction({ answerDef: { mode: "type" } }, {
+        language: "pl",
+        sourceLanguage: "en",
+        studyInstruction: "  Say it before you type.  ",
+      }),
+    ).toBe("Say it before you type.");
+  });
+
+  it("uses neutral words when the source is missing or both languages are the same", () => {
+    const same = { language: "en", sourceLanguage: "en" };
+    expect(studyCardInstruction({ answerDef: { mode: "cloze" } }, same)).toBe(
+      "Fill the blank in the line.",
+    );
+    expect(studyCardInstruction({ answerDef: { mode: "type" } }, same)).toBe(
+      "Type the full line.",
+    );
+    expect(studyCardInstruction(listeningCard, same)).toBe("Listen, then type the full line.");
+    expect(studyCardInstruction({ answerDef: { mode: "picks" } }, same)).toBe(
+      "Choose the correct meaning.",
+    );
+
+    const targetOnly = { language: "pl" };
+    expect(studyCardInstruction(listeningCard, targetOnly)).toBe(
+      "Listen, then type the full line.",
+    );
+    expect(studyCardInstruction({ answerDef: { mode: "picks" } }, targetOnly)).toBe(
+      "Choose the correct meaning.",
+    );
   });
 
   it("auto-hints once, only for a wrong answer, and only when the tutor is on", () => {

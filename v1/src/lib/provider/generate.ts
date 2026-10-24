@@ -43,6 +43,8 @@ export const generatedPackSchema = z
       version: z.string().default("1.0.0"),
       description: z.string().optional(),
       language: z.string().optional(),
+      sourceLanguage: z.string().optional(),
+      studyInstruction: z.string().optional(),
     }),
     decks: z.array(z.object({ id: z.string().min(1), name: z.string().min(1) })).min(1),
     lines: z.array(generatedLineSchema.extend({ deckId: z.string().min(1) })).min(1),
@@ -61,7 +63,11 @@ export type GeneratedLine = z.infer<typeof generatedLineSchema>;
 /** The context a line needs beyond its own words: requested style and pack language. */
 export interface GeneratedCardOptions {
   cardStyle?: CardStyle;
+  /** The language being learned. */
   language?: string;
+  /** The language of questions and translations. */
+  sourceLanguage?: string;
+  studyInstruction?: string;
 }
 
 /** Read the line style the app must build, refusing anything the learner did not ask for. */
@@ -268,7 +274,13 @@ export function generatedPackBundle(
   const parsed = generatedPackSchema.safeParse(json.value);
   if (!parsed.success) return providerRefusal(parsed.error);
   const decks = new Map(parsed.data.decks.map((deck) => [deck.id, deck]));
-  const language = parsed.data.pack.language?.trim() || options.language;
+  // The brief owns the pair and instruction. A provider may echo them, but it
+  // cannot replace what the learner chose.
+  const language = options.language?.trim() || parsed.data.pack.language?.trim();
+  const sourceLanguage =
+    options.sourceLanguage?.trim() || parsed.data.pack.sourceLanguage?.trim();
+  const studyInstruction =
+    options.studyInstruction?.trim() || parsed.data.pack.studyInstruction?.trim();
   const cards = [];
   for (const line of parsed.data.lines) {
     const deck = decks.get(line.deckId);
@@ -285,7 +297,14 @@ export function generatedPackBundle(
     ok: true,
     bundle: {
       schema: "flashcards.pack/v1",
-      pack: parsed.data.pack,
+      pack: {
+        ...parsed.data.pack,
+        // The brief owns the pair and instruction. A provider may echo them,
+        // but it cannot silently erase what the learner chose.
+        ...(language ? { language } : {}),
+        ...(sourceLanguage ? { sourceLanguage } : {}),
+        ...(studyInstruction ? { studyInstruction } : {}),
+      },
       decks: parsed.data.decks,
       cards,
     },

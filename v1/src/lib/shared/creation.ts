@@ -3,6 +3,10 @@
 // refusals in one pure module stops three callers from inventing three rules.
 // PACK: creation-control
 // 2026-10-22 opencode: created for the creation-control pack [pack: creation-control]
+// 2026-10-23 opencode: the brief now names the pack's target and question
+// languages and its study instruction. [pack: language-prompt-control]
+
+import { languageName, normalizeLanguage } from "@/lib/shared/language";
 
 /** The four choices the Create screen offers for card style. */
 export const CARD_STYLES = ["mixed", "cloze", "type", "hear_type"] as const;
@@ -27,6 +31,9 @@ export interface CreationBrief {
   cardStyle: CardStyle;
   packName: string;
   deckName: string;
+  targetLanguage: string;
+  sourceLanguage: string;
+  studyInstruction: string;
 }
 
 /** A blank brief is a learner brief with no subject, ready for the screen to fill. */
@@ -37,6 +44,9 @@ export const DEFAULT_CREATION_BRIEF: CreationBrief = {
   cardStyle: "mixed",
   packName: "",
   deckName: "",
+  targetLanguage: "",
+  sourceLanguage: "en",
+  studyInstruction: "",
 };
 
 /** True when a value is one of the four styles the screen may send. */
@@ -58,6 +68,9 @@ export function defaultCreationBrief(overrides: Partial<CreationBrief> = {}): Cr
     cardStyle: overrides.cardStyle ?? DEFAULT_CREATION_BRIEF.cardStyle,
     packName: overrides.packName ?? DEFAULT_CREATION_BRIEF.packName,
     deckName: overrides.deckName ?? DEFAULT_CREATION_BRIEF.deckName,
+    targetLanguage: overrides.targetLanguage ?? DEFAULT_CREATION_BRIEF.targetLanguage,
+    sourceLanguage: overrides.sourceLanguage ?? DEFAULT_CREATION_BRIEF.sourceLanguage,
+    studyInstruction: overrides.studyInstruction ?? DEFAULT_CREATION_BRIEF.studyInstruction,
   };
 }
 
@@ -97,7 +110,18 @@ export function validateCreationBrief(value: unknown): BriefValidation {
   const deckFocus = optionalText(record.deckFocus);
   const packName = optionalText(record.packName);
   const deckName = optionalText(record.deckName);
-  if (subject === null || deckFocus === null || packName === null || deckName === null) {
+  const targetLanguage = optionalText(record.targetLanguage);
+  const sourceLanguage = optionalText(record.sourceLanguage);
+  const studyInstruction = optionalText(record.studyInstruction);
+  if (
+    subject === null ||
+    deckFocus === null ||
+    packName === null ||
+    deckName === null ||
+    targetLanguage === null ||
+    sourceLanguage === null ||
+    studyInstruction === null
+  ) {
     return { ok: false, message: "Every text field in a creation brief must be a string." };
   }
 
@@ -115,6 +139,13 @@ export function validateCreationBrief(value: unknown): BriefValidation {
     };
   }
 
+  // A brief is only sent by the new screens, so it always names the target.
+  // An empty question language stays empty; the screen gives a new pack English.
+  const normalizedTarget = normalizeLanguage(targetLanguage);
+  if (normalizedTarget.length === 0) {
+    return { ok: false, message: "Choose the language the cards should teach." };
+  }
+
   return {
     ok: true,
     brief: {
@@ -125,8 +156,45 @@ export function validateCreationBrief(value: unknown): BriefValidation {
       cardStyle,
       packName,
       deckName,
+      targetLanguage: normalizedTarget,
+      // An empty source stays unknown, so an old pack keeps neutral words.
+      sourceLanguage: normalizeLanguage(sourceLanguage),
+      studyInstruction,
     },
   };
+}
+
+/**
+ * Put the learner's chosen pair and instruction onto a Chat pack before it is
+ * imported. A provider may echo them or leave them out, but it may not replace
+ * what the brief says. Invalid text is left alone so the normal import error
+ * still explains the real problem.
+ */
+export function withBriefOnPackText(
+  text: string,
+  brief: CreationBrief | null | undefined,
+): string {
+  if (!brief) return text;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    return text;
+  }
+  if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) return text;
+  const record = parsed as Record<string, unknown>;
+  const pack = record.pack;
+  if (pack === null || typeof pack !== "object" || Array.isArray(pack)) return text;
+
+  const nextPack = { ...(pack as Record<string, unknown>) };
+  const target = normalizeLanguage(brief.targetLanguage);
+  const source = normalizeLanguage(brief.sourceLanguage);
+  const instruction = brief.studyInstruction.trim();
+  if (target.length > 0) nextPack.language = target;
+  if (source.length > 0) nextPack.sourceLanguage = source;
+  if (instruction.length > 0) nextPack.studyInstruction = instruction;
+
+  return JSON.stringify({ ...record, pack: nextPack });
 }
 
 /** The facts about one pack that may enter a prompt. No cards, settings or key. */
@@ -134,6 +202,7 @@ export interface LibraryPackFact {
   name: string;
   description?: string;
   language?: string;
+  sourceLanguage?: string;
   decks: ReadonlyArray<{ name: string }>;
 }
 
@@ -142,6 +211,7 @@ export interface LibraryPackEntry {
   name: string;
   description: string;
   language: string;
+  sourceLanguage: string;
   decks: string[];
 }
 
@@ -159,7 +229,8 @@ export function libraryInventoryFromPacks(
     .map((pack) => ({
       name: pack.name.trim(),
       description: (pack.description ?? "").trim(),
-      language: (pack.language ?? "").trim(),
+      language: normalizeLanguage(pack.language),
+      sourceLanguage: normalizeLanguage(pack.sourceLanguage),
       decks: pack.decks
         .map((deck) => deck.name.trim())
         .filter((name) => name.length > 0),
@@ -176,7 +247,14 @@ export function describeLibraryInventory(inventory: LibraryInventory): string {
   const header =
     "The learner's existing library (pack names, descriptions, languages and deck labels only):";
   const rows = inventory.map((pack) => {
-    const language = pack.language.length > 0 ? ` (${pack.language})` : "";
+    const target = languageName(pack.language);
+    const source = languageName(pack.sourceLanguage);
+    const language =
+      target.length === 0
+        ? ""
+        : source.length > 0 && source !== target
+          ? ` (${target}, questions in ${source})`
+          : ` (${target})`;
     const description = pack.description.length > 0 ? pack.description : "(no description)";
     const decks = pack.decks.length > 0 ? pack.decks.join(", ") : "none yet";
     return `- ${pack.name}${language}: ${description}. Decks: ${decks}.`;
@@ -217,6 +295,24 @@ export function describeCreationBrief(
   // A provider-chosen subject may still have a deck focus the learner wrote.
   if (brief.subjectMode === "provider" && brief.deckFocus.length > 0) {
     lines.push(`Deck focus: ${brief.deckFocus}`);
+  }
+
+  // The pair is a hard fact for every target, not a subject choice. The code is
+  // included so a provider cannot turn "Polish" into a different language.
+  if (brief.targetLanguage.length > 0) {
+    const name = languageName(brief.targetLanguage);
+    lines.push(`The learner is learning ${name} (${brief.targetLanguage}).`);
+    lines.push(`Write the full lines in ${name}.`);
+  }
+  if (brief.sourceLanguage.length > 0) {
+    const name = languageName(brief.sourceLanguage);
+    lines.push(`Questions, translations and explanations are in ${name} (${brief.sourceLanguage}).`);
+    if (brief.targetLanguage.length > 0 && brief.sourceLanguage !== brief.targetLanguage) {
+      lines.push(`Write translations in ${name}.`);
+    }
+  }
+  if (brief.studyInstruction.length > 0) {
+    lines.push(`Store this study instruction on the pack: "${brief.studyInstruction}"`);
   }
 
   // A supplied name is a request; the app's collision suffix still has the last word.

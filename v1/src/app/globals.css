@@ -1161,12 +1161,25 @@ textarea.field {
   border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
 }
 
+.study-instruction {
+  margin: 2px 0 12px;
+  font-size: 1.02rem;
+}
+
 .study-listen {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 12px 16px;
   margin: 18px 0;
+}
+
+.study-listen-text {
+  flex-basis: 100%;
+  padding: 8px 12px;
+  border-left: 3px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  font-size: 1.04rem;
 }
 
 .study-listen p {
