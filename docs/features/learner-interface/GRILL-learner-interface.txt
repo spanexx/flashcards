@@ -45,6 +45,9 @@ A3. The desktop shell uses a 240px sidebar and a content area up to 1420px, so
     progress, tutor state and an end control, so the screen uses the desktop
     width without stretching the reading line. Phone stays one column with no
     horizontal overflow.
+    [Superseded 2026-10-25 by docs/features/study-tab-redesign/: the learner
+    approved one calm column, so both Study rails are gone, the plan uses up to
+    860px and the card 720px.]
 
 Q4. What does full-screen mode do?
 A4. The running study card has one "Full screen" control. Clicking it puts the

@@ -43,6 +43,7 @@ the IMPL reconcile section, is in progress._
   - Owner: learner-interface
   - To fix: decision — the learner kept the plan rail and Scenario 3 now describes both rails.
   - Verified by: learner-interface Scenario 3 updated 2026-10-25; full suite and build pass.
+  - Superseded 2026-10-25: the `study-tab-redesign` pack removed both Study rails and the learner approved the one-column design. The line citations above describe the code at resolution time; the current screens live in `v1/src/app/study/StudyPlan.tsx` and `v1/src/app/study/StudySession.tsx`.
   - Related: D-14.
 
 - **D-14** (Medium, 2026-10-25, reporter: interface polish visual review) — The phone top bar was pinned and blurred, which the responsive-shell promise never described.

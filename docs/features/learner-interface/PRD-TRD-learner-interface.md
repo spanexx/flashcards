@@ -71,16 +71,20 @@ cards, packs, languages and decks.
 use the wide grid, and Write pack fields sit in two columns where they fit.
 
 **When** the learner opens Study
-**Then** the card column is about 820px.
+**Then** the screen is one calm column: the plan uses up to 860px, the running
+card about 720px, and no side rail competes with either. The approved design is
+`docs/features/study-tab-redesign/PRD-TRD-study-tab-redesign.md`; it supersedes
+the 820px card and both Study rails described in this pack.
 
 **Given** the study plan, before a session starts
-**Then** a plan rail shows the card count, the tutor state, the score setting
-(or "None kept"), a "Start session" control and a "What to expect" summary.
-Answered count, cards left, hints used and the end control do not exist yet.
+**Then** the count, the tutor state, "No score kept", the "Study from" and deck
+pickers, the Offer field and a "Start session" control sit in that one column,
+with "Why these cards", "What to expect" and the tutor details folded below.
+Answered count, cards left, hints used and an end control do not exist yet.
 
 **Given** a running session
-**Then** the same rail shows the scope, the offer, answered count, cards left,
-hints used, tutor state and an end control.
+**Then** the head shows "Card n of N", position pips, "Full screen" and "End";
+there is no session rail.
 
 ### Scenario 4: Controls look like one family
 
@@ -106,7 +110,7 @@ classes as every other form, not inline text.
 **Given** a running card
 **When** the learner presses "Full screen"
 **Then** the card enters browser fullscreen and the sidebar, page heading and
-session rail leave the screen; the stage grows to 1100px and the same control
+progress head leave the screen; the stage grows to 1100px and the same control
 reads "Exit full screen".
 
 **When** the learner presses Esc or "Exit full screen"
@@ -162,8 +166,8 @@ It must show:
 - `simulate-language-prompt-control.test.ts` no longer expects "Show the text"
   or "reading check"; it expects the post-answer line and the full-screen
   controls.
-- The built Study page contains "Full screen", "Exit full screen", the session
-  rail labels and no "Show the text".
+- The built Study page contains "Full screen", "Exit full screen", the plan
+  facts and the position pips, and no "Show the text".
 - A browser run at 1440x900 shows: no transcript before answering; the answer
   after; full screen enters, keeps state on next card, and exits; Library rail
   counts are real; Create pickers list more than 70 languages and accept an
@@ -240,8 +244,12 @@ No new route. Existing contracts stay:
 
 ### Architecture Notes
 
-- `StudyClient.tsx` owns the listening simplification, the session rail and the
-  full-screen stage. A `stageRef` wraps the card and its controls.
+- `StudyClient.tsx` owns the listening simplification, the full-screen stage and
+  the card loop. A `stageRef` wraps the card and its controls.
+- The plan, the session head and the card are separate modules under
+  `app/study/` (see the study-tab-redesign pack). `StudySession` accepts an
+  optional `aboveCard` element, which is the teaching-layers seam; it renders
+  nothing when absent.
 - `enterFullScreen` sets local state first, then calls
   `stageRef.current.requestFullscreen()` inside the click gesture. A refusal is
   caught and leaves the CSS overlay on. `exitFullScreen` clears local state and
@@ -251,8 +259,8 @@ No new route. Existing contracts stay:
   on unmount. A mount cleanup releases the browser fullscreen on route change.
 - `finish` exits full screen before it changes the phase. There is no separate
   phase effect, so React does not set state synchronously inside an effect.
-- The session rail reads the current queue, index, result, hint list and tutor
-  approval. It does not write anything.
+- The session head reads the current queue and index. It does not write
+  anything.
 - `LibraryClient.tsx` keeps the tabs and wraps Packs/Cards in a
   `.library-layout` with a real `.rail`. Create keeps its own `create-grid`.
 - `CreatePanel.tsx`, `CreationBriefFields.tsx` and `PackEditor.tsx` replace
@@ -293,7 +301,8 @@ No new route. Existing contracts stay:
 - **Long select:** 73 native options are long on phone but remain usable; the
   browser handles scrolling.
 - **Wider layout:** long card text can become hard to read. The study column
-  stays around 820px, while the shell uses the extra width for rails and forms.
+  stays around 860px for the plan and 720px for the card, while the shell uses
+  the extra width for Library and Create.
 - **Old values:** a pack may store a name, a code or an unknown word. The picker
   must preserve what it cannot place, not silently rewrite it.
 

@@ -120,7 +120,11 @@ describe("study experience rehearsal", () => {
       expect(text).toContain("Study from");
       expect(text).toContain("Tutor hint");
       expect(text).toContain("Pack hint");
-      expect(text).toContain("study-plan-layout");
+      expect(text).toContain("study-plan");
+      expect(text).toContain("study-display");
+      expect(text).toContain("study-pips");
+      expect(text).toContain("study-start");
+      expect(text).toContain("No score kept");
       expect(text).toContain("Start session");
       // Why: labels are smaller than values; a control that inherited the
       // label size rendered at 13.6px and looked broken on a phone.
