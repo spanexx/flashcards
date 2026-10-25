@@ -1,12 +1,13 @@
 # Flashcards - Dev Lane
 
 ## Start Here
-- **Commands** - `commands.md` - detached work, bounded waits, smallest first.
+- **Commands** - `commands.md` - detached work, bounded waits, smallest first, logs outside the repo.
 - **Build and test** - `build.md` - WSL build, `out/`, typecheck, lint, tests.
 - **Serve** - `serve.md` - static server, Windows reachability gate, cleanup.
 - **Environment** - `environment.md` - WSL/Windows paths and networking.
 - **Data and provider** - `data.md` - IndexedDB, backup, browser-held key.
 - **History** - `history.md` - archived v1 Express lane, deviations, known gaps.
+- **Cleanup** - `../cleanup.md` - stop processes, close ports, remove logs and caches.
 
 ## Current Lane
 - `v1` has code. This is the live browser-owned build, not the pre-code placeholder.

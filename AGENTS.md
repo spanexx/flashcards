@@ -14,11 +14,14 @@
 - **NEVER USE `nohup`/`setsid` FOR A HOST-FACING WSL SERVER** - a one-shot WSL shell can leave the process unreachable from Windows even while `ss` shows it listening.
 - **EVERY WAIT MUST BE BOUNDED** - give long commands an explicit timeout. A command that produces no new output is stuck: stop it and inspect the process or port. Do not wait on it again.
 - **RUN THE SMALLEST CHECK FIRST** - one targeted check, then the full suite once at the end. When a check passes, stop and report it. Repeating the same check is not verification.
-- **RUN LONG WORK DETACHED** - start servers, browser lanes, builds and test suites in the background with a log; poll the log with a bound.
-- **CLEAN UP BACKGROUND PROCESSES** - stop test servers and fake providers when the check is done.
+- **RUN LONG WORK DETACHED** - start servers, browser lanes, builds and test suites in the background with a log outside the repo; poll the log with a bound.
+- **CLEAN UP AFTER YOURSELF** - stop every process you started, close its port, and delete your logs, caches and scratch files. See `docs/ethics/cleanup.md`.
 
 ## BEFORE YOU COMMIT
 - Read `docs/ethics/commit.md`. It is the gate.
+
+## BEFORE YOU FINISH
+- Read `docs/ethics/cleanup.md`. Stop every process you started, close its port, delete your logs, caches and scratch files, and leave `git status` showing only intended work.
 
 ## BEFORE YOU WRITE ANY PIECE OF CODE
 - **I Only Accept modular Ethics** - `docs/ethics/modular.md`

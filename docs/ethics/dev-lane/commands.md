@@ -7,7 +7,8 @@
 
 ## Detached Work
 - Start servers, browser lanes, builds, and full test suites in the background
-  with a log.
+  with a log under the system temp folder, never inside the repo. Delete the log
+  after the check.
 - For a host-facing WSL server, use `serve.md`. Do not use `nohup`/`setsid` in a
   one-shot WSL call.
 - Keep the host-side PID from `Start-Process wsl.exe ... -PassThru`.
@@ -30,3 +31,4 @@
 - Stop a WSL server through its Windows-side PID.
 - Confirm the port is closed. A process that survived the terminal is not proof
   that it is reachable.
+- Delete the logs, coverage and generated output you created. See `../cleanup.md`.

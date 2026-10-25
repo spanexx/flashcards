@@ -50,4 +50,5 @@ curl.exe -sS -o NUL -w "guest=%{http_code}`n" --max-time 5 "http://$ip`:4173/"
 ## Stop
 - Stop through the Windows-side PID.
 - Confirm the port is closed.
+- Delete the server log after the stop; it belongs under system temp, not the repo.
 - A process that survived the terminal is not evidence that it is reachable.
