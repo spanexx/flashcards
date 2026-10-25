@@ -1,6 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Flashcards">
-  <rect width="64" height="64" rx="14" fill="#1d3557"/>
-  <rect x="14" y="18" width="30" height="34" rx="5" fill="#a8dadc" transform="rotate(-8 29 35)"/>
-  <rect x="21" y="14" width="30" height="34" rx="5" fill="#f1faee"/>
-  <path d="M28 25h16M28 32h16M28 39h10" stroke="#1d3557" stroke-width="3" stroke-linecap="round"/>
+  <rect width="64" height="64" rx="14" fill="#2f5d50" />
+  <g transform="translate(14 14) scale(1.5)" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z" />
+    <path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65" />
+    <path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65" />
+  </g>
 </svg>
