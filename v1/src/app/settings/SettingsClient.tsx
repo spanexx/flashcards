@@ -13,9 +13,13 @@
 // session-only Tested state stays. [pack: browser-app]
 // 2026-10-25 opencode: profile selects use the shared field family so they stack
 // cleanly on a phone. [pack: learner-interface]
+// 2026-10-25 opencode: Appearance card holds the theme and sound choices.
+// [pack: learner-delight]
 
 import { useCallback, useEffect, useState } from "react";
 import { apiGet, apiSend } from "@/lib/client/api";
+import SoundSwitch from "./SoundSwitch";
+import ThemeSwitch from "./ThemeSwitch";
 import {
   autosaveNow,
   autosaveState,
@@ -323,42 +327,65 @@ export default function SettingsClient() {
       </div>
 
       {tab === "profile" ? (
-        <div className="card">
-          <div className="form-grid">
-            <label className="field-label">
-              Level
-              <span className="select-wrap">
-                <select
-                  className="field"
-                  value={settings.level}
-                  onChange={(event) => void saveCategories({ level: event.target.value })}
-                >
-                  <option value="beginner">Beginner</option>
-                  <option value="intermediate">Intermediate</option>
-                  <option value="advanced">Advanced</option>
-                </select>
-              </span>
-            </label>
-            <label className="field-label">
-              Style
-              <span className="select-wrap">
-                <select
-                  className="field"
-                  value={settings.learningStyle}
-                  onChange={(event) => void saveCategories({ learningStyle: event.target.value })}
-                >
-                  <option value="examples-first">Examples first</option>
-                  <option value="rules-first">Rules first</option>
-                  <option value="conversation">Conversation</option>
-                  <option value="gentle">Gentle</option>
-                </select>
-              </span>
-            </label>
+        <>
+          <div className="card stack">
+            <h2 style={{ margin: 0 }}>Appearance</h2>
+            <div className="row" style={{ justifyContent: "space-between" }}>
+              <div>
+                <p style={{ margin: 0 }}>Colour theme</p>
+                <p className="muted" style={{ margin: 0 }}>
+                  System follows your device.
+                </p>
+              </div>
+              <ThemeSwitch />
+            </div>
+            <div className="row" style={{ justifyContent: "space-between" }}>
+              <div>
+                <p style={{ margin: 0 }}>Sound effects</p>
+                <p className="muted" style={{ margin: 0 }}>
+                  Small cues for right, nearly, missed, and finishing. Off unless you turn them on.
+                </p>
+              </div>
+              <SoundSwitch />
+            </div>
           </div>
-          <p className="muted" style={{ marginBottom: 0 }}>
-            These are categories, not sentences — the tutor never receives anything you wrote.
-          </p>
-        </div>
+          <div className="card">
+            <div className="form-grid">
+              <label className="field-label">
+                Level
+                <span className="select-wrap">
+                  <select
+                    className="field"
+                    value={settings.level}
+                    onChange={(event) => void saveCategories({ level: event.target.value })}
+                  >
+                    <option value="beginner">Beginner</option>
+                    <option value="intermediate">Intermediate</option>
+                    <option value="advanced">Advanced</option>
+                  </select>
+                </span>
+              </label>
+              <label className="field-label">
+                Style
+                <span className="select-wrap">
+                  <select
+                    className="field"
+                    value={settings.learningStyle}
+                    onChange={(event) => void saveCategories({ learningStyle: event.target.value })}
+                  >
+                    <option value="examples-first">Examples first</option>
+                    <option value="rules-first">Rules first</option>
+                    <option value="conversation">Conversation</option>
+                    <option value="gentle">Gentle</option>
+                  </select>
+                </span>
+              </label>
+            </div>
+            <p className="muted" style={{ marginBottom: 0 }}>
+              These are categories, not sentences — the tutor never receives anything you wrote.
+            </p>
+          </div>
+        </>
       ) : null}
 
       {tab === "provider" ? (
