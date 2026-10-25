@@ -85,8 +85,8 @@ Verification: the card with no layer is pixel-identical to Phase 4.
 
 ## Delivery note
 
-Delivered on 2026-10-25 on branch `fix/study-tab-redesign` (commit pending the
-learner's go).
+Delivered on 2026-10-25 on branch `fix/study-tab-redesign` as commit `69cd77b`,
+with both drift gates green.
 
 - `study-layout.ts` holds the headline, lede and pip helpers; eight tests pin
   the copy and the first, middle, last, empty and over-run pip states.
