@@ -198,7 +198,7 @@ No videos ship unless a working YouTube id is supplied. A person checks every fa
 
 The post-impl browser simulation must drive the real app and show each item:
 
-1. Beginner auto-open, collapse, reopen, answer with help, cold repeat at the end with no layer, `helpSeen`/`coldCheck` rows in the drawer.
+1. Beginner auto-open, collapse, reopen, answer with help (`helpSeen: true`), no cold repeat — peeking costs a return only at intermediate — and the `helpSeen`/`coldCheck` rows in the drawer.
 2. Intermediate: peek, got-it stays got-it, one repeat; peek plus wrong returns once; no-peek wrong returns normally.
 3. Advanced: no layer before, folded after reveal, opening adds no repeat.
 4. Card with no layer adds no furniture.

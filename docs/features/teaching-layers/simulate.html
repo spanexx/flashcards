@@ -1,0 +1,2546 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flashcards - Teaching layers design simulation</title>
+<!--
+WHY: Design-time simulation for teaching layers. It mirrors the locked GRILL:
+one optional ordered layer per card (text, image, video), the deck's level
+decides presentation, intermediate peeking costs a cold repeat, advanced
+teaches after the answer, and media failures never block the card. Hardcoded
+data; saves nothing.
+PACK: teaching-layers
+2026-10-25 qoder: created before the implementation [pack: teaching-layers]
+2026-10-25 qoder: reconciled after the post-impl run (see simulate-post.md).
+The design held: a beginner never gets a cold repeat, the return is queued only
+for an intermediate peek, and every other scenario matched the built app. This
+file is the single canonical simulation; the pre-impl copy is archived.
+
+2026-10-25 qoder: wears the v1 app shell and tokens; author screen reduced to
+one editor, one preview and one collapsed reference. [pack: teaching-layers]
+-->
+<style>
+  /* WHY: The simulation must look like the app it describes, so these tokens
+     and the shell below are copied from v1/src/app/globals.css rather than
+     invented here. */
+  :root {
+    color-scheme: light dark;
+    --bg: #f7f6f3;
+    --ink: #23211d;
+    --quiet: #6d6a63;
+    --card: #ffffff;
+    --line: #dedbd3;
+    --accent: #2f5d50;
+    --accent-ink: #ffffff;
+    --good: #2f6d3f;
+    --near: #8a6d1f;
+    --miss: #8a3b2f;
+    --plain: #4b5563;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #191816;
+      --ink: #ece9e2;
+      --quiet: #a5a199;
+      --card: #232220;
+      --line: #3a3833;
+      --accent: #7fb3a2;
+      --accent-ink: #10120f;
+      --good: #8ec79b;
+      --near: #d9bc6a;
+      --miss: #e0968a;
+      --plain: #b6bcc7;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.55;
+  }
+
+  body.layer-open { overflow: hidden; }
+
+  button, input, select, textarea { font: inherit; }
+  button { cursor: pointer; }
+
+  h1 { font-size: clamp(1.65rem, 2vw, 2.1rem); letter-spacing: -0.02em; margin: 0 0 4px; }
+  h2 { font-size: 1.06rem; letter-spacing: -0.01em; margin: 18px 0 6px; }
+  h3 { font-size: 0.95rem; margin: 14px 0 6px; }
+
+  p.lead { color: var(--quiet); max-width: 72ch; margin: 0 0 12px; }
+  .muted { color: var(--quiet); }
+  .small { font-size: 0.82rem; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.88em; }
+  .grow { flex: 1; min-width: 0; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .eyebrow {
+    margin: 0;
+    color: var(--quiet);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  /* App shell and sidebar, copied from the real app. */
+  .shell {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    min-height: 100vh;
+  }
+
+  .sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 24px 16px;
+    border-right: 1px solid var(--line);
+    background: color-mix(in srgb, var(--card) 55%, var(--bg));
+  }
+
+  .sidebar .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    width: fit-content;
+    font-weight: 650;
+    color: var(--ink);
+    text-decoration: none;
+    padding: 0 10px;
+  }
+
+  .brand-mark {
+    display: grid;
+    place-items: center;
+    flex: 0 0 30px;
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, #ffffff 16%, transparent);
+  }
+
+  .brand-mark svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .brand-name { letter-spacing: -0.012em; }
+
+  .side-nav {
+    display: grid;
+    gap: 2px;
+    margin-top: 18px;
+  }
+
+  .side-nav button,
+  .side-nav .side-link {
+    font: inherit;
+    text-align: left;
+    width: 100%;
+    color: var(--quiet);
+    background: none;
+    border: 0;
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 10px;
+  }
+
+  .side-nav button:hover {
+    color: var(--ink);
+    background: color-mix(in srgb, var(--line) 45%, transparent);
+  }
+
+  .side-nav button[aria-selected="true"] {
+    color: var(--ink);
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
+    font-weight: 600;
+  }
+
+  .side-nav .side-link { opacity: 0.5; cursor: default; }
+
+  .side-foot {
+    margin: auto 0 0;
+    padding: 0 10px;
+    color: var(--quiet);
+    font-size: 0.78rem;
+  }
+
+  .sim-foot { margin: 2px 0 0; color: var(--near); }
+
+  .content {
+    width: 100%;
+    max-width: 1420px;
+    margin: 0 auto;
+    padding: 34px 40px 80px;
+  }
+
+  /* App page furniture. */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin: 12px 0;
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--ink) 6%, transparent);
+  }
+
+  .card.tight { padding: 13px 15px; }
+
+  .btn {
+    font: inherit;
+    min-height: 40px;
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 8px 14px;
+  }
+
+  .btn:hover:not(:disabled) { border-color: var(--quiet); }
+  .btn:disabled { opacity: 0.45; cursor: default; }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+  .btn.small { min-height: 32px; padding: 4px 10px; font-size: 0.82rem; }
+  .btn[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+
+  .btn:focus-visible,
+  .field:focus-visible,
+  .answer-input:focus-visible,
+  .study-select:focus-visible,
+  .editor-row-body input:focus-visible,
+  .editor-row-body select:focus-visible,
+  .editor-row-body textarea:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    outline-offset: 2px;
+  }
+
+  .chip {
+    display: inline-block;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 1px 10px;
+    font-size: 0.82rem;
+    color: var(--quiet);
+  }
+
+  .chip.warm { color: var(--near); border-color: color-mix(in srgb, var(--near) 45%, var(--line)); }
+  .chip.cold { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+
+  .level-pill {
+    display: inline-block;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 2px 10px;
+    font-size: 0.82rem;
+    color: var(--quiet);
+    white-space: nowrap;
+  }
+
+  .level-pill.beginner { color: var(--good); border-color: color-mix(in srgb, var(--good) 45%, var(--line)); }
+  .level-pill.intermediate { color: var(--near); border-color: color-mix(in srgb, var(--near) 45%, var(--line)); }
+  .level-pill.advanced { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* Study scope and layout, copied from the real study screen. */
+  .study-scope {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    align-items: end;
+  }
+
+  .study-scope-field {
+    display: grid;
+    gap: 4px;
+    min-width: 320px;
+    flex: 0 1 440px;
+    color: var(--quiet);
+    font-size: 0.85rem;
+  }
+
+  .select-wrap { position: relative; display: block; }
+
+  .select-wrap::after {
+    content: "";
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid var(--quiet);
+    border-bottom: 2px solid var(--quiet);
+    transform: translateY(-65%) rotate(45deg);
+    pointer-events: none;
+  }
+
+  .study-select {
+    font: inherit;
+    width: 100%;
+    min-height: 42px;
+    padding: 9px 34px 9px 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--card);
+    color: var(--ink);
+    appearance: none;
+    cursor: pointer;
+  }
+
+  .study-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 820px) minmax(250px, 310px);
+    gap: 20px;
+    align-items: start;
+    justify-content: center;
+  }
+
+  .stage { min-width: 0; }
+  .study-stage, .study-stage-inner { min-width: 0; }
+
+  /* Running card, copied from the app's StudyClient. */
+  .study-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .study-progress {
+    height: 7px;
+    margin: 10px 0 14px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--line) 55%, transparent);
+    overflow: hidden;
+  }
+
+  .study-progress > span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--accent);
+    transition: width 220ms ease;
+  }
+
+  .study-card {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px 20px;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--card) 94%, var(--accent) 6%),
+      var(--card)
+    );
+    box-shadow: 0 10px 28px color-mix(in srgb, var(--ink) 10%, transparent);
+  }
+
+  .study-card.cold { border-color: color-mix(in srgb, var(--near) 45%, var(--line)); }
+
+  .study-card-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .study-mode {
+    display: inline-block;
+    padding: 2px 10px;
+    border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line));
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+    color: var(--accent);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .study-instruction { margin: 2px 0 12px; font-size: 1.02rem; }
+  .study-returned { margin: 4px 0 10px; }
+
+  .prompt-text { font-size: 1.3rem; line-height: 1.7; margin: 12px 0 16px; }
+
+  .stack { display: grid; gap: 10px; }
+
+  .answer-input {
+    font: inherit;
+    font-size: 1.1rem;
+    width: 100%;
+    padding: 9px 11px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: var(--card);
+    color: var(--ink);
+  }
+
+  .outcome { font-weight: 650; }
+  .outcome-got_it { color: var(--good); }
+  .outcome-nearly { color: var(--near); }
+  .outcome-again, .outcome-no { color: var(--miss); }
+  .outcome-unjudged { color: var(--plain); }
+
+  .study-result {
+    margin-top: 18px;
+    border-top: 1px solid var(--line);
+    padding-top: 14px;
+    animation: study-reveal 180ms ease-out;
+  }
+
+  @keyframes study-reveal {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  .study-result-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .study-outcome {
+    display: inline-block;
+    padding: 2px 10px;
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    font-size: 1rem;
+  }
+
+  .study-summary { color: var(--quiet); }
+
+  .study-answer {
+    margin: 8px 0 12px;
+    padding: 10px 14px;
+    border-left: 3px solid var(--accent);
+    border-radius: 0 10px 10px 0;
+    background: color-mix(in srgb, var(--accent) 6%, transparent);
+    font-size: 1.25rem;
+    line-height: 1.6;
+  }
+
+  .study-label {
+    margin: 0 0 4px;
+    color: var(--quiet);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .study-adjust {
+    margin-top: 12px;
+    border-top: 1px dashed var(--line);
+    padding-top: 10px;
+  }
+
+  .study-adjust summary { color: var(--quiet); cursor: pointer; font-size: 0.9rem; }
+  .study-adjust-list { margin-top: 8px; }
+
+  .study-region {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: start;
+    gap: 10px;
+  }
+
+  .study-region-detail { margin-top: 2px; }
+  .study-corrections { justify-content: flex-end; }
+  .study-capped { margin: 6px 0; }
+
+  /* A focused card, as the app's full-screen stage. */
+  .study-stage.stage-full {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    overflow: auto;
+    padding: clamp(16px, 3vw, 40px);
+    background:
+      radial-gradient(900px 500px at 50% -20%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 65%),
+      var(--bg);
+  }
+
+  .study-stage.stage-full .study-stage-inner {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .stage-full .study-card { padding: clamp(22px, 3.2vw, 42px); }
+  .stage-full .study-instruction { font-size: 1.28rem; }
+  .stage-full .study-answer { font-size: 1.65rem; }
+  .stage-full .answer-input { min-height: 56px; font-size: 1.04rem; }
+
+  body.full-stage { overflow: hidden; }
+
+  .sim-only { font-style: italic; }
+
+  .layer-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    padding: 9px 12px;
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+  }
+
+  .layer-bar-icon { color: var(--accent); font-size: 1.05rem; line-height: 1; }
+  .layer-bar-copy { flex: 1; min-width: 200px; }
+  .layer-bar-copy strong { display: block; font-size: 0.9rem; }
+  .layer-bar-copy span { display: block; color: var(--quiet); font-size: 0.82rem; }
+
+  .cold-note {
+    margin-bottom: 14px;
+    padding: 9px 12px;
+    border-left: 3px solid var(--near);
+    border-radius: 0 8px 8px 0;
+    background: color-mix(in srgb, var(--near) 12%, transparent);
+    font-size: 0.86rem;
+  }
+
+  .note {
+    margin: 10px 0;
+    padding: 9px 12px;
+    border-left: 3px solid var(--near);
+    border-radius: 0 8px 8px 0;
+    background: color-mix(in srgb, var(--near) 12%, transparent);
+    font-size: 0.86rem;
+  }
+
+  /* Rail, copied from the app's study rail. */
+  .rail { display: grid; gap: 14px; position: sticky; top: 24px; align-content: start; }
+  .rail .card { margin: 0; }
+  .rail-card h3 { margin: 0 0 3px; }
+  .rails-sub { margin: 0; color: var(--quiet); font-size: 0.8rem; }
+
+  .study-rail-head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  .study-rail-head h3 { margin: 0; }
+  .study-rail-head p { margin: 3px 0 0; }
+
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 12px; }
+
+  .stat {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 11px 12px;
+    background: color-mix(in srgb, var(--line) 22%, transparent);
+  }
+
+  .stat strong { display: block; font-size: 1.35rem; letter-spacing: -0.03em; }
+  .stat span { color: var(--quiet); font-size: 0.76rem; }
+
+  .badge {
+    display: inline-block;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 1px 9px;
+    font-size: 0.78rem;
+    color: var(--quiet);
+  }
+
+  .badge.ok { color: var(--good); border-color: color-mix(in srgb, var(--good) 45%, var(--line)); }
+  .badge.warn { color: var(--near); border-color: color-mix(in srgb, var(--near) 45%, var(--line)); }
+
+  .study-layout.solo { grid-template-columns: minmax(0, 820px); }
+
+  .notice {
+    border-left: 3px solid var(--near);
+    background: color-mix(in srgb, var(--near) 12%, transparent);
+    padding: 9px 12px;
+    border-radius: 0 8px 8px 0;
+    margin: 10px 0;
+  }
+
+  .study-hint {
+    border-left-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+  }
+
+  .study-hint-label {
+    margin: 0 0 4px;
+    color: var(--accent);
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .study-hint-text { margin: 4px 0; }
+
+  .study-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+
+  .blank-input {
+    font: inherit;
+    font-size: 1.15rem;
+    min-width: 7ch;
+    max-width: 16ch;
+    border: none;
+    border-bottom: 2px solid var(--accent);
+    background: transparent;
+    color: var(--ink);
+    padding: 0 4px 2px;
+  }
+
+  .blank-input:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* Simulation furniture: dashed, labelled, and visibly outside the app. */
+  .sim-bar { border-style: dashed; }
+
+  .sim-chip { color: var(--near); border-color: color-mix(in srgb, var(--near) 45%, var(--line)); }
+
+  .sim-controls { margin-top: 30px; }
+
+  .sim-controls-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 10px;
+  }
+
+  .sim-controls-grid .card { margin: 0; }
+  .sim-controls-grid h3 { margin: 0 0 4px; }
+  .sim-controls-grid .toggle:first-of-type { margin-top: 10px; }
+  .sim-controls .is-flash { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+
+  .queue { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; }
+
+  .queue li {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 7px 9px;
+    color: var(--quiet);
+    font-size: 0.8rem;
+  }
+
+  .queue li.current {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  .queue li.done { opacity: 0.68; }
+  .queue .why { display: block; margin-top: 2px; font-size: 0.74rem; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; border-bottom: 1px solid var(--line); padding: 7px 6px; vertical-align: top; }
+
+  .ev-table { margin-top: 8px; font-size: 0.8rem; }
+  .ev-table th { color: var(--quiet); font-weight: 600; font-size: 0.76rem; }
+
+  .toggle {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    margin-top: 8px;
+    color: var(--quiet);
+    font-size: 0.8rem;
+  }
+
+  .toggle input { margin-top: 3px; accent-color: var(--accent); }
+  .toggle strong { color: var(--ink); font-weight: 600; }
+
+  /* Level explainer under the study flow. */
+  .levels-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .levels-head h2 { margin: 0; }
+  .level-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+
+  .level-card { padding: 13px 15px; margin: 0; box-shadow: none; }
+
+  .level-card.current {
+    border-color: var(--accent);
+    box-shadow: inset 0 0 0 1px var(--accent);
+  }
+
+  .level-card h3 { margin: 7px 0 4px; }
+  .level-card ul { margin: 0; padding-left: 18px; color: var(--quiet); font-size: 0.8rem; }
+  .level-card li { margin: 4px 0; }
+  .level-card .try { margin: 8px 0 0; color: var(--accent); font-size: 0.78rem; font-weight: 600; }
+
+  /* Author screen: a three-step wizard, one panel at a time. */
+  .author-head { max-width: 760px; }
+  .author-head h2 { margin: 4px 0 6px; font-size: 1.15rem; }
+  .author-head .lead { margin-bottom: 0; }
+
+  .wizard-steps {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    max-width: 980px;
+    margin: 18px 0 14px;
+  }
+
+  .wizard-step {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 11px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--card);
+    color: var(--quiet);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .wizard-step:hover { border-color: var(--quiet); }
+
+  .wizard-step[aria-current="step"] {
+    border-color: var(--accent);
+    color: var(--ink);
+    box-shadow: inset 0 0 0 1px var(--accent);
+  }
+
+  .wizard-index {
+    display: grid;
+    place-items: center;
+    flex: 0 0 24px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--line) 55%, transparent);
+    font-size: 0.76rem;
+    font-weight: 700;
+  }
+
+  .wizard-step[aria-current="step"] .wizard-index {
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
+
+  .wizard-step strong { display: block; font-size: 0.86rem; }
+  .wizard-sub { display: block; font-size: 0.74rem; color: var(--quiet); }
+
+  .wizard-card { max-width: 980px; padding: 22px 24px 18px; }
+  .wizard-panel > h3 { margin: 4px 0 6px; }
+  .wizard-panel > .lead, .wizard-panel > .muted { margin-top: 0; }
+
+  .wizard-preview {
+    display: grid;
+    gap: 10px;
+    margin: 14px 0 4px;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--card) 70%, var(--bg));
+  }
+
+  .wizard-preview > p:first-child { margin-top: 0; }
+
+  .wizard-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+  }
+
+  #wizard-position { margin-right: auto; }
+
+  .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+
+  .field-label {
+    display: grid;
+    gap: 6px;
+    color: var(--quiet);
+    font-size: 0.84rem;
+    font-weight: 600;
+  }
+
+  .field-label .field { color: var(--ink); font-weight: 400; }
+
+  input.field, select.field, textarea.field {
+    font: inherit;
+    width: 100%;
+    min-height: 42px;
+    padding: 9px 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--card);
+    color: var(--ink);
+  }
+
+  textarea.field { min-height: 76px; resize: vertical; }
+
+  .editor-tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 18px 0 4px;
+  }
+
+  .editor-tools h3 { margin: 0; }
+  .add-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .editor-help { margin: 0 0 6px; color: var(--quiet); font-size: 0.78rem; }
+
+  .editor-row {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    margin: 8px 0;
+    background: var(--card);
+  }
+
+  .editor-row > summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 11px;
+    list-style: none;
+    cursor: pointer;
+  }
+
+  .editor-row > summary::-webkit-details-marker { display: none; }
+
+  .editor-row > summary::before {
+    content: "\25B8";
+    color: var(--quiet);
+    font-size: 0.8rem;
+  }
+
+  .editor-row[open] > summary::before { content: "\25BE"; }
+
+  .editor-row-head strong { font-size: 0.86rem; }
+  .editor-kind { color: var(--quiet); font-size: 0.76rem; }
+  .editor-row-body { display: grid; gap: 8px; padding: 0 11px 11px; }
+
+  .editor-row-body label {
+    display: grid;
+    gap: 4px;
+    color: var(--quiet);
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .editor-row-body input,
+  .editor-row-body select,
+  .editor-row-body textarea {
+    font: inherit;
+    width: 100%;
+    min-height: 38px;
+    padding: 7px 10px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: var(--card);
+    color: var(--ink);
+    font-weight: 400;
+  }
+
+  .editor-row-body textarea { min-height: 54px; resize: vertical; }
+  .editor-row-body .inline { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .editor-row-body .hint { margin: 0; color: var(--quiet); font-size: 0.76rem; }
+  .editor-row-body .hint.warn { color: var(--miss); }
+
+  .editor-row-body input[type="file"] { padding: 6px; font-size: 0.8rem; }
+
+  .editor-row-body input[type="file"]::file-selector-button {
+    font: inherit;
+    margin-right: 8px;
+    padding: 4px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--card);
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  .file-status { display: block; }
+  .file-status.ok { color: var(--good); }
+  .file-status.warn { color: var(--miss); }
+
+  .editor-row-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+
+  .editor-row-actions button {
+    font: inherit;
+    min-height: 30px;
+    padding: 3px 9px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: transparent;
+    color: var(--ink);
+    font-size: 0.78rem;
+  }
+
+  .editor-row-actions button:hover { border-color: var(--quiet); }
+
+  .study-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+  #editor-save-note { margin: 8px 0 0; }
+
+  #editor-preview-body > p.muted { margin: 0; }
+
+  .part { margin: 14px 0; }
+
+  .part-text {
+    border-left: 3px solid color-mix(in srgb, var(--accent) 45%, var(--line));
+    padding: 2px 0 2px 12px;
+  }
+
+  .part-text p { margin: 0; font-size: 0.98rem; }
+  .part-text.lead p { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.01em; }
+
+  .part-lang {
+    display: inline-block;
+    margin-top: 3px;
+    color: var(--quiet);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .part-image { margin: 14px 0; }
+
+  .part-image svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--card);
+  }
+
+  .part-image figcaption {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 6px;
+    margin-top: 5px;
+    color: var(--quiet);
+    font-size: 0.76rem;
+  }
+
+  .part-fallback {
+    border-left: 3px solid var(--miss);
+    border-radius: 0 8px 8px 0;
+    padding: 9px 12px;
+    background: color-mix(in srgb, var(--miss) 12%, transparent);
+    font-size: 0.88rem;
+  }
+
+  .part-fallback strong { display: block; }
+  .part-fallback p { margin: 4px 0 0; color: var(--quiet); }
+  .part-fallback .link-btn { margin-top: 6px; }
+
+  .link-btn {
+    border: 0;
+    background: transparent;
+    color: var(--accent);
+    padding: 0;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .part-video { margin: 14px 0; }
+  .video-poster { position: relative; border-radius: 10px; overflow: hidden; background: #141a16; }
+  .video-poster svg { display: block; width: 100%; height: auto; }
+
+  .video-poster .play {
+    position: absolute;
+    left: 12px;
+    bottom: 12px;
+    border: 0;
+    border-radius: 999px;
+    padding: 6px 12px;
+    background: #f3f1eb;
+    color: #141a16;
+    font-weight: 700;
+    font-size: 0.8rem;
+  }
+
+  .video-title { margin: 6px 0 0; font-size: 0.9rem; font-weight: 600; }
+
+  .video-meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 6px;
+    margin-top: 5px;
+    color: var(--quiet);
+    font-size: 0.76rem;
+  }
+
+  .video-player {
+    margin-top: 8px;
+    padding: 14px;
+    border-radius: 10px;
+    background: #141a16;
+    color: #dfe7df;
+    font-size: 0.84rem;
+  }
+
+  .video-player p { margin: 0 0 8px; }
+  .video-player .link-btn { color: #cfe3d8; }
+
+  .mini-poster {
+    border-radius: 10px;
+    padding: 20px 14px;
+    background: #141a16;
+    color: #dfe7df;
+    text-align: center;
+    font-size: 0.82rem;
+  }
+
+  .code-block {
+    margin: 8px 0;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--line) 35%, transparent);
+    color: var(--ink);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.8rem;
+    line-height: 1.55;
+    overflow-x: auto;
+    white-space: pre-wrap;
+  }
+
+  details.disclosure {
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    padding: 10px 12px;
+    margin-top: 10px;
+  }
+
+  details.disclosure summary { cursor: pointer; color: var(--quiet); }
+
+  .reference-details { margin-top: 18px; }
+  .reference-body { padding-top: 6px; }
+  .reference-body h3 { margin: 12px 0 6px; }
+  .reference-body ul { margin: 6px 0; padding-left: 20px; }
+
+  .reference-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    gap: 18px;
+  }
+
+  .media-table { font-size: 0.82rem; }
+  .media-table th { color: var(--quiet); font-weight: 600; }
+  .media-table th, .media-table td { padding: 6px 6px; }
+
+  /* The teaching layer stays a collapsible modal, as the GRILL locks it. */
+  /* WHY: The layer must sit above the fixed full-stage overlay. The stage is
+     z-index 80, so the dialog lives above it instead of behind the card. */
+  .layer-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    background: color-mix(in srgb, #000 45%, transparent);
+  }
+
+  .layer-modal {
+    display: none;
+    position: fixed;
+    z-index: 91;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(680px, calc(100vw - 24px));
+    max-height: calc(100vh - 32px);
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: 0 24px 70px color-mix(in srgb, #000 35%, transparent);
+  }
+
+  body.layer-open .layer-backdrop { display: block; }
+  body.layer-open .layer-modal { display: flex; }
+
+  .layer-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .layer-head h2 { margin: 2px 0; }
+  .layer-head p { margin: 0; }
+  .layer-head .muted { font-size: 0.82rem; }
+
+  .layer-body { padding: 4px 18px 0; overflow: auto; }
+  .layer-note { margin: 8px 0 10px; color: var(--near); font-size: 0.84rem; }
+  .layer-note:empty { display: none; }
+
+  .layer-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 18px 14px;
+    border-top: 1px solid var(--line);
+    background: color-mix(in srgb, var(--line) 18%, var(--card));
+  }
+
+  .layer-foot p { margin: 0; color: var(--quiet); font-size: 0.78rem; }
+
+  @media (max-width: 1180px) {
+    .study-layout { grid-template-columns: 1fr; }
+    .rail { position: static; }
+  }
+
+  @media (max-width: 1100px) {
+    .wizard-steps { grid-template-columns: 1fr; }
+    .sim-controls-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 900px) {
+    .level-grid { grid-template-columns: 1fr; }
+    .reference-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 860px) {
+    .shell { grid-template-columns: 1fr; align-content: start; }
+
+    .sidebar {
+      position: static;
+      height: auto;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px 10px;
+      padding: 10px 14px;
+      border-right: none;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .sidebar .brand { padding: 0; }
+    .side-nav { display: flex; flex-wrap: wrap; gap: 2px; margin-top: 0; }
+    .side-nav button, .side-nav .side-link { width: auto; }
+    .side-foot { display: none; }
+    .content { padding: 20px 16px 56px; }
+  }
+
+  @media (max-width: 620px) {
+    .study-card { padding: 14px; }
+    .study-answer { font-size: 1.15rem; }
+    .study-region { grid-template-columns: 1fr; }
+    .study-corrections { justify-content: flex-start; }
+    .study-scope-field { width: 100%; min-width: 0; flex-basis: 100%; }
+    .form-grid { grid-template-columns: 1fr; }
+    .wizard-card { padding: 16px; }
+    .editor-row-body .inline { grid-template-columns: 1fr; }
+    .layer-head, .layer-body, .layer-foot { padding-left: 14px; padding-right: 14px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .study-progress > span { transition: none; }
+    .study-result { animation: none; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z" />
+          <path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65" />
+          <path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65" />
+        </svg>
+      </span>
+      <span class="brand-name">Flashcards</span>
+    </div>
+    <nav class="side-nav nav" aria-label="Main">
+      <button type="button" data-view="study" aria-selected="true">Study</button>
+      <button type="button" data-view="author" aria-selected="false">Library</button>
+      <span class="side-link" title="Not part of this simulation">Progress</span>
+      <span class="side-link" title="Not part of this simulation">Settings</span>
+    </nav>
+    <p class="side-foot">Local only. No account.</p>
+    <p class="side-foot sim-foot">Design simulation. Nothing is saved.</p>
+  </aside>
+
+  <main class="content">
+    <section class="view active" id="view-study">
+      <section class="card tight sim-bar">
+        <div class="study-scope">
+          <label class="study-scope-field">
+            <span>Deck</span>
+            <span class="select-wrap">
+              <select id="deck-select" class="study-select">
+                <option value="pl">Polish from Scratch / Greetings — beginner</option>
+                <option value="net">Browser Dev / Network — intermediate</option>
+                <option value="perf">Browser Dev / Performance — advanced</option>
+              </select>
+            </span>
+          </label>
+          <span class="level-pill beginner" id="deck-level">beginner</span>
+          <button class="btn small" type="button" data-action="restart">Restart this card</button>
+          <span class="grow"></span>
+          <span class="chip sim-chip">simulation only</span>
+        </div>
+      </section>
+
+      <div class="study-layout" id="study-layout">
+        <div class="stage study-stage" id="stage"></div>
+
+        <aside class="rail study-rail" id="study-rail">
+          <section class="card tight" id="rail-session"></section>
+          <section class="card tight">
+            <h3>Full screen</h3>
+            <p class="muted small" style="margin-top:6px">Full screen hides the sidebar and this rail. Esc or the same control brings them back. Your card and answer stay put.</p>
+          </section>
+        </aside>
+      </div>
+
+      <section class="sim-controls" id="sim-controls">
+        <div class="levels-head">
+          <div>
+            <h2>Simulation controls</h2>
+            <p class="muted small">These controls do not exist in the app. They exist to show what gets recorded and what breaks safely.</p>
+          </div>
+        </div>
+        <div class="sim-controls-grid">
+          <section class="card tight" id="rail-evidence"></section>
+          <section class="card tight">
+            <h3>Queue</h3>
+            <p class="rails-sub">One return per card per session, only when needed.</p>
+            <ol class="queue" id="sim-queue"></ol>
+          </section>
+          <section class="card tight">
+            <h3>Media failure switches</h3>
+            <p class="rails-sub">Change one, then reopen the layer. The card and its answer keep working.</p>
+            <label class="toggle"><input type="checkbox" data-fail="webImage"> <span><strong>Break the web image</strong><br>Network deck. Shows the alt text and an open link.</span></label>
+            <label class="toggle"><input type="checkbox" data-fail="deadVideo"> <span><strong>Make the YouTube id dead</strong><br>Network deck. Shows the search text and “Open on YouTube”.</span></label>
+            <label class="toggle"><input type="checkbox" data-fail="missingLocal"> <span><strong>Remove the local file</strong><br>Performance deck. Says the file is not on this device.</span></label>
+            <label class="toggle"><input type="checkbox" data-fail="noPolishVoice"> <span><strong>Pretend no Polish voice</strong><br>Greetings deck. Listen skips the Polish part and names it.</span></label>
+          </section>
+        </div>
+
+        <div class="levels-head" style="margin-top:24px">
+          <div>
+            <h2>How the level changes the flow</h2>
+            <p class="muted small">The level belongs to the deck. It changes presentation only: no card identity change, no evidence reset.</p>
+          </div>
+        </div>
+        <div class="level-grid" id="levels"></div>
+      </section>
+    </section>
+
+    <section class="view" id="view-author">
+      <div class="author-head">
+        <p class="eyebrow">Library / Card editor</p>
+        <h2>Teaching layer</h2>
+        <p class="lead">Optional. Three short steps: the card, its teaching parts, then a preview before you save.</p>
+      </div>
+
+      <nav class="wizard-steps" id="wizard-steps" aria-label="Editor steps">
+        <button class="wizard-step" type="button" data-wizard-go="1" aria-current="step">
+          <span class="wizard-index">1</span>
+          <span><strong>Card</strong><span class="wizard-sub">Question and answer</span></span>
+        </button>
+        <button class="wizard-step" type="button" data-wizard-go="2">
+          <span class="wizard-index">2</span>
+          <span><strong>Teaching parts</strong><span class="wizard-sub">Text, image, video</span></span>
+        </button>
+        <button class="wizard-step" type="button" data-wizard-go="3">
+          <span class="wizard-index">3</span>
+          <span><strong>Preview and save</strong><span class="wizard-sub">What the learner sees</span></span>
+        </button>
+      </nav>
+
+      <section class="card wizard-card">
+        <div class="wizard-panel" data-wizard-panel="1">
+          <p class="eyebrow">Step 1 of 3</p>
+          <h3>The card stays as it is</h3>
+          <p class="muted small">The teaching layer is a separate optional field. Changing it never changes the question, the answer or the evidence.</p>
+          <div class="form-grid">
+            <label class="field-label">Question<input class="field" value="dog" readonly></label>
+            <label class="field-label">Answer<input class="field" value="pies" readonly></label>
+          </div>
+        </div>
+
+        <div class="wizard-panel" data-wizard-panel="2" hidden>
+          <p class="eyebrow">Step 2 of 3</p>
+          <div class="editor-tools">
+            <h3>Teaching parts</h3>
+            <div class="add-row">
+              <button class="btn small" type="button" data-add="text">Add text</button>
+              <button class="btn small" type="button" data-add="image">Add image</button>
+              <button class="btn small" type="button" data-add="video">Add video</button>
+            </div>
+          </div>
+          <p class="editor-help">Click a part to open it. Images can be a web address or a file from this computer; videos can be YouTube, a web address or a file.</p>
+          <div id="editor-rows"></div>
+          <p class="small muted" id="editor-parts-note">Order is display order. A card with no parts is valid.</p>
+        </div>
+
+        <div class="wizard-panel" data-wizard-panel="3" hidden>
+          <p class="eyebrow">Step 3 of 3</p>
+          <h3>Preview and save</h3>
+          <p class="muted small">This is the layer as the learner sees it. Saving writes it with the card, in place.</p>
+          <div class="wizard-preview" id="editor-preview-body"><p class="muted small">Your parts appear here.</p></div>
+          <div class="study-actions">
+            <button class="btn primary" type="button" data-save>Save with the card</button>
+            <button class="btn" type="button" data-preview>Refresh preview</button>
+          </div>
+          <p class="small muted" id="editor-save-note">Save writes the layer with the card, in place. A layer-only edit changes no identity and keeps evidence.</p>
+        </div>
+
+        <div class="wizard-foot">
+          <button class="btn small" type="button" data-wizard-back disabled>Back</button>
+          <span class="muted small" id="wizard-position">Step 1 of 3</span>
+          <button class="btn small primary" type="button" data-wizard-next>Next</button>
+        </div>
+      </section>
+
+      <details class="disclosure reference-details">
+        <summary>Reference: card shape, media, failures and identity</summary>
+        <div class="reference-body">
+          <div class="reference-grid">
+            <div>
+              <h3>Card shape</h3>
+              <pre class="code-block">{
+  "summary": "Why a cached request is fast",
+  "prompt": [{ "type": "text", "text": "Did the request reach the server?" }],
+  "answer": [{ "type": "text", "text": "No. The browser reused a stored response." }],
+  "teaching": [
+    { "type": "text",  "text": "pies", "lang": "pl-PL" },
+    { "type": "text",  "text": "pronounced “pyes” - the Polish word for dog." },
+    { "type": "image", "source": "builtin", "src": "packs/browser-dev/cache.svg", "alt": "Network rows with one cache hit" },
+    { "type": "image", "source": "web",     "src": "https://example.com/cache.png", "alt": "A cache hit in the Network panel" },
+    { "type": "video", "source": "youtube", "src": "VIDEO_ID", "start": 42, "end": 70, "search": "Chrome DevTools network cache" }
+  ]
+}</pre>
+              <p class="small muted">One optional field, an ordered list. Display order is list order, top to bottom. A video range is whole seconds inside one video. Text <span class="mono">lang</span> defaults to the pack language.</p>
+            </div>
+
+            <div>
+              <h3>Media sources</h3>
+              <table class="media-table">
+                <thead><tr><th>Source</th><th>Stored</th><th>Offline</th><th>Limit</th></tr></thead>
+                <tbody>
+                  <tr><td>Built-in image</td><td>App file</td><td>Yes</td><td>Shipped with the pack</td></tr>
+                  <tr><td>Web image</td><td>URL</td><td>No</td><td>Third-party request</td></tr>
+                  <tr><td>Local image</td><td>Blob</td><td>Yes</td><td>1600 px, 1 MB</td></tr>
+                  <tr><td>YouTube</td><td>Id + range</td><td>No</td><td>Public, no playlists</td></tr>
+                  <tr><td>Web video</td><td>URL</td><td>No</td><td>Direct video URL</td></tr>
+                  <tr><td>Local video</td><td>Blob</td><td>Yes</td><td>20 MB</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <h3>When media fails</h3>
+          <ul class="small">
+            <li>The card never depends on media. Text, question and answer stay usable.</li>
+            <li>Dead or blocked YouTube: the search text and an “Open on YouTube” link. No endless spinner.</li>
+            <li>Broken web image: a placeholder with the alt text and a link to open it.</li>
+            <li>Missing local file: “This file is not on this device” plus “Choose the file again”.</li>
+            <li>Built-in media must be in the offline cache, or it fails like a web image.</li>
+            <li>The app retries only when the learner reopens the layer or the card.</li>
+          </ul>
+
+          <h3>Editing identity</h3>
+          <p class="small"><strong>Teaching layer changed:</strong> the card is updated in place. Evidence stays; a pack update that only fixes an explanation does not retire the card.</p>
+          <p class="small"><strong>Question or answer changed:</strong> a new card is created. The old card is retired and keeps its evidence.</p>
+        </div>
+      </details>
+    </section>
+  </main>
+</div>
+
+<div class="layer-backdrop" id="layer-backdrop"></div>
+<div class="layer-modal" id="layer-modal" role="dialog" aria-modal="true" aria-labelledby="layer-title">
+  <div class="layer-head">
+    <div>
+      <p class="eyebrow" id="layer-sub">Teaching layer</p>
+      <h2 id="layer-title">Before the question</h2>
+      <p class="muted" id="layer-level-note"></p>
+    </div>
+    <button class="btn small" type="button" id="layer-collapse" data-action="collapse-layer">Collapse to the question</button>
+  </div>
+  <div class="layer-body">
+    <div id="layer-parts"></div>
+    <p class="layer-note" id="layer-note"></p>
+  </div>
+  <div class="layer-foot" id="layer-foot">
+    <button class="btn primary" type="button" id="listen-btn">Listen to the layer</button>
+    <p>Reads text parts only, top to bottom. Skips images and video. Uses the device voice.</p>
+  </div>
+</div>
+
+<template id="tpl-text">
+  <details class="editor-row" data-kind="text">
+    <summary class="editor-row-head"><strong>Text <span class="row-number"></span></strong><span class="grow"></span><span class="editor-kind">plain text</span></summary>
+    <div class="editor-row-body">
+      <label>Text<textarea>pies - pronounced “pyes” - the Polish word for dog.</textarea></label>
+      <label>Language<input type="text" value="pl-PL"></label>
+      <p class="hint">Plain text only. Line breaks allowed; no formatting. Defaults to the pack language.</p>
+      <div class="editor-row-actions">
+        <button type="button" data-move="up">Up</button>
+        <button type="button" data-move="down">Down</button>
+        <button type="button" data-remove>Remove</button>
+      </div>
+    </div>
+  </details>
+</template>
+
+<template id="tpl-image">
+  <details class="editor-row" data-kind="image">
+    <summary class="editor-row-head"><strong>Image <span class="row-number"></span></strong><span class="grow"></span><span class="editor-kind">web image</span></summary>
+    <div class="editor-row-body">
+      <label>Source<select data-source-select><option value="web">Web address</option><option value="local">File from this computer</option></select></label>
+      <label class="source-web">Address<input type="url" value="https://example.com/cache.png"></label>
+      <label class="source-local" hidden>File<input type="file" accept="image/*"><span class="hint file-status" data-file-status></span></label>
+      <label>Alt text<input type="text" value="A cache hit in the Network panel"></label>
+      <p class="hint warn">Alt text is required: it feeds the broken-image fallback and a screen reader.</p>
+      <p class="hint" data-image-hint>Only the address is stored. The image needs internet and can break.</p>
+      <div class="editor-row-actions">
+        <button type="button" data-move="up">Up</button>
+        <button type="button" data-move="down">Down</button>
+        <button type="button" data-remove>Remove</button>
+      </div>
+    </div>
+  </details>
+</template>
+
+<template id="tpl-video">
+  <details class="editor-row" data-kind="video">
+    <summary class="editor-row-head"><strong>Video <span class="row-number"></span></strong><span class="grow"></span><span class="editor-kind">YouTube</span></summary>
+    <div class="editor-row-body">
+      <label>Source<select data-source-select><option value="youtube">YouTube link</option><option value="web">Web address</option><option value="local">File from this computer</option></select></label>
+      <label class="source-link">Link<input type="text" value="https://youtu.be/VIDEO_ID"></label>
+      <label class="source-local" hidden>File<input type="file" accept="video/*"><span class="hint file-status" data-file-status></span></label>
+      <div class="inline video-range">
+        <label>Start (seconds)<input type="number" value="42" min="0"></label>
+        <label>End (seconds)<input type="number" value="70" min="0"></label>
+      </div>
+      <label class="video-search">Search text if the video fails<input type="text" value="Chrome DevTools network cache"></label>
+      <p class="hint" data-video-hint>A YouTube link is reduced to its id. End must be after start.</p>
+      <div class="editor-row-actions">
+        <button type="button" data-move="up">Up</button>
+        <button type="button" data-move="down">Down</button>
+        <button type="button" data-remove>Remove</button>
+      </div>
+    </div>
+  </details>
+</template>
+
+<script>
+
+  const LEVELS = {
+    beginner: {
+      label: 'Beginner',
+      title: 'The layer is the lesson.',
+      bullets: [
+        'The layer is open before the question.',
+        'Collapse it to answer; it stays available as a bar.',
+        'No extra card. A wrong answer still returns once, as it does today.',
+        'helpSeen is true: the layer was visible before the answer.'
+      ],
+      tryIt: 'Collapse the layer, type “pies”, and look at the record.'
+    },
+    intermediate: {
+      label: 'Intermediate',
+      title: 'Help is one click, and it costs a repeat.',
+      bullets: [
+        'The layer is folded before the question.',
+        'Opening it before the answer adds the same card at the end, without the layer.',
+        'That repeat is a cold check: coldCheck true, and not progress on its own.',
+        'Opening after the answer adds nothing. One return per card per session.'
+      ],
+      tryIt: 'Open the layer before revealing the answer and watch the queue.'
+    },
+    advanced: {
+      label: 'Advanced',
+      title: 'Answer first. Learn after.',
+      bullets: [
+        'No teaching layer before the answer.',
+        'After the answer is revealed, the layer is available, folded.',
+        'Opening it adds no extra card.',
+        'helpSeen stays false: the layer was not visible before the answer.'
+      ],
+      tryIt: 'Reveal the answer first, then look for the folded layer.'
+    }
+  };
+
+  const DECKS = {
+    pl: {
+      pack: 'Polish from Scratch',
+      deck: 'Greetings',
+      level: 'beginner',
+      lang: 'pl-PL',
+      mode: 'Type the line',
+      modeKind: 'type',
+      instruction: 'Read the English line, then type the full Polish line.',
+      summary: 'dog — pies',
+      prompt: 'dog',
+      answer: 'pies',
+      placeholder: 'Type the Polish line',
+      teaching: [
+        { type: 'text', text: 'pies', lang: 'pl-PL', lead: true },
+        { type: 'text', text: 'pronounced “pyes” - the Polish word for dog.', lang: 'en-US' },
+        { type: 'text', text: 'Listen, then type the Polish word.', lang: 'en-US' }
+      ]
+    },
+    net: {
+      pack: 'Browser Dev',
+      deck: 'Network',
+      level: 'intermediate',
+      lang: 'en-US',
+      mode: 'Fill the blank',
+      modeKind: 'cloze',
+      instruction: 'Fill the blank in the line.',
+      summary: 'A cache hit never reaches the server',
+      prompt: 'A response marked “from disk cache” was handled by the {{blank}}, not the server.',
+      answer: 'browser',
+      placeholder: 'browser',
+      teaching: [
+        { type: 'text', text: 'The Network panel lists every request the page makes. A cache hit is reused by the browser before the request reaches the server.', lang: 'en-US' },
+        { type: 'image', source: 'builtin', figure: 'network', alt: 'Network rows with one response marked from disk cache' },
+        { type: 'image', source: 'web', figure: 'cache', alt: 'A cache hit drawn as traffic that stops at the browser cache' },
+        { type: 'video', source: 'youtube', src: 'VIDEO_ID', start: 42, end: 70, search: 'Chrome DevTools network panel cache', title: 'Reading a cache hit in the Network panel' },
+        { type: 'text', text: 'Only a request with no cache match goes to the server. The status can still read 200, so read the size and the cache note, not only the status.', lang: 'en-US' }
+      ]
+    },
+    perf: {
+      pack: 'Browser Dev',
+      deck: 'Performance',
+      level: 'advanced',
+      lang: 'en-US',
+      mode: 'Type the line',
+      modeKind: 'type',
+      instruction: 'Type the full line.',
+      summary: 'Measure first on the phone profile',
+      prompt: 'A page feels slow on a mid-range phone.',
+      answer: 'Record a performance trace with the phone profile, then read the main-thread work and the longest tasks.',
+      placeholder: 'Type the line',
+      teaching: [
+        { type: 'text', text: 'Start with a recorded trace, not a guess. Use the phone profile and look at the main thread first.', lang: 'en-US' },
+        { type: 'image', source: 'local', figure: 'trace', alt: 'A performance trace with a long main-thread task' },
+        { type: 'text', text: 'A long task over 50 ms blocks input. Fix the biggest one before changing smaller details.', lang: 'en-US' }
+      ]
+    }
+  };
+
+  const LABELS = { again: 'Again', got_it: 'Got it', nearly: 'Nearly', no: 'No', unjudged: 'Not judged' };
+  const MEANINGS = {
+    again: 'wrong, but familiar. A lapse in something already known.',
+    got_it: 'correct.',
+    nearly: 'substantially correct, a word or detail slipped.',
+    no: 'wrong, and it was not previously known. A gap.'
+  };
+  const FAILS = { webImage: false, deadVideo: false, missingLocal: false, noPolishVoice: false };
+
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+  const esc = (value) => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+
+  function currentDeck() { return DECKS[state.deckId]; }
+  function fmt(seconds) { return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`; }
+
+  let layerNote = '';
+  let hintNote = '';
+  let fullStage = false;
+  let speech = { speaking: false, token: 0, parts: [], index: 0, skipped: [] };
+  let state = freshState('pl');
+
+  function freshState(deckId) {
+    const deck = DECKS[deckId];
+    const beginner = deck.level === 'beginner';
+    return {
+      deckId,
+      phase: 'question',
+      layerOpen: beginner,
+      helpSeen: beginner,
+      peeked: false,
+      repeatQueued: false,
+      repeat: null,
+      onRepeat: false,
+      outcome: null,
+      attempts: [],
+      input: '',
+      note: beginner ? 'The layer opened with the card. Collapse it when you are ready to answer.' : null
+    };
+  }
+
+  function svgNetwork() {
+    return `<svg viewBox="0 0 600 214" role="img" aria-label="Network panel">
+      <rect width="600" height="214" fill="#fbfaf7"/>
+      <rect width="600" height="30" fill="#eef1eb"/>
+      <text x="14" y="20" font-family="monospace" font-size="12" fill="#6d716c">Name</text>
+      <text x="280" y="20" font-family="monospace" font-size="12" fill="#6d716c">Status</text>
+      <text x="360" y="20" font-family="monospace" font-size="12" fill="#6d716c">Type</text>
+      <text x="458" y="20" font-family="monospace" font-size="12" fill="#6d716c">Size</text>
+      <text x="530" y="20" font-family="monospace" font-size="12" fill="#6d716c">Time</text>
+      <line x1="0" y1="30" x2="600" y2="30" stroke="#dfe1da"/>
+      <text x="14" y="55" font-family="monospace" font-size="12" fill="#202522">document</text><text x="280" y="55" font-family="monospace" font-size="12" fill="#2f6d3f">200</text><text x="360" y="55" font-family="monospace" font-size="12" fill="#202522">document</text><text x="458" y="55" font-family="monospace" font-size="12" fill="#202522">18 kB</text><text x="530" y="55" font-family="monospace" font-size="12" fill="#202522">42 ms</text>
+      <line x1="0" y1="66" x2="600" y2="66" stroke="#dfe1da"/>
+      <rect x="0" y="67" width="600" height="28" fill="#e8f0e9"/>
+      <text x="14" y="85" font-family="monospace" font-size="12" fill="#202522">app.js</text><text x="280" y="85" font-family="monospace" font-size="12" fill="#2f6d3f">200</text><text x="360" y="85" font-family="monospace" font-size="12" fill="#202522">script</text><text x="458" y="85" font-family="monospace" font-size="12" fill="#202522">82 kB</text><text x="530" y="85" font-family="monospace" font-size="12" fill="#2f6d3f">0 ms</text>
+      <text x="14" y="101" font-family="monospace" font-size="10" fill="#2f5d50">(disk cache)</text>
+      <line x1="0" y1="108" x2="600" y2="108" stroke="#dfe1da"/>
+      <text x="14" y="127" font-family="monospace" font-size="12" fill="#202522">fetch /api/cards</text><text x="280" y="127" font-family="monospace" font-size="12" fill="#2f6d3f">200</text><text x="360" y="127" font-family="monospace" font-size="12" fill="#202522">fetch</text><text x="458" y="127" font-family="monospace" font-size="12" fill="#202522">4 kB</text><text x="530" y="127" font-family="monospace" font-size="12" fill="#202522">118 ms</text>
+      <line x1="0" y1="136" x2="600" y2="136" stroke="#dfe1da"/>
+      <text x="14" y="155" font-family="monospace" font-size="12" fill="#202522">img/logo.svg</text><text x="280" y="155" font-family="monospace" font-size="12" fill="#2f6d3f">200</text><text x="360" y="155" font-family="monospace" font-size="12" fill="#202522">img</text><text x="458" y="155" font-family="monospace" font-size="12" fill="#202522">2 kB</text><text x="530" y="155" font-family="monospace" font-size="12" fill="#2f6d3f">0 ms</text>
+      <text x="14" y="171" font-family="monospace" font-size="10" fill="#2f5d50">(memory cache)</text>
+      <line x1="0" y1="178" x2="600" y2="178" stroke="#dfe1da"/>
+      <text x="14" y="197" font-family="monospace" font-size="12" fill="#202522">fetch /api/plan</text><text x="280" y="197" font-family="monospace" font-size="12" fill="#202522">304</text><text x="360" y="197" font-family="monospace" font-size="12" fill="#202522">fetch</text><text x="458" y="197" font-family="monospace" font-size="12" fill="#202522">0 B</text><text x="530" y="197" font-family="monospace" font-size="12" fill="#202522">96 ms</text>
+    </svg>`;
+  }
+
+  function svgCache() {
+    return `<svg viewBox="0 0 600 210" role="img" aria-label="Cache hit diagram">
+      <rect width="600" height="210" fill="#fbfaf7"/>
+      <rect x="36" y="64" width="150" height="82" rx="12" fill="#ffffff" stroke="#2f5d50" stroke-width="2"/>
+      <text x="111" y="100" text-anchor="middle" font-family="system-ui" font-size="14" font-weight="700" fill="#202522">Browser</text>
+      <text x="111" y="120" text-anchor="middle" font-family="monospace" font-size="11" fill="#6d716c">request</text>
+      <rect x="236" y="76" width="128" height="58" rx="12" fill="#e8f0e9" stroke="#2f5d50"/>
+      <text x="300" y="102" text-anchor="middle" font-family="system-ui" font-size="13" font-weight="700" fill="#202522">Cache</text>
+      <text x="300" y="119" text-anchor="middle" font-family="monospace" font-size="11" fill="#2f5d50">hit</text>
+      <rect x="432" y="64" width="132" height="82" rx="12" fill="#ffffff" stroke="#dfe1da" stroke-width="2"/>
+      <text x="498" y="100" text-anchor="middle" font-family="system-ui" font-size="13" font-weight="700" fill="#202522">Server</text>
+      <text x="498" y="120" text-anchor="middle" font-family="monospace" font-size="11" fill="#6d716c">not reached</text>
+      <line x1="186" y1="105" x2="232" y2="105" stroke="#2f5d50" stroke-width="2"/>
+      <polygon points="232,105 222,100 222,110" fill="#2f5d50"/>
+      <line x1="364" y1="105" x2="428" y2="105" stroke="#c9cec7" stroke-width="2" stroke-dasharray="5 5"/>
+      <line x1="428" y1="105" x2="364" y2="105" stroke="#c9cec7" stroke-width="2" stroke-dasharray="5 5"/>
+      <text x="300" y="178" text-anchor="middle" font-family="system-ui" font-size="12" fill="#2f5d50">the response is reused; no round trip</text>
+    </svg>`;
+  }
+
+  function svgTrace() {
+    return `<svg viewBox="0 0 600 200" role="img" aria-label="Performance trace">
+      <rect width="600" height="200" fill="#fbfaf7"/>
+      <text x="16" y="24" font-family="monospace" font-size="12" fill="#6d716c">Main thread</text>
+      <rect x="16" y="38" width="568" height="14" rx="4" fill="#dfe1da"/>
+      <rect x="16" y="58" width="128" height="18" rx="4" fill="#a9c7ba"/>
+      <rect x="150" y="58" width="248" height="18" rx="4" fill="#8a6d1f"/>
+      <rect x="404" y="58" width="104" height="18" rx="4" fill="#a9c7ba"/>
+      <rect x="514" y="58" width="70" height="18" rx="4" fill="#c9cec7"/>
+      <text x="274" y="94" text-anchor="middle" font-family="system-ui" font-size="12" font-weight="700" fill="#8a6d1f">long task 184 ms</text>
+      <rect x="16" y="112" width="568" height="12" rx="4" fill="#dfe1da"/>
+      <text x="16" y="146" font-family="monospace" font-size="11" fill="#6d716c">script</text>
+      <rect x="72" y="136" width="64" height="14" rx="3" fill="#a9c7ba"/>
+      <rect x="140" y="136" width="92" height="14" rx="3" fill="#a9c7ba"/>
+      <rect x="236" y="136" width="38" height="14" rx="3" fill="#a9c7ba"/>
+      <text x="16" y="178" font-family="monospace" font-size="11" fill="#6d716c">layout + paint</text>
+      <rect x="120" y="168" width="110" height="14" rx="3" fill="#c9cec7"/>
+      <rect x="234" y="168" width="56" height="14" rx="3" fill="#c9cec7"/>
+    </svg>`;
+  }
+
+  function svgThumb(title) {
+    return `<svg viewBox="0 0 600 260" role="img" aria-label="${esc(title)} visual">
+      <rect width="600" height="260" fill="#141a16"/>
+      <rect x="24" y="24" width="552" height="212" rx="12" fill="#1e2821"/>
+      <rect x="52" y="56" width="210" height="12" rx="6" fill="#3a4a3f"/>
+      <rect x="52" y="80" width="360" height="10" rx="5" fill="#2b382f"/>
+      <rect x="52" y="100" width="300" height="10" rx="5" fill="#2b382f"/>
+      <rect x="52" y="132" width="496" height="70" rx="8" fill="#26322a"/>
+      <rect x="66" y="146" width="120" height="10" rx="5" fill="#8a6d1f"/>
+      <rect x="196" y="146" width="260" height="10" rx="5" fill="#3a4a3f"/>
+      <circle cx="300" cy="86" r="26" fill="rgba(255,255,255,.14)"/>
+      <polygon points="292,74 292,98 312,86" fill="#f3f1eb"/>
+    </svg>`;
+  }
+
+  function renderTextPart(part, deck) {
+    const lang = part.lang || deck.lang;
+    return `<div class="part part-text ${part.lead ? 'lead' : ''}" lang="${esc(lang)}">
+      <p>${esc(part.text)}</p>
+      <span class="part-lang">${esc(lang)}</span>
+    </div>`;
+  }
+
+  function renderImagePart(part) {
+    const labels = {
+      builtin: 'Built-in image · works offline',
+      web: 'Web image · needs internet',
+      local: 'Local image · stored in this browser'
+    };
+    if (part.source === 'web' && FAILS.webImage) {
+      return `<div class="part part-fallback">
+        <strong>The image did not load.</strong>
+        <p>${esc(part.alt)}</p>
+        <button class="link-btn" type="button" data-sim-note="The real app opens the image URL in a new tab. The card and its answer keep working.">Open the image</button>
+      </div>`;
+    }
+    if (part.source === 'local' && FAILS.missingLocal) {
+      return `<div class="part part-fallback">
+        <strong>This file is not on this device.</strong>
+        <p>${esc(part.alt)}</p>
+        <button class="link-btn" type="button" data-sim-note="The real app opens a file picker and stores the chosen file in the media store again.">Choose the file again</button>
+      </div>`;
+    }
+    const figure = part.figure === 'cache' ? svgCache() : part.figure === 'trace' ? svgTrace() : svgNetwork();
+    return `<figure class="part part-image">
+      ${figure}
+      <figcaption><span>${esc(labels[part.source])}</span><span>alt: ${esc(part.alt)}</span></figcaption>
+    </figure>`;
+  }
+
+  function renderVideoPart(part) {
+    const sourceLabel = part.source === 'youtube' ? 'YouTube · needs internet' : part.source === 'web' ? 'Web video · needs internet' : 'Local video · stored in this browser';
+    const range = part.start != null && part.end != null ? `${fmt(part.start)}–${fmt(part.end)}` : '';
+    if (part.source === 'youtube' && FAILS.deadVideo) {
+      return `<div class="part part-fallback">
+        <strong>The video did not load.</strong>
+        <p>Search text: <span class="mono">${esc(part.search || '')}</span></p>
+        <button class="link-btn" type="button" data-sim-note="The real app opens a YouTube search for this text. No player and no endless spinner.">Open on YouTube</button>
+      </div>`;
+    }
+    if (part.source === 'local' && FAILS.missingLocal) {
+      return `<div class="part part-fallback">
+        <strong>This file is not on this device.</strong>
+        <p>${esc(part.title || 'Local video')}</p>
+        <button class="link-btn" type="button" data-sim-note="The real app opens a file picker and stores the chosen file in the media store again.">Choose the file again</button>
+      </div>`;
+    }
+    return `<div class="part part-video">
+      <div class="video-poster">
+        ${svgThumb(part.title || 'Teaching video')}
+        <button class="play" type="button" data-play-video>Play the section${range ? ` · ${range}` : ''}</button>
+      </div>
+      <p class="video-title">${esc(part.title || 'Teaching video')}</p>
+      <div class="video-meta"><span>${esc(sourceLabel)}</span><span>${esc(part.src)}${range ? ` · ${range}` : ''}</span></div>
+      <div class="video-player" hidden>
+        <p>Player placeholder. The real embed starts at ${part.start != null ? fmt(part.start) : 'the start'} and stops at ${part.end != null ? fmt(part.end) : 'the end'}.</p>
+        <button class="link-btn" type="button" data-stop-video>Stop</button>
+      </div>
+    </div>`;
+  }
+
+  function renderPart(part, deck) {
+    if (part.type === 'text') return renderTextPart(part, deck);
+    if (part.type === 'image') return renderImagePart(part);
+    if (part.type === 'video') return renderVideoPart(part);
+    return '';
+  }
+
+  function levelBarText(deck) {
+    if (deck.level === 'beginner') {
+      return state.layerOpen ? 'Open over the card. Collapse it when you are ready to answer.' : 'Collapsed. The question is in front. Opening it again adds nothing.';
+    }
+    if (deck.level === 'intermediate') {
+      return state.phase === 'question'
+        ? 'Folded. Opening it before you answer adds this card at the end, without the layer.'
+        : 'Folded. Opening it now adds nothing.';
+    }
+    return 'Available after the answer, folded. Opening it adds no extra card.';
+  }
+
+  function showLayerBar(deck) {
+    if (!deck.teaching || state.onRepeat || state.phase === 'done') return false;
+    if (deck.level === 'advanced') return state.phase === 'revealed';
+    return true;
+  }
+
+  function renderPrompt(deck) {
+    if (deck.modeKind === 'cloze') {
+      if (state.phase === 'question') {
+        const [before, after] = deck.prompt.split('{{blank}}');
+        return `<p class="prompt-text">${esc(before)}<input class="blank-input" id="answer-input" type="text" value="${esc(state.input)}" placeholder="${esc(deck.placeholder)}" autocomplete="off" aria-label="Fill the blank">${esc(after)}</p>`;
+      }
+      return `<p class="prompt-text">${esc(deck.prompt.replace('{{blank}}', deck.answer))}</p>`;
+    }
+    return `<p class="prompt-text">${esc(deck.prompt)}</p>`;
+  }
+
+  function resultNote() {
+    const lines = [];
+    if (state.onRepeat) {
+      lines.push('Cold check recorded: coldCheck true. A same-session repeat is not progress on its own.');
+    } else if (state.helpSeen) {
+      lines.push('helpSeen: true — the layer was visible before the answer.');
+    } else {
+      lines.push('helpSeen: false — the layer was not visible before the answer.');
+    }
+    if (state.repeatQueued && !state.onRepeat) {
+      if (state.repeat && state.repeat.reason === 'peek+wrong') {
+        lines.push('Peeked and missed: one return only, without the layer.');
+      } else if (state.repeat && state.repeat.reason === 'peek') {
+        lines.push('Peeking queued one return at the end, without the layer.');
+      } else {
+        lines.push('A wrong answer returns once, as it does today.');
+      }
+    }
+    return esc(lines.join(' '));
+  }
+
+  function renderAnswerArea(deck) {
+    if (state.phase === 'question') {
+      const field = deck.modeKind === 'cloze'
+        ? ''
+        : `<input class="answer-input" id="answer-input" type="text" value="${esc(state.input)}" placeholder="${esc(deck.placeholder)}" autocomplete="off" aria-label="${esc(deck.placeholder)}">`;
+      return `<div class="stack" style="margin-top:14px">
+        ${field}
+        <div><button class="btn primary" type="button" data-action="reveal">Answer</button></div>
+      </div>
+      <p class="small muted" style="margin-top:9px">Design simulation: the real app checks your answer. Here it is revealed; pick a verdict to see the record.</p>`;
+    }
+    const chosen = state.outcome;
+    return `<div class="study-result">
+      <div class="study-result-head">
+        <span class="outcome outcome-${chosen || 'unjudged'} study-outcome">${esc(chosen ? LABELS[chosen] : LABELS.unjudged)}</span>
+        <span class="study-summary">${esc(deck.summary)}</span>
+      </div>
+      <div class="study-answer">
+        <p class="study-label">Answer</p>
+        <p style="margin:0">${esc(deck.answer)}</p>
+      </div>
+      <details class="study-adjust"${chosen ? '' : ' open'}>
+        <summary>Was this fair? <span class="sim-only">(simulation control)</span></summary>
+        <div class="study-adjust-list">
+          <div class="region-row study-region">
+            <div>
+              <span class="muted">The answer</span>
+              <div class="muted study-region-detail">The real app judges your answer first. Here, choose the verdict it should record.</div>
+            </div>
+            <div class="row study-corrections">
+              <button class="btn small" type="button" data-outcome="got_it" ${chosen ? 'disabled' : ''} title="${esc(MEANINGS.got_it)}">I got it</button>
+              <button class="btn small" type="button" data-outcome="nearly" ${chosen ? 'disabled' : ''} title="${esc(MEANINGS.nearly)}">Nearly</button>
+              <button class="btn small" type="button" data-outcome="again" ${chosen ? 'disabled' : ''} title="${esc(MEANINGS.again)}">I missed it</button>
+              <button class="btn small" type="button" data-outcome="no" ${chosen ? 'disabled' : ''} title="${esc(MEANINGS.no)}">No</button>
+            </div>
+          </div>
+        </div>
+      </details>
+      ${chosen ? `<p class="muted small" style="margin-top:10px">${resultNote()}</p>` : ''}
+      <div class="study-actions">
+        <button class="btn primary" type="button" data-action="next" ${chosen ? '' : 'disabled'}>${state.repeatQueued && !state.onRepeat ? 'Next card' : 'Finish'}</button>
+        <button class="btn" type="button" data-action="record">Look at this card&rsquo;s record</button>
+      </div>
+    </div>`;
+  }
+
+  function renderDone() {
+    const cold = state.attempts.filter((attempt) => attempt.coldCheck).length;
+    const helped = state.attempts.filter((attempt) => attempt.helpSeen).length;
+    const attempts = state.attempts.length === 1 ? '1 attempt' : `${state.attempts.length} attempts`;
+    return `<div>
+      <h1>This session is finished.</h1>
+      <div class="card">
+        <div class="row">
+          <button class="btn primary" type="button" data-action="restart">Study again</button>
+          <button class="btn" type="button" data-action="record">Look at progress</button>
+        </div>
+      </div>
+      <p class="muted small" style="margin-top:12px">Simulation record: ${attempts}, ${helped} with help seen, ${cold} cold ${cold === 1 ? 'check' : 'checks'}.${cold ? ' A cold check proves short-term recall, not progress; the card still returns next session on its normal schedule.' : ''}</p>
+    </div>`;
+  }
+
+  function renderStage() {
+    if (state.phase === 'done') {
+      $('#stage').className = 'stage study-stage';
+      $('#stage').innerHTML = renderDone();
+      return;
+    }
+    const deck = currentDeck();
+    const total = state.repeatQueued ? 2 : 1;
+    const current = state.onRepeat ? 2 : 1;
+    const progress = Math.max(6, ((current - 1) / total) * 100 + (state.phase === 'revealed' ? 100 / total : 0));
+    const bar = showLayerBar(deck) ? `<div class="layer-bar">
+      <span class="layer-bar-icon" aria-hidden="true">▤</span>
+      <div class="layer-bar-copy">
+        <strong>Teaching layer</strong>
+        <span>${esc(levelBarText(deck))}</span>
+      </div>
+      <button class="btn small" type="button" data-action="open-layer">Show the teaching layer</button>
+    </div>` : '';
+    const coldNote = state.onRepeat ? `<div class="cold-note"><strong>Cold check.</strong> The same card, without its teaching layer. One return per card per session.</div>` : '';
+    const returnedNote = state.onRepeat && state.repeat && (state.repeat.reason === 'wrong' || state.repeat.reason === 'peek+wrong')
+      ? '<p class="muted study-returned">This one is marked to return once — it was missed in this session.</p>'
+      : '';
+    const hint = hintNote ? `<div class="notice study-hint">
+      <p class="study-hint-label">Simulation</p>
+      <p class="study-hint-text">${esc(hintNote)}</p>
+    </div>` : '';
+    $('#stage').className = `stage study-stage${fullStage ? ' stage-full' : ''}`;
+    $('#stage').innerHTML = `<div class="study-stage-inner">
+      <div class="study-head">
+        <span class="muted">Card ${current} of ${total}</span>
+        <div class="row">
+          <button class="btn small" type="button" data-action="full" aria-pressed="${fullStage}">${fullStage ? 'Exit full screen' : 'Full screen'}</button>
+          <button class="btn small" type="button" data-action="end">End here</button>
+        </div>
+      </div>
+      <div class="study-progress" role="progressbar" aria-label="Card progress" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${current}"><span style="width:${progress}%"></span></div>
+      <div class="card study-card${state.onRepeat ? ' cold' : ''}">
+        <div class="study-card-top">
+          <span class="study-mode">${esc(deck.mode)}</span>
+          <button class="btn small" type="button" data-action="hint">${hintNote ? 'Hint shown' : 'Ask for a hint'}</button>
+        </div>
+        <p class="muted study-instruction">${esc(deck.instruction)}</p>
+        ${returnedNote}
+        ${bar}
+        ${coldNote}
+        ${renderPrompt(deck)}
+        ${hint}
+        ${renderAnswerArea(deck)}
+      </div>
+    </div>`;
+  }
+
+  function renderRail() {
+    const deck = currentDeck();
+    const total = state.repeatQueued ? 2 : 1;
+    const answered = state.attempts.length;
+    const left = Math.max(0, total - answered - (state.phase === 'revealed' ? 1 : 0));
+    const badge = state.onRepeat
+      ? '<span class="badge warn">Cold check</span>'
+      : deck.level === 'beginner'
+      ? '<span class="badge ok">Layer with card</span>'
+      : deck.level === 'intermediate'
+      ? '<span class="badge warn">Peek costs a repeat</span>'
+      : '<span class="badge">After the answer</span>';
+    $('#rail-session').innerHTML = `<div class="study-rail-head">
+      <div>
+        <h3>This session</h3>
+        <p class="muted small">${esc(deck.pack)} / ${esc(deck.deck)} · ${deck.level}</p>
+      </div>
+      ${badge}
+    </div>
+    <div class="stat-grid">
+      <div class="stat"><strong>${total}</strong><span>cards offered</span></div>
+      <div class="stat"><strong>${answered}</strong><span>answered</span></div>
+      <div class="stat"><strong>${left}</strong><span>left</span></div>
+      <div class="stat"><strong>${state.helpSeen ? 'Yes' : 'No'}</strong><span>help seen</span></div>
+    </div>
+    <button class="btn" type="button" style="width:100%;margin-top:12px" data-action="end">End this session</button>`;
+
+    const repeatReason = state.repeat && state.repeat.reason === 'peek+wrong'
+      ? 'Peeked, then missed. Still one return.'
+      : state.repeat && state.repeat.reason === 'peek'
+      ? 'Added because the layer was opened before the answer.'
+      : 'Added because the answer was wrong. This is today&rsquo;s rule too.';
+    $('#sim-queue').innerHTML = `<li class="${!state.onRepeat && state.phase !== 'done' ? 'current' : 'done'}">Card 1 · ${esc(deck.summary)}</li>
+      ${state.repeatQueued ? `<li class="${state.onRepeat && state.phase !== 'done' ? 'current' : 'done'}">Card 2 · same card, no teaching layer
+        <span class="why">${repeatReason} ${state.repeat && state.repeat.coldCheck ? '<span class="chip warm">cold check</span>' : ''}</span>
+      </li>` : ''}`;
+
+    const rows = state.attempts.map((attempt, index) => `<tr>
+      <td>${index + 1}${attempt.coldCheck ? ' · cold' : ''}</td>
+      <td>${attempt.helpSeen ? 'true' : 'false'}</td>
+      <td>${attempt.coldCheck ? 'true' : 'false'}</td>
+      <td>${LABELS[attempt.outcome]}</td>
+    </tr>`).join('');
+    const pending = state.attempts.length === 0 ? `<tr><td>1</td><td>${state.helpSeen ? 'true' : '—'}</td><td>${state.onRepeat ? 'true' : '—'}</td><td>—</td></tr>` : '';
+    const hasCold = state.attempts.some((attempt) => attempt.coldCheck);
+    const evidenceNote = hasCold
+      ? 'The cold check is a same-session repeat. It is not progress; the real evidence is the next scheduled attempt.'
+      : 'The layer is teaching, not a hint. helpSeen is recorded; no outcome is capped by it.';
+    $('#rail-evidence').innerHTML = `<h3>What gets recorded</h3>
+      <p class="rails-sub">Evidence after each attempt. Never the provider key.</p>
+      <table class="ev-table">
+        <thead><tr><th>Attempt</th><th>helpSeen</th><th>coldCheck</th><th>Outcome</th></tr></thead>
+        <tbody>${rows || pending}</tbody>
+      </table>
+      <p class="note small" style="margin-top:10px">${evidenceNote}</p>
+      ${state.note ? `<p class="muted small" style="margin-top:8px">${esc(state.note)}</p>` : ''}`;
+  }
+
+  function renderLevels() {
+    const current = currentDeck().level;
+    $('#levels').innerHTML = Object.entries(LEVELS).map(([key, level]) => `<article class="card level-card ${key === current ? 'current' : ''}">
+      <span class="level-pill ${key}">${level.label}</span>
+      <h3>${level.title}</h3>
+      <ul>${level.bullets.map((bullet) => `<li>${bullet}</li>`).join('')}</ul>
+      <p class="try">Try this: ${level.tryIt}</p>
+    </article>`).join('');
+  }
+
+  function renderLayer() {
+    const deck = currentDeck();
+    const open = state.layerOpen && !state.onRepeat && deck.teaching && deck.teaching.length > 0;
+    document.body.classList.toggle('layer-open', Boolean(open));
+    if (!open) return;
+    const parts = deck.teaching.map((part) => renderPart(part, deck)).join('');
+    $('#layer-sub').textContent = `Teaching layer · ${deck.pack} / ${deck.deck} · ${deck.level}`;
+    $('#layer-title').textContent = 'Teaching layer';
+    $('#layer-level-note').textContent = deck.level === 'beginner'
+      ? 'Open before the question. Collapse it to answer; the bar stays.'
+      : deck.level === 'intermediate'
+      ? (state.phase === 'question' ? 'Opening this before you answer adds a repeat at the end, without the layer.' : 'Opening after the answer adds nothing.')
+      : 'Available after the answer. Opening it adds no extra card.';
+    $('#layer-parts').innerHTML = parts;
+    const textParts = deck.teaching.filter((part) => part.type === 'text');
+    $('#layer-foot').style.display = textParts.length ? '' : 'none';
+    updateListenButton();
+  }
+
+  function render() {
+    if (state.phase === 'done') {
+      state.layerOpen = false;
+      fullStage = false;
+    }
+    $('#study-layout').classList.toggle('solo', state.phase === 'done');
+    $('#study-rail').hidden = state.phase === 'done';
+    document.body.classList.toggle('full-stage', fullStage && state.phase !== 'done');
+    renderStage();
+    renderRail();
+    const deck = currentDeck();
+    const pill = $('#deck-level');
+    pill.textContent = deck.level;
+    pill.className = `level-pill ${deck.level}`;
+    $('#deck-select').value = state.deckId;
+    renderLevels();
+    renderLayer();
+  }
+
+  function queueRepeat(reason) {
+    if (state.repeatQueued) return;
+    state.repeatQueued = true;
+    state.repeat = { reason, coldCheck: reason.includes('peek') };
+    state.note = reason === 'peek'
+      ? 'One return was added at the end of this session, without the layer.'
+      : 'A wrong answer returns once, without the layer. This is the existing rule.';
+  }
+
+  function openLayer() {
+    const deck = currentDeck();
+    if (state.onRepeat || !deck.teaching) return;
+    if (deck.level === 'advanced' && state.phase === 'question') return;
+    if (deck.level === 'intermediate' && state.phase === 'question') {
+      state.helpSeen = true;
+      if (!state.peeked) {
+        state.peeked = true;
+        queueRepeat('peek');
+      }
+    }
+    state.layerOpen = true;
+    layerNote = '';
+    render();
+    window.setTimeout(() => $('#layer-collapse')?.focus(), 0);
+  }
+
+  function closeLayer() {
+    state.layerOpen = false;
+    stopListening();
+    render();
+  }
+
+  function reveal() {
+    if (state.phase !== 'question') return;
+    state.phase = 'revealed';
+    render();
+  }
+
+  function chooseOutcome(outcome) {
+    if (state.phase !== 'revealed' || state.outcome) return;
+    const wrong = outcome === 'again' || outcome === 'no';
+    state.outcome = outcome;
+    state.attempts.push({ outcome, helpSeen: state.helpSeen, coldCheck: state.onRepeat });
+    if (!state.onRepeat) {
+      if (wrong) {
+        if (state.repeatQueued && state.repeat) {
+          if (state.peeked) state.repeat.reason = 'peek+wrong';
+          state.repeat.coldCheck = state.peeked;
+          state.note = state.peeked
+            ? 'Peeked and missed: one return only, without the layer.'
+            : 'A wrong answer returns once, without the layer.';
+        } else {
+          queueRepeat('wrong');
+        }
+      } else if (state.peeked && !state.repeatQueued) {
+        queueRepeat('peek');
+      }
+    }
+    render();
+  }
+
+  function next() {
+    if (!state.outcome) return;
+    hintNote = '';
+    if (state.repeatQueued && !state.onRepeat) {
+      state.onRepeat = true;
+      state.phase = 'question';
+      state.outcome = null;
+      state.helpSeen = false;
+      state.layerOpen = false;
+      state.input = '';
+      state.note = state.repeat && state.repeat.coldCheck
+        ? 'Cold check: the same card, no teaching layer. Answer it from memory.'
+        : 'This card returns once, without the layer.';
+      stopListening();
+      render();
+      return;
+    }
+    state.phase = 'done';
+    state.layerOpen = false;
+    stopListening();
+    render();
+  }
+
+  function restart() {
+    state = freshState(state.deckId);
+    layerNote = '';
+    hintNote = '';
+    stopListening();
+    render();
+  }
+
+  function toggleHint() {
+    hintNote = 'No hint is set up in this simulation. The teaching layer is teaching, not a hint; it changes nothing about how the answer is judged.';
+    render();
+  }
+
+  function toggleFullStage() {
+    fullStage = !fullStage;
+    if (fullStage) {
+      // WHY: The layer dialog is a sibling of the stage, not a child. Ask the
+      // whole page for full screen so the dialog stays inside the fullscreen
+      // element and can sit above the fixed stage.
+      const page = document.documentElement;
+      if (page.requestFullscreen) void page.requestFullscreen().catch(() => {});
+    } else if (document.fullscreenElement) {
+      void document.exitFullscreen().catch(() => {});
+    }
+    render();
+  }
+
+  function endSession() {
+    if (state.phase === 'done') return;
+    state.phase = 'done';
+    state.layerOpen = false;
+    fullStage = false;
+    if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});
+    stopListening();
+    render();
+  }
+
+  function showRecord() {
+    const evidence = $('#rail-evidence');
+    $('#sim-controls').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    evidence.classList.add('is-flash');
+    window.setTimeout(() => evidence.classList.remove('is-flash'), 1400);
+  }
+
+  function stopListening() {
+    speech.token += 1;
+    speech.speaking = false;
+    speech.parts = [];
+    speech.index = 0;
+    speech.skipped = [];
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    updateListenButton();
+  }
+
+  function layerTextParts(deck) {
+    return deck.teaching.filter((part) => part.type === 'text').map((part) => ({ text: part.text, lang: part.lang || deck.lang }));
+  }
+
+  function hasVoice(voices, lang) {
+    const base = lang.toLowerCase().split('-')[0];
+    return voices.some((voice) => voice.lang && voice.lang.toLowerCase().split('-')[0] === base);
+  }
+
+  function setLayerNote(text) {
+    layerNote = text;
+    const element = $('#layer-note');
+    if (element) element.textContent = text;
+  }
+
+  function updateListenButton() {
+    const button = $('#listen-btn');
+    if (!button) return;
+    const supported = 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined';
+    button.disabled = !supported;
+    button.textContent = speech.speaking ? 'Stop' : 'Listen to the layer';
+    button.setAttribute('aria-pressed', String(speech.speaking));
+    if (!supported) button.title = 'Speech is not available on this device.';
+  }
+
+  function toggleListen() {
+    if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') {
+      setLayerNote('This device cannot read text aloud. The layer and the card still work.');
+      return;
+    }
+    if (speech.speaking) {
+      stopListening();
+      return;
+    }
+    const parts = layerTextParts(currentDeck());
+    if (!parts.length) return;
+    speech = { speaking: true, token: speech.token + 1, parts, index: 0, skipped: [] };
+    window.speechSynthesis.cancel();
+    updateListenButton();
+    speakNext(speech.token);
+  }
+
+  function speakNext(token) {
+    if (token !== speech.token || !speech.speaking) return;
+    if (speech.index >= speech.parts.length) {
+      speech.speaking = false;
+      const skipped = Array.from(new Set(speech.skipped));
+      if (skipped.length) setLayerNote(`No voice is installed for ${skipped.join(', ')}. That part was skipped; the rest was read.`);
+      updateListenButton();
+      return;
+    }
+    const part = speech.parts[speech.index++];
+    if (FAILS.noPolishVoice && part.lang.toLowerCase().startsWith('pl')) {
+      speech.skipped.push(part.lang);
+      speakNext(token);
+      return;
+    }
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length && !hasVoice(voices, part.lang)) {
+      speech.skipped.push(part.lang);
+      speakNext(token);
+      return;
+    }
+    const utterance = new SpeechSynthesisUtterance(part.text);
+    utterance.lang = part.lang;
+    const exact = voices.find((voice) => voice.lang && voice.lang.toLowerCase() === part.lang.toLowerCase());
+    const loose = exact || voices.find((voice) => hasVoice([voice], part.lang));
+    if (loose) utterance.voice = loose;
+    utterance.onend = () => speakNext(token);
+    utterance.onerror = () => {
+      speech.skipped.push(part.lang);
+      speakNext(token);
+    };
+    window.speechSynthesis.speak(utterance);
+  }
+
+  function toggleVideo(button) {
+    const box = button.closest('.part-video');
+    if (!box) return;
+    const player = $('.video-player', box);
+    if (player.hidden) {
+      player.hidden = false;
+      button.dataset.openLabel = button.textContent;
+      button.textContent = 'Pause the section';
+    } else {
+      player.hidden = true;
+      button.textContent = button.dataset.openLabel || 'Play the section';
+    }
+  }
+
+  function stopVideo(button) {
+    const box = button.closest('.part-video');
+    if (!box) return;
+    const player = $('.video-player', box);
+    const play = $('[data-play-video]', box);
+    player.hidden = true;
+    if (play) play.textContent = play.dataset.openLabel || 'Play the section';
+  }
+
+  document.addEventListener('click', (event) => {
+    const action = event.target.closest('[data-action]');
+    if (action) {
+      const name = action.dataset.action;
+      if (name === 'open-layer') openLayer();
+      if (name === 'collapse-layer') closeLayer();
+      if (name === 'reveal') reveal();
+      if (name === 'next') next();
+      if (name === 'restart') restart();
+      if (name === 'hint') toggleHint();
+      if (name === 'full') toggleFullStage();
+      if (name === 'end') endSession();
+      if (name === 'record') showRecord();
+      return;
+    }
+    const outcome = event.target.closest('[data-outcome]');
+    if (outcome) { chooseOutcome(outcome.dataset.outcome); return; }
+    const note = event.target.closest('[data-sim-note]');
+    if (note) { setLayerNote(note.dataset.simNote); return; }
+    const play = event.target.closest('[data-play-video]');
+    if (play) { toggleVideo(play); return; }
+    const stop = event.target.closest('[data-stop-video]');
+    if (stop) { stopVideo(stop); return; }
+  });
+
+  document.addEventListener('input', (event) => {
+    if (event.target.id === 'answer-input') state.input = event.target.value;
+  });
+
+  $('#deck-select').addEventListener('change', (event) => {
+    state = freshState(event.target.value);
+    layerNote = '';
+    hintNote = '';
+    fullStage = false;
+    stopListening();
+    render();
+  });
+
+  $('#layer-backdrop').addEventListener('click', closeLayer);
+  $('#listen-btn').addEventListener('click', toggleListen);
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    if (document.body.classList.contains('layer-open')) closeLayer();
+    else if (fullStage) toggleFullStage();
+  });
+
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement && fullStage) {
+      fullStage = false;
+      render();
+    }
+  });
+
+  $$('[data-fail]').forEach((input) => {
+    input.addEventListener('change', () => {
+      FAILS[input.dataset.fail] = input.checked;
+      stopListening();
+      renderLayer();
+    });
+  });
+
+  $$('.nav button').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      $$('.nav button').forEach((other) => other.setAttribute('aria-selected', String(other === tab)));
+      $$('.view').forEach((view) => view.classList.toggle('active', view.id === `view-${tab.dataset.view}`));
+      state.layerOpen = false;
+      hintNote = '';
+      fullStage = false;
+      stopListening();
+      render();
+    });
+  });
+
+  const EDITOR_TEMPLATES = {
+    text: $('#tpl-text').innerHTML,
+    image: $('#tpl-image').innerHTML,
+    video: $('#tpl-video').innerHTML
+  };
+
+  let editorStep = 1;
+
+  function setEditorStep(step) {
+    editorStep = Math.min(3, Math.max(1, Number(step) || 1));
+    $$('.wizard-step').forEach((button) => {
+      button.setAttribute('aria-current', button.dataset.wizardGo === String(editorStep) ? 'step' : 'false');
+    });
+    $$('.wizard-panel').forEach((panel) => {
+      panel.hidden = panel.dataset.wizardPanel !== String(editorStep);
+    });
+    const back = $('[data-wizard-back]');
+    if (back) back.disabled = editorStep === 1;
+    const next = $('[data-wizard-next]');
+    if (next) next.hidden = editorStep === 3;
+    const position = $('#wizard-position');
+    if (position) position.textContent = `Step ${editorStep} of 3`;
+    if (editorStep === 3) renderEditorPreview();
+  }
+
+  function syncEditorSource(select) {
+    const row = select.closest('.editor-row');
+    if (!row) return;
+    const kind = row.dataset.kind;
+    const source = select.value;
+    const web = $('.source-web', row);
+    const link = $('.source-link', row);
+    const local = $('.source-local', row);
+    if (web) web.hidden = source !== 'web';
+    if (link) link.hidden = source === 'local';
+    if (local) local.hidden = source !== 'local';
+    const range = $('.video-range', row);
+    const search = $('.video-search', row);
+    if (range) range.hidden = source !== 'youtube';
+    if (search) search.hidden = source !== 'youtube';
+    const kindLabel = $('.editor-kind', row);
+    if (kindLabel) {
+      kindLabel.textContent = kind === 'image'
+        ? (source === 'local' ? 'local image' : 'web image')
+        : (source === 'local' ? 'local video' : source === 'web' ? 'web video' : 'YouTube');
+    }
+    const imageHint = $('[data-image-hint]', row);
+    if (imageHint) {
+      imageHint.textContent = source === 'local'
+        ? 'Resized to at most 1600 px wide and 1 MB, then copied into this browser’s media store.'
+        : 'Only the address is stored. The image needs internet and can break.';
+    }
+    const videoHint = $('[data-video-hint]', row);
+    if (videoHint) {
+      videoHint.textContent = source === 'local'
+        ? 'Copied into this browser’s media store, at most 20 MB.'
+        : source === 'web'
+          ? 'A direct video URL. The card works without it.'
+          : 'A YouTube link is reduced to its id. End must be after start.';
+    }
+  }
+
+  function reportEditorFile(input) {
+    const row = input.closest('.editor-row');
+    if (!row) return;
+    const status = $('[data-file-status]', row);
+    if (!status) return;
+    const file = input.files && input.files[0];
+    if (!file) { status.textContent = ''; status.className = 'hint file-status'; return; }
+    const megabytes = file.size / (1024 * 1024);
+    const size = megabytes >= 0.1
+      ? `${megabytes.toFixed(1)} MB`
+      : `${Math.max(1, Math.round(file.size / 1024))} kB`;
+    if (row.dataset.kind === 'image') {
+      if (file.type && !file.type.startsWith('image/')) {
+        status.textContent = 'Choose an image file.';
+        status.className = 'hint file-status warn';
+        return;
+      }
+      status.textContent = `${file.name} · ${size}. Copied in after resizing to at most 1600 px wide and 1 MB.`;
+      status.className = 'hint file-status ok';
+      return;
+    }
+    if (file.type && !file.type.startsWith('video/')) {
+      status.textContent = 'Choose a video file.';
+      status.className = 'hint file-status warn';
+      return;
+    }
+    if (megabytes > 20) {
+      status.textContent = `${file.name} · ${size}. The limit is 20 MB; choose a smaller file.`;
+      status.className = 'hint file-status warn';
+      return;
+    }
+    status.textContent = `${file.name} · ${size}. Copied into this browser’s media store.`;
+    status.className = 'hint file-status ok';
+  }
+
+  function youtubeId(link) {
+    const match = String(link || '').match(/(?:youtu\.be\/|[?&]v=|embed\/)([A-Za-z0-9_-]{6,})/);
+    return match ? match[1] : (link || 'VIDEO_ID');
+  }
+
+  function renderEditorPreview() {
+    const rows = $$('#editor-rows .editor-row');
+    const html = rows.map((row) => {
+      const kind = row.dataset.kind;
+      if (kind === 'text') {
+        const text = $('textarea', row)?.value || '';
+        const lang = $('input[type="text"]', row)?.value || '';
+        return `<div class="part-text"><p>${esc(text)}</p><span class="part-lang">${esc(lang)}</span></div>`;
+      }
+      if (kind === 'image') {
+        const alt = $('input[type="text"]', row)?.value || '(no alt text)';
+        const source = $('[data-source-select]', row)?.value || 'web';
+        if (source === 'local') {
+          const file = $('input[type="file"]', row)?.files?.[0];
+          return `<figure class="part-image"><div class="mini-poster">Local image · ${esc(file ? file.name : 'no file chosen')}</div><figcaption><span>Local image · kept in this browser</span><span>alt: ${esc(alt)}</span></figcaption></figure>`;
+        }
+        const url = $('.source-web input', row)?.value || '(no address)';
+        return `<figure class="part-image"><svg viewBox="0 0 400 150" role="img" aria-label="${esc(alt)}"><rect width="400" height="150" fill="#eef1eb"/><rect x="150" y="50" width="100" height="50" rx="8" fill="#a9c7ba"/><text x="200" y="80" text-anchor="middle" font-family="system-ui" font-size="11" fill="#202522">image preview</text></svg><figcaption><span>Web image · ${esc(url)}</span><span>alt: ${esc(alt)}</span></figcaption></figure>`;
+      }
+      const source = $('[data-source-select]', row)?.value || 'youtube';
+      if (source === 'local') {
+        const file = $('input[type="file"]', row)?.files?.[0];
+        return `<div class="mini-poster">Local video · ${esc(file ? file.name : 'no file chosen')}</div>`;
+      }
+      if (source === 'web') {
+        const url = $('.source-link input', row)?.value || 'WEB_URL';
+        return `<div class="mini-poster">Web video · ${esc(url)}</div>`;
+      }
+      const id = youtubeId($('.source-link input', row)?.value);
+      return `<div class="mini-poster">YouTube · ${esc(id)}</div>`;
+    }).join('');
+    $('#editor-preview-body').innerHTML = html || '<p class="muted small" style="margin-top:6px">No teaching parts. A card with no layer is valid.</p>';
+  }
+
+  function renumberEditor() {
+    const rows = $$('#editor-rows .editor-row');
+    rows.forEach((row, index) => {
+      const number = $('.row-number', row);
+      if (number) number.textContent = index + 1;
+    });
+    const note = $('#editor-parts-note');
+    if (note) {
+      note.textContent = rows.length
+        ? `${rows.length} part${rows.length === 1 ? '' : 's'}. Click one to open it; order is display order.`
+        : 'No parts yet. A card with no parts is valid.';
+    }
+    const preview = $('#editor-preview-body');
+    if (preview && !rows.length) preview.innerHTML = '<p class="muted small" style="margin-top:6px">No teaching parts. A card with no layer is valid.</p>';
+  }
+
+  function addEditorRow(kind, open = true) {
+    $('#editor-rows').insertAdjacentHTML('beforeend', EDITOR_TEMPLATES[kind]);
+    const row = $('#editor-rows').lastElementChild;
+    if (open) row.open = true;
+    const select = $('[data-source-select]', row);
+    if (select) syncEditorSource(select);
+    renumberEditor();
+  }
+
+  document.addEventListener('change', (event) => {
+    const source = event.target.closest('[data-source-select]');
+    if (source) { syncEditorSource(source); return; }
+    const file = event.target.closest('input[type="file"]');
+    if (file) reportEditorFile(file);
+  });
+
+  document.addEventListener('click', (event) => {
+    const add = event.target.closest('[data-add]');
+    if (add) { addEditorRow(add.dataset.add); return; }
+    const go = event.target.closest('[data-wizard-go]');
+    if (go) { setEditorStep(go.dataset.wizardGo); return; }
+    const back = event.target.closest('[data-wizard-back]');
+    if (back) { setEditorStep(editorStep - 1); return; }
+    const next = event.target.closest('[data-wizard-next]');
+    if (next) { setEditorStep(editorStep + 1); return; }
+    const move = event.target.closest('[data-move]');
+    if (move) {
+      const row = move.closest('.editor-row');
+      if (move.dataset.move === 'up' && row.previousElementSibling) row.parentNode.insertBefore(row, row.previousElementSibling);
+      if (move.dataset.move === 'down' && row.nextElementSibling) row.parentNode.insertBefore(row.nextElementSibling, row);
+      renumberEditor();
+      return;
+    }
+    const remove = event.target.closest('[data-remove]');
+    if (remove) { remove.closest('.editor-row').remove(); renumberEditor(); return; }
+    const preview = event.target.closest('[data-preview]');
+    if (preview) { renderEditorPreview(); return; }
+    const save = event.target.closest('[data-save]');
+    if (save) {
+      $('#editor-save-note').textContent = 'Saved in place. The card keeps its identity and its evidence.';
+      return;
+    }
+  });
+
+  ['text', 'image', 'video'].forEach((kind) => addEditorRow(kind, false));
+  renumberEditor();
+  setEditorStep(1);
+  render();
+
+</script>
+</body>
+</html>

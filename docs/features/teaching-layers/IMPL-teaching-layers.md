@@ -184,8 +184,10 @@ npm run lint
   Typecheck, lint and the full suite (51 files, 542 tests, after `npm run
   build`) pass. Reconcile note: the pre-impl sim showed a wrong return without
   the layer; PRD Scenario 8 keeps the normal presentation, and the
-  implementation follows the PRD. The beginner case submits `helpSeen: false`
-  because the layer is folded before the answer, matching GRILL entry 5.
+  implementation follows the PRD. The beginner case submits `helpSeen: true`
+  when the layer was open: `StudyClient.tsx:402` submits
+  `layerOpen || peeked`. (Phase 7 first said `false`; the post-impl run
+  corrected it, and the code has always submitted the truth the layer shows.)
 - 2026-10-25: phase 8 complete. `client/teaching-editor.ts` holds the pure
   row/part conversions, and `app/library/TeachingEditor.tsx` is the three-step
   wizard; it saves through `PATCH /api/cards/:id/teaching`, so the card keeps
@@ -222,3 +224,16 @@ npm run lint
   cannot prove embedding permission); `jabłko` → YAHP-koh is the respelling to
   eyeball. `public/packs/polish-starter.json` stays tracked as the fixture for
   four older simulation tests and is not in the manifest.
+- 2026-10-25: phase 10 complete. Drove the real export in Chrome (localhost:4183,
+  service worker `ac24d627b6ad5a0b`) through all thirteen contract items; the
+  evidence is in `simulate-post.md`. One real defect surfaced and was fixed: a
+  dead YouTube id looked alive because its 404 body is a valid 120x90 JPEG, so
+  `youtubeStillIsDead` now judges the still by size and the dead id falls back to
+  a plain link. The contract wording for item 1 was wrong (a beginner never gets
+  a cold repeat; `returnReason` returns "cold" only for an intermediate peek),
+  and the phase 7 `helpSeen` note was corrected above. The simulations are
+  reconciled into `simulate.html` (canonical) with the pre-impl copy kept in
+  `archive/`. Three behaviours outside the contract are recorded, not changed:
+  the pack row counts pack-origin cards while the shelf total counts all cards;
+  a pack re-imported after dismissal keeps its tombstone, so a later manifest
+  bump skips it; a restored media record keeps bytes but not width/height.
