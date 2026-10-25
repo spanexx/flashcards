@@ -71,14 +71,32 @@ cards, packs, languages and decks.
 use the wide grid, and Write pack fields sit in two columns where they fit.
 
 **When** the learner opens Study
-**Then** the card column is about 820px and a session rail shows the scope, the
-offer, answered count, cards left, hints used, tutor state and an end control.
+**Then** the card column is about 820px.
+
+**Given** the study plan, before a session starts
+**Then** a plan rail shows the card count, the tutor state, the score setting
+(or "None kept"), a "Start session" control and a "What to expect" summary.
+Answered count, cards left, hints used and the end control do not exist yet.
+
+**Given** a running session
+**Then** the same rail shows the scope, the offer, answered count, cards left,
+hints used, tutor state and an end control.
 
 ### Scenario 4: Controls look like one family
 
-**Given** any input, select, textarea or button
-**Then** it shares a consistent height, radius, border, focus ring and disabled
-state; selects show a visible chevron and a comfortable hit area.
+**Given** any input, select or textarea
+**Then** it is 44px high with an 11px radius and a shared border, focus ring and
+disabled state; selects show a visible chevron and 16px text, so a phone does
+not zoom when the picker takes focus.
+
+**Given** any button
+**Then** it shares the same border, focus ring and disabled state at 40px high
+with a 10px radius, and a small button is 32px high. Buttons are deliberately
+4px shorter than fields because they carry less text and sit in tighter rows.
+
+**Given** the Settings profile form
+**Then** its Level and Style labels use the same `field-label` and `form-grid`
+classes as every other form, not inline text.
 
 **Given** light or dark mode
 **Then** picker choices and field text remain readable.

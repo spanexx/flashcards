@@ -3,7 +3,9 @@
    PACK: v1-prototype
    2026-10-19 opencode: created for the v1 prototype [pack: v1-prototype]
    2026-10-20 opencode: compact pack panels and taller card list [pack: browser-app]
-   2026-10-23 opencode: the global jobs control, panel and notice. [pack: background-jobs] */
+   2026-10-23 opencode: the global jobs control, panel and notice. [pack: background-jobs]
+   2026-10-25 opencode: the Lucide brand, sticky phone bar, shared select
+   family and the Study plan rail. [pack: learner-interface] */
 
 :root {
   color-scheme: light dark;
@@ -66,10 +68,40 @@ body {
 }
 
 .sidebar .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  width: fit-content;
   font-weight: 650;
   color: var(--ink);
   text-decoration: none;
   padding: 0 10px;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  border-radius: 9px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #ffffff 16%, transparent);
+}
+
+.brand-mark svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.brand-name {
+  letter-spacing: -0.012em;
 }
 
 .side-nav {
@@ -116,6 +148,10 @@ body {
   }
 }
 
+/* WHY: A long card or library list must not take the four destinations away
+   on a phone. The compact bar stays pinned and keeps the install button clear.
+   PACK: learner-interface / D-14
+   2026-10-25 opencode: pinned the compact phone bar [pack: learner-interface] */
 @media (max-width: 860px) {
   .shell {
     grid-template-columns: 1fr;
@@ -123,26 +159,41 @@ body {
   }
 
   .sidebar {
-    position: static;
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
     height: auto;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px 10px;
-    padding: 10px 14px;
+    align-content: start;
+    gap: 7px;
+    padding: 10px 70px 10px 14px;
     border-right: none;
     border-bottom: 1px solid var(--line);
+    background: color-mix(in srgb, var(--bg) 94%, transparent);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
   }
 
   .sidebar .brand {
     padding: 0;
+    min-height: 32px;
   }
 
   .side-nav {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 2px;
+    width: 100%;
     margin-top: 0;
+  }
+
+  .side-nav a {
+    padding: 7px 2px;
+    font-size: 0.82rem;
+    line-height: 1.2;
+    text-align: center;
+    white-space: nowrap;
   }
 
   .side-foot {
@@ -256,12 +307,25 @@ p.lead {
 .plan-bar {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 12px;
-  align-items: center;
+  gap: 10px 14px;
+  align-items: end;
+  justify-content: space-between;
 }
 
-.plan-bar .grow {
-  flex: 1;
+.plan-offer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+}
+
+.plan-offer .field {
+  width: 5.5rem;
+  min-width: 5.5rem;
+}
+
+.plan-bar .btn.small {
+  min-height: 40px;
 }
 
 .muted {
@@ -411,16 +475,23 @@ form.inline {
   align-items: center;
 }
 
+/* WHY: Labels are smaller than the value the learner reads. The control must
+   keep its own readable size or a phone renders a shrunken picker and zooms.
+   PACK: learner-interface / D-14
+   2026-10-25 opencode: separated field text from label sizing [pack: learner-interface] */
 input.field,
 select.field,
 textarea.field {
-  font: inherit;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 400;
   width: 100%;
-  min-height: 42px;
+  min-width: 0;
+  min-height: 44px;
   padding: 9px 12px;
   border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--card);
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--card) 94%, var(--bg));
   color: var(--ink);
 }
 
@@ -435,6 +506,11 @@ select.field {
   cursor: pointer;
 }
 
+select.field:hover:not(:disabled),
+.study-select:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--line));
+}
+
 input.field:disabled,
 select.field:disabled,
 textarea.field:disabled {
@@ -447,6 +523,16 @@ textarea.field:disabled {
 .select-wrap {
   position: relative;
   display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.select-wrap select {
+  width: 100%;
+}
+
+.select-wrap:focus-within::after {
+  border-color: var(--accent);
 }
 
 .select-wrap::after {
@@ -731,9 +817,11 @@ td {
   display: grid;
   gap: 6px;
   flex: 1 1 11rem;
+  min-width: 0;
   color: var(--quiet);
   font-size: 0.84rem;
   font-weight: 600;
+  line-height: 1.35;
 }
 
 .field-label .field {
@@ -1205,22 +1293,187 @@ td {
 
 .study-scope-field {
   display: grid;
-  gap: 4px;
+  flex: 1 1 240px;
+  gap: 5px;
+  min-width: 0;
+  max-width: 360px;
   color: var(--quiet);
   font-size: 0.85rem;
+  font-weight: 600;
 }
 
+/* WHY: The scope label is 0.85rem, but the language and deck names inside the
+   select are values, not label text. Keep them at 16px on every device.
+   PACK: learner-interface / D-14
+   2026-10-25 opencode: stopped the select from inheriting label sizing [pack: learner-interface] */
 .study-select {
-  font: inherit;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 400;
   width: 100%;
-  min-height: 42px;
+  min-width: 0;
+  min-height: 44px;
   padding: 9px 34px 9px 12px;
   border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--card);
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--card) 94%, var(--bg));
   color: var(--ink);
   appearance: none;
   cursor: pointer;
+}
+
+/* WHY: The plan phase once ended at the top of a wide page while the desktop
+   sides stayed empty. It now uses the same deliberate main-plus-rail shape as
+   the running card, without changing what the learner can do.
+   PACK: learner-interface
+   2026-10-25 opencode: added the plan shell and start rail [pack: learner-interface] */
+.study-eyebrow {
+  margin: 0 0 3px;
+  color: var(--quiet);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.study-plan-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 820px) minmax(250px, 310px);
+  grid-template-areas:
+    "head head"
+    "main rail"
+    "details rail";
+  column-gap: 20px;
+  row-gap: 14px;
+  align-items: start;
+  justify-content: center;
+}
+
+.study-plan-head {
+  grid-area: head;
+}
+
+.study-plan-head .lead {
+  margin-bottom: 0;
+}
+
+.study-plan-main {
+  grid-area: main;
+  min-width: 0;
+}
+
+.study-plan-main > .study-scope {
+  margin-top: 0;
+}
+
+.study-plan-details {
+  grid-area: details;
+  min-width: 0;
+}
+
+.study-plan-details > .disclosure:first-child {
+  margin-top: 0;
+}
+
+.study-plan-rail {
+  grid-area: rail;
+  position: sticky;
+  top: 24px;
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.study-plan-rail .card {
+  margin: 0;
+}
+
+.study-plan-rail h3 {
+  margin: 0;
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+}
+
+.study-plan-start {
+  display: grid;
+  gap: 14px;
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--accent) 11%, var(--card)),
+    var(--card) 62%
+  );
+}
+
+.study-plan-count {
+  margin: 0;
+  font-size: 2.15rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.045em;
+}
+
+.study-plan-count span {
+  display: block;
+  margin-top: 5px;
+  color: var(--quiet);
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: 0;
+}
+
+.study-plan-source {
+  margin: 5px 0 0;
+  color: var(--quiet);
+  font-size: 0.86rem;
+}
+
+.study-plan-facts {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.study-plan-facts div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.study-plan-facts dt {
+  color: var(--quiet);
+  font-size: 0.83rem;
+}
+
+.study-plan-facts dd {
+  margin: 0;
+  font-size: 0.86rem;
+  font-weight: 650;
+  text-align: right;
+}
+
+.study-start-btn {
+  width: 100%;
+  min-height: 46px;
+  font-size: 1rem;
+}
+
+.study-plan-calm {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.study-plan-rules {
+  display: grid;
+  gap: 5px;
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: var(--quiet);
+  font-size: 0.86rem;
 }
 
 .study-layout {
@@ -1314,6 +1567,19 @@ body.full-stage {
   .study-rail {
     position: static;
     grid-row: auto;
+  }
+
+  .study-plan-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "head"
+      "main"
+      "rail"
+      "details";
+  }
+
+  .study-plan-rail {
+    position: static;
   }
 }
 
@@ -1603,6 +1869,30 @@ body.full-stage {
   .study-scope-field,
   .study-select {
     width: 100%;
+    max-width: none;
+  }
+
+  .row > .field-label {
+    flex-basis: 100%;
+  }
+
+  .plan-bar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  .plan-offer {
+    justify-content: space-between;
+  }
+
+  .plan-bar .btn.small {
+    width: 100%;
+    min-height: 42px;
+  }
+
+  .study-plan-count {
+    font-size: 2rem;
   }
 
   .jobs-fab {

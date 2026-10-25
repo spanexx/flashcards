@@ -8,6 +8,8 @@
 // 2026-10-19 opencode: created for the v1 prototype [pack: v1-prototype]
 // 2026-10-20 opencode: static export prefetch is off; Next's RSC prefetch paths
 // 404 on a plain file host. [pack: browser-app]
+// 2026-10-25 opencode: the plan now uses the wide shell and a start rail, while
+// the plan/answer rules stay untouched. [pack: learner-interface]
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
@@ -637,120 +639,165 @@ export default function StudyClient() {
       ? `${selectedPack.name}${selectedDeck ? ` / ${selectedDeck.name}` : ""}`
       : "the whole library";
     return (
-      <div>
-        <h1>Today&apos;s session</h1>
-        <p className="lead">
-          {plan.cards.length} {plan.cards.length === 1 ? "card" : "cards"} from {scopeText}{" "}
-          {plan.cards.length === 1 ? "is" : "are"} laid out. It is an offer — stop whenever you
-          like.
-        </p>
+      <div className="study-plan-layout">
+        <header className="study-plan-head">
+          <p className="study-eyebrow">Study</p>
+          <h1>Today&apos;s session</h1>
+          <p className="lead">
+            {plan.cards.length} {plan.cards.length === 1 ? "card" : "cards"} from {scopeText}{" "}
+            {plan.cards.length === 1 ? "is" : "are"} laid out. It is an offer — stop whenever you
+            like.
+          </p>
+        </header>
 
-        <ScopePicker
-          packs={packs}
-          packName={scopePack}
-          deckId={scopeDeck}
-          onChange={(nextPack, nextDeck) => {
-            setScopePack(nextPack);
-            setScopeDeck(nextDeck);
-            void loadPlan(offerChoice, nextPack, nextDeck);
-          }}
-        />
+        <div className="study-plan-main">
+          <ScopePicker
+            packs={packs}
+            packName={scopePack}
+            deckId={scopeDeck}
+            onChange={(nextPack, nextDeck) => {
+              setScopePack(nextPack);
+              setScopeDeck(nextDeck);
+              void loadPlan(offerChoice, nextPack, nextDeck);
+            }}
+          />
 
-        <div className="card plan-bar">
-          <label>
-            Cards offered:{" "}
-            <input
-              className="field"
-              type="number"
-              min={5}
-              max={40}
-              step={5}
-              value={offerChoice}
-              onChange={(event) => setOfferChoice(Math.max(1, Number(event.target.value) || 5))}
-              style={{ width: "5.5rem" }}
-            />
-          </label>
-          <button
-            className="btn small"
-            type="button"
-            onClick={() => void loadPlan(offerChoice, scopePack, scopeDeck)}
-          >
-            Rebuild the plan
-          </button>
-          <span className="grow" />
-          <button className="btn primary" type="button" onClick={startSession} disabled={plan.cards.length === 0}>
-            Start
-          </button>
+          <div className="card plan-bar">
+            <label className="plan-offer">
+              <span>Cards offered</span>
+              <input
+                className="field"
+                type="number"
+                min={5}
+                max={40}
+                step={5}
+                value={offerChoice}
+                onChange={(event) => setOfferChoice(Math.max(1, Number(event.target.value) || 5))}
+              />
+            </label>
+            <button
+              className="btn small"
+              type="button"
+              onClick={() => void loadPlan(offerChoice, scopePack, scopeDeck)}
+            >
+              Rebuild the plan
+            </button>
+          </div>
         </div>
 
-        <details className="disclosure">
-          <summary>Why these cards</summary>
-          {plan.groups.length === 0 ? (
-            <p className="muted">Nothing stood out, so the plan takes a fair spread.</p>
-          ) : (
-            <ul className="plain">
-              {plan.groups.map((group) => (
-                <li key={group.topic}>
-                  <strong>{group.label}</strong> — {group.reason}{" "}
-                  <span className="chip">
-                    {group.cardIds.length} {group.cardIds.length === 1 ? "card" : "cards"}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </details>
+        <aside className="rail study-plan-rail">
+          <section className="card study-plan-start">
+            <div>
+              <p className="study-eyebrow">Ready</p>
+              <p className="study-plan-count">
+                {plan.cards.length}
+                <span>{plan.cards.length === 1 ? "card in this offer" : "cards in this offer"}</span>
+              </p>
+              <p className="study-plan-source">from {scopeText}</p>
+            </div>
+            <dl className="study-plan-facts">
+              <div>
+                <dt>Tutor</dt>
+                <dd>{approved === "yes" ? "On" : "Off"}</dd>
+              </div>
+              <div>
+                <dt>Score</dt>
+                <dd>None kept</dd>
+              </div>
+            </dl>
+            <button
+              className="btn primary study-start-btn"
+              type="button"
+              onClick={startSession}
+              disabled={plan.cards.length === 0}
+            >
+              Start session
+            </button>
+            <p className="muted small study-plan-calm">
+              Stopping is not an ending. Stop whenever you like.
+            </p>
+          </section>
 
-        <details className="disclosure">
-          <summary>{banner?.available ? "The tutor and hints" : "Hints"}</summary>
-          {banner && banner.available ? (
-            <>
-              <h2 style={{ marginTop: 0 }}>The tutor</h2>
-              {approved === "none" ? (
-                <>
-                  <p>
-                    A tutor could help with hints this session, using <strong>{banner.model}</strong> at{" "}
-                    <strong>{banner.endpoint}</strong>.
+          <section className="card tight">
+            <h3>What to expect</h3>
+            <ul className="study-plan-rules">
+              <li>Hints come from the pack or the tutor.</li>
+              <li>A missed card returns once.</li>
+              <li>The full line appears after you answer.</li>
+            </ul>
+          </section>
+        </aside>
+
+        <div className="study-plan-details">
+          <details className="disclosure">
+            <summary>Why these cards</summary>
+            {plan.groups.length === 0 ? (
+              <p className="muted">Nothing stood out, so the plan takes a fair spread.</p>
+            ) : (
+              <ul className="plain">
+                {plan.groups.map((group) => (
+                  <li key={group.topic}>
+                    <strong>{group.label}</strong> — {group.reason}{" "}
+                    <span className="chip">
+                      {group.cardIds.length} {group.cardIds.length === 1 ? "card" : "cards"}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </details>
+
+          <details className="disclosure">
+            <summary>{banner?.available ? "The tutor and hints" : "Hints"}</summary>
+            {banner && banner.available ? (
+              <>
+                <h2 style={{ marginTop: 0 }}>The tutor</h2>
+                {approved === "none" ? (
+                  <>
+                    <p>
+                      A tutor could help with hints this session, using <strong>{banner.model}</strong> at{" "}
+                      <strong>{banner.endpoint}</strong>.
+                    </p>
+                    <ul className="plain">
+                      <li>It sees {banner.slots.join(", ")}.</li>
+                      <li>It never sees what you type.</li>
+                    </ul>
+                    <details className="disclosure">
+                      <summary>Show the exact shape of what it would see</summary>
+                      <pre className="code-block">{banner.shape}</pre>
+                    </details>
+                    <div className="row" style={{ marginTop: 12 }}>
+                      <button className="btn primary" type="button" onClick={() => setApproved("yes")}>
+                        Turn the tutor on for this session
+                      </button>
+                      <button className="btn" type="button" onClick={() => setApproved("no")}>
+                        Keep it off
+                      </button>
+                    </div>
+                  </>
+                ) : approved === "yes" ? (
+                  <p className="muted">
+                    The tutor is on for this session. <button className="btn small" type="button" onClick={() => setApproved("no")}>Turn it off</button>
                   </p>
-                  <ul className="plain">
-                    <li>It sees {banner.slots.join(", ")}.</li>
-                    <li>It never sees what you type.</li>
-                  </ul>
-                  <details className="disclosure">
-                    <summary>Show the exact shape of what it would see</summary>
-                    <pre className="code-block">{banner.shape}</pre>
-                  </details>
-                  <div className="row" style={{ marginTop: 12 }}>
-                    <button className="btn primary" type="button" onClick={() => setApproved("yes")}>
-                      Turn the tutor on for this session
+                ) : (
+                  <p className="muted">
+                    The tutor is off. Hints will come from the pack itself.{" "}
+                    <button className="btn small" type="button" onClick={() => setApproved("yes")}>
+                      Turn it on
                     </button>
-                    <button className="btn" type="button" onClick={() => setApproved("no")}>
-                      Keep it off
-                    </button>
-                  </div>
-                </>
-              ) : approved === "yes" ? (
-                <p className="muted">
-                  The tutor is on for this session. <button className="btn small" type="button" onClick={() => setApproved("no")}>Turn it off</button>
-                </p>
-              ) : (
-                <p className="muted">
-                  The tutor is off. Hints will come from the pack itself.{" "}
-                  <button className="btn small" type="button" onClick={() => setApproved("yes")}>
-                    Turn it on
-                  </button>
-                </p>
-              )}
-            </>
-          ) : (
-            <p className="muted">No tutor is set up. Hints come from the pack itself, if it ships any.</p>
-          )}
-        </details>
-        {approved === "yes" ? (
-          <p className="muted study-tutor-note">
-            The tutor will offer a hint after a missed answer.
-          </p>
-        ) : null}
+                  </p>
+                )}
+              </>
+            ) : (
+              <p className="muted">No tutor is set up. Hints come from the pack itself, if it ships any.</p>
+            )}
+          </details>
+          {approved === "yes" ? (
+            <p className="muted study-tutor-note">
+              The tutor will offer a hint after a missed answer.
+            </p>
+          ) : null}
+        </div>
       </div>
     );
   }
