@@ -24,7 +24,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      NEXT_PUBLIC_BASE_PATH: /flashcards
+      NEXT_PUBLIC_BASE_PATH: /flashcards/v1
     defaults:
       run:
         working-directory: v1
