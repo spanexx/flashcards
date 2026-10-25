@@ -38,12 +38,12 @@ the IMPL reconcile section, is in progress._
 
 - **D-13** (Medium, 2026-10-25, reporter: interface polish visual review) — The branch added a second side rail to the Study plan screen while the locked Study promise described only the running session rail.
   - Doc claim: "a plan rail shows the card count, the tutor state, the score setting ... a Start session control and a What to expect summary" (`docs/features/learner-interface/PRD-TRD-learner-interface.md:76-79`); "the same rail shows the scope, the offer, answered count, cards left, hints used, tutor state and an end control" (`docs/features/learner-interface/PRD-TRD-learner-interface.md:81-83`)
-  - Code reality: the plan rail sits at `v1/src/app/StudyClient.tsx:642` and `v1/src/app/StudyClient.tsx:688-729`, showing a count, Tutor, Score / None kept, "Start session" and "What to expect"; the running rail stays at `v1/src/app/StudyClient.tsx:1046-1081`.
+  - Code reality: at resolution the plan rail sat in the then-current `StudyClient`, showing a count, Tutor, Score / None kept, "Start session" and "What to expect", with the running rail beside it. The `study-tab-redesign` pack later removed both rails, so the plan now renders at `v1/src/app/study/StudyPlan.tsx:50` and the session head at `v1/src/app/study/StudySession.tsx:40`.
   - Why matters: without a decision the plan screen reads as the promised Study shape, yet its facts are different.
   - Owner: learner-interface
   - To fix: decision — the learner kept the plan rail and Scenario 3 now describes both rails.
   - Verified by: learner-interface Scenario 3 updated 2026-10-25; full suite and build pass.
-  - Superseded 2026-10-25: the `study-tab-redesign` pack removed both Study rails and the learner approved the one-column design. The line citations above describe the code at resolution time; the current screens live in `v1/src/app/study/StudyPlan.tsx` and `v1/src/app/study/StudySession.tsx`.
+  - Superseded 2026-10-25: the `study-tab-redesign` pack removed both Study rails and the learner approved the one-column design.
   - Related: D-14.
 
 - **D-14** (Medium, 2026-10-25, reporter: interface polish visual review) — The phone top bar was pinned and blurred, which the responsive-shell promise never described.
