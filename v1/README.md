@@ -79,7 +79,7 @@ import: one bad card refuses the whole file.
 | ----------------------- | --------------------------------------------------- |
 | `npm run dev`           | Development server on loopback                      |
 | `npm run build`         | Static build in `out/`                              |
-| `npm run start`         | Next.js server for the built app                    |
+| `npx serve@latest out`   | Next.js server for the built app                    |
 | `npm run typecheck`     | TypeScript, no emit                                 |
 | `npm run lint`          | ESLint                                              |
 | `npm test`              | Unit tests (vitest)                                 |
@@ -100,3 +100,5 @@ and the static pages.
 - A bundle is checked whole before anything is saved. A bad file names the item
   and field and changes nothing.
 - A backup never contains the provider key. A malformed backup changes nothing.
+
+Deployed: https://spanexx.github.io/flashcards/
