@@ -12,6 +12,7 @@ import { getMedia, mediaUrl } from "@/lib/browser/media";
 import {
   youtubeEmbedUrl,
   youtubeFallbackLabel,
+  youtubeStillIsDead,
   youtubeThumbnailUrl,
   youtubeWatchUrl,
 } from "@/lib/client/layer";
@@ -182,7 +183,8 @@ function YouTubeVideo({ part }: { part: TeachingVideoPart }) {
       clearTimeout(timer);
       setProbe({ id: part.src, state: next });
     };
-    still.onload = () => settle("ready");
+    still.onload = () =>
+      settle(youtubeStillIsDead(still.naturalWidth, still.naturalHeight) ? "dead" : "ready");
     still.onerror = () => settle("dead");
     still.src = youtubeThumbnailUrl(part.src);
     return () => {

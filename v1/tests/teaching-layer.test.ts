@@ -17,10 +17,10 @@ import {
   youtubeEmbedUrl,
   youtubeFallbackLabel,
   youtubeIdFrom,
+  youtubeStillIsDead,
   youtubeThumbnailUrl,
   youtubeWatchUrl,
 } from "@/lib/client/layer";
-
 const id = "dQw4w9WgXcQ";
 
 type VideoPart = Extract<TeachingPart, { type: "video" }>;
@@ -52,6 +52,14 @@ describe("YouTube addresses", () => {
   it("opens on YouTube at the start of the section", () => {
     expect(youtubeWatchUrl(id)).toBe(`https://www.youtube.com/watch?v=${id}`);
     expect(youtubeWatchUrl(id, 42)).toBe(`https://www.youtube.com/watch?v=${id}&t=42s`);
+  });
+
+  // WHY: YouTube answers a dead id with HTTP 404 whose body is a valid 120x90
+  // picture, so an image load alone cannot tell the two apart; only its size can.
+  it("calls the placeholder still a dead video", () => {
+    expect(youtubeStillIsDead(120, 90)).toBe(true);
+    expect(youtubeStillIsDead(480, 360)).toBe(false);
+    expect(youtubeStillIsDead(0, 0)).toBe(true);
   });
 });
 

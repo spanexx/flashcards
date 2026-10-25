@@ -131,6 +131,19 @@ export function youtubeThumbnailUrl(id: string): string {
   return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
 }
 
+/** The still size a live video always answers with. */
+const YOUTUBE_STILL_WIDTH = 480;
+const YOUTUBE_STILL_HEIGHT = 360;
+
+/**
+ * Whether a loaded still is YouTube's placeholder rather than a real picture. A
+ * dead id returns HTTP 404 with a valid 120x90 body, so the load event fires and
+ * only the size separates the two.
+ */
+export function youtubeStillIsDead(width: number, height: number): boolean {
+  return width < YOUTUBE_STILL_WIDTH || height < YOUTUBE_STILL_HEIGHT;
+}
+
 /** The privacy-friendly player address for one video and optional section. */
 export function youtubeEmbedUrl(id: string, start?: number, end?: number): string {
   const params = new URLSearchParams({ rel: "0", playsinline: "1" });
