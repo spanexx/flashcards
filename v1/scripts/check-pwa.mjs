@@ -67,6 +67,12 @@ function pngSize(buffer) {
   return { width: buffer.readUInt32BE(16), height: buffer.readUInt32BE(20) };
 }
 
+function icoCount(buffer) {
+  if (buffer.length < 6) return 0;
+  if (buffer.readUInt16LE(0) !== 0 || buffer.readUInt16LE(2) !== 1) return 0;
+  return buffer.readUInt16LE(4);
+}
+
 try {
   await stat(join(output, "index.html"));
 } catch {
@@ -79,7 +85,17 @@ const requiredRoutes = ["index.html", "library/index.html", "progress/index.html
 for (const route of requiredRoutes) {
   check(files.includes(route), `missing route ${route}`);
 }
+for (const asset of ["favicon.ico", "icon.svg"]) {
+  check(files.includes(asset), `missing browser icon ${asset}`);
+}
 check(files.some((file) => file.startsWith("_next/static/")), "missing _next/static assets");
+
+try {
+  const favicon = await readFile(join(output, "favicon.ico"));
+  check(icoCount(favicon) >= 2, "favicon.ico must contain at least two icon sizes");
+} catch {
+  fail("favicon.ico could not be read");
+}
 
 const manifestPath = join(output, "manifest.webmanifest");
 let manifest = null;
@@ -160,6 +176,8 @@ for (const file of htmlFiles) {
 const indexHtml = await readFile(join(output, "index.html"), "utf8");
 check(indexHtml.includes('aria-label="Install app"'), "home page has no install button");
 check(indexHtml.includes('name="theme-color"'), "home page has no theme-color");
+check(/<link[^>]+rel="icon"[^>]+favicon\.ico/i.test(indexHtml), "home page does not link favicon.ico");
+check(/<link[^>]+rel="icon"[^>]+icon\.svg/i.test(indexHtml), "home page does not link icon.svg");
 
 const workerPath = join(output, "sw.js");
 let worker = "";
@@ -189,7 +207,13 @@ if (worker) {
   for (const route of ["./", "./library/", "./progress/", "./settings/", "./manifest.webmanifest"]) {
     check(precache.includes(route), `sw.js does not precache ${route}`);
   }
-  for (const icon of ["./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png"]) {
+  for (const icon of [
+    "./favicon.ico",
+    "./icon.svg",
+    "./icons/icon-192.png",
+    "./icons/icon-512.png",
+    "./icons/icon-maskable-512.png",
+  ]) {
     check(precache.includes(icon), `sw.js does not precache ${icon}`);
   }
   for (const url of precache) {

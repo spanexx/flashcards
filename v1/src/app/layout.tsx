@@ -8,6 +8,7 @@
 // 2026-10-23 opencode: the job runner boots with the shell and the dock is on
 // every screen. [pack: background-jobs]
 // 2026-10-23 opencode: install button, manifest and service-worker boot. [pack: pwa-deploy]
+// 2026-10-25 opencode: link the Lucide SVG mark and the real favicon route. [pack: pwa-deploy]
 
 import type { Metadata, Viewport } from "next";
 import Nav from "./Nav";
@@ -31,6 +32,8 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
+      { url: withBasePath("/favicon.ico"), sizes: "any" },
+      { url: withBasePath("/icon.svg"), type: "image/svg+xml" },
       { url: withBasePath("/icons/icon-192.png"), sizes: "192x192", type: "image/png" },
       { url: withBasePath("/icons/icon-512.png"), sizes: "512x512", type: "image/png" },
     ],

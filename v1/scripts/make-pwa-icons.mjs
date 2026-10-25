@@ -1,8 +1,10 @@
 // WHY: PWA install prompts want real raster icons, and this project has no
 // image build step. This small, dependency-free generator keeps the committed
-// PNGs reproducible from one source.
+// PNGs and favicon reproducible from one source: the Lucide Layers mark.
 // PACK: pwa-deploy
 // 2026-10-23 opencode: created for the pwa-deploy pack [pack: pwa-deploy]
+// 2026-10-25 opencode: replaced the old card artwork with the shared Lucide
+// Layers mark and added the multi-size favicon. [pack: pwa-deploy]
 
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
@@ -10,14 +12,12 @@ import { fileURLToPath } from "node:url";
 import { deflateSync } from "node:zlib";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const output = join(here, "..", "public", "icons");
+const publicDir = join(here, "..", "public");
+const iconsDir = join(publicDir, "icons");
 
 const COLORS = {
   background: [0x2f, 0x5d, 0x50, 255],
-  back: [0x7f, 0xb3, 0xa2, 255],
-  card: [0xff, 0xff, 0xff, 255],
-  line: [0x2f, 0x5d, 0x50, 255],
-  softLine: [0xb7, 0xc9, 0xc3, 255],
+  ink: [0xff, 0xff, 0xff, 255],
 };
 
 function canvas(size) {
@@ -31,24 +31,45 @@ function canvas(size) {
   return pixels;
 }
 
-function insideRoundedRect(x, y, left, top, width, height, radius) {
-  if (x < left || y < top || x >= left + width || y >= top + height) return false;
-  const nearestX = x < left + radius ? left + radius : x > left + width - radius ? left + width - radius : x;
-  const nearestY = y < top + radius ? top + radius : y > top + height - radius ? top + height - radius : y;
-  const dx = x - nearestX;
-  const dy = y - nearestY;
-  return dx * dx + dy * dy <= radius * radius;
+function blend(pixels, size, x, y, color, coverage) {
+  if (x < 0 || y < 0 || x >= size || y >= size || coverage <= 0) return;
+  const offset = (y * size + x) * 4;
+  const alpha = Math.min(1, coverage);
+  for (let channel = 0; channel < 4; channel += 1) {
+    pixels[offset + channel] = Math.round(
+      pixels[offset + channel] * (1 - alpha) + color[channel] * alpha,
+    );
+  }
 }
 
-function roundedRect(pixels, size, left, top, width, height, radius, color) {
-  for (let y = Math.floor(top); y < Math.ceil(top + height); y += 1) {
-    for (let x = Math.floor(left); x < Math.ceil(left + width); x += 1) {
-      if (!insideRoundedRect(x, y, left, top, width, height, radius)) continue;
-      const offset = (y * size + x) * 4;
-      pixels[offset] = color[0];
-      pixels[offset + 1] = color[1];
-      pixels[offset + 2] = color[2];
-      pixels[offset + 3] = color[3];
+function distanceToSegment(x, y, x1, y1, x2, y2) {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const lengthSquared = dx * dx + dy * dy;
+  if (lengthSquared === 0) return Math.hypot(x - x1, y - y1);
+  const along = Math.max(0, Math.min(1, ((x - x1) * dx + (y - y1) * dy) / lengthSquared));
+  return Math.hypot(x - (x1 + along * dx), y - (y1 + along * dy));
+}
+
+function line(pixels, size, x1, y1, x2, y2, width, color) {
+  const half = width / 2;
+  const left = Math.max(0, Math.floor(Math.min(x1, x2) - half - 1));
+  const top = Math.max(0, Math.floor(Math.min(y1, y2) - half - 1));
+  const right = Math.min(size - 1, Math.ceil(Math.max(x1, x2) + half + 1));
+  const bottom = Math.min(size - 1, Math.ceil(Math.max(y1, y2) + half + 1));
+  const samples = 4;
+  const step = 1 / samples;
+  for (let y = top; y <= bottom; y += 1) {
+    for (let x = left; x <= right; x += 1) {
+      let hits = 0;
+      for (let sy = 0; sy < samples; sy += 1) {
+        for (let sx = 0; sx < samples; sx += 1) {
+          if (distanceToSegment(x + (sx + 0.5) * step, y + (sy + 0.5) * step, x1, y1, x2, y2) <= half) {
+            hits += 1;
+          }
+        }
+      }
+      blend(pixels, size, x, y, color, hits / (samples * samples));
     }
   }
 }
@@ -56,14 +77,23 @@ function roundedRect(pixels, size, left, top, width, height, radius, color) {
 function draw(size) {
   const pixels = canvas(size);
   const scale = size / 512;
-  const rect = (left, top, width, height, radius, color) =>
-    roundedRect(pixels, size, left * scale, top * scale, width * scale, height * scale, radius * scale, color);
-
-  rect(170, 120, 210, 260, 30, COLORS.back);
-  rect(120, 170, 270, 190, 30, COLORS.card);
-  rect(152, 210, 200, 18, 9, COLORS.line);
-  rect(152, 252, 145, 18, 9, COLORS.softLine);
-  rect(152, 294, 170, 18, 9, COLORS.softLine);
+  const point = (x, y) => [x * scale, y * scale];
+  const width = 32 * scale;
+  const strokes = [
+    [[256, 96], [416, 178]],
+    [[416, 178], [256, 260]],
+    [[256, 260], [96, 178]],
+    [[96, 178], [256, 96]],
+    [[96, 266], [256, 348]],
+    [[256, 348], [416, 266]],
+    [[96, 350], [256, 432]],
+    [[256, 432], [416, 350]],
+  ];
+  for (const [[fromX, fromY], [toX, toY]] of strokes) {
+    const [x1, y1] = point(fromX, fromY);
+    const [x2, y2] = point(toX, toY);
+    line(pixels, size, x1, y1, x2, y2, width, COLORS.ink);
+  }
   return pixels;
 }
 
@@ -118,12 +148,38 @@ function png(size) {
   ]);
 }
 
-await mkdir(output, { recursive: true });
+function ico(images) {
+  const header = Buffer.alloc(6);
+  header.writeUInt16LE(0, 0);
+  header.writeUInt16LE(1, 2);
+  header.writeUInt16LE(images.length, 4);
+  let offset = 6 + images.length * 16;
+  const entries = images.map(({ size, data }) => {
+    const entry = Buffer.alloc(16);
+    entry[0] = size >= 256 ? 0 : size;
+    entry[1] = size >= 256 ? 0 : size;
+    entry[2] = 0;
+    entry[3] = 0;
+    entry.writeUInt16LE(1, 4);
+    entry.writeUInt16LE(32, 6);
+    entry.writeUInt32LE(data.length, 8);
+    entry.writeUInt32LE(offset, 12);
+    offset += data.length;
+    return entry;
+  });
+  return Buffer.concat([header, ...entries, ...images.map(({ data }) => data)]);
+}
+
+await mkdir(iconsDir, { recursive: true });
 for (const [name, size] of [
   ["icon-192.png", 192],
   ["icon-512.png", 512],
   ["icon-maskable-512.png", 512],
 ]) {
-  await writeFile(join(output, name), png(size));
+  await writeFile(join(iconsDir, name), png(size));
   console.log(`wrote public/icons/${name} (${size}x${size})`);
 }
+
+const favicon = ico([16, 32, 48].map((size) => ({ size, data: png(size) })));
+await writeFile(join(publicDir, "favicon.ico"), favicon);
+console.log("wrote public/favicon.ico (16, 32, 48)");

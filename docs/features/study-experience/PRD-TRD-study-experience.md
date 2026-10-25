@@ -30,10 +30,11 @@ outcome words, the one-return rule, the session offer, or the no-score ending.
 4. **The learner chooses the scope.** The plan screen offers All cards or one
    installed pack, plus a deck inside that pack. The chosen scope filters the
    plan; the offer count still applies.
-5. **The card looks deliberate.** A progress bar, a clear mode label, a larger
+5. **The card looks deliberate.** Position pips, a quiet mode label, a larger
    prompt, a distinct answer block with translations on their own line, a calm
    outcome badge and a phone-sized layout. Corrections move behind a small
-   disclosure.
+   disclosure. The layout itself was superseded by the study-tab-redesign pack,
+   which keeps every rule here and drops the side rail.
 6. **Nothing else moves.** The judge, evidence, session ending, algorithm,
    provider prompt, card schema, pack schema and backup schema are unchanged.
 
@@ -63,8 +64,8 @@ outcome words, the one-return rule, the session offer, or the no-score ending.
   - type: "Type the line"
   - hear_type: "Listen and type"
   - picks: "Choose the meaning"
-- The mode label is a chip. It may also show "tutor on" when the tutor was
-  approved.
+- The mode label is quiet uppercase text, not a chip. The tutor state lives on
+  the plan screen, not on the card.
 - The prompt side renders only what the card author put in `card.prompt`.
 - The summary is not rendered anywhere before the answer is judged.
 
@@ -113,10 +114,10 @@ outcome words, the one-return rule, the session offer, or the no-score ending.
 
 ### 3.6 Visual language
 
-- The study screen uses a narrower shell than the library and keeps the card
-  centred.
-- A slim progress bar shows position in the session.
-- The card has a soft gradient, a larger prompt, and generous spacing.
+- The study screen is one calm column: the card is the hero and no side rail
+  competes with it.
+- Position pips show where the learner is in the session.
+- The card has a generous shadow, a serif prompt, and generous spacing.
 - The reveal fades in; motion is short and respects `prefers-reduced-motion`.
 - At phone width the card fills the available width, the play button is
   full-width, and the primary action stays easy to reach.
@@ -149,7 +150,8 @@ outcome words, the one-return rule, the session offer, or the no-score ending.
 ## 5. Components
 
 - `StudyClient.tsx` owns the scope selectors, the tutor auto-hint, the mode
-  labels, the listening block, the reveal layout and the progress bar.
+  labels, the listening block, the reveal layout and the position pips. The
+  plan, session shell and card are separate modules under `app/study/`.
 - `Side` gains a translation block style; it does not interpret card content.
 - `router.ts` gains pack/deck filtering in `planAnswer`.
 - `globals.css` gains `.study-*` classes and a phone breakpoint. Existing

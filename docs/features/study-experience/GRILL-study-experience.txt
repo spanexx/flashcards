@@ -46,6 +46,9 @@ A5. The study card becomes the visual centre: a progress bar, a clear mode label
     a calm outcome badge. The four judgement-correction buttons move behind a
     small "Was this fair?" disclosure so the next action is obvious. The layout
     stays comfortable on a phone.
+    [Superseded 2026-10-25 by docs/features/study-tab-redesign/: position pips
+    replace the progress bar, and the mode label is quiet uppercase text rather
+    than a chip.]
 
 Q6. What does not change?
 A6. The four outcome words, the judge, the one-return rule, the session offer and

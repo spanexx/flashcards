@@ -10,6 +10,9 @@
   ### Prove It
     - `git status` shows nothing unexpected.
     - `git diff --cached` read line by line.
+    - `npm run check:drift` and `npm run check:drift:staged` pass. The staged
+      gate refuses a file an Open or Awaiting entry names. Run them by hand as
+      well; the hook is a safety net, not the proof.
     - The build and the tests pass in WSL Debian.
     - Staged blobs carry LF, never CRLF.
     - The cleanup gate is done: no server, debug browser, log, cache or scratch file from this job remains.

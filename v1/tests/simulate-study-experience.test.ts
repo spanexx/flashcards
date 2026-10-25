@@ -55,7 +55,9 @@ async function readTree(directory: string): Promise<string> {
     entries.map(async (entry) => {
       const full = join(directory, entry.name);
       if (entry.isDirectory()) return readTree(full);
-      if (!/\.(js|html)$/.test(entry.name)) return "";
+      // Why: the control-size copy lives in the built stylesheet, so the
+      // rehearsal must read CSS too. [pack: learner-interface]
+      if (!/\.(js|html|css)$/.test(entry.name)) return "";
       return readFile(full, "utf8");
     }),
   );
@@ -118,7 +120,18 @@ describe("study experience rehearsal", () => {
       expect(text).toContain("Study from");
       expect(text).toContain("Tutor hint");
       expect(text).toContain("Pack hint");
-      line("the built study screen carries the new labels");
+      expect(text).toContain("study-plan");
+      expect(text).toContain("study-display");
+      expect(text).toContain("study-pips");
+      expect(text).toContain("study-start");
+      expect(text).toContain("No score kept");
+      expect(text).toContain("Start session");
+      // Why: labels are smaller than values; a control that inherited the
+      // label size rendered at 13.6px and looked broken on a phone.
+      // [pack: learner-interface / D-14]
+      expect(text).toMatch(/select\.field[^{]*\{[^}]*font-size:\s*1rem[^}]*font-weight:\s*400/);
+      expect(text).toMatch(/\.study-select[^{]*\{[^}]*font-size:\s*1rem[^}]*font-weight:\s*400/);
+      line("the built study screen carries the new labels, plan shell and 16px controls");
     }
   });
 });

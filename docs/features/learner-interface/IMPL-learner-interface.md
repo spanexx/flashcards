@@ -175,3 +175,14 @@ the running card and never persisted.
 - **Old docs:** the pre-answer listening fallback is deliberately reversed.
   Update the old feature docs in the same change so the next agent does not
   restore it.
+
+## Delivery note 2026-10-25: Study tab redesign
+
+The plan rail and the session rail described above were removed by the
+`study-tab-redesign` pack, which keeps this pack's full-screen mechanism (stage
+ref, CSS fallback, Escape, next-card) and its listening and picker rules
+unchanged. The Study column is now 860px for the plan and 720px for the card.
+See `docs/features/study-tab-redesign/`.
+
+Verification: typecheck, lint, 46 test files / 479 tests, static build, and a
+browser pass at 1440x900 and 390x844 with no horizontal overflow.
