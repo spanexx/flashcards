@@ -7,6 +7,9 @@
     "doc": "docs"
   },
   "scripts": {
+    "check:drift": "node scripts/check-drift.mjs",
+    "check:drift:staged": "node scripts/check-drift.mjs --mode=staged",
+    "check:drift:release": "node scripts/check-drift.mjs --mode=release",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

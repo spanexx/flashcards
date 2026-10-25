@@ -149,3 +149,14 @@ Verification:
 Deviation: the plan line uses the actual planned card count, not the requested
 offer count, so a one-card scope reads "1 card" even when the offer field is
 still 20.
+
+## Delivery note 2026-10-25: quiet label and pips
+
+The `study-tab-redesign` pack replaced the mode chip with quiet uppercase text,
+the progress bar with position pips, and the side rail with one column. Every
+rule in sections 3.1 to 3.5 (scope, listening, tutor, reveal, corrections)
+is unchanged, and no saved shape moved. See
+`docs/features/study-tab-redesign/`.
+
+Verification: typecheck, lint, 46 test files / 479 tests, static build, and a
+browser pass at 1440x900 and 390x844 with no horizontal overflow.

@@ -1,0 +1,10 @@
+#!/bin/sh
+# WHY: The drift log only polices work if the commit itself is stopped. This
+# hook asks the checker about the staging area, so a commit cannot carry a file
+# that an Open or Awaiting entry names until the log says what happened.
+# ETHICS: docs/ethics/drift.md
+# 2026-10-25 qoder: added the pre-commit gate for staged drift. [ethics: drift]
+
+# WHY: Hook output must reach the person committing even when they pipe the
+# commit's output, so the failure is printed on stderr by the checker itself.
+exec node scripts/check-drift.mjs --mode=staged

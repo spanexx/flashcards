@@ -11,6 +11,8 @@
 // 2026-10-20 opencode: visible provider profile and connection test [pack: browser-app]
 // 2026-10-20 opencode: a successful connection notice clears itself, while the
 // session-only Tested state stays. [pack: browser-app]
+// 2026-10-25 opencode: profile selects use the shared field family so they stack
+// cleanly on a phone. [pack: learner-interface]
 
 import { useCallback, useEffect, useState } from "react";
 import { apiGet, apiSend } from "@/lib/client/api";
@@ -322,9 +324,9 @@ export default function SettingsClient() {
 
       {tab === "profile" ? (
         <div className="card">
-          <div className="row">
-            <label>
-              Level:{" "}
+          <div className="form-grid">
+            <label className="field-label">
+              Level
               <span className="select-wrap">
                 <select
                   className="field"
@@ -337,8 +339,8 @@ export default function SettingsClient() {
                 </select>
               </span>
             </label>
-            <label>
-              Style:{" "}
+            <label className="field-label">
+              Style
               <span className="select-wrap">
                 <select
                   className="field"

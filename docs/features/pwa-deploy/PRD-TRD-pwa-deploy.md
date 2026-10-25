@@ -43,6 +43,9 @@ build gate that refuses an export that would break on Pages.
 - At 860px and below the shell becomes one grid column. The sidebar becomes a
   compact top bar: brand, then the four links. It no longer stretches to fill
   the viewport, so there is no large blank band above the page.
+- On a phone the top bar is pinned while the page scrolls, and its background
+  is translucent with a blur, so the four links stay reachable over moving
+  content.
 - The top bar reserves space on the right for the install button.
 - Content padding drops to 16px. The create grid becomes one column at 760px.
 - `.scroll-area` scrolls horizontally and the progress table has a minimum
@@ -78,7 +81,9 @@ build gate that refuses an export that would break on Pages.
   - theme `#2f5d50`, background `#f7f6f3`
   - icons: 192 any, 512 any, 512 maskable
 - The icon generator is a dependency-free Node script that writes valid RGBA
-  PNGs: a deep green field with two stacked cards and three text lines.
+  PNGs: a deep green field with the Lucide Layers mark, three stacked chevrons.
+- `src/app/icon.svg` draws the same three chevrons, so the tab and install
+  icons agree.
 - The icons are committed and regenerated before every build.
 - The root layout links the manifest and both icon sizes; the Apple touch icon
   uses the 192px file.

@@ -1,16 +1,86 @@
 # Drift Log
-**Last updated:** 2026-10-19  **Open:** 0  **Resolved:** 11  **Critical/High:** 0
+**Last updated:** 2026-10-25  **Open:** 0  **Awaiting:** 0  **Resolved:** 18  **Critical/High:** 0
 
 ## Open
 
-_None. The v1-prototype drift review of 2026-10-19 found nine gaps; two more
-surfaced during the live provider test. All eleven were fixed in code or docs
-the same day (D-1…D-11, below). The manual browser walkthrough, noted in the
-IMPL reconcile section, is in progress.
+_None. Every gap the interface-polish review found is closed and verified below._
+
+## Awaiting decision
+
+_None. On 2026-10-25 the learner chose "land as built, update the docs"; each decision is recorded in its Resolved entry._
+
+_Historical: the v1-prototype drift review of 2026-10-19 found nine gaps; two
+more surfaced during the live provider test. All eleven were fixed in code or
+docs the same day (D-1…D-11, below). The manual browser walkthrough, noted in
+the IMPL reconcile section, is in progress._
 
 ---
 
 ## Resolved
+
+- **D-12** (Medium, 2026-10-25, reporter: interface polish visual review) — No `favicon.ico` existed in the repository, so a fresh checkout had no tab icon until the icon script ran.
+  - Doc claim: "The icons are committed and regenerated before every build." (`docs/features/pwa-deploy/PRD-TRD-pwa-deploy.md:86`)
+  - Code reality: `v1/public/favicon.ico` is tracked with three entries, 16, 32 and 48 at 32 bpp, written by `v1/scripts/make-pwa-icons.mjs:183-184`.
+  - Why matters: the browser asks for the icon on every visit; without the file in the repo the tab falls back to a default mark, so the header, tab and install icon disagree.
+  - Owner: pwa-deploy
+  - To fix: fix code — committed `v1/public/favicon.ico` with this branch.
+  - Verified by: `v1/tests/pwa-deploy.test.ts` reads the ICO directory (three entries, 16/32/48 at 32 bpp) and the PNG IHDR sizes; the `/flashcards` build and the full suite pass.
+  - Related: D-17.
+
+- **D-15** (Medium, 2026-10-25, reporter: interface polish visual review) — Select values rendered at 13.6px because the select inherited the scope label's 0.85rem.
+  - Doc claim: "it is 44px high with an 11px radius" and "selects show a visible chevron and 16px text" (`docs/features/learner-interface/PRD-TRD-learner-interface.md:87-90`)
+  - Code reality: `.study-select` sets `font-size: 1rem` at `v1/src/app/globals.css:1309-1323`; the surrounding scope label stays `0.85rem` at `v1/src/app/globals.css:1301`, so the picker text is 16px.
+  - Why matters: on a phone the picker text is smaller than every other control, and a shrunken select also invites the browser's zoom-on-focus.
+  - Owner: learner-interface
+  - To fix: fix code — the 16px rule landed with this branch.
+  - Verified by: full suite and `/flashcards` build pass; the rule is in the committed stylesheet.
+  - Related: D-16.
+
+- **D-13** (Medium, 2026-10-25, reporter: interface polish visual review) — The branch added a second side rail to the Study plan screen while the locked Study promise described only the running session rail.
+  - Doc claim: "a plan rail shows the card count, the tutor state, the score setting ... a Start session control and a What to expect summary" (`docs/features/learner-interface/PRD-TRD-learner-interface.md:76-79`); "the same rail shows the scope, the offer, answered count, cards left, hints used, tutor state and an end control" (`docs/features/learner-interface/PRD-TRD-learner-interface.md:81-83`)
+  - Code reality: the plan rail sits at `v1/src/app/StudyClient.tsx:642` and `v1/src/app/StudyClient.tsx:688-729`, showing a count, Tutor, Score / None kept, "Start session" and "What to expect"; the running rail stays at `v1/src/app/StudyClient.tsx:1046-1081`.
+  - Why matters: without a decision the plan screen reads as the promised Study shape, yet its facts are different.
+  - Owner: learner-interface
+  - To fix: decision — the learner kept the plan rail and Scenario 3 now describes both rails.
+  - Verified by: learner-interface Scenario 3 updated 2026-10-25; full suite and build pass.
+  - Superseded 2026-10-25: the `study-tab-redesign` pack removed both Study rails and the learner approved the one-column design. The line citations above describe the code at resolution time; the current screens live in `v1/src/app/study/StudyPlan.tsx` and `v1/src/app/study/StudySession.tsx`.
+  - Related: D-14.
+
+- **D-14** (Medium, 2026-10-25, reporter: interface polish visual review) — The phone top bar was pinned and blurred, which the responsive-shell promise never described.
+  - Doc claim: "On a phone the top bar is pinned while the page scrolls, and its background is translucent with a blur" (`docs/features/pwa-deploy/PRD-TRD-pwa-deploy.md:46-48`)
+  - Code reality: inside the 860px block, `.sidebar` gets `position: sticky`, `top: 0`, `z-index: 30` and a blur at `v1/src/app/globals.css:161-176`, with sticky at `v1/src/app/globals.css:162`.
+  - Why matters: lasting behaviour on the smallest screen must be intended and written down, or the next reader cannot tell.
+  - Owner: learner-interface with pwa-deploy
+  - To fix: decision — the learner kept it and pwa-deploy section 3.1 now names it.
+  - Verified by: pwa-deploy section 3.1 updated 2026-10-25; full suite and build pass.
+  - Related: D-13.
+
+- **D-16** (Medium, 2026-10-25, reporter: interface polish visual review) — Buttons and fields did not share one height or radius, and the branch widened the height gap.
+  - Doc claim: "it is 44px high with an 11px radius" and "at 40px high with a 10px radius, and a small button is 32px high" (`docs/features/learner-interface/PRD-TRD-learner-interface.md:87-95`)
+  - Code reality: fields are `min-height: 44px; border-radius: 11px` at `v1/src/app/globals.css:482-496`; buttons are `min-height: 40px; border-radius: 10px` at `v1/src/app/globals.css:240-249`; `.btn.small` is 32px at `v1/src/app/globals.css:267-271`.
+  - Why matters: Scenario 4 promised one family; two heights and two radii made that promise untrue on every form that puts a button beside a field.
+  - Owner: learner-interface
+  - To fix: decision — the learner kept the current sizes and Scenario 4 records them as deliberate.
+  - Verified by: learner-interface Scenario 4 updated 2026-10-25 to name 44/11 fields, 40/10 buttons and 32 small buttons; full suite and build pass.
+  - Related: D-15.
+
+- **D-17** (Medium, 2026-10-25, reporter: interface polish visual review) — The icon artwork drew the Lucide Layers mark, contradicting the shipped icon promise.
+  - Doc claim: "a deep green field with the Lucide Layers mark, three stacked chevrons" (`docs/features/pwa-deploy/PRD-TRD-pwa-deploy.md:83-84`); "draws the same three chevrons, so the tab and install icons agree" (`docs/features/pwa-deploy/PRD-TRD-pwa-deploy.md:85`)
+  - Code reality: the generator header names "the Lucide Layers mark" at `v1/scripts/make-pwa-icons.mjs:3`, and its drawing code strokes the three chevrons at `v1/scripts/make-pwa-icons.mjs:82-95`; `v1/src/app/icon.svg:3-7` draws the same paths.
+  - Why matters: the shipped PRD described artwork that no longer existed, so anyone regenerating or reviewing the install icon was misled.
+  - Owner: pwa-deploy
+  - To fix: decision — the learner kept the Layers mark and pwa-deploy section 3.3 now describes it.
+  - Verified by: pwa-deploy section 3.3 updated 2026-10-25; the three PNGs were regenerated and committed; ICO and PNG tests pass.
+  - Related: D-12.
+
+- **D-18** (Low, 2026-10-25, reporter: interface polish visual review) — The Settings profile labels moved into the form family without a promise naming that screen.
+  - Doc claim: "classes as every other form, not inline text" (`docs/features/learner-interface/PRD-TRD-learner-interface.md:97-99`)
+  - Code reality: the profile block uses `form-grid` and `field-label` at `v1/src/app/settings/SettingsClient.tsx:298-313`; both classes already existed from the learner-interface pack.
+  - Why matters: extra scope on a screen no locked line named; without a record the next reader cannot tell whether it belongs to the pack.
+  - Owner: learner-interface
+  - To fix: decision — the learner kept the markup and Scenario 4 now names the Settings labels.
+  - Verified by: learner-interface Scenario 4 updated 2026-10-25; full suite and build pass.
+  - Related: D-16.
 
 - **D-1** (High, 2026-10-19, reporter: drift review `.reports/2026-10-19-drift-v1-prototype.md`) — R16: the learner's working was collected in a textarea but never shown beside the pack's working after the answer; the region was invisible.
   - Doc claim: `working?: { label: string; expected: string }` and "Working shown, then discarded" (`docs/features/v1-prototype/PRD-TRD-v1-prototype.md:129`; `docs/features/v1-prototype/GRILL-v1-prototype.txt:198`)
@@ -23,7 +93,7 @@ IMPL reconcile section, is in progress.
 
 - **D-2** (High, 2026-10-19, reporter: drift review) — R7: the import box had no file chooser, and the correction buttons in the study reveal omitted the locked "No" outcome.
   - Doc claim: import is all-or-nothing JSON with item numbers (`docs/features/v1-prototype/GRILL-v1-prototype.txt:129`); correction appends a new row (`docs/features/v1-prototype/PRD-TRD-v1-prototype.md:222`)
-  - Code reality: import accepted pasted text only, no `<input type="file">`; reveal offered Again/Nearly/Got it but no No (`v1/src/app/library/LibraryClient.tsx:498`; `v1/src/app/StudyClient.tsx:13` — `CORRECTIONS` now carries all four)
+  - Code reality: import accepted pasted text only, no `<input type="file">`; reveal offered Again/Nearly/Got it but no No (the file chooser now lives at `v1/src/app/library/CreatePanel.tsx:1001`; `v1/src/app/StudyClient.tsx:13` — `CORRECTIONS` now carries all four)
   - Why matters: two locked decisions (R7; the four locked outcome words) were partially unreachable from the screen.
   - Owner: v1-prototype
   - To fix: fix code — file chooser reads the file into the same import box; No joins the correction row.
@@ -58,11 +128,11 @@ IMPL reconcile section, is in progress.
   - Related: none.
 
 - **D-6** (Medium, 2026-10-19, reporter: drift review) — The sample pack contained no multi-blank card and no working-region card, and its two listen cards claimed `type`; simulation point 3 could not prove per-blank evidence.
-  - Doc claim: four answering surfaces including hear-then-type (`docs/features/v1-prototype/PRD-TRD-v1-prototype.md:122`); "A cloze answer is judged per blank" (`PRD-TRD-v1-prototype.md:76`)
+  - Doc claim: four answering surfaces including hear-then-type (`docs/features/v1-prototype/PRD-TRD-v1-prototype.md:122`); "A cloze answer is judged per blank" (`docs/features/v1-prototype/PRD-TRD-v1-prototype.md:76`)
   - Code reality: all pack cards were single-blank; listen cards used `mode: "type"` (`v1/packs/polish-starter/cards.json` before fix; hear_type now at :439 and :453, two-blank card at :511, working card at :537)
   - Why matters: the simulation's strongest point was untestable and a promised surface had no example.
   - Owner: v1-prototype
-  - To fix: fix code and pack — added a two-blank cloze card, a working-region card, and switched the listen cards to `hear_type`; simulation point 3 now asserts two rows share one attempt id (`v1/scripts/simulate.mjs:222`).
+  - To fix: fix code and pack — added a two-blank cloze card, a working-region card, and switched the listen cards to `hear_type`; the v1-prototype `simulate.mjs` that asserted point 3 is no longer in the tree, replaced by the browser simulations.
   - Verified by: simulate 10/10 with the strengthened point 3.
   - Related: D-1.
 

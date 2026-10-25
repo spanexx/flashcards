@@ -19,6 +19,9 @@
 
 ## BEFORE YOU COMMIT
 - Read `docs/ethics/commit.md`. It is the gate.
+- **Drift Is A Gate** - `docs/ethics/drift.md#three-gates-not-one` - run `npm run check:drift` and `npm run check:drift:staged`; both must pass before you commit. The staged gate refuses a file that an Open or Awaiting entry names.
+- **The Hook Enforces Drift** - `docs/ethics/drift.md#turn-the-commit-gate-on` - `.githooks/pre-commit` runs the staged gate. Turn it on once per clone with `git config core.hooksPath .githooks`; the agent must not run that command.
+- **Drift Is A Release Gate Too** - `docs/ethics/drift.md#three-gates-not-one` - `npm run check:drift:release` must pass before any tag or deploy; it refuses while any Open or Awaiting entry remains.
 
 ## BEFORE YOU FINISH
 - Read `docs/ethics/cleanup.md`. Stop every process you started, close its port, delete your logs, caches and scratch files, and leave `git status` showing only intended work.
@@ -28,6 +31,7 @@
 - **Must Follow Implementation Ethics** - `docs/ethics/implementation.md`
 - **Commenting Is Not Optional** - `docs/ethics/commenting.md`
 - **Every Piece of Code Has An Origin** - `docs/ethics/origin.md` - it arrives through `feature-pipeline` or `surgical-change`. There is no third way in.
+- **Drift Is A Gate** - `docs/ethics/drift.md#origin-before-code` - a change needs an origin, and a `surgical-change` cites a D-N that existed before it.
 - **ENVIRONMENT AGNOSTIC** - Ensure the platform works across all environments. Reassess your previous decisions and revise any that limit cross-environment compatibility.
 
 ## DO NOTs

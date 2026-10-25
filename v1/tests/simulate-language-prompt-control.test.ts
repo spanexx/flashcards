@@ -301,7 +301,7 @@ describe("language and prompt control rehearsal", () => {
       "Full screen",
       "Exit full screen",
       "This session",
-      "End this session",
+      "End the session",
     ]) {
       expect(built, `the built client is missing "${words}"`).toContain(words);
     }
