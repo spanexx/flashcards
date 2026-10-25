@@ -20,6 +20,16 @@ import {
   studyCardInstruction,
   studyModeLabel,
 } from "@/lib/client/study-view";
+import {
+  deckLevelFor,
+  layerBarText,
+  layerExplanation,
+  layerPolicy,
+  layerSpeech,
+  returnReason,
+} from "@/lib/client/layer";
+import { newId } from "@/lib/core/id";
+import TeachingMedia from "./TeachingMedia";
 import type {
   AnswerResult,
   Card,
@@ -27,10 +37,22 @@ import type {
   Outcome,
   PackStatus,
   Plan,
+  StudyLevel,
+  TeachingPart,
   TutorBanner,
 } from "@/lib/shared/types";
 
 type Phase = "loading" | "empty" | "plan" | "running" | "done" | "error";
+
+/** One trip through the card. A return is a new entry, never the same one. */
+interface QueueEntry {
+  entryId: string;
+  card: Card;
+  coldCheck: boolean;
+  suppressTeaching: boolean;
+  /** Why this entry exists; the first showing has no reason. */
+  returnKind: "cold" | "wrong" | null;
+}
 
 /** Read a number out of an error detail list, for plain display. */
 function issueLines(error: unknown): string[] {
@@ -55,6 +77,161 @@ function speak(text: string, lang?: string): void {
   if (lang) utterance.lang = lang;
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(utterance);
+}
+
+/** Speech is checked after mount so the static build renders the same everywhere. */
+function speechAvailable(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    "speechSynthesis" in window &&
+    typeof SpeechSynthesisUtterance !== "undefined"
+  );
+}
+
+/** Does this device name a voice for the language? An empty list is not a no. */
+function hasVoice(lang: string): boolean {
+  if (!lang) return true;
+  const voices = window.speechSynthesis.getVoices();
+  if (voices.length === 0) return true;
+  const wanted = lang.toLowerCase().replace("_", "-");
+  const primary = wanted.split("-")[0];
+  return voices.some((voice) => {
+    const heard = voice.lang.toLowerCase().replace("_", "-");
+    return heard === wanted || heard.split("-")[0] === primary;
+  });
+}
+
+/**
+ * The teaching layer, above the card. It never blocks the answer: there is no
+ * backdrop, and collapsing gives the question back. Listen is device-only.
+ */
+function LayerPanel({
+  parts,
+  lang,
+  level,
+  answered,
+  onCollapse,
+}: {
+  parts: TeachingPart[];
+  lang?: string;
+  level: StudyLevel;
+  answered: boolean;
+  onCollapse: () => void;
+}) {
+  const lines = useMemo(() => layerSpeech(parts, lang), [parts, lang]);
+  const [support, setSupport] = useState<"checking" | "ready" | "unavailable">("checking");
+  const [speaking, setSpeaking] = useState(false);
+  const [missing, setMissing] = useState<string[]>([]);
+  const tokenRef = useRef(0);
+
+  useEffect(() => {
+    let active = true;
+    Promise.resolve().then(() => {
+      if (active) setSupport(speechAvailable() ? "ready" : "unavailable");
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(
+    () => () => {
+      tokenRef.current += 1;
+      if (speechAvailable()) window.speechSynthesis.cancel();
+    },
+    [],
+  );
+
+  const stop = useCallback(() => {
+    tokenRef.current += 1;
+    setSpeaking(false);
+    if (speechAvailable()) window.speechSynthesis.cancel();
+  }, []);
+
+  const listen = useCallback(() => {
+    if (!speechAvailable() || lines.length === 0) return;
+    if (speaking) {
+      stop();
+      return;
+    }
+    tokenRef.current += 1;
+    const token = tokenRef.current;
+    setSpeaking(true);
+    setMissing([]);
+    window.speechSynthesis.cancel();
+    const skipped = new Set<string>();
+    const speakAt = (position: number) => {
+      if (tokenRef.current !== token) return;
+      if (position >= lines.length) {
+        setSpeaking(false);
+        if (skipped.size > 0) setMissing([...skipped]);
+        return;
+      }
+      const line = lines[position];
+      if (line.lang && !hasVoice(line.lang)) {
+        skipped.add(line.lang);
+        speakAt(position + 1);
+        return;
+      }
+      const utterance = new SpeechSynthesisUtterance(line.text);
+      if (line.lang) utterance.lang = line.lang;
+      utterance.onend = () => speakAt(position + 1);
+      utterance.onerror = () => speakAt(position + 1);
+      window.speechSynthesis.speak(utterance);
+    };
+    speakAt(0);
+  }, [lines, speaking, stop]);
+
+  return (
+    <section className="layer-panel" role="dialog" aria-label="Teaching layer">
+      <div className="layer-head">
+        <div>
+          <p className="muted small layer-kicker">Teaching layer · {level}</p>
+          <h2>Teaching layer</h2>
+          <p className="muted small">{layerExplanation(level, answered)}</p>
+        </div>
+        <button className="btn small" type="button" onClick={onCollapse} autoFocus>
+          Collapse to the question
+        </button>
+      </div>
+      <div className="layer-body">
+        {parts.map((part, position) =>
+          part.type === "text" ? (
+            <p className="layer-text" key={position}>
+              {part.text}
+            </p>
+          ) : (
+            <TeachingMedia key={position} part={part} />
+          ),
+        )}
+        {missing.length > 0 ? (
+          <p className="muted small" role="status">
+            No voice is installed for {missing.join(", ")}. Those lines were skipped.
+          </p>
+        ) : null}
+      </div>
+      {lines.length > 0 ? (
+        <div className="layer-foot">
+          <button
+            className="btn primary"
+            type="button"
+            onClick={listen}
+            disabled={support !== "ready"}
+            aria-pressed={speaking}
+          >
+            {speaking ? "Stop" : "Listen to the layer"}
+          </button>
+          <p className="muted small">
+            {support === "unavailable"
+              ? "Speech is not available on this device."
+              : support === "checking"
+                ? "Checking the device voice..."
+                : "Reads text parts only, top to bottom. Skips images and video. Uses the device voice."}
+          </p>
+        </div>
+      ) : null}
+    </section>
+  );
 }
 
 function blankWidth(part: Extract<CardPart, { type: "blank" }>): string {
@@ -198,10 +375,10 @@ export default function StudyClient() {
   const [phase, setPhase] = useState<Phase>("loading");
   const [message, setMessage] = useState<string | null>(null);
   const [plan, setPlan] = useState<Plan | null>(null);
-  const [queue, setQueue] = useState<Card[]>([]);
+  const [queue, setQueue] = useState<QueueEntry[]>([]);
   const [index, setIndex] = useState(0);
   const [results, setResults] = useState<Record<string, AnswerResult>>({});
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [answersByEntry, setAnswersByEntry] = useState<Record<string, Record<string, string>>>({});
   const [hintTexts, setHintTexts] = useState<string[]>([]);
   const [hintMessage, setHintMessage] = useState<string | null>(null);
   const [hintUsed, setHintUsed] = useState(false);
@@ -217,17 +394,36 @@ export default function StudyClient() {
   const [answered, setAnswered] = useState(0);
   const [hintsUsed, setHintsUsed] = useState(0);
   const [fullStage, setFullStage] = useState(false);
+  const [layerUi, setLayerUi] = useState<{ entryId: string; open: boolean } | null>(null);
 
   const stageRef = useRef<HTMLDivElement | null>(null);
   const returnedRef = useRef<Set<string>>(new Set());
-  const [returnedIds, setReturnedIds] = useState<string[]>([]);
+  const peekedRef = useRef<Set<string>>(new Set());
+  const entryIdRef = useRef<string>("");
   const startedRef = useRef<number>(0);
   const attemptsRef = useRef(0);
   const autoHintedRef = useRef<Set<string>>(new Set());
   const hintTokenRef = useRef(0);
 
-  const card = queue[index] ?? null;
-  const result = card ? results[card.id] : undefined;
+  const entry = queue[index] ?? null;
+  const card = entry?.card ?? null;
+  const result = entry ? results[entry.entryId] : undefined;
+  const answers = useMemo(
+    () => (entry ? (answersByEntry[entry.entryId] ?? {}) : {}),
+    [answersByEntry, entry],
+  );
+  const level = card ? deckLevelFor(card, packs) : "intermediate";
+  const policy = layerPolicy(level, Boolean(card?.teaching?.length) && !entry?.suppressTeaching);
+  const layerOpen =
+    policy.hasLayer &&
+    (layerUi?.entryId === entry?.entryId ? layerUi.open : policy.before === "open");
+  const layerBarAvailable =
+    policy.hasLayer && (Boolean(result) || policy.before !== "hidden");
+
+  // Hints and late answers belong to one entry, because one card can come back.
+  useEffect(() => {
+    entryIdRef.current = entry?.entryId ?? "";
+  }, [entry]);
 
   /** Leave the focused stage and release the browser fullscreen when present. */
   const exitFullScreen = useCallback(async () => {
@@ -251,6 +447,31 @@ export default function StudyClient() {
       });
     }
   }, []);
+
+  /** Merge a field into the current entry's answers; a return starts empty. */
+  const updateAnswers = useCallback(
+    (patch: Record<string, string>) => {
+      if (!entry) return;
+      setAnswersByEntry((previous) => ({
+        ...previous,
+        [entry.entryId]: { ...(previous[entry.entryId] ?? {}), ...patch },
+      }));
+    },
+    [entry],
+  );
+
+  /** Open the layer, and remember a peek that happened before the answer. */
+  const openTeaching = useCallback(() => {
+    if (!entry || !policy.hasLayer) return;
+    if (level === "advanced" && !result) return;
+    if (level === "intermediate" && !result) peekedRef.current.add(entry.entryId);
+    setLayerUi({ entryId: entry.entryId, open: true });
+  }, [entry, level, policy.hasLayer, result]);
+
+  const closeTeaching = useCallback(() => {
+    if (!entry) return;
+    setLayerUi({ entryId: entry.entryId, open: false });
+  }, [entry]);
 
   /** Load a fresh plan; the offer and the chosen pack/deck may be adjusted. */
   const loadPlan = useCallback(async (offer?: number, packName = "", deckId = "") => {
@@ -278,9 +499,11 @@ export default function StudyClient() {
       setQueue([]);
       setIndex(0);
       setResults({});
+      setAnswersByEntry({});
       returnedRef.current = new Set();
+      peekedRef.current = new Set();
       autoHintedRef.current = new Set();
-      setReturnedIds([]);
+      setLayerUi(null);
       attemptsRef.current = 0;
       setAnswered(0);
       setHintsUsed(0);
@@ -332,16 +555,21 @@ export default function StudyClient() {
   );
 
   useEffect(() => {
-    if (!fullStage) return;
+    if (!fullStage && !layerOpen) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
+      if (event.key !== "Escape") return;
+      // Escape closes the layer first, because that is the thing on top.
+      if (layerOpen) {
         event.preventDefault();
-        void exitFullScreen();
+        closeTeaching();
+        return;
       }
+      event.preventDefault();
+      void exitFullScreen();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [exitFullScreen, fullStage]);
+  }, [closeTeaching, exitFullScreen, fullStage, layerOpen]);
 
   // Escape through the browser's own fullscreen path still clears our state.
   useEffect(() => {
@@ -359,9 +587,17 @@ export default function StudyClient() {
   const startSession = useCallback(() => {
     if (!plan) return;
     startedRef.current = Date.now();
-    setQueue(plan.cards);
+    setQueue(
+      plan.cards.map((card) => ({
+        entryId: newId(),
+        card,
+        coldCheck: false,
+        suppressTeaching: false,
+        returnKind: null,
+      })),
+    );
     setIndex(0);
-    setAnswers({});
+    setAnswersByEntry({});
     setHintTexts([]);
     setHintMessage(null);
     setHintSource(null);
@@ -370,6 +606,9 @@ export default function StudyClient() {
     hintTokenRef.current += 1;
     setHintBusy(false);
     autoHintedRef.current = new Set();
+    returnedRef.current = new Set();
+    peekedRef.current = new Set();
+    setLayerUi(null);
     setAnswered(0);
     setHintsUsed(0);
     setFullStage(false);
@@ -381,7 +620,6 @@ export default function StudyClient() {
     // makes every older response invisible, and clears its busy state here.
     hintTokenRef.current += 1;
     setHintBusy(false);
-    setAnswers({});
     setHintTexts([]);
     setHintMessage(null);
     setHintSource(null);
@@ -419,10 +657,12 @@ export default function StudyClient() {
 
   const requestHint = useCallback(
     async (outcomeCategory?: string, automatic = false) => {
-      if (!card || hintBusy) return;
+      if (!entry || hintBusy) return;
       const token = ++hintTokenRef.current;
-      const requestedCard = card.id;
-      const current = () => token === hintTokenRef.current && card.id === requestedCard;
+      const requestedCard = entry.card.id;
+      const requestedEntry = entry.entryId;
+      const current = () =>
+        token === hintTokenRef.current && entryIdRef.current === requestedEntry;
       setHintBusy(true);
       setHintMessage(null);
       try {
@@ -461,7 +701,7 @@ export default function StudyClient() {
         if (token === hintTokenRef.current) setHintBusy(false);
       }
     },
-    [approved, card, hintBusy, hintTexts, result],
+    [approved, entry, hintBusy, hintTexts, result],
   );
 
   const askHint = useCallback(() => {
@@ -469,23 +709,40 @@ export default function StudyClient() {
   }, [requestHint]);
 
   const submitAnswer = useCallback(async () => {
-    if (!card || busy) return;
+    if (!entry || busy) return;
     setBusy(true);
+    const submitted = entry;
     try {
       const response = await apiSend<AnswerResult>("/api/answer", "POST", {
-        cardId: card.id,
+        cardId: submitted.card.id,
         answers,
         timeMs: Date.now() - startedRef.current,
         hintUsed,
+        // Help is teaching, not a hint: the layer never caps the outcome.
+        helpSeen: layerOpen || peekedRef.current.has(submitted.entryId),
+        coldCheck: submitted.coldCheck,
       });
       attemptsRef.current += 1;
       setAnswered((previous) => previous + 1);
-      setResults((previous) => ({ ...previous, [card.id]: response }));
-      // Only genuinely wrong cards return (Again or No). Nearly is not wrong.
-      if (isWrong(response.cardOutcome) && !returnedRef.current.has(card.id)) {
-        returnedRef.current.add(card.id);
-        setReturnedIds((previous) => [...previous, card.id]);
-        setQueue((previous) => [...previous, card]);
+      setResults((previous) => ({ ...previous, [submitted.entryId]: response }));
+      const reason = returnReason({
+        level,
+        peeked: peekedRef.current.has(submitted.entryId),
+        wrong: isWrong(response.cardOutcome),
+        alreadyReturned: returnedRef.current.has(submitted.card.id),
+      });
+      if (reason) {
+        returnedRef.current.add(submitted.card.id);
+        setQueue((previous) => [
+          ...previous,
+          {
+            entryId: newId(),
+            card: submitted.card,
+            coldCheck: reason === "cold",
+            suppressTeaching: reason === "cold",
+            returnKind: reason,
+          },
+        ]);
       }
       // A tutor that is on should do something without being asked: one hint
       // after the first miss on this card, never a stream.
@@ -493,10 +750,10 @@ export default function StudyClient() {
         shouldAutoHint({
           approved: approved === "yes",
           outcome: response.cardOutcome,
-          alreadyAutoHinted: autoHintedRef.current.has(card.id),
+          alreadyAutoHinted: autoHintedRef.current.has(submitted.card.id),
         })
       ) {
-        autoHintedRef.current.add(card.id);
+        autoHintedRef.current.add(submitted.card.id);
         void requestHint(OUTCOME_LABELS[response.cardOutcome], true);
       }
     } catch (error) {
@@ -504,7 +761,7 @@ export default function StudyClient() {
     } finally {
       setBusy(false);
     }
-  }, [answers, approved, busy, card, hintUsed, requestHint]);
+  }, [answers, approved, busy, entry, hintUsed, layerOpen, level, requestHint]);
 
   const nextCard = useCallback(() => {
     if (index + 1 < queue.length) {
@@ -517,23 +774,23 @@ export default function StudyClient() {
 
   const correct = useCallback(
     async (region: string | null, outcome: Outcome) => {
-      if (!card || !result) return;
-      const row = result.rows.find((entry) => entry.region === region);
+      if (!entry || !result) return;
+      const row = result.rows.find((item) => item.region === region);
       if (!row) return;
       try {
         await apiSend("/api/evidence/correction", "POST", { rowId: row.id, outcome });
         setResults((previous) => {
-          const current = previous[card.id];
+          const current = previous[entry.entryId];
           if (!current) return previous;
-          const nextResults = current.results.map((entry) =>
-            entry.region === region ? { ...entry, outcome } : entry,
+          const nextResults = current.results.map((item) =>
+            item.region === region ? { ...item, outcome } : item,
           );
           return {
             ...previous,
-            [card.id]: {
+            [entry.entryId]: {
               ...current,
               results: nextResults,
-              cardOutcome: worstOutcome(nextResults.map((entry) => entry.outcome)),
+              cardOutcome: worstOutcome(nextResults.map((item) => item.outcome)),
             },
           };
         });
@@ -541,7 +798,7 @@ export default function StudyClient() {
         setMessage(error instanceof Error ? error.message : "The correction could not be saved.");
       }
     },
-    [card, result],
+    [entry, result],
   );
 
   const blanks = useMemo(
@@ -755,7 +1012,7 @@ export default function StudyClient() {
     );
   }
 
-  if (phase === "running" && card) {
+  if (phase === "running" && card && entry) {
     const mode = card.answerDef.mode;
     const canSubmit = mode !== "picks" || (answers.choice ?? "").length > 0;
     const regionLabel = (region: string | null) =>
@@ -763,6 +1020,7 @@ export default function StudyClient() {
     const listen = mode === "hear_type" ? listenPrompt(card) : null;
     const cardPack = packs.find((pack) => pack.name === card.packName) ?? null;
     const instruction = studyCardInstruction(card, cardPack);
+    const packLanguage = cardPack?.language;
     const selectedDeck = cardPack?.decks?.find((deck) => deck.id === card.deckId) ?? null;
     const scopeLabel = cardPack
       ? `${cardPack.name}${selectedDeck ? ` / ${selectedDeck.name}` : ""}`
@@ -820,10 +1078,32 @@ export default function StudyClient() {
 
               <p className="muted study-instruction">{instruction}</p>
 
-              {returnedIds.includes(card.id) ? (
+              {entry.returnKind === "wrong" ? (
                 <p className="muted study-returned">
                   This one is marked to return once — it was missed in this session.
                 </p>
+              ) : null}
+
+              {entry.coldCheck ? (
+                <div className="cold-note">
+                  <strong>Cold check.</strong> The same card, without its teaching layer. One
+                  return per card per session.
+                </div>
+              ) : null}
+
+              {layerBarAvailable && !layerOpen ? (
+                <div className="layer-bar">
+                  <span className="layer-bar-icon" aria-hidden="true">
+                    ▤
+                  </span>
+                  <div className="layer-bar-copy">
+                    <strong>Teaching layer</strong>
+                    <span>{layerBarText(level, Boolean(result))}</span>
+                  </div>
+                  <button className="btn small" type="button" onClick={openTeaching}>
+                    Show the teaching layer
+                  </button>
+                </div>
               ) : null}
 
               {mode === "hear_type" && listen ? (
@@ -841,7 +1121,7 @@ export default function StudyClient() {
                 <Side
                   parts={card.prompt}
                   answers={answers}
-                  setAnswer={(id, value) => setAnswers((previous) => ({ ...previous, [id]: value }))}
+                  setAnswer={(id, value) => updateAnswers({ [id]: value })}
                   interactive
                 />
               )}
@@ -872,7 +1152,7 @@ export default function StudyClient() {
                           type="button"
                           className="option"
                           aria-pressed={answers.choice === option}
-                          onClick={() => setAnswers({ choice: option })}
+                          onClick={() => updateAnswers({ choice: option })}
                         >
                           {option}
                         </button>
@@ -883,7 +1163,7 @@ export default function StudyClient() {
                       className="answer-input"
                       placeholder={mode === "hear_type" ? "Type what you hear" : "Your answer"}
                       value={answers.answer ?? ""}
-                      onChange={(event) => setAnswers({ answer: event.target.value })}
+                      onChange={(event) => updateAnswers({ answer: event.target.value })}
                     />
                   )}
                   {card.answerDef.working ? (
@@ -994,6 +1274,16 @@ export default function StudyClient() {
               </ul>
             ) : null}
           </div>
+          {layerOpen && card.teaching && card.teaching.length > 0 ? (
+            <LayerPanel
+              key={entry.entryId}
+              parts={card.teaching}
+              lang={packLanguage}
+              level={level}
+              answered={Boolean(result)}
+              onCollapse={closeTeaching}
+            />
+          ) : null}
         </div>
 
         <aside className="rail study-rail">

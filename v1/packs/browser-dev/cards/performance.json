@@ -1,0 +1,125 @@
+{
+  "cards": [
+    {
+      "key": "perf-long-task",
+      "summary": "A long task blocks the main thread",
+      "topics": ["performance"],
+      "tags": ["main-thread"],
+      "prompt": [{ "type": "text", "text": "A piece of work over 50 milliseconds on the main thread is called what?" }],
+      "answer": [{ "type": "text", "text": "a long task" }],
+      "answerDef": { "mode": "picks", "options": ["a long task", "a repaint", "a fetch"], "correct": ["a long task"] },
+      "hints": ["The name describes its length."],
+      "fullLine": "A piece of work over 50 milliseconds on the main thread is a long task.",
+      "teaching": [{ "type": "text", "text": "The browser can only paint after the current piece of work finishes.", "lang": "en" }]
+    },
+    {
+      "key": "perf-lcp",
+      "summary": "LCP measures the largest block",
+      "topics": ["performance"],
+      "tags": ["metrics"],
+      "prompt": [{ "type": "text", "text": "LCP stands for Largest Contentful " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": "." }],
+      "answer": [{ "type": "text", "text": "LCP stands for Largest Contentful Paint." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["Paint"] }] },
+      "hints": ["The final word is what a browser does to pixels."],
+      "fullLine": "LCP stands for Largest Contentful Paint.",
+      "teaching": [{ "type": "text", "text": "It measures when the biggest visible block has finished arriving.", "lang": "en" }]
+    },
+    {
+      "key": "perf-response-budget",
+      "summary": "200 ms still feels immediate",
+      "topics": ["performance"],
+      "tags": ["metrics"],
+      "prompt": [{ "type": "text", "text": "A tap that responds within how many milliseconds still feels immediate?" }],
+      "answer": [{ "type": "text", "text": "200 ms" }],
+      "answerDef": { "mode": "picks", "options": ["200 ms", "2 s", "5 s"], "correct": ["200 ms"] },
+      "hints": ["Far less than a second, but more than a blink."],
+      "fullLine": "A tap that responds within 200 ms still feels immediate.",
+      "teaching": [
+        { "type": "text", "text": "A response under a tenth of a second feels instant, and this budget is the published outer limit.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/browser-dev/images/long-task.svg", "alt": "A timeline with one long block delaying several short paint marks" },
+        { "type": "video", "source": "youtube", "src": "cGiSr0MilsI", "search": "Core Web Vitals Explained LCP INP CLS", "alt": "What Core Web Vitals measure and why they matter" }
+      ]
+    },
+    {
+      "key": "perf-layout-shift",
+      "summary": "Moving content costs reading",
+      "topics": ["performance"],
+      "tags": ["metrics"],
+      "prompt": [{ "type": "text", "text": "Content that jumps after the first paint is called a layout " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": "." }],
+      "answer": [{ "type": "text", "text": "Content that jumps after the first paint is called a layout shift." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["shift", "jank"] }] },
+      "hints": ["The page moves under the reader."],
+      "fullLine": "Content that jumps after the first paint is called a layout shift.",
+      "teaching": [{ "type": "text", "text": "Content that moves after the first paint costs reading effort.", "lang": "en" }]
+    },
+    {
+      "key": "perf-fetchpriority",
+      "summary": "fetchpriority marks importance",
+      "topics": ["performance"],
+      "tags": ["hints"],
+      "prompt": [{ "type": "text", "text": "Which attribute tells the browser an image matters early?" }],
+      "answer": [{ "type": "text", "text": "fetchpriority" }],
+      "answerDef": { "mode": "type", "expected": ["fetchpriority"], "judge": "loose" },
+      "hints": ["It combines fetching with a word for rank."],
+      "fullLine": "The fetchpriority attribute tells the browser an image matters early.",
+      "teaching": [{ "type": "text", "text": "It is a hint, not a guarantee, and the server still decides.", "lang": "en" }]
+    },
+    {
+      "key": "perf-smaller-hero",
+      "summary": "A smaller hero helps LCP",
+      "topics": ["performance"],
+      "tags": ["images"],
+      "prompt": [{ "type": "text", "text": "Which change most likely improves LCP?" }],
+      "answer": [{ "type": "text", "text": "serving a smaller hero image" }],
+      "answerDef": { "mode": "picks", "options": ["serving a smaller hero image", "adding more fonts", "adding an animation"], "correct": ["serving a smaller hero image"] },
+      "hints": ["The largest block has to arrive before the metric stops."],
+      "fullLine": "Serving a smaller hero image most likely improves LCP."
+    },
+    {
+      "key": "perf-parser",
+      "summary": "A blocking script stops the parser",
+      "topics": ["performance"],
+      "tags": ["loading"],
+      "prompt": [{ "type": "text", "text": "A blocking script stops the HTML " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": "." }],
+      "answer": [{ "type": "text", "text": "A blocking script stops the HTML parser." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["parser"] }] },
+      "hints": ["It is the step that reads the tags."],
+      "fullLine": "A blocking script stops the HTML parser.",
+      "teaching": [{ "type": "text", "text": "The rest of the HTML waits while the script runs.", "lang": "en" }]
+    },
+    {
+      "key": "perf-flame-chart",
+      "summary": "A flame chart shows time by call",
+      "topics": ["performance"],
+      "tags": ["devtools"],
+      "prompt": [{ "type": "text", "text": "On a performance recording, what does the flame chart show?" }],
+      "answer": [{ "type": "text", "text": "where time went, by call" }],
+      "answerDef": { "mode": "picks", "options": ["where time went, by call", "the page's colour palette", "the server's log"], "correct": ["where time went, by call"] },
+      "hints": ["Wide bars own more of the recording."],
+      "fullLine": "A flame chart shows where time went, by call."
+    },
+    {
+      "key": "perf-worker",
+      "summary": "A worker runs off the main thread",
+      "topics": ["performance"],
+      "tags": ["main-thread"],
+      "prompt": [{ "type": "text", "text": "A Web " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " runs script off the main thread." }],
+      "answer": [{ "type": "text", "text": "A Web Worker runs script off the main thread." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["Worker", "worker"] }] },
+      "hints": ["It is the browser's background helper."],
+      "fullLine": "A Web Worker runs script off the main thread.",
+      "teaching": [{ "type": "text", "text": "It has its own thread and no direct access to the page's elements.", "lang": "en" }]
+    },
+    {
+      "key": "perf-image-size",
+      "summary": "Unsized images shift layout",
+      "topics": ["performance"],
+      "tags": ["images"],
+      "prompt": [{ "type": "text", "text": "An image with no width or height causes what?" }],
+      "answer": [{ "type": "text", "text": "layout shift" }],
+      "answerDef": { "mode": "picks", "options": ["layout shift", "a network error", "a memory leak"], "correct": ["layout shift"] },
+      "hints": ["The browser cannot reserve space it does not know."],
+      "fullLine": "An image with no width or height causes layout shift."
+    }
+  ]
+}

@@ -1,0 +1,122 @@
+{
+  "cards": [
+    {
+      "key": "recipe-reproduce",
+      "summary": "Reproduce before fixing",
+      "topics": ["debugging-recipes"],
+      "tags": ["method"],
+      "prompt": [{ "type": "text", "text": "What is the first step of a debugging recipe?" }],
+      "answer": [{ "type": "text", "text": "reproduce the problem" }],
+      "answerDef": { "mode": "picks", "options": ["reproduce the problem", "rewrite the code", "clear the cache"], "correct": ["reproduce the problem"] },
+      "hints": ["You cannot prove a fix on a path you cannot repeat."],
+      "fullLine": "The first step of a debugging recipe is to reproduce the problem."
+    },
+    {
+      "key": "recipe-network-panel",
+      "summary": "Missing files show in Network",
+      "topics": ["debugging-recipes"],
+      "tags": ["network"],
+      "prompt": [{ "type": "text", "text": "A missing file is easiest to spot in the " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " panel." }],
+      "answer": [{ "type": "text", "text": "A missing file is easiest to spot in the Network panel." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["Network"] }] },
+      "hints": ["Every request leaves a row there."],
+      "fullLine": "A missing file is easiest to spot in the Network panel.",
+      "teaching": [{ "type": "text", "text": "A missing request is easier to see than to guess.", "lang": "en" }]
+    },
+    {
+      "key": "recipe-git-bisect",
+      "summary": "git bisect finds the bad commit",
+      "topics": ["debugging-recipes"],
+      "tags": ["git"],
+      "prompt": [{ "type": "text", "text": "What does git bisect find?" }],
+      "answer": [{ "type": "text", "text": "the commit that introduced the bug" }],
+      "answerDef": { "mode": "picks", "options": ["the commit that introduced the bug", "the fastest commit", "the newest branch"], "correct": ["the commit that introduced the bug"] },
+      "hints": ["It halves the history each time."],
+      "fullLine": "git bisect finds the commit that introduced the bug."
+    },
+    {
+      "key": "recipe-reproduction",
+      "summary": "A fix needs a reproduction",
+      "topics": ["debugging-recipes"],
+      "tags": ["method"],
+      "prompt": [{ "type": "text", "text": "A bug without a " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " is hard to prove fixed." }],
+      "answer": [{ "type": "text", "text": "A bug without a reproduction is hard to prove fixed." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["reproduction", "repro"] }] },
+      "hints": ["It is a repeatable path back to the failure."],
+      "fullLine": "A bug without a reproduction is hard to prove fixed.",
+      "teaching": [
+        { "type": "text", "text": "Without a repeatable path you cannot tell whether a change helped.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/browser-dev/images/recipe-flow.svg", "alt": "A debugging recipe drawn as steps: reproduce, inspect, change one thing, check again" },
+        { "type": "video", "source": "youtube", "src": "VInAd-GJZec", "search": "Master JavaScript Debugging With DevTools and VS Code", "alt": "Practical debugging habits in DevTools and VS Code" }
+      ]
+    },
+    {
+      "key": "recipe-restart",
+      "summary": "A restart clears leftovers",
+      "topics": ["debugging-recipes"],
+      "tags": ["method"],
+      "prompt": [{ "type": "text", "text": "A bug that disappears after a full restart suggests what?" }],
+      "answer": [{ "type": "text", "text": "saved state or a cache" }],
+      "answerDef": { "mode": "picks", "options": ["saved state or a cache", "a broken keyboard", "a slow network"], "correct": ["saved state or a cache"] },
+      "hints": ["Something outlived the last page load."],
+      "fullLine": "A bug that disappears after a full restart suggests saved state or a cache."
+    },
+    {
+      "key": "recipe-hard-reload",
+      "summary": "A hard reload skips the cache",
+      "topics": ["debugging-recipes"],
+      "tags": ["caching"],
+      "prompt": [{ "type": "text", "text": "Which shortcut reloads while bypassing the cache on Windows and Linux?" }],
+      "answer": [{ "type": "text", "text": "Ctrl+Shift+R" }],
+      "answerDef": { "mode": "type", "expected": ["Ctrl+Shift+R", "Control+Shift+R"], "judge": "loose" },
+      "hints": ["It adds two modifiers to the ordinary reload key."],
+      "fullLine": "Ctrl+Shift+R reloads while bypassing the cache on Windows and Linux."
+    },
+    {
+      "key": "recipe-read-message",
+      "summary": "Read the exact error",
+      "topics": ["debugging-recipes"],
+      "tags": ["method"],
+      "prompt": [{ "type": "text", "text": "Where should a debugging session start?" }],
+      "answer": [{ "type": "text", "text": "the exact error text" }],
+      "answerDef": { "mode": "picks", "options": ["the exact error text", "a guess about the cause", "a full rewrite"], "correct": ["the exact error text"] },
+      "hints": ["It is printed with the stack trace."],
+      "fullLine": "A debugging session should start with the exact error text.",
+      "teaching": [{ "type": "text", "text": "Read the printed words before forming a theory.", "lang": "en" }]
+    },
+    {
+      "key": "recipe-write-steps",
+      "summary": "Write the steps down",
+      "topics": ["debugging-recipes"],
+      "tags": ["method"],
+      "prompt": [{ "type": "text", "text": "Why write the reproduction steps down?" }],
+      "answer": [{ "type": "text", "text": "so the fix can be checked the same way" }],
+      "answerDef": { "mode": "picks", "options": ["so the fix can be checked the same way", "to make the bug go away", "so the browser runs faster"], "correct": ["so the fix can be checked the same way"] },
+      "hints": ["Your memory of the path fades."],
+      "fullLine": "Write the reproduction steps down so the fix can be checked the same way."
+    },
+    {
+      "key": "recipe-bisection",
+      "summary": "Bisection narrows a change",
+      "topics": ["debugging-recipes"],
+      "tags": ["method"],
+      "prompt": [{ "type": "text", "text": "Finding the change between a working and a broken version is called " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": "." }],
+      "answer": [{ "type": "text", "text": "Finding the change between a working and a broken version is called bisection." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["bisection", "bisecting"] }] },
+      "hints": ["Each check cuts the range in half."],
+      "fullLine": "Finding the change between a working and a broken version is called bisection."
+    },
+    {
+      "key": "recipe-two-browsers",
+      "summary": "Two browsers point at shared code",
+      "topics": ["debugging-recipes"],
+      "tags": ["method"],
+      "prompt": [{ "type": "text", "text": "A bug appears in two browsers. What should you check first?" }],
+      "answer": [{ "type": "text", "text": "shared code or the server response" }],
+      "answerDef": { "mode": "picks", "options": ["shared code or the server response", "the keyboard layout", "the screen brightness"], "correct": ["shared code or the server response"] },
+      "hints": ["Look for what both engines receive."],
+      "fullLine": "When a bug appears in two browsers, check shared code or the server response first.",
+      "teaching": [{ "type": "text", "text": "Two engines failing the same way points at something both receive.", "lang": "en" }]
+    }
+  ]
+}

@@ -1,0 +1,128 @@
+{
+  "cards": [
+    {
+      "key": "devtools-elements-panel",
+      "summary": "Elements shows the page structure",
+      "topics": ["devtools-basics"],
+      "tags": ["panels"],
+      "prompt": [{ "type": "text", "text": "Which panel shows the page's HTML structure?" }],
+      "answer": [{ "type": "text", "text": "Elements" }],
+      "answerDef": { "mode": "picks", "options": ["Elements", "Network", "Application"], "correct": ["Elements"] },
+      "hints": ["Its name is the plural of a page's building blocks."],
+      "fullLine": "The Elements panel shows the page's HTML structure.",
+      "teaching": [
+        { "type": "text", "text": "Each panel answers one question; the tabs switch between them.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/browser-dev/images/devtools-panels.svg", "alt": "DevTools with Elements, Console, Sources, Network and Application tabs" },
+        { "type": "video", "source": "youtube", "src": "fxplz32rgEQ", "search": "Chrome Dev Tools 101 beginner guide", "alt": "A beginner tour of the Chrome DevTools panels" }
+      ]
+    },
+    {
+      "key": "devtools-console-panel",
+      "summary": "Console shows messages",
+      "topics": ["devtools-basics"],
+      "tags": ["panels"],
+      "prompt": [{ "type": "text", "text": "The " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " panel shows logged messages and errors." }],
+      "answer": [{ "type": "text", "text": "The Console panel shows logged messages and errors." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["Console"] }] },
+      "hints": ["Its name comes from the text window of an old computer."],
+      "fullLine": "The Console panel shows logged messages and errors.",
+      "teaching": [{ "type": "text", "text": "Start here when a page is blank: an error is often already written.", "lang": "en" }]
+    },
+    {
+      "key": "devtools-network-panel",
+      "summary": "Network lists requests",
+      "topics": ["devtools-basics"],
+      "tags": ["panels"],
+      "prompt": [{ "type": "text", "text": "Which panel lists every file the page requested?" }],
+      "answer": [{ "type": "text", "text": "Network" }],
+      "answerDef": { "mode": "picks", "options": ["Network", "Sources", "Performance"], "correct": ["Network"] },
+      "hints": ["It is named after the connection between browser and server."],
+      "fullLine": "The Network panel lists every file the page requested.",
+      "teaching": [{ "type": "text", "text": "Each row is one request, with a status and a timing bar.", "lang": "en" }]
+    },
+    {
+      "key": "devtools-sources-panel",
+      "summary": "Sources holds the scripts",
+      "topics": ["devtools-basics"],
+      "tags": ["panels"],
+      "prompt": [{ "type": "text", "text": "To pause code on a line, open the " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " panel." }],
+      "answer": [{ "type": "text", "text": "To pause code on a line, open the Sources panel." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["Sources"] }] },
+      "hints": ["It is also the word for where something comes from."],
+      "fullLine": "To pause code on a line, open the Sources panel.",
+      "teaching": [{ "type": "text", "text": "Breakpoints live beside the script that runs them.", "lang": "en" }]
+    },
+    {
+      "key": "devtools-application-panel",
+      "summary": "Application shows storage",
+      "topics": ["devtools-basics"],
+      "tags": ["panels"],
+      "prompt": [{ "type": "text", "text": "The " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " panel shows the page's storage, cookies and cache." }],
+      "answer": [{ "type": "text", "text": "The Application panel shows the page's storage, cookies and cache." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["Application"] }] },
+      "hints": ["It shares its name with the program you are testing."],
+      "fullLine": "The Application panel shows the page's storage, cookies and cache.",
+      "teaching": [{ "type": "text", "text": "This is where you inspect localStorage, IndexedDB and service workers.", "lang": "en" }]
+    },
+    {
+      "key": "devtools-performance-panel",
+      "summary": "Performance records work",
+      "topics": ["devtools-basics"],
+      "tags": ["panels"],
+      "prompt": [{ "type": "text", "text": "Which DevTools panel records frame rate and long tasks?" }],
+      "answer": [{ "type": "text", "text": "Performance" }],
+      "answerDef": { "mode": "type", "expected": ["Performance"], "judge": "loose" },
+      "hints": ["Its name answers the question: how fast does it feel?"],
+      "fullLine": "The Performance panel records frame rate and long tasks.",
+      "teaching": [{ "type": "text", "text": "A recording shows where time goes, not just how much passed.", "lang": "en" }]
+    },
+    {
+      "key": "devtools-open-key",
+      "summary": "F12 opens DevTools",
+      "topics": ["devtools-basics"],
+      "tags": ["shortcuts"],
+      "prompt": [{ "type": "text", "text": "Which key opens DevTools in most browsers on Windows and Linux?" }],
+      "answer": [{ "type": "text", "text": "F12" }],
+      "answerDef": { "mode": "type", "expected": ["F12", "Ctrl+Shift+I", "Control+Shift+I"], "judge": "loose" },
+      "hints": ["It is the last of the twelve function keys."],
+      "fullLine": "F12 opens DevTools in most browsers on Windows and Linux.",
+      "teaching": [{ "type": "text", "text": "On a Mac, the same panel opens with the developer shortcut in the browser menu.", "lang": "en" }]
+    },
+    {
+      "key": "devtools-device-toolbar",
+      "summary": "Device mode changes the viewport",
+      "topics": ["devtools-basics"],
+      "tags": ["device-mode"],
+      "prompt": [{ "type": "text", "text": "What does the device toolbar do?" }],
+      "answer": [{ "type": "text", "text": "simulates screen size, pixel ratio and touch" }],
+      "answerDef": { "mode": "picks", "options": ["simulates screen size, pixel ratio and touch", "deletes the page cache", "edits the server code"], "correct": ["simulates screen size, pixel ratio and touch"] },
+      "hints": ["It changes the frame around the page, not the page's files."],
+      "fullLine": "The device toolbar simulates screen size, pixel ratio and touch.",
+      "teaching": [{ "type": "text", "text": "A simulated phone width is a preview, not a real device test.", "lang": "en" }]
+    },
+    {
+      "key": "devtools-live-dom",
+      "summary": "Elements edits the live DOM",
+      "topics": ["devtools-basics"],
+      "tags": ["elements"],
+      "prompt": [{ "type": "text", "text": "The Elements panel lets you edit the " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " DOM, not the source file." }],
+      "answer": [{ "type": "text", "text": "The Elements panel lets you edit the live DOM, not the source file." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["live"] }] },
+      "hints": ["The opposite of a saved file."],
+      "fullLine": "The Elements panel lets you edit the live DOM, not the source file.",
+      "teaching": [{ "type": "text", "text": "Reloading the page throws those edits away.", "lang": "en" }]
+    },
+    {
+      "key": "devtools-slow-image",
+      "summary": "Network explains a slow file",
+      "topics": ["devtools-basics"],
+      "tags": ["network"],
+      "prompt": [{ "type": "text", "text": "Which panel shows why an image took three seconds to arrive?" }],
+      "answer": [{ "type": "text", "text": "Network" }],
+      "answerDef": { "mode": "picks", "options": ["Network", "Console", "Sources"], "correct": ["Network"] },
+      "hints": ["Look for the request's own timing bar."],
+      "fullLine": "The Network panel shows why an image took three seconds to arrive.",
+      "teaching": [{ "type": "text", "text": "The timing split tells you whether the wait was the server or the download.", "lang": "en" }]
+    }
+  ]
+}

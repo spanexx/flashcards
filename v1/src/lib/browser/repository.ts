@@ -4,7 +4,16 @@
 // PACK: browser-app
 // 2026-10-20 opencode: created for the browser-owned build.
 
-import type { Card, EvidenceRow, PackStatus, PromptLogEntry, SessionEvent, Settings } from "@/lib/shared/types";
+import type {
+  Card,
+  Deck,
+  EvidenceRow,
+  PackStatus,
+  PromptLogEntry,
+  SessionEvent,
+  Settings,
+  Tombstone,
+} from "@/lib/shared/types";
 import type { PackPrompts } from "@/lib/packs/types";
 import { defaultSettings, mergeSettings, normalizeSettings } from "@/lib/core/settings-shape";
 import { browserStore, type StoredValue, type Store } from "@/lib/browser/store";
@@ -19,7 +28,7 @@ export interface BrowserPack extends StoredValue {
   language?: string;
   sourceLanguage?: string;
   studyInstruction?: string;
-  decks: Array<{ id: string; name: string }>;
+  decks: Deck[];
   prompts: PackPrompts | null;
   createdAt: string;
   updatedAt: string;
@@ -56,14 +65,23 @@ function serial<T>(work: () => Promise<T>): Promise<T> {
   return next;
 }
 
+/** Old pack rows predate deck levels; a missing level means intermediate. */
+function withLevels(pack: BrowserPack): BrowserPack {
+  return {
+    ...pack,
+    decks: pack.decks.map((deck) => ({ ...deck, level: deck.level ?? "intermediate" })),
+  };
+}
+
 /** All packs, newest name order is left to the caller. */
 export async function readPacks(store: Store = browserStore()): Promise<BrowserPack[]> {
-  return store.all<BrowserPack>("packs");
+  return (await store.all<BrowserPack>("packs")).map(withLevels);
 }
 
 /** One pack by its exact name. */
 export async function readPack(name: string, store: Store = browserStore()): Promise<BrowserPack | null> {
-  return store.get<BrowserPack>("packs", name);
+  const pack = await store.get<BrowserPack>("packs", name);
+  return pack ? withLevels(pack) : null;
 }
 
 /** Add or replace one pack manifest. */
@@ -287,6 +305,36 @@ export function writeMeta(id: string, value: string, store: Store = browserStore
   return serial(() => store.put<MetaRow>("meta", { id, value }));
 }
 
+/** Every deliberate removal, so a seed can leave what the learner took out. */
+export async function readTombstones(store: Store = browserStore()): Promise<Tombstone[]> {
+  return store.all<Tombstone>("tombstones");
+}
+
+/** The ids the learner removed, optionally only packs or only cards. */
+export async function readTombstoneIds(
+  kind?: Tombstone["kind"],
+  store: Store = browserStore(),
+): Promise<Set<string>> {
+  const rows = await readTombstones(store);
+  return new Set(rows.filter((row) => !kind || row.kind === kind).map((row) => row.id));
+}
+
+/** Remember one deliberate removal. */
+export function writeTombstone(tombstone: Tombstone, store: Store = browserStore()): Promise<void> {
+  return serial(async () => {
+    await store.put("tombstones", tombstone);
+    markChanged();
+  });
+}
+
+/** Remember several removals, such as those carried by a restored backup. */
+export function writeTombstones(tombstones: Tombstone[], store: Store = browserStore()): Promise<void> {
+  return serial(async () => {
+    for (const tombstone of tombstones) await store.put("tombstones", tombstone);
+    if (tombstones.length > 0) markChanged();
+  });
+}
+
 /** Turn a pack and its cards into the status shape the screens already know. */
 export function packStatus(pack: BrowserPack, cards: Card[]): PackStatus {
   const deckNames = pack.decks.map((deck) => deck.name);
@@ -333,7 +381,11 @@ export function orphanedPackNames(cards: Card[], packs: BrowserPack[]): string[]
   return [...missing].sort();
 }
 
-/** Remove every row from every store. Used by restore, never by normal use. */
+/**
+ * Remove the library. Used by restore, never by normal use. Local media stays
+ * because the incoming backup may point at it; removal tombstones stay because
+ * a restore must not undo what the learner deliberately took out.
+ */
 export function clearLibrary(store: Store = browserStore()): Promise<void> {
   return serial(async () => {
     for (const name of ["packs", "cards", "evidence", "sessions", "prompts", "settings", "meta"] as const) {

@@ -5,7 +5,7 @@
 // 2026-10-19 opencode: created for the v1 prototype [pack: v1-prototype]
 
 import type { Card, EvidenceRow, Outcome } from "@/lib/shared/types";
-import { attemptsByCard, type AttemptSummary } from "@/lib/core/evidence";
+import { attemptsByCard, realAttempts, type AttemptSummary } from "@/lib/core/evidence";
 
 /** Facts about one card's history. Nothing here says "strong" or "weak". */
 export interface CardSummary {
@@ -37,7 +37,9 @@ export function buildSummaries(
   const summaries = new Map<string, CardSummary>();
 
   for (const card of cards) {
-    const history: AttemptSummary[] = attempts.get(card.id) ?? [];
+    // WHY: A same-session cold check is not learning evidence, so scheduling
+    // reads only the attempts that were not helped by a peek.
+    const history: AttemptSummary[] = realAttempts(attempts.get(card.id) ?? []);
     const first = history[0];
     const last = history[history.length - 1];
     let streak = 0;

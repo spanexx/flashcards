@@ -1,0 +1,224 @@
+{
+  "cards": [
+    {
+      "key": "body-and-health-head",
+      "summary": "Head",
+      "topics": ["body-and-health"],
+      "tags": ["feminine"],
+      "prompt": [{ "type": "text", "text": "Head" }],
+      "answer": [
+        { "type": "text", "text": "głowa" },
+        { "type": "text", "text": "head", "role": "translation" },
+        { "type": "text", "text": "GWOH-vah", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["głowa"], "judge": "loose" },
+      "hints": ["You nod it to say yes."],
+      "fullLine": "głowa",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun for the top part of the body.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "body-and-health-hand",
+      "summary": "Hand",
+      "topics": ["body-and-health"],
+      "tags": ["feminine"],
+      "prompt": [{ "type": "text", "text": "Hand" }],
+      "answer": [
+        { "type": "text", "text": "ręka" },
+        { "type": "text", "text": "hand", "role": "translation" },
+        { "type": "text", "text": "REN-kah", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["ręka"], "judge": "loose" },
+      "hints": ["You use it to hold a cup."],
+      "fullLine": "ręka",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun that covers the whole arm in Polish.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "body-and-health-eye",
+      "summary": "Eye",
+      "topics": ["body-and-health"],
+      "tags": ["neuter"],
+      "prompt": [{ "type": "text", "text": "Eye" }],
+      "answer": [
+        { "type": "text", "text": "oko" },
+        { "type": "text", "text": "eye", "role": "translation" },
+        { "type": "text", "text": "OH-koh", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["oko"], "judge": "loose" },
+      "hints": ["You close it when you sleep."],
+      "fullLine": "oko",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A neuter noun with an irregular plural.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "body-and-health-ear",
+      "summary": "Ear",
+      "topics": ["body-and-health"],
+      "tags": ["neuter"],
+      "prompt": [{ "type": "text", "text": "Ear" }],
+      "answer": [
+        { "type": "text", "text": "ucho" },
+        { "type": "text", "text": "ear", "role": "translation" },
+        { "type": "text", "text": "OO-hoh", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["ucho"], "judge": "loose" },
+      "hints": ["You listen with it."],
+      "fullLine": "ucho",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A neuter noun used for hearing.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "body-and-health-tooth",
+      "summary": "Tooth",
+      "topics": ["body-and-health"],
+      "tags": ["masculine"],
+      "prompt": [{ "type": "text", "text": "Tooth" }],
+      "answer": [
+        { "type": "text", "text": "ząb" },
+        { "type": "text", "text": "tooth", "role": "translation" },
+        { "type": "text", "text": "zomp", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["ząb"], "judge": "loose" },
+      "hints": ["You brush it twice a day."],
+      "fullLine": "ząb",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun; the plural changes the stem.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "body-and-health-heart",
+      "summary": "Heart",
+      "topics": ["body-and-health"],
+      "tags": ["neuter"],
+      "prompt": [{ "type": "text", "text": "Heart" }],
+      "answer": [
+        { "type": "text", "text": "serce" },
+        { "type": "text", "text": "heart", "role": "translation" },
+        { "type": "text", "text": "SER-tseh", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["serce"], "judge": "loose" },
+      "hints": ["It beats faster when you run."],
+      "fullLine": "serce",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A neuter noun for the organ that pumps blood.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "body-and-health-doctor",
+      "summary": "Doctor",
+      "topics": ["body-and-health"],
+      "tags": ["masculine"],
+      "prompt": [{ "type": "text", "text": "Doctor" }],
+      "answer": [
+        { "type": "text", "text": "lekarz" },
+        { "type": "text", "text": "doctor", "role": "translation" },
+        { "type": "text", "text": "LEH-kahsh", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["lekarz"], "judge": "loose" },
+      "hints": ["You visit one when you feel ill."],
+      "fullLine": "lekarz",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun for a medical professional.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "body-and-health-medicine",
+      "summary": "Medicine",
+      "topics": ["body-and-health"],
+      "tags": ["neuter"],
+      "prompt": [{ "type": "text", "text": "Medicine" }],
+      "answer": [
+        { "type": "text", "text": "lekarstwo" },
+        { "type": "text", "text": "medicine", "role": "translation" },
+        { "type": "text", "text": "leh-KAR-stvoh", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["lekarstwo"], "judge": "loose" },
+      "hints": ["The chemist sells it in small boxes."],
+      "fullLine": "lekarstwo",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A neuter noun for something you take when ill.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "body-and-health-pain",
+      "summary": "Pain",
+      "topics": ["body-and-health"],
+      "tags": ["masculine"],
+      "prompt": [{ "type": "text", "text": "Pain" }],
+      "answer": [
+        { "type": "text", "text": "ból" },
+        { "type": "text", "text": "pain", "role": "translation" },
+        { "type": "text", "text": "bool", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["ból"], "judge": "loose" },
+      "hints": ["You feel it after an injury."],
+      "fullLine": "ból",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun for an ache or a sharp hurt.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "body-and-health-healthy",
+      "summary": "Healthy",
+      "topics": ["body-and-health"],
+      "tags": ["adjective"],
+      "prompt": [{ "type": "text", "text": "Healthy" }],
+      "answer": [
+        { "type": "text", "text": "zdrowy" },
+        { "type": "text", "text": "healthy", "role": "translation" },
+        { "type": "text", "text": "ZDROH-vih", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["zdrowy"], "judge": "loose" },
+      "hints": ["It is the opposite of ill."],
+      "fullLine": "zdrowy",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine adjective; it describes a person or a meal.",
+          "lang": "en"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,224 @@
+{
+  "cards": [
+    {
+      "key": "people-and-family-mother",
+      "summary": "Mother",
+      "topics": ["people-and-family"],
+      "tags": ["feminine"],
+      "prompt": [{ "type": "text", "text": "Mother" }],
+      "answer": [
+        { "type": "text", "text": "matka" },
+        { "type": "text", "text": "mother", "role": "translation" },
+        { "type": "text", "text": "MAHT-kah", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["matka"], "judge": "loose" },
+      "hints": ["You will hear the warmer, shorter family word far more at home."],
+      "fullLine": "matka",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun for a parent; a more affectionate form also exists.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "people-and-family-father",
+      "summary": "Father",
+      "topics": ["people-and-family"],
+      "tags": ["masculine"],
+      "prompt": [{ "type": "text", "text": "Father" }],
+      "answer": [
+        { "type": "text", "text": "ojciec" },
+        { "type": "text", "text": "father", "role": "translation" },
+        { "type": "text", "text": "OY-chets", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["ojciec"], "judge": "loose" },
+      "hints": ["The casual family word for him sounds like 'tata'."],
+      "fullLine": "ojciec",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun, and the everyday word for a male parent.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "people-and-family-sister",
+      "summary": "Sister",
+      "topics": ["people-and-family"],
+      "tags": ["feminine"],
+      "prompt": [{ "type": "text", "text": "Sister" }],
+      "answer": [
+        { "type": "text", "text": "siostra" },
+        { "type": "text", "text": "sister", "role": "translation" },
+        { "type": "text", "text": "SHOHS-trah", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["siostra"], "judge": "loose" },
+      "hints": ["The word for a male sibling looks quite different."],
+      "fullLine": "siostra",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun for a female sibling.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "people-and-family-brother",
+      "summary": "Brother",
+      "topics": ["people-and-family"],
+      "tags": ["masculine"],
+      "prompt": [{ "type": "text", "text": "Brother" }],
+      "answer": [
+        { "type": "text", "text": "brat" },
+        { "type": "text", "text": "brother", "role": "translation" },
+        { "type": "text", "text": "braht", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["brat"], "judge": "loose" },
+      "hints": ["It is short and follows the same cases as other masculine nouns."],
+      "fullLine": "brat",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun for a male sibling.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "people-and-family-son",
+      "summary": "Son",
+      "topics": ["people-and-family"],
+      "tags": ["masculine"],
+      "prompt": [{ "type": "text", "text": "Son" }],
+      "answer": [
+        { "type": "text", "text": "syn" },
+        { "type": "text", "text": "son", "role": "translation" },
+        { "type": "text", "text": "sihn", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["syn"], "judge": "loose" },
+      "hints": ["It is often paired with the word for the female child in family lists."],
+      "fullLine": "syn",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun for a male child of his parents.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "people-and-family-daughter",
+      "summary": "Daughter",
+      "topics": ["people-and-family"],
+      "tags": ["feminine"],
+      "prompt": [{ "type": "text", "text": "Daughter" }],
+      "answer": [
+        { "type": "text", "text": "córka" },
+        { "type": "text", "text": "daughter", "role": "translation" },
+        { "type": "text", "text": "TSOOR-kah", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["córka"], "judge": "loose" },
+      "hints": ["It is the female counterpart of the word for a male child."],
+      "fullLine": "córka",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun for a female child of her parents.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "people-and-family-child",
+      "summary": "Child",
+      "topics": ["people-and-family"],
+      "tags": ["neuter"],
+      "prompt": [{ "type": "text", "text": "Child" }],
+      "answer": [
+        { "type": "text", "text": "dziecko" },
+        { "type": "text", "text": "child", "role": "translation" },
+        { "type": "text", "text": "JETS-koh", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["dziecko"], "judge": "loose" },
+      "hints": ["Its plural is irregular, so learn the two forms as a pair."],
+      "fullLine": "dziecko",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A neuter noun for a young person, used for either gender.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "people-and-family-friend",
+      "summary": "Friend",
+      "topics": ["people-and-family"],
+      "tags": ["masculine"],
+      "prompt": [{ "type": "text", "text": "Friend (close, male)" }],
+      "answer": [
+        { "type": "text", "text": "przyjaciel" },
+        { "type": "text", "text": "friend", "role": "translation" },
+        { "type": "text", "text": "pshih-YAH-chel", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["przyjaciel"], "judge": "loose" },
+      "hints": ["A shorter, more casual word exists for pals."],
+      "fullLine": "przyjaciel",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun for a close friend, not just an acquaintance.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "people-and-family-man",
+      "summary": "Man",
+      "topics": ["people-and-family"],
+      "tags": ["masculine"],
+      "prompt": [{ "type": "text", "text": "Man" }],
+      "answer": [
+        { "type": "text", "text": "mężczyzna" },
+        { "type": "text", "text": "man", "role": "translation" },
+        { "type": "text", "text": "men-SHCHIZ-nah", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["mężczyzna"], "judge": "loose" },
+      "hints": ["It is one of the longest everyday words for a person."],
+      "fullLine": "mężczyzna",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun for an adult male, despite its feminine-looking ending.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "people-and-family-woman",
+      "summary": "Woman",
+      "topics": ["people-and-family"],
+      "tags": ["feminine"],
+      "prompt": [{ "type": "text", "text": "Woman" }],
+      "answer": [
+        { "type": "text", "text": "kobieta" },
+        { "type": "text", "text": "woman", "role": "translation" },
+        { "type": "text", "text": "koh-BYEH-tah", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["kobieta"], "judge": "loose" },
+      "hints": ["It is the polite word you see on signs and forms."],
+      "fullLine": "kobieta",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun for an adult female.",
+          "lang": "en"
+        }
+      ]
+    }
+  ]
+}

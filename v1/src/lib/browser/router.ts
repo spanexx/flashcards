@@ -19,6 +19,7 @@ import type {
   Outcome,
   PackStatus,
   Settings,
+  StudyLevel,
   TutorBanner,
 } from "@/lib/shared/types";
 import { ApiError } from "@/lib/client/errors";
@@ -33,7 +34,7 @@ import {
   simpleCardSchema,
   simpleCardToSource,
 } from "@/lib/core/card";
-import { cardSourceSchema, issuesFromZod, packPromptsSchema } from "@/lib/core/schema";
+import { cardSourceSchema, issuesFromZod, packPromptsSchema, teachingPartSchema } from "@/lib/core/schema";
 import { countSeenBefore, groupAttempts, makeAnswerRows, makeCorrectionRow } from "@/lib/core/evidence";
 import { judgeCard } from "@/lib/core/judge";
 import { buildPlan } from "@/lib/core/plan";
@@ -64,7 +65,6 @@ import {
   type BrowserPack,
 } from "@/lib/browser/repository";
 import {
-  ensureSeeded,
   exportBackup,
   exportPackBundle,
   importBundle,
@@ -72,6 +72,7 @@ import {
   PACK_BUNDLE_SCHEMA,
   type ImportTarget,
 } from "@/lib/browser/bundle";
+import { deleteBuiltInCard, dismissPack, ensureSeeded } from "@/lib/browser/seed";
 import {
   askHint,
   browserProviderStatus,
@@ -176,6 +177,9 @@ function optionalBriefFor(record: Record<string, unknown> | null, kind: string |
   return brief;
 }
 
+/** One seed pass per app start; a failure is retried after the next reload. */
+let seedPass: Promise<void> | null = null;
+
 /** The library as the old screens knew it: packs, cards and display statuses. */
 async function loadState(): Promise<{
   packs: BrowserPack[];
@@ -183,7 +187,8 @@ async function loadState(): Promise<{
   statuses: PackStatus[];
   orphans: string[];
 }> {
-  await ensureSeeded();
+  seedPass ??= ensureSeeded();
+  await seedPass;
   const [packs, cards] = await Promise.all([readPacks(), readCards()]);
   const statuses = packs.map((pack) => packStatus(pack, cards));
   return { packs, cards, statuses, orphans: orphanedPackNames(cards, packs) };
@@ -330,7 +335,10 @@ async function answer(body: Record<string, unknown>): Promise<AnswerResult> {
   const seenBefore = countSeenBefore(rows, cardId);
   const judged = judgeCard(card.answerDef, answers, seenBefore, hintUsed);
   const at = new Date().toISOString();
-  const newRows = makeAnswerRows(cardId, attemptId, judged.results, timeMs, seenBefore, at);
+  const newRows = makeAnswerRows(cardId, attemptId, judged.results, timeMs, seenBefore, at, {
+    helpSeen: body.helpSeen === true,
+    coldCheck: body.coldCheck === true,
+  });
   await appendEvidence(newRows);
 
   return {
@@ -433,7 +441,14 @@ async function createDeck(packName: string, body: Record<string, unknown>) {
   const name = asString(body.name)?.trim();
   if (!name) fail("Give the deck a name.");
   const id = asString(body.id)?.trim() || slugFromName(name, "deck");
-  const fragment = { decks: [{ id, name }], cards: [] };
+  const asked = asString(body.level);
+  const levels: StudyLevel[] = ["beginner", "intermediate", "advanced"];
+  if (asked !== null && !levels.includes(asked as StudyLevel)) {
+    fail("That is not a level the app knows.");
+  }
+  // A new deck starts at the learner's current level unless the form chose one.
+  const level = (asked as StudyLevel | null) ?? (await readSettings()).level;
+  const fragment = { decks: [{ id, name, level }], cards: [] };
   const result = await importBundle(JSON.stringify(fragment), { kind: "deck", packName });
   if (!result.ok) fail("The deck needs fixing before it can be saved.", result.issues);
   const fresh = await readPack(packName);
@@ -514,6 +529,8 @@ async function editCard(id: string, body: Record<string, unknown>) {
     answerDef: existingCard.answerDef,
     hints: existingCard.hints,
     fullLine: existingCard.fullLine,
+    // The layer is help, not a side: a side edit copies it to the new card.
+    teaching: existingCard.teaching,
   };
 
   let source: CardSource;
@@ -521,7 +538,7 @@ async function editCard(id: string, body: Record<string, unknown>) {
     const payload = { ...body, topics: existingCard.topics };
     const simple = simpleCardSchema.safeParse(payload);
     if (!simple.success) fail("The card is missing something.", issuesFromZod(simple.error, 0));
-    source = simpleCardToSource(simple.data);
+    source = { ...simpleCardToSource(simple.data), teaching: existingCard.teaching };
   } else {
     source = mergeSource(base, body);
     const parsed = cardSourceSchema.safeParse(source);
@@ -553,6 +570,29 @@ async function editCard(id: string, body: Record<string, unknown>) {
 
   await upsertCards([{ ...existingCard, retired: true }, card]);
   return { card, retired: existingCard.id };
+}
+
+/**
+ * Save a teaching layer on the card it belongs to: same id, same evidence, no
+ * retired copy. An empty or null layer removes it.
+ */
+async function updateTeaching(id: string, body: Record<string, unknown>) {
+  const cards = await readCards();
+  const existingCard = cards.find((entry) => entry.id === id);
+  if (!existingCard) fail("That card is not in the deck.");
+  if (body.teaching === undefined) fail("Send the layer as a list of parts, or null to remove it.");
+
+  const parsed = teachingPartSchema.array().safeParse(body.teaching ?? []);
+  if (!parsed.success) fail("The teaching layer needs fixing.", issuesFromZod(parsed.error, 0));
+  if (parsed.data.length === 0) {
+    const next = { ...existingCard };
+    delete next.teaching;
+    await upsertCards([next]);
+    return { card: next };
+  }
+  const next = { ...existingCard, teaching: parsed.data };
+  await upsertCards([next]);
+  return { card: next };
 }
 
 /** The old flat import is wrapped in the one bundle format, targeting one deck. */
@@ -754,6 +794,7 @@ export async function localSend<T>(
     const name = decodeURIComponent(packPath[1]);
     const result = await deletePack(name);
     if (!result) fail(`There is no pack "${name}" here.`);
+    await dismissPack(name);
     return { deleted: true, ...result } as T;
   }
   const deckPath = /^\/api\/packs\/([^/]+)\/decks(?:\/([^/]+))?$/.exec(path);
@@ -776,6 +817,11 @@ export async function localSend<T>(
     if (!record) fail("The card arrived in a shape the app does not understand.");
     if (method === "POST") return (await createCard(record)) as T;
   }
+  const teachingPath = /^\/api\/cards\/([^/]+)\/teaching$/.exec(path);
+  if (teachingPath && method === "PATCH") {
+    if (!record) fail("The layer arrived in a shape the app does not understand.");
+    return (await updateTeaching(decodeURIComponent(teachingPath[1]), record)) as T;
+  }
   if (path.startsWith("/api/cards/") && path !== "/api/cards/import") {
     const id = decodeURIComponent(path.slice("/api/cards/".length));
     if (method === "PATCH") {
@@ -787,6 +833,7 @@ export async function localSend<T>(
       const existing = cards.find((entry) => entry.id === id);
       if (!existing) fail("That card is not in the deck.");
       await deleteCard(id);
+      await deleteBuiltInCard(existing);
       const removedEvidenceRows = await deleteCardEvidence(id);
       return { deleted: true, removedEvidenceRows } as T;
     }

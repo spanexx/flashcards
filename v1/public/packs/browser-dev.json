@@ -1,0 +1,6231 @@
+{
+  "schema": "flashcards.pack/v1",
+  "pack": {
+    "name": "browser-dev",
+    "version": "1.0.0",
+    "description": "How the browser works, seen through its own developer tools.",
+    "language": "en"
+  },
+  "decks": [
+    {
+      "id": "how-the-browser-works",
+      "name": "How the browser works",
+      "level": "beginner"
+    },
+    {
+      "id": "devtools-basics",
+      "name": "DevTools basics",
+      "level": "beginner"
+    },
+    {
+      "id": "elements-and-the-dom",
+      "name": "Elements and the DOM",
+      "level": "beginner"
+    },
+    {
+      "id": "styles-and-the-box-model",
+      "name": "Styles and the box model",
+      "level": "beginner"
+    },
+    {
+      "id": "console",
+      "name": "Console",
+      "level": "beginner"
+    },
+    {
+      "id": "responsive-and-device-mode",
+      "name": "Responsive and device mode",
+      "level": "beginner"
+    },
+    {
+      "id": "network",
+      "name": "Network",
+      "level": "intermediate"
+    },
+    {
+      "id": "sources-and-debugging",
+      "name": "Sources and debugging",
+      "level": "intermediate"
+    },
+    {
+      "id": "application-and-storage",
+      "name": "Application and storage",
+      "level": "intermediate"
+    },
+    {
+      "id": "accessibility",
+      "name": "Accessibility",
+      "level": "intermediate"
+    },
+    {
+      "id": "performance",
+      "name": "Performance",
+      "level": "advanced"
+    },
+    {
+      "id": "memory-and-leaks",
+      "name": "Memory and leaks",
+      "level": "advanced"
+    },
+    {
+      "id": "security-essentials",
+      "name": "Security essentials",
+      "level": "advanced"
+    },
+    {
+      "id": "debugging-recipes",
+      "name": "Debugging recipes",
+      "level": "advanced"
+    }
+  ],
+  "cards": [
+    {
+      "key": "a11y-visible-label",
+      "summary": "A field needs a visible label",
+      "tags": [
+        "forms"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What gives a form field its accessible name?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "a connected visible label"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "a connected visible label",
+          "placeholder text alone",
+          "a bright border"
+        ],
+        "correct": [
+          "a connected visible label"
+        ]
+      },
+      "hints": [
+        "It should stay visible after the field is filled."
+      ],
+      "fullLine": "A connected visible label gives a form field its accessible name.",
+      "deckId": "accessibility"
+    },
+    {
+      "key": "a11y-alt-text",
+      "summary": "Meaningful images need alt text",
+      "tags": [
+        "images"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "An image that carries meaning needs a useful "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " text."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "An image that carries meaning needs a useful alt text."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "alt",
+              "alternative"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "It sits on the image tag itself."
+      ],
+      "fullLine": "An image that carries meaning needs a useful alt text.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Describe what the picture adds to the page, not every pixel.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "accessibility"
+    },
+    {
+      "key": "a11y-contrast",
+      "summary": "Normal text needs 4.5 to 1",
+      "tags": [
+        "contrast"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which contrast ratio meets the WCAG AA level for normal text?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "4.5:1"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "4.5:1",
+          "2:1",
+          "1.5:1"
+        ],
+        "correct": [
+          "4.5:1"
+        ]
+      },
+      "hints": [
+        "The smallest passing value is a little under five to one."
+      ],
+      "fullLine": "Normal text meets WCAG AA at a contrast ratio of 4.5:1.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Small text needs a stronger difference than large text.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "accessibility"
+    },
+    {
+      "key": "a11y-tab-key",
+      "summary": "Tab moves through controls",
+      "tags": [
+        "keyboard"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Keyboard users reach controls by pressing "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Keyboard users reach controls by pressing Tab."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "Tab",
+              "tab"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "It is the key above Caps Lock."
+      ],
+      "fullLine": "Keyboard users reach controls by pressing Tab.",
+      "deckId": "accessibility"
+    },
+    {
+      "key": "a11y-aria-label",
+      "summary": "aria-label adds an invisible name",
+      "tags": [
+        "aria"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which attribute adds a name when no visible label exists?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "aria-label"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "aria-label"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It belongs to the ARIA family."
+      ],
+      "fullLine": "aria-label adds a name when no visible label exists.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "It supplies a name that only assistive software reads.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "accessibility"
+    },
+    {
+      "key": "a11y-aria-last-resort",
+      "summary": "Prefer native HTML over ARIA",
+      "tags": [
+        "aria"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "When should you reach for ARIA?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "only when native HTML cannot express it"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "only when native HTML cannot express it",
+          "whenever a div is used",
+          "to replace every label"
+        ],
+        "correct": [
+          "only when native HTML cannot express it"
+        ]
+      },
+      "hints": [
+        "A real button already does the job."
+      ],
+      "fullLine": "Reach for ARIA only when native HTML cannot express it.",
+      "deckId": "accessibility"
+    },
+    {
+      "key": "a11y-focus-visible",
+      "summary": "Focus must stay visible",
+      "tags": [
+        "keyboard"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A focus outline must be visible "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A focus outline must be visible clearly."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "clearly",
+              "plainly"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Removing it strands keyboard users."
+      ],
+      "fullLine": "A focus outline must be visible clearly.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Never remove the focus outline without replacing it.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "accessibility"
+    },
+    {
+      "key": "a11y-heading-order",
+      "summary": "Headings step down one level",
+      "tags": [
+        "headings"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which heading order is correct?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "h1 then h2"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "h1 then h2",
+          "h2 then h1",
+          "h1 then h4"
+        ],
+        "correct": [
+          "h1 then h2"
+        ]
+      },
+      "hints": [
+        "Do not skip a level just for size."
+      ],
+      "fullLine": "The correct heading order is h1 then h2.",
+      "deckId": "accessibility"
+    },
+    {
+      "key": "a11y-tree",
+      "summary": "Screen readers walk a tree",
+      "tags": [
+        "screen-readers"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Screen readers navigate by the accessibility "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " built from the DOM."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Screen readers navigate by the accessibility tree built from the DOM."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "tree"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "It branches from the page down to each control."
+      ],
+      "fullLine": "Screen readers navigate by the accessibility tree built from the DOM.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Assistive software walks the page the same way the browser does.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/browser-dev/images/accessible-name.svg",
+          "alt": "A text field joined by an arrow to its visible label, with the announced name written above"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "e2nkq3h1P68",
+          "search": "Learn Accessibility full a11y tutorial",
+          "alt": "An introduction to building accessible interfaces"
+        }
+      ],
+      "deckId": "accessibility"
+    },
+    {
+      "key": "a11y-div-click",
+      "summary": "A clickable div is not a button",
+      "tags": [
+        "keyboard"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A container with a click handler has no keyboard access of its own. What is missing?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "a role and a keyboard handler"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "a role and a keyboard handler",
+          "a border",
+          "a title attribute"
+        ],
+        "correct": [
+          "a role and a keyboard handler"
+        ]
+      },
+      "hints": [
+        "A real button would bring both for free."
+      ],
+      "fullLine": "A clickable container is missing a role and a keyboard handler.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A bare container has no keyboard behaviour of its own.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "accessibility"
+    },
+    {
+      "key": "storage-local",
+      "summary": "localStorage keeps strings",
+      "tags": [
+        "storage"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which store keeps key-value strings until they are deleted?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "localStorage"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "localStorage",
+          "sessionStorage",
+          "IndexedDB"
+        ],
+        "correct": [
+          "localStorage"
+        ]
+      },
+      "hints": [
+        "Its name suggests it lasts on this device."
+      ],
+      "fullLine": "localStorage keeps key-value strings until they are deleted.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "It survives reloads and browser restarts until something removes the entry.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "application-and-storage"
+    },
+    {
+      "key": "storage-session",
+      "summary": "sessionStorage ends with the tab",
+      "tags": [
+        "storage"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "sessionStorage is cleared when the "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " closes."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "sessionStorage is cleared when the tab closes."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "tab",
+              "browser tab"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "It lasts as long as one browsing context."
+      ],
+      "fullLine": "sessionStorage is cleared when the tab closes.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Each browsing context gets its own copy, and closing it discards the data.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "application-and-storage"
+    },
+    {
+      "key": "storage-indexeddb",
+      "summary": "IndexedDB holds many records",
+      "tags": [
+        "storage"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which store is best for thousands of structured records?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "IndexedDB"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "IndexedDB",
+          "localStorage",
+          "a cookie"
+        ],
+        "correct": [
+          "IndexedDB"
+        ]
+      },
+      "hints": [
+        "It has an index and a database in its name."
+      ],
+      "fullLine": "IndexedDB is best for thousands of structured records.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "It holds many structured records and can be searched by key.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/browser-dev/images/storage-shelves.svg",
+          "alt": "Three storage shelves labelled for a single session, this device, and a full database"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "07c9vKj47vk",
+          "search": "localStorage sessionStorage IndexedDB explained",
+          "alt": "A comparison of the browser storage options"
+        }
+      ],
+      "deckId": "application-and-storage"
+    },
+    {
+      "key": "storage-cookies-request",
+      "summary": "Cookies travel with requests",
+      "tags": [
+        "cookies"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Cookies are sent to the server with "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " request to the same origin."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Cookies are sent to the server with every request to the same origin."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "each",
+              "every"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "They ride along automatically."
+      ],
+      "fullLine": "Cookies are sent to the server with every request to the same origin.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "They travel with the request, so keep them small.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "application-and-storage"
+    },
+    {
+      "key": "storage-local-strings",
+      "summary": "localStorage stores text",
+      "tags": [
+        "storage"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which store takes only strings, so objects must be converted with JSON?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "localStorage"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "localStorage"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "Its sibling for one session behaves the same way."
+      ],
+      "fullLine": "localStorage takes only strings, so objects must be converted with JSON.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Values come back as text, so objects need JSON in and out.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "application-and-storage"
+    },
+    {
+      "key": "storage-cache-storage",
+      "summary": "Cache Storage serves responses",
+      "tags": [
+        "caching",
+        "service-worker"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which storage does a service worker's fetch handling read from?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Cache Storage"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Cache Storage",
+          "localStorage",
+          "sessionStorage"
+        ],
+        "correct": [
+          "Cache Storage"
+        ]
+      },
+      "hints": [
+        "It holds whole responses, not single values."
+      ],
+      "fullLine": "A service worker's fetch handling reads from Cache Storage.",
+      "deckId": "application-and-storage"
+    },
+    {
+      "key": "storage-caches-api",
+      "summary": "The caches API opens storage",
+      "tags": [
+        "caching"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Scripts reach Cache Storage through the "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " API."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Scripts reach Cache Storage through the caches API."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "caches",
+              "Cache"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "The global object is named after what it holds."
+      ],
+      "fullLine": "Scripts reach Cache Storage through the caches API.",
+      "deckId": "application-and-storage"
+    },
+    {
+      "key": "storage-session-survives-reload",
+      "summary": "sessionStorage survives a reload",
+      "tags": [
+        "storage"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which store survives a reload but not a new tab?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "sessionStorage"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "sessionStorage",
+          "localStorage",
+          "IndexedDB"
+        ],
+        "correct": [
+          "sessionStorage"
+        ]
+      },
+      "hints": [
+        "Think of one sitting in one window."
+      ],
+      "fullLine": "sessionStorage survives a reload but not a new tab.",
+      "deckId": "application-and-storage"
+    },
+    {
+      "key": "storage-strings",
+      "summary": "Web storage holds strings",
+      "tags": [
+        "storage"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "localStorage stores only "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "localStorage stores only strings."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "strings",
+              "text"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Numbers and objects must be converted first."
+      ],
+      "fullLine": "localStorage stores only strings.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Numbers and objects must be converted before they are stored.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "application-and-storage"
+    },
+    {
+      "key": "storage-origin-parts",
+      "summary": "An origin is three parts",
+      "tags": [
+        "origin"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Two pages share storage only when they share which three parts?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "scheme, host and port"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "scheme, host and port",
+          "path, query and title",
+          "tab, window and frame"
+        ],
+        "correct": [
+          "scheme, host and port"
+        ]
+      },
+      "hints": [
+        "A path is not one of them."
+      ],
+      "fullLine": "Two pages share storage only when they share scheme, host and port.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A path or a query string does not change which pages share a store.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "application-and-storage"
+    },
+    {
+      "key": "console-log",
+      "summary": "console.log prints a value",
+      "tags": [
+        "console"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "console."
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " prints a value in the console."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "console.log prints a value in the console."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "log"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "It is the same word as a written record."
+      ],
+      "fullLine": "console.log prints a value in the console.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Each line carries a time, a level and the value you passed.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/browser-dev/images/console-lines.svg",
+          "alt": "A console panel with one message, one warning and one error line"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "NmH7qRscP28",
+          "search": "Chrome Developer Tools guide Elements Console Network tabs",
+          "alt": "A tour of the DevTools tabs, including the Console"
+        }
+      ],
+      "deckId": "console"
+    },
+    {
+      "key": "console-error",
+      "summary": "console.error marks a failure",
+      "tags": [
+        "console"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which call prints a red error line?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "console.error"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "console.error",
+          "console.log",
+          "console.table"
+        ],
+        "correct": [
+          "console.error"
+        ]
+      },
+      "hints": [
+        "The name says what went wrong."
+      ],
+      "fullLine": "console.error prints a red error line.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The level stands out from ordinary output so a failure is hard to miss.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "console"
+    },
+    {
+      "key": "console-dollar-zero",
+      "summary": "$0 is the selected element",
+      "tags": [
+        "console",
+        "devtools"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "In DevTools, `$0` refers to the element selected in the "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " panel."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "In DevTools, `$0` refers to the element selected in the Elements panel."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "Elements"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "It is where the page structure is shown."
+      ],
+      "fullLine": "In DevTools, $0 refers to the element selected in the Elements panel.",
+      "deckId": "console"
+    },
+    {
+      "key": "console-copy",
+      "summary": "copy sends a value to the clipboard",
+      "tags": [
+        "console"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which console helper copies its argument to the clipboard?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "copy"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "copy",
+          "copy()"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It is the everyday verb for duplicating text."
+      ],
+      "fullLine": "The copy helper sends its argument to the clipboard.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "It saves a value so you can paste it into a bug report.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "console"
+    },
+    {
+      "key": "console-table",
+      "summary": "console.table shows rows",
+      "tags": [
+        "console"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which prints an array of objects as rows and columns?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "console.table"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "console.table",
+          "console.log",
+          "console.group"
+        ],
+        "correct": [
+          "console.table"
+        ]
+      },
+      "hints": [
+        "The output looks like a spreadsheet."
+      ],
+      "fullLine": "console.table prints an array of objects as rows and columns.",
+      "deckId": "console"
+    },
+    {
+      "key": "console-warn",
+      "summary": "Warnings are yellow",
+      "tags": [
+        "console"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A console.warn line is usually "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A console.warn line is usually yellow."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "yellow"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "It sits between calm white text and a red failure."
+      ],
+      "fullLine": "A console.warn line is usually yellow.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The colour is a hint, not a rule; the words carry the meaning.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "console"
+    },
+    {
+      "key": "console-clear",
+      "summary": "console.clear empties the console",
+      "tags": [
+        "console"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which call empties the console?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "console.clear"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "console.clear",
+          "clear",
+          "clear()"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "The verb also describes wiping a whiteboard."
+      ],
+      "fullLine": "console.clear empties the console.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "An empty window is easier to read when a new run starts.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "console"
+    },
+    {
+      "key": "console-leftover-log",
+      "summary": "Leftover logs can leak data",
+      "tags": [
+        "console",
+        "production"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Why can a leftover console.log be a problem in production?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "it can expose private data"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "it can expose private data",
+          "it slows the network",
+          "it deletes storage"
+        ],
+        "correct": [
+          "it can expose private data"
+        ]
+      },
+      "hints": [
+        "Anyone with the tools can read the output."
+      ],
+      "fullLine": "A leftover console.log can expose private data in production.",
+      "deckId": "console"
+    },
+    {
+      "key": "console-live-object",
+      "summary": "Logged objects stay live",
+      "tags": [
+        "console"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A logged object is a live reference, so its fields can change "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " you logged it."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A logged object is a live reference, so its fields can change after you logged it."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "after"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "The panel reads the object, not a frozen copy."
+      ],
+      "fullLine": "A logged object is a live reference, so its fields can change after you logged it.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The panel keeps a reference to the object, not a copy of its fields.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "console"
+    },
+    {
+      "key": "console-group",
+      "summary": "console.group folds lines",
+      "tags": [
+        "console"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which call folds several log lines under one heading?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "console.group"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "console.group",
+          "console.count",
+          "console.time"
+        ],
+        "correct": [
+          "console.group"
+        ]
+      },
+      "hints": [
+        "The folded lines belong together."
+      ],
+      "fullLine": "console.group folds several log lines under one heading.",
+      "deckId": "console"
+    },
+    {
+      "key": "recipe-reproduce",
+      "summary": "Reproduce before fixing",
+      "tags": [
+        "method"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What is the first step of a debugging recipe?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "reproduce the problem"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "reproduce the problem",
+          "rewrite the code",
+          "clear the cache"
+        ],
+        "correct": [
+          "reproduce the problem"
+        ]
+      },
+      "hints": [
+        "You cannot prove a fix on a path you cannot repeat."
+      ],
+      "fullLine": "The first step of a debugging recipe is to reproduce the problem.",
+      "deckId": "debugging-recipes"
+    },
+    {
+      "key": "recipe-network-panel",
+      "summary": "Missing files show in Network",
+      "tags": [
+        "network"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A missing file is easiest to spot in the "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " panel."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A missing file is easiest to spot in the Network panel."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "Network"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Every request leaves a row there."
+      ],
+      "fullLine": "A missing file is easiest to spot in the Network panel.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A missing request is easier to see than to guess.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "debugging-recipes"
+    },
+    {
+      "key": "recipe-git-bisect",
+      "summary": "git bisect finds the bad commit",
+      "tags": [
+        "git"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What does git bisect find?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "the commit that introduced the bug"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "the commit that introduced the bug",
+          "the fastest commit",
+          "the newest branch"
+        ],
+        "correct": [
+          "the commit that introduced the bug"
+        ]
+      },
+      "hints": [
+        "It halves the history each time."
+      ],
+      "fullLine": "git bisect finds the commit that introduced the bug.",
+      "deckId": "debugging-recipes"
+    },
+    {
+      "key": "recipe-reproduction",
+      "summary": "A fix needs a reproduction",
+      "tags": [
+        "method"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A bug without a "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " is hard to prove fixed."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A bug without a reproduction is hard to prove fixed."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "reproduction",
+              "repro"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "It is a repeatable path back to the failure."
+      ],
+      "fullLine": "A bug without a reproduction is hard to prove fixed.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Without a repeatable path you cannot tell whether a change helped.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/browser-dev/images/recipe-flow.svg",
+          "alt": "A debugging recipe drawn as steps: reproduce, inspect, change one thing, check again"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "VInAd-GJZec",
+          "search": "Master JavaScript Debugging With DevTools and VS Code",
+          "alt": "Practical debugging habits in DevTools and VS Code"
+        }
+      ],
+      "deckId": "debugging-recipes"
+    },
+    {
+      "key": "recipe-restart",
+      "summary": "A restart clears leftovers",
+      "tags": [
+        "method"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A bug that disappears after a full restart suggests what?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "saved state or a cache"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "saved state or a cache",
+          "a broken keyboard",
+          "a slow network"
+        ],
+        "correct": [
+          "saved state or a cache"
+        ]
+      },
+      "hints": [
+        "Something outlived the last page load."
+      ],
+      "fullLine": "A bug that disappears after a full restart suggests saved state or a cache.",
+      "deckId": "debugging-recipes"
+    },
+    {
+      "key": "recipe-hard-reload",
+      "summary": "A hard reload skips the cache",
+      "tags": [
+        "caching"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which shortcut reloads while bypassing the cache on Windows and Linux?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Ctrl+Shift+R"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "Ctrl+Shift+R",
+          "Control+Shift+R"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It adds two modifiers to the ordinary reload key."
+      ],
+      "fullLine": "Ctrl+Shift+R reloads while bypassing the cache on Windows and Linux.",
+      "deckId": "debugging-recipes"
+    },
+    {
+      "key": "recipe-read-message",
+      "summary": "Read the exact error",
+      "tags": [
+        "method"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Where should a debugging session start?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "the exact error text"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "the exact error text",
+          "a guess about the cause",
+          "a full rewrite"
+        ],
+        "correct": [
+          "the exact error text"
+        ]
+      },
+      "hints": [
+        "It is printed with the stack trace."
+      ],
+      "fullLine": "A debugging session should start with the exact error text.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Read the printed words before forming a theory.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "debugging-recipes"
+    },
+    {
+      "key": "recipe-write-steps",
+      "summary": "Write the steps down",
+      "tags": [
+        "method"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Why write the reproduction steps down?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "so the fix can be checked the same way"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "so the fix can be checked the same way",
+          "to make the bug go away",
+          "so the browser runs faster"
+        ],
+        "correct": [
+          "so the fix can be checked the same way"
+        ]
+      },
+      "hints": [
+        "Your memory of the path fades."
+      ],
+      "fullLine": "Write the reproduction steps down so the fix can be checked the same way.",
+      "deckId": "debugging-recipes"
+    },
+    {
+      "key": "recipe-bisection",
+      "summary": "Bisection narrows a change",
+      "tags": [
+        "method"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Finding the change between a working and a broken version is called "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Finding the change between a working and a broken version is called bisection."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "bisection",
+              "bisecting"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Each check cuts the range in half."
+      ],
+      "fullLine": "Finding the change between a working and a broken version is called bisection.",
+      "deckId": "debugging-recipes"
+    },
+    {
+      "key": "recipe-two-browsers",
+      "summary": "Two browsers point at shared code",
+      "tags": [
+        "method"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A bug appears in two browsers. What should you check first?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "shared code or the server response"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "shared code or the server response",
+          "the keyboard layout",
+          "the screen brightness"
+        ],
+        "correct": [
+          "shared code or the server response"
+        ]
+      },
+      "hints": [
+        "Look for what both engines receive."
+      ],
+      "fullLine": "When a bug appears in two browsers, check shared code or the server response first.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Two engines failing the same way points at something both receive.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "debugging-recipes"
+    },
+    {
+      "key": "devtools-elements-panel",
+      "summary": "Elements shows the page structure",
+      "tags": [
+        "panels"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which panel shows the page's HTML structure?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Elements"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Elements",
+          "Network",
+          "Application"
+        ],
+        "correct": [
+          "Elements"
+        ]
+      },
+      "hints": [
+        "Its name is the plural of a page's building blocks."
+      ],
+      "fullLine": "The Elements panel shows the page's HTML structure.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Each panel answers one question; the tabs switch between them.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/browser-dev/images/devtools-panels.svg",
+          "alt": "DevTools with Elements, Console, Sources, Network and Application tabs"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "fxplz32rgEQ",
+          "search": "Chrome Dev Tools 101 beginner guide",
+          "alt": "A beginner tour of the Chrome DevTools panels"
+        }
+      ],
+      "deckId": "devtools-basics"
+    },
+    {
+      "key": "devtools-console-panel",
+      "summary": "Console shows messages",
+      "tags": [
+        "panels"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "The "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " panel shows logged messages and errors."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "The Console panel shows logged messages and errors."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "Console"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Its name comes from the text window of an old computer."
+      ],
+      "fullLine": "The Console panel shows logged messages and errors.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Start here when a page is blank: an error is often already written.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "devtools-basics"
+    },
+    {
+      "key": "devtools-network-panel",
+      "summary": "Network lists requests",
+      "tags": [
+        "panels"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which panel lists every file the page requested?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Network"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Network",
+          "Sources",
+          "Performance"
+        ],
+        "correct": [
+          "Network"
+        ]
+      },
+      "hints": [
+        "It is named after the connection between browser and server."
+      ],
+      "fullLine": "The Network panel lists every file the page requested.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Each row is one request, with a status and a timing bar.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "devtools-basics"
+    },
+    {
+      "key": "devtools-sources-panel",
+      "summary": "Sources holds the scripts",
+      "tags": [
+        "panels"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "To pause code on a line, open the "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " panel."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "To pause code on a line, open the Sources panel."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "Sources"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "It is also the word for where something comes from."
+      ],
+      "fullLine": "To pause code on a line, open the Sources panel.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Breakpoints live beside the script that runs them.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "devtools-basics"
+    },
+    {
+      "key": "devtools-application-panel",
+      "summary": "Application shows storage",
+      "tags": [
+        "panels"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "The "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " panel shows the page's storage, cookies and cache."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "The Application panel shows the page's storage, cookies and cache."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "Application"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "It shares its name with the program you are testing."
+      ],
+      "fullLine": "The Application panel shows the page's storage, cookies and cache.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "This is where you inspect localStorage, IndexedDB and service workers.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "devtools-basics"
+    },
+    {
+      "key": "devtools-performance-panel",
+      "summary": "Performance records work",
+      "tags": [
+        "panels"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which DevTools panel records frame rate and long tasks?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Performance"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "Performance"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "Its name answers the question: how fast does it feel?"
+      ],
+      "fullLine": "The Performance panel records frame rate and long tasks.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A recording shows where time goes, not just how much passed.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "devtools-basics"
+    },
+    {
+      "key": "devtools-open-key",
+      "summary": "F12 opens DevTools",
+      "tags": [
+        "shortcuts"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which key opens DevTools in most browsers on Windows and Linux?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "F12"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "F12",
+          "Ctrl+Shift+I",
+          "Control+Shift+I"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It is the last of the twelve function keys."
+      ],
+      "fullLine": "F12 opens DevTools in most browsers on Windows and Linux.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "On a Mac, the same panel opens with the developer shortcut in the browser menu.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "devtools-basics"
+    },
+    {
+      "key": "devtools-device-toolbar",
+      "summary": "Device mode changes the viewport",
+      "tags": [
+        "device-mode"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What does the device toolbar do?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "simulates screen size, pixel ratio and touch"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "simulates screen size, pixel ratio and touch",
+          "deletes the page cache",
+          "edits the server code"
+        ],
+        "correct": [
+          "simulates screen size, pixel ratio and touch"
+        ]
+      },
+      "hints": [
+        "It changes the frame around the page, not the page's files."
+      ],
+      "fullLine": "The device toolbar simulates screen size, pixel ratio and touch.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A simulated phone width is a preview, not a real device test.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "devtools-basics"
+    },
+    {
+      "key": "devtools-live-dom",
+      "summary": "Elements edits the live DOM",
+      "tags": [
+        "elements"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "The Elements panel lets you edit the "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " DOM, not the source file."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "The Elements panel lets you edit the live DOM, not the source file."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "live"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "The opposite of a saved file."
+      ],
+      "fullLine": "The Elements panel lets you edit the live DOM, not the source file.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Reloading the page throws those edits away.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "devtools-basics"
+    },
+    {
+      "key": "devtools-slow-image",
+      "summary": "Network explains a slow file",
+      "tags": [
+        "network"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which panel shows why an image took three seconds to arrive?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Network"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Network",
+          "Console",
+          "Sources"
+        ],
+        "correct": [
+          "Network"
+        ]
+      },
+      "hints": [
+        "Look for the request's own timing bar."
+      ],
+      "fullLine": "The Network panel shows why an image took three seconds to arrive.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The timing split tells you whether the wait was the server or the download.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "devtools-basics"
+    },
+    {
+      "key": "dom-tree-shape",
+      "summary": "The DOM is a tree",
+      "tags": [
+        "dom"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which shape best describes the DOM?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "a tree"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "a tree",
+          "a flat list",
+          "one long string"
+        ],
+        "correct": [
+          "a tree"
+        ]
+      },
+      "hints": [
+        "Parents hold children, and a child may hold more."
+      ],
+      "fullLine": "The DOM is a tree of elements.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Every element can hold children, so the page has levels rather than one flat row.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "elements-and-the-dom"
+    },
+    {
+      "key": "dom-html-element",
+      "summary": "html wraps the page",
+      "tags": [
+        "dom"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "The <html> element wraps the <head> and the "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "The <html> element wraps the <head> and the body."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "body"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "It holds what is actually shown on the page."
+      ],
+      "fullLine": "The <html> element wraps the <head> and the body.",
+      "deckId": "elements-and-the-dom"
+    },
+    {
+      "key": "dom-head-metadata",
+      "summary": "The head describes the page",
+      "tags": [
+        "dom"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Title, meta tags and stylesheet links live in the "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Title, meta tags and stylesheet links live in the head."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "head"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "It is the part a reader never sees drawn."
+      ],
+      "fullLine": "Title, meta tags and stylesheet links live in the head.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Metadata and stylesheet links describe the page but are never painted.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "elements-and-the-dom"
+    },
+    {
+      "key": "dom-query-selector",
+      "summary": "querySelector finds one element",
+      "tags": [
+        "dom",
+        "selectors"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which method returns the first element that matches a CSS selector?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "querySelector"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "querySelector",
+          "document.querySelector"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "The plural version returns a list instead."
+      ],
+      "fullLine": "querySelector returns the first element that matches a CSS selector.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The plural form returns every match as a list, even when only one exists.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "elements-and-the-dom"
+    },
+    {
+      "key": "dom-classlist-live",
+      "summary": "classList changes the page",
+      "tags": [
+        "dom"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Changing an element's classList does what?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "updates the live page"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "updates the live page",
+          "saves the HTML file",
+          "waits for a reload"
+        ],
+        "correct": [
+          "updates the live page"
+        ]
+      },
+      "hints": [
+        "The DOM in memory is what the browser draws."
+      ],
+      "fullLine": "Changing an element's classList updates the live page.",
+      "deckId": "elements-and-the-dom"
+    },
+    {
+      "key": "dom-text-node",
+      "summary": "Words are text nodes",
+      "tags": [
+        "dom"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "The words inside a paragraph form a "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " node."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "The words inside a paragraph form a text node."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "text"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "It cannot hold children of its own."
+      ],
+      "fullLine": "The words inside a paragraph form a text node.",
+      "deckId": "elements-and-the-dom"
+    },
+    {
+      "key": "dom-text-content",
+      "summary": "textContent reads the words",
+      "tags": [
+        "dom"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which property reads or replaces all the words inside an element?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "textContent"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "textContent"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "The other common property parses its string as markup."
+      ],
+      "fullLine": "textContent reads or replaces all the words inside an element.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "innerHTML parses its string as markup; this property treats it as plain characters.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "elements-and-the-dom"
+    },
+    {
+      "key": "dom-text-content-safer",
+      "summary": "textContent is safer",
+      "tags": [
+        "dom",
+        "safety"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which is safer when showing text written by a learner?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "textContent"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "textContent",
+          "innerHTML",
+          "document.write"
+        ],
+        "correct": [
+          "textContent"
+        ]
+      },
+      "hints": [
+        "One of these would let a tag become real markup."
+      ],
+      "fullLine": "textContent is safer when showing text written by a learner.",
+      "deckId": "elements-and-the-dom"
+    },
+    {
+      "key": "dom-node",
+      "summary": "Everything is a node",
+      "tags": [
+        "dom"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Every element, text and comment in the DOM is a "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Every element, text and comment in the DOM is a node."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "node"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Different kinds share the same tree vocabulary."
+      ],
+      "fullLine": "Every element, text and comment in the DOM is a node.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Elements, words and comments all sit in one tree as separate points.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/browser-dev/images/dom-tree.svg",
+          "alt": "A page drawn as a tree: html branching into head and body, body branching into a heading, a paragraph and a list"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "NO5kUNxGIu0",
+          "search": "The JavaScript DOM explained in 5 minutes",
+          "alt": "A short tour of the DOM as a tree of nodes"
+        }
+      ],
+      "deckId": "elements-and-the-dom"
+    },
+    {
+      "key": "dom-source-vs-live",
+      "summary": "View Source is not the live DOM",
+      "tags": [
+        "dom",
+        "devtools"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Why can the Elements panel show HTML that View Source does not?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "script changed the live DOM"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "script changed the live DOM",
+          "the browser rewrote the file",
+          "View Source refreshes late"
+        ],
+        "correct": [
+          "script changed the live DOM"
+        ]
+      },
+      "hints": [
+        "One view is the sent bytes; the other is what runs now."
+      ],
+      "fullLine": "The Elements panel differs from View Source because script changed the live DOM.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "View Source shows the bytes the server sent; the Elements panel shows what runs now.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "elements-and-the-dom"
+    },
+    {
+      "key": "browser-http-request",
+      "summary": "The browser asks for a page",
+      "tags": [
+        "http"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "The browser asks the server for a page with an HTTP "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "The browser asks the server for a page with an HTTP request."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "request"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Name the message the browser sends."
+      ],
+      "fullLine": "The browser asks the server for a page with an HTTP request.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The server answers with a response: a status, headers and a body.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/browser-dev/images/request-response.svg",
+          "alt": "Browser and server exchanging a request and a response"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "VSMqUF6kNA0",
+          "search": "How Browsers Work Explained DOM CSSOM Render Tree",
+          "alt": "A walk through the browser's rendering pipeline, from HTML to pixels"
+        }
+      ],
+      "deckId": "how-the-browser-works"
+    },
+    {
+      "key": "browser-builds-dom",
+      "summary": "HTML becomes the DOM",
+      "tags": [
+        "dom"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What does the browser build from the HTML it receives?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "the DOM"
+        },
+        {
+          "type": "text",
+          "text": "A tree of objects that JavaScript can read.",
+          "role": "translation"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "the DOM",
+          "DOM"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "The name has three letters and stands for an object model."
+      ],
+      "fullLine": "The browser builds the DOM from the HTML it receives.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "HTML describes the page; the browser turns those tags into objects that scripts can change.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "how-the-browser-works"
+    },
+    {
+      "key": "browser-dns-ip",
+      "summary": "DNS finds the address",
+      "tags": [
+        "dns"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "DNS turns a host name into an "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " address."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "DNS turns a host name into an IP address."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "IP"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Two letters, short for Internet Protocol."
+      ],
+      "fullLine": "DNS turns a host name into an IP address.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Without DNS the browser would not know which machine to contact.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "how-the-browser-works"
+    },
+    {
+      "key": "browser-main-thread",
+      "summary": "JavaScript runs on one thread",
+      "tags": [
+        "main-thread"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which one runs a page's JavaScript?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "the main thread"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "the main thread",
+          "the network process",
+          "the DNS resolver"
+        ],
+        "correct": [
+          "the main thread"
+        ]
+      },
+      "hints": [
+        "It is the same place where layout and clicks are handled."
+      ],
+      "fullLine": "A page's JavaScript runs on the main thread.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A long script keeps clicks and paints waiting until it finishes.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "how-the-browser-works"
+    },
+    {
+      "key": "browser-cssom",
+      "summary": "CSS becomes the CSSOM",
+      "tags": [
+        "css"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "CSS rules become a second tree, the "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "CSS rules become a second tree, the CSSOM."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "CSSOM"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "It ends with the same three letters as the DOM."
+      ],
+      "fullLine": "CSS rules become a second tree, the CSSOM.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "That second tree holds the parsed style rules, and scripts can read or change them.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "how-the-browser-works"
+    },
+    {
+      "key": "browser-render-tree",
+      "summary": "Two trees make the render tree",
+      "tags": [
+        "render-tree"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "The render tree is built from which two trees?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "the DOM and the CSSOM"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "the DOM and the CSSOM",
+          "the DOM and the cache",
+          "HTML and DNS"
+        ],
+        "correct": [
+          "the DOM and the CSSOM"
+        ]
+      },
+      "hints": [
+        "One side is structure, the other is style."
+      ],
+      "fullLine": "The render tree is built from the DOM and the CSSOM.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Only content that will be shown reaches the render tree.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "how-the-browser-works"
+    },
+    {
+      "key": "browser-paint",
+      "summary": "Painting fills the pixels",
+      "tags": [
+        "paint"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "After layout, the browser "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " the pixels."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "After layout, the browser paints the pixels."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "paints"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "One word: what an artist does with a brush."
+      ],
+      "fullLine": "After layout, the browser paints the pixels.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Painting comes after layout has decided where every box sits.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "how-the-browser-works"
+    },
+    {
+      "key": "browser-layout",
+      "summary": "Layout places the boxes",
+      "tags": [
+        "layout"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which step decides where each box goes?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "layout"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "layout"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "A viewport change makes this step run again."
+      ],
+      "fullLine": "Layout decides where each box goes.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "When the viewport or content size changes, positions and sizes are recomputed.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "how-the-browser-works"
+    },
+    {
+      "key": "browser-pipeline-order",
+      "summary": "The rendering order",
+      "tags": [
+        "pipeline"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which order is correct?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "parse, DOM, styles, layout, paint"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "parse, DOM, styles, layout, paint",
+          "paint, layout, DOM, parse",
+          "DOM, paint, parse, layout"
+        ],
+        "correct": [
+          "parse, DOM, styles, layout, paint"
+        ]
+      },
+      "hints": [
+        "Nothing can be styled before the page is parsed."
+      ],
+      "fullLine": "The order is parse, DOM, styles, layout, paint.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Parsing comes first; styling and layout need the DOM.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "how-the-browser-works"
+    },
+    {
+      "key": "browser-main-thread-name",
+      "summary": "Page script uses the main thread",
+      "tags": [
+        "main-thread"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Page JavaScript usually runs on the browser's "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " thread."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Page JavaScript usually runs on the browser's main thread."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "main"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "The opposite of a worker."
+      ],
+      "fullLine": "Page JavaScript usually runs on the browser's main thread.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A Web Worker runs script somewhere else, so the page stays responsive.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "how-the-browser-works"
+    },
+    {
+      "key": "memory-leak",
+      "summary": "Memory that never falls back",
+      "tags": [
+        "memory"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A page's memory keeps growing after you close a panel. What is likely?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "a memory leak"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "a memory leak",
+          "a slow network",
+          "a CSS error"
+        ],
+        "correct": [
+          "a memory leak"
+        ]
+      },
+      "hints": [
+        "Something is still holding on after it should be free."
+      ],
+      "fullLine": "Memory that keeps growing after you close a panel suggests a memory leak.",
+      "deckId": "memory-and-leaks"
+    },
+    {
+      "key": "memory-detached",
+      "summary": "Detached nodes leave the page",
+      "tags": [
+        "memory",
+        "dom"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Elements removed from the page but still held in JavaScript are "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " nodes."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Elements removed from the page but still held in JavaScript are detached nodes."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "detached"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "They are no longer part of the tree."
+      ],
+      "fullLine": "Elements removed from the page but still held in JavaScript are detached nodes.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The page no longer shows it, but script may still hold a reference.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/browser-dev/images/detached-nodes.svg",
+          "alt": "A page tree with one node cut away, still tied by a line to a script variable"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "6IlTjqU_Tc0",
+          "search": "How To Detect Memory Leaks In Your Web App",
+          "alt": "Finding memory leaks with browser developer tools"
+        }
+      ],
+      "deckId": "memory-and-leaks"
+    },
+    {
+      "key": "memory-js-reference",
+      "summary": "A live reference keeps a node",
+      "tags": [
+        "memory"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which keeps a detached element alive?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "a live JavaScript reference"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "a live JavaScript reference",
+          "a CSS class name",
+          "an alt attribute"
+        ],
+        "correct": [
+          "a live JavaScript reference"
+        ]
+      },
+      "hints": [
+        "Somewhere in script, a variable still points at it."
+      ],
+      "fullLine": "A live JavaScript reference keeps a detached element alive.",
+      "deckId": "memory-and-leaks"
+    },
+    {
+      "key": "memory-panel",
+      "summary": "The Memory panel takes snapshots",
+      "tags": [
+        "devtools"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which DevTools panel takes heap snapshots?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Memory"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "Memory"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "Its name is what is being measured."
+      ],
+      "fullLine": "The Memory panel takes heap snapshots.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "It records what the heap holds at one moment.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "memory-and-leaks"
+    },
+    {
+      "key": "memory-closure",
+      "summary": "A closure can hold an object",
+      "tags": [
+        "memory"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " that captures a large object can keep it alive."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A closure that captures a large object can keep it alive."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "closure"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "It is a function that remembers its outer variables."
+      ],
+      "fullLine": "A closure that captures a large object can keep it alive.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A function can keep outer variables alive after their scope ends.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "memory-and-leaks"
+    },
+    {
+      "key": "memory-weakmap",
+      "summary": "WeakMap lets a key go",
+      "tags": [
+        "memory"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which structure lets a key be collected when nothing else holds it?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "WeakMap"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "WeakMap",
+          "Map",
+          "Array"
+        ],
+        "correct": [
+          "WeakMap"
+        ]
+      },
+      "hints": [
+        "Its first word says how firmly it holds anything."
+      ],
+      "fullLine": "A WeakMap lets a key be collected when nothing else holds it.",
+      "deckId": "memory-and-leaks"
+    },
+    {
+      "key": "memory-collector",
+      "summary": "The collector reclaims unused objects",
+      "tags": [
+        "memory"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "When nothing references an object, the garbage "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " may reclaim it."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "When nothing references an object, the garbage collector may reclaim it."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "collector"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "It tidies what nobody points at."
+      ],
+      "fullLine": "When nothing references an object, the garbage collector may reclaim it.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Unused objects are reclaimed automatically when nothing points to them.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "memory-and-leaks"
+    },
+    {
+      "key": "memory-heap-snapshot",
+      "summary": "A rising heap suggests a reference",
+      "tags": [
+        "memory"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A heap snapshot taken after the same action shows memory only rising. What does that suggest?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "something is still referenced"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "something is still referenced",
+          "the collector is disabled forever",
+          "the page is caching properly"
+        ],
+        "correct": [
+          "something is still referenced"
+        ]
+      },
+      "hints": [
+        "If the count falls back, the claim is safe."
+      ],
+      "fullLine": "A heap that only rises after the same action suggests something is still referenced.",
+      "deckId": "memory-and-leaks"
+    },
+    {
+      "key": "memory-listener-leak",
+      "summary": "Unremoved listeners leak",
+      "tags": [
+        "memory",
+        "events"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A listener added on every render without removal is a common "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A listener added on every render without removal is a common leak."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "leak"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "The heap grows with each new copy."
+      ],
+      "fullLine": "A listener added on every render without removal is a common leak.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Every render adds another one, and none are removed.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "memory-and-leaks"
+    },
+    {
+      "key": "memory-allocation-timeline",
+      "summary": "Record what allocates memory",
+      "tags": [
+        "memory",
+        "devtools"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which recording shows what creates memory while an action runs?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "record an allocation timeline"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "record an allocation timeline",
+          "delete the cache",
+          "reload the page"
+        ],
+        "correct": [
+          "record an allocation timeline"
+        ]
+      },
+      "hints": [
+        "It plots creation over time, not just a final total."
+      ],
+      "fullLine": "Recording an allocation timeline shows what creates memory while an action runs.",
+      "deckId": "memory-and-leaks"
+    },
+    {
+      "key": "network-ttfb",
+      "summary": "TTFB measures the first byte",
+      "tags": [
+        "timing"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which timing measures the wait before the first byte arrives?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Time to first byte"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Time to first byte",
+          "download size",
+          "DNS name"
+        ],
+        "correct": [
+          "Time to first byte"
+        ]
+      },
+      "hints": [
+        "It counts the wait before anything has arrived."
+      ],
+      "fullLine": "Time to first byte measures the wait before the first byte arrives.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A late start can hurt even when the file itself is small.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "network"
+    },
+    {
+      "key": "network-preflight",
+      "summary": "A preflight checks permission",
+      "tags": [
+        "cors"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A cross-origin request with a non-simple header is preceded by a "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " request."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A cross-origin request with a non-simple header is preceded by a preflight request."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "preflight"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "The browser asks permission before sending the real one."
+      ],
+      "fullLine": "A cross-origin request with a non-simple header is preceded by a preflight request.",
+      "deckId": "network"
+    },
+    {
+      "key": "network-404",
+      "summary": "404 means not found",
+      "tags": [
+        "status"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A 404 status means what?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "the file was not found"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "the file was not found",
+          "the server crashed",
+          "the file was cached"
+        ],
+        "correct": [
+          "the file was not found"
+        ]
+      },
+      "hints": [
+        "The address exists; the resource does not."
+      ],
+      "fullLine": "A 404 status means the file was not found.",
+      "deckId": "network"
+    },
+    {
+      "key": "network-cache-control",
+      "summary": "Cache-Control sets reuse",
+      "tags": [
+        "caching"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "The `Cache-Control` header tells the browser how long a response may be "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " without asking again."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "The Cache-Control header tells the browser how long a response may be cached without asking again."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "cached",
+              "stored",
+              "reused"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "It decides how long a saved copy stays useful."
+      ],
+      "fullLine": "The Cache-Control header tells the browser how long a response may be cached without asking again.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Skipping the round trip is what makes a repeat visit feel instant.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "network"
+    },
+    {
+      "key": "network-failed-image",
+      "summary": "Check status and response first",
+      "tags": [
+        "debugging"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "An image failed to load. Where do you look first?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "the request's status and response"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "the request's status and response",
+          "the CSS file",
+          "the favicon"
+        ],
+        "correct": [
+          "the request's status and response"
+        ]
+      },
+      "hints": [
+        "Start with the exchange that failed."
+      ],
+      "fullLine": "When an image fails, check the request's status and response first.",
+      "deckId": "network"
+    },
+    {
+      "key": "network-get",
+      "summary": "GET asks for a resource",
+      "tags": [
+        "methods"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which method asks the server to return a resource without changing it?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "GET"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "GET"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It is the everyday reading method."
+      ],
+      "fullLine": "GET asks the server to return a resource without changing it.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "This method asks for data and should not change anything on the server.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "network"
+    },
+    {
+      "key": "network-queueing",
+      "summary": "Queueing waits for a connection",
+      "tags": [
+        "timing"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A request that waits for a free connection is shown as "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A request that waits for a free connection is shown as queueing."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "queueing",
+              "queued",
+              "waiting"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "It is standing in line, not travelling."
+      ],
+      "fullLine": "A request that waits for a free connection is shown as queueing.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The browser waits for a free connection before it can start.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/browser-dev/images/network-waterfall.svg",
+          "alt": "A network waterfall: several request bars starting at different times, with one long wait at the left"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "2CC0fugc_2o",
+          "search": "Understand Browser DevTools Network Tab",
+          "alt": "Reading requests, sizes and timings in the Network panel"
+        }
+      ],
+      "deckId": "network"
+    },
+    {
+      "key": "network-disable-cache",
+      "summary": "Disable cache re-requests files",
+      "tags": [
+        "caching",
+        "devtools"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What does the Disable cache checkbox do while DevTools is open?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "bypasses the browser cache"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "bypasses the browser cache",
+          "deletes the server cache",
+          "clears cookies"
+        ],
+        "correct": [
+          "bypasses the browser cache"
+        ]
+      },
+      "hints": [
+        "It changes what the browser may reuse."
+      ],
+      "fullLine": "The Disable cache checkbox bypasses the browser cache while DevTools is open.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "While the panel is open, every request goes to the server again.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "network"
+    },
+    {
+      "key": "network-panel-purpose",
+      "summary": "Network shows request order",
+      "tags": [
+        "devtools"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "To see request order and timing, open the "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " panel."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "To see request order and timing, open the Network panel."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "Network"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Its rows are sorted by when they started."
+      ],
+      "fullLine": "To see request order and timing, open the Network panel.",
+      "deckId": "network"
+    },
+    {
+      "key": "network-method-url",
+      "summary": "Method and URL identify a request",
+      "tags": [
+        "requests"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Two requests are otherwise identical. Which pair tells them apart?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "method and URL"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "method and URL",
+          "status and size",
+          "colour and font"
+        ],
+        "correct": [
+          "method and URL"
+        ]
+      },
+      "hints": [
+        "One says what to do, the other says where."
+      ],
+      "fullLine": "The method and URL tell two otherwise identical requests apart.",
+      "deckId": "network"
+    },
+    {
+      "key": "perf-long-task",
+      "summary": "A long task blocks the main thread",
+      "tags": [
+        "main-thread"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A piece of work over 50 milliseconds on the main thread is called what?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "a long task"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "a long task",
+          "a repaint",
+          "a fetch"
+        ],
+        "correct": [
+          "a long task"
+        ]
+      },
+      "hints": [
+        "The name describes its length."
+      ],
+      "fullLine": "A piece of work over 50 milliseconds on the main thread is a long task.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The browser can only paint after the current piece of work finishes.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "performance"
+    },
+    {
+      "key": "perf-lcp",
+      "summary": "LCP measures the largest block",
+      "tags": [
+        "metrics"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "LCP stands for Largest Contentful "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "LCP stands for Largest Contentful Paint."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "Paint"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "The final word is what a browser does to pixels."
+      ],
+      "fullLine": "LCP stands for Largest Contentful Paint.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "It measures when the biggest visible block has finished arriving.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "performance"
+    },
+    {
+      "key": "perf-response-budget",
+      "summary": "200 ms still feels immediate",
+      "tags": [
+        "metrics"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A tap that responds within how many milliseconds still feels immediate?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "200 ms"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "200 ms",
+          "2 s",
+          "5 s"
+        ],
+        "correct": [
+          "200 ms"
+        ]
+      },
+      "hints": [
+        "Far less than a second, but more than a blink."
+      ],
+      "fullLine": "A tap that responds within 200 ms still feels immediate.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A response under a tenth of a second feels instant, and this budget is the published outer limit.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/browser-dev/images/long-task.svg",
+          "alt": "A timeline with one long block delaying several short paint marks"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "cGiSr0MilsI",
+          "search": "Core Web Vitals Explained LCP INP CLS",
+          "alt": "What Core Web Vitals measure and why they matter"
+        }
+      ],
+      "deckId": "performance"
+    },
+    {
+      "key": "perf-layout-shift",
+      "summary": "Moving content costs reading",
+      "tags": [
+        "metrics"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Content that jumps after the first paint is called a layout "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Content that jumps after the first paint is called a layout shift."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "shift",
+              "jank"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "The page moves under the reader."
+      ],
+      "fullLine": "Content that jumps after the first paint is called a layout shift.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Content that moves after the first paint costs reading effort.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "performance"
+    },
+    {
+      "key": "perf-fetchpriority",
+      "summary": "fetchpriority marks importance",
+      "tags": [
+        "hints"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which attribute tells the browser an image matters early?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "fetchpriority"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "fetchpriority"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It combines fetching with a word for rank."
+      ],
+      "fullLine": "The fetchpriority attribute tells the browser an image matters early.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "It is a hint, not a guarantee, and the server still decides.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "performance"
+    },
+    {
+      "key": "perf-smaller-hero",
+      "summary": "A smaller hero helps LCP",
+      "tags": [
+        "images"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which change most likely improves LCP?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "serving a smaller hero image"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "serving a smaller hero image",
+          "adding more fonts",
+          "adding an animation"
+        ],
+        "correct": [
+          "serving a smaller hero image"
+        ]
+      },
+      "hints": [
+        "The largest block has to arrive before the metric stops."
+      ],
+      "fullLine": "Serving a smaller hero image most likely improves LCP.",
+      "deckId": "performance"
+    },
+    {
+      "key": "perf-parser",
+      "summary": "A blocking script stops the parser",
+      "tags": [
+        "loading"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A blocking script stops the HTML "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A blocking script stops the HTML parser."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "parser"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "It is the step that reads the tags."
+      ],
+      "fullLine": "A blocking script stops the HTML parser.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The rest of the HTML waits while the script runs.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "performance"
+    },
+    {
+      "key": "perf-flame-chart",
+      "summary": "A flame chart shows time by call",
+      "tags": [
+        "devtools"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "On a performance recording, what does the flame chart show?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "where time went, by call"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "where time went, by call",
+          "the page's colour palette",
+          "the server's log"
+        ],
+        "correct": [
+          "where time went, by call"
+        ]
+      },
+      "hints": [
+        "Wide bars own more of the recording."
+      ],
+      "fullLine": "A flame chart shows where time went, by call.",
+      "deckId": "performance"
+    },
+    {
+      "key": "perf-worker",
+      "summary": "A worker runs off the main thread",
+      "tags": [
+        "main-thread"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A Web "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " runs script off the main thread."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A Web Worker runs script off the main thread."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "Worker",
+              "worker"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "It is the browser's background helper."
+      ],
+      "fullLine": "A Web Worker runs script off the main thread.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "It has its own thread and no direct access to the page's elements.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "performance"
+    },
+    {
+      "key": "perf-image-size",
+      "summary": "Unsized images shift layout",
+      "tags": [
+        "images"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "An image with no width or height causes what?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "layout shift"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "layout shift",
+          "a network error",
+          "a memory leak"
+        ],
+        "correct": [
+          "layout shift"
+        ]
+      },
+      "hints": [
+        "The browser cannot reserve space it does not know."
+      ],
+      "fullLine": "An image with no width or height causes layout shift.",
+      "deckId": "performance"
+    },
+    {
+      "key": "responsive-viewport-meta",
+      "summary": "The viewport meta tag lives in the head",
+      "tags": [
+        "responsive"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "The viewport meta tag lives in the "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " of the page."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "The viewport meta tag lives in the head of the page."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "head"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "It is the part that describes rather than draws."
+      ],
+      "fullLine": "The viewport meta tag lives in the head of the page.",
+      "deckId": "responsive-and-device-mode"
+    },
+    {
+      "key": "responsive-device-mode",
+      "summary": "Device mode changes the viewport",
+      "tags": [
+        "device-mode"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What does device mode change?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "the viewport size the page sees"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "the viewport size the page sees",
+          "the server's files",
+          "the network speed only"
+        ],
+        "correct": [
+          "the viewport size the page sees"
+        ]
+      },
+      "hints": [
+        "It changes the frame around the page."
+      ],
+      "fullLine": "Device mode changes the viewport size the page sees.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A preset changes the frame the page is drawn in; it does not touch the files on the server.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/browser-dev/images/device-widths.svg",
+          "alt": "The same page drawn in three frames: narrow phone, tablet and wide desktop"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "69IbzTWg5PM",
+          "search": "CSS media queries responsive web design tutorial",
+          "alt": "Media queries and how a layout adapts to screen size"
+        }
+      ],
+      "deckId": "responsive-and-device-mode"
+    },
+    {
+      "key": "responsive-media-query",
+      "summary": "A media query is a condition",
+      "tags": [
+        "responsive",
+        "css"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A `@media` query applies rules only when its "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " matches."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A @media query applies rules only when its condition matches."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "condition"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "It is the same word for an if-check in code."
+      ],
+      "fullLine": "A @media query applies rules only when its condition matches.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A width rule can switch on only below or above a chosen size.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "responsive-and-device-mode"
+    },
+    {
+      "key": "responsive-device-width",
+      "summary": "width=device-width matches the screen",
+      "tags": [
+        "responsive"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which meta value makes the viewport equal the device width?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "width=device-width"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "width=device-width"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It names the measured value twice."
+      ],
+      "fullLine": "The viewport meta value width=device-width makes the viewport equal the device width.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "This value tells the layout to match the screen instead of a default 980 pixels.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "responsive-and-device-mode"
+    },
+    {
+      "key": "responsive-rem",
+      "summary": "rem follows the user setting",
+      "tags": [
+        "responsive",
+        "units"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which unit makes text scale with the user's browser setting?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "rem"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "rem",
+          "px",
+          "cm"
+        ],
+        "correct": [
+          "rem"
+        ]
+      },
+      "hints": [
+        "It ties size to the page's base size."
+      ],
+      "fullLine": "The rem unit makes text scale with the user's browser setting.",
+      "deckId": "responsive-and-device-mode"
+    },
+    {
+      "key": "responsive-mobile-first",
+      "summary": "Mobile-first starts narrow",
+      "tags": [
+        "responsive",
+        "css"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Mobile-first CSS starts with the "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " layout and adds wider rules later."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Mobile-first CSS starts with the small layout and adds wider rules later."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "small",
+              "narrow",
+              "mobile"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Begin with the tightest space you must support."
+      ],
+      "fullLine": "Mobile-first CSS starts with the small layout and adds wider rules later.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The base stylesheet is the one rule set every screen starts from.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "responsive-and-device-mode"
+    },
+    {
+      "key": "responsive-device-mode-files",
+      "summary": "Device mode does not change files",
+      "tags": [
+        "device-mode"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Does device mode change which files the server sends?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "no, it only changes the simulated frame"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "no, it only changes the simulated frame",
+          "yes, it requests the mobile site",
+          "yes, it rewrites the HTML"
+        ],
+        "correct": [
+          "no, it only changes the simulated frame"
+        ]
+      },
+      "hints": [
+        "It is a preview inside your own browser."
+      ],
+      "fullLine": "Device mode does not change which files the server sends; it only changes the simulated frame.",
+      "deckId": "responsive-and-device-mode"
+    },
+    {
+      "key": "responsive-media-at-rule",
+      "summary": "@media wraps conditional rules",
+      "tags": [
+        "responsive",
+        "css"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which at-rule targets a screen width?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "@media"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "@media"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It begins with the at sign."
+      ],
+      "fullLine": "@media targets a screen width.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "It wraps CSS rules that only apply when a screen size or feature matches.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "responsive-and-device-mode"
+    },
+    {
+      "key": "responsive-text-zoom",
+      "summary": "Responsive text avoids zooming",
+      "tags": [
+        "responsive"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Text that stays readable without zooming is an example of a "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " layout."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Text that stays readable without zooming is an example of a responsive layout."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "responsive",
+              "flexible"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "It answers to the screen instead of fighting it."
+      ],
+      "fullLine": "Text that stays readable without zooming is an example of a responsive layout.",
+      "deckId": "responsive-and-device-mode"
+    },
+    {
+      "key": "responsive-tap-target",
+      "summary": "Small targets hurt touch users",
+      "tags": [
+        "responsive",
+        "accessibility"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A button that is only 12 pixels tall is mainly a problem for whom?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "touch users"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "touch users",
+          "screen readers only",
+          "slow networks"
+        ],
+        "correct": [
+          "touch users"
+        ]
+      },
+      "hints": [
+        "Think about what a finger cannot aim at."
+      ],
+      "fullLine": "A button that is only 12 pixels tall is mainly a problem for touch users.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A control needs enough area for a thumb to hit it reliably.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "responsive-and-device-mode"
+    },
+    {
+      "key": "security-same-origin",
+      "summary": "Same origin needs three matches",
+      "tags": [
+        "origin"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Same-origin means the same scheme, host and what else?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "port"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "port",
+          "path",
+          "title"
+        ],
+        "correct": [
+          "port"
+        ]
+      },
+      "hints": [
+        "It is the number after a colon in a URL."
+      ],
+      "fullLine": "Same-origin means the same scheme, host and port.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Two pages on different numbers here never share storage or permissions.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/browser-dev/images/same-origin.svg",
+          "alt": "Three URL cards compared across scheme, host and port, with only the matching trio let through"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "M2Cm_Q_i8PI",
+          "search": "Frontend security XSS CSRF CORS explained",
+          "alt": "An overview of common frontend security risks"
+        }
+      ],
+      "deckId": "security-essentials"
+    },
+    {
+      "key": "security-xss",
+      "summary": "User text can become script",
+      "tags": [
+        "xss"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Text from a user turned into HTML can cause cross-site "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Text from a user turned into HTML can cause cross-site scripting."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "scripting",
+              "XSS"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "It is usually shortened to three letters."
+      ],
+      "fullLine": "Text from a user turned into HTML can cause cross-site scripting.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "User text becomes executable when it is inserted as markup.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "security-essentials"
+    },
+    {
+      "key": "security-cors-preflight",
+      "summary": "Custom headers trigger a preflight",
+      "tags": [
+        "cors"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which request triggers a CORS preflight?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "a cross-origin request with a custom header"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "a cross-origin request with a custom header",
+          "a same-origin GET",
+          "any image request"
+        ],
+        "correct": [
+          "a cross-origin request with a custom header"
+        ]
+      },
+      "hints": [
+        "Simple requests skip the extra question."
+      ],
+      "fullLine": "A cross-origin request with a custom header triggers a CORS preflight.",
+      "deckId": "security-essentials"
+    },
+    {
+      "key": "security-https-transit",
+      "summary": "HTTPS protects data in transit",
+      "tags": [
+        "https"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "HTTPS protects data in "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " between browser and server."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "HTTPS protects data in transit between browser and server."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "transit"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "It covers the journey, not the storage at either end."
+      ],
+      "fullLine": "HTTPS protects data in transit between browser and server.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "It encrypts the hop but says nothing about the server's trust.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "security-essentials"
+    },
+    {
+      "key": "security-csp",
+      "summary": "CSP limits script sources",
+      "tags": [
+        "csp"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which response header limits where scripts may load from?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Content-Security-Policy"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "Content-Security-Policy",
+          "CSP"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "The name names two ideas: content and policy."
+      ],
+      "fullLine": "Content-Security-Policy limits where scripts may load from.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "It names the allowed sources for scripts, styles and images.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "security-essentials"
+    },
+    {
+      "key": "security-httponly",
+      "summary": "HttpOnly hides a cookie",
+      "tags": [
+        "cookies"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which cookie flag hides the cookie from JavaScript?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "HttpOnly"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "HttpOnly",
+          "Secure",
+          "SameSite"
+        ],
+        "correct": [
+          "HttpOnly"
+        ]
+      },
+      "hints": [
+        "Only the network layer may read it."
+      ],
+      "fullLine": "The HttpOnly flag hides the cookie from JavaScript.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Even a successful injection cannot read this flag's cookie.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "security-essentials"
+    },
+    {
+      "key": "security-secure-flag",
+      "summary": "Secure cookies need HTTPS",
+      "tags": [
+        "cookies"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A cookie marked "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " is only sent over HTTPS."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A cookie marked Secure is only sent over HTTPS."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "Secure"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "The flag describes the connection."
+      ],
+      "fullLine": "A cookie marked Secure is only sent over HTTPS.",
+      "deckId": "security-essentials"
+    },
+    {
+      "key": "security-csrf",
+      "summary": "CSRF abuses your session",
+      "tags": [
+        "csrf"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A form that changes data on another site while you are logged in is what?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "cross-site request forgery"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "cross-site request forgery",
+          "a cache miss",
+          "a layout shift"
+        ],
+        "correct": [
+          "cross-site request forgery"
+        ]
+      },
+      "hints": [
+        "The request is genuine; the intent is not."
+      ],
+      "fullLine": "A form that changes data on another site while you are logged in is cross-site request forgery.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The browser attaches the session automatically, so the site must check intent.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "security-essentials"
+    },
+    {
+      "key": "security-text-not-markup",
+      "summary": "User text must stay text",
+      "tags": [
+        "xss",
+        "safety"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "User text must reach the page as "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": ", never as markup."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "User text must reach the page as text, never as markup."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "text",
+              "plain text"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "The browser should not parse it."
+      ],
+      "fullLine": "User text must reach the page as text, never as markup.",
+      "deckId": "security-essentials"
+    },
+    {
+      "key": "security-textcontent",
+      "summary": "textContent shows characters",
+      "tags": [
+        "safety"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which is the safer way to show a learner's name?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "textContent"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "textContent",
+          "innerHTML",
+          "eval"
+        ],
+        "correct": [
+          "textContent"
+        ]
+      },
+      "hints": [
+        "One option executes its string."
+      ],
+      "fullLine": "textContent is the safer way to show a learner's name.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "It inserts characters without parsing tags.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "security-essentials"
+    },
+    {
+      "key": "debug-breakpoint",
+      "summary": "A breakpoint pauses code",
+      "tags": [
+        "breakpoints"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What does a breakpoint do?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "pauses code on that line"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "pauses code on that line",
+          "deletes the line",
+          "speeds up the line"
+        ],
+        "correct": [
+          "pauses code on that line"
+        ]
+      },
+      "hints": [
+        "It gives you time to look around."
+      ],
+      "fullLine": "A breakpoint pauses code on that line.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A pause lets you read values before the next statement runs.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "sources-and-debugging"
+    },
+    {
+      "key": "debug-debugger-statement",
+      "summary": "The debugger statement pauses",
+      "tags": [
+        "breakpoints"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Writing the `debugger` statement in code makes the browser "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " there."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Writing the debugger statement in code makes the browser pause there."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "pause",
+              "stop"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "It behaves like a line marked by hand."
+      ],
+      "fullLine": "Writing the debugger statement in code makes the browser pause there.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The keyword is a statement, so it only acts when execution reaches it.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "sources-and-debugging"
+    },
+    {
+      "key": "debug-step-into",
+      "summary": "Step into enters a function",
+      "tags": [
+        "stepping"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which debugger action enters the function called on the current line?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Step into"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Step into",
+          "Step over",
+          "Resume"
+        ],
+        "correct": [
+          "Step into"
+        ]
+      },
+      "hints": [
+        "The other step command treats the call as one line."
+      ],
+      "fullLine": "Step into enters the function called on the current line.",
+      "deckId": "sources-and-debugging"
+    },
+    {
+      "key": "debug-scope",
+      "summary": "Scope lists visible variables",
+      "tags": [
+        "scopes"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "The "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " panel lists the variables the paused code can see."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "The Scope panel lists the variables the paused code can see."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "Scope",
+              "scope"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "It answers: what is in reach here?"
+      ],
+      "fullLine": "The Scope panel lists the variables the paused code can see.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "It lists the variables visible at the paused line.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/browser-dev/images/breakpoint.svg",
+          "alt": "A script paused on a highlighted line with a breakpoint dot in the margin"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "ZaOZFkHTloM",
+          "search": "Debugging JavaScript in Chrome DevTools",
+          "alt": "Setting breakpoints and stepping through code in the Sources panel"
+        }
+      ],
+      "deckId": "sources-and-debugging"
+    },
+    {
+      "key": "debug-source-map",
+      "summary": "A source map points back",
+      "tags": [
+        "source-maps"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which file maps minified code back to the original source?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "a source map"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "a source map",
+          "source map"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "The debugger can then show the names you wrote."
+      ],
+      "fullLine": "A source map maps minified code back to the original source.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Without one, a paused line may point at a tiny, renamed bundle.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "sources-and-debugging"
+    },
+    {
+      "key": "debug-call-stack",
+      "summary": "The call stack shows the path",
+      "tags": [
+        "call-stack"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What does the call stack show?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "the functions that led to this point"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "the functions that led to this point",
+          "the page's CSS",
+          "the network order"
+        ],
+        "correct": [
+          "the functions that led to this point"
+        ]
+      },
+      "hints": [
+        "Read it bottom-up for the arrival path."
+      ],
+      "fullLine": "The call stack shows the functions that led to this point.",
+      "deckId": "sources-and-debugging"
+    },
+    {
+      "key": "debug-conditional",
+      "summary": "A conditional breakpoint checks an expression",
+      "tags": [
+        "breakpoints"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A conditional breakpoint pauses only when its expression is "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A conditional breakpoint pauses only when its expression is true."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "true"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "It is the same test an if statement uses."
+      ],
+      "fullLine": "A conditional breakpoint pauses only when its expression is true.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The expression is checked each time the line is reached.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "sources-and-debugging"
+    },
+    {
+      "key": "debug-reproduce-small",
+      "summary": "Reproduce with small steps",
+      "tags": [
+        "method"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What is the best first move when debugging?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "reproduce it with the smallest steps"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "reproduce it with the smallest steps",
+          "rewrite the module",
+          "add console.log everywhere"
+        ],
+        "correct": [
+          "reproduce it with the smallest steps"
+        ]
+      },
+      "hints": [
+        "A short path is easier to trust."
+      ],
+      "fullLine": "The best first move when debugging is to reproduce it with the smallest steps.",
+      "deckId": "sources-and-debugging"
+    },
+    {
+      "key": "debug-resume",
+      "summary": "Resume continues the script",
+      "tags": [
+        "stepping"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "After reading the paused state, press "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " to let the code continue."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "After reading the paused state, press Resume to let the code continue."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "Resume",
+              "resume",
+              "continue"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "It means carry on from here."
+      ],
+      "fullLine": "After reading the paused state, press Resume to let the code continue.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The button lets the rest of the script run to the next pause.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "sources-and-debugging"
+    },
+    {
+      "key": "debug-blackbox",
+      "summary": "Blackboxing skips a script",
+      "tags": [
+        "stepping"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What does blackboxing a script do?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "hides its frames so you step past it"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "hides its frames so you step past it",
+          "deletes it",
+          "minifies it"
+        ],
+        "correct": [
+          "hides its frames so you step past it"
+        ]
+      },
+      "hints": [
+        "Think of a library you do not want to read."
+      ],
+      "fullLine": "Blackboxing a script hides its frames so you step past it.",
+      "deckId": "sources-and-debugging"
+    },
+    {
+      "key": "box-four-layers",
+      "summary": "A box has four layers",
+      "tags": [
+        "box-model"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "From the inside out, which order is correct?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "content, padding, border, margin"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "content, padding, border, margin",
+          "margin, border, padding, content",
+          "content, margin, border, padding"
+        ],
+        "correct": [
+          "content, padding, border, margin"
+        ]
+      },
+      "hints": [
+        "The space that pushes neighbours away is always last."
+      ],
+      "fullLine": "A box runs from content, through padding and border, out to margin.",
+      "deckId": "styles-and-the-box-model"
+    },
+    {
+      "key": "box-padding",
+      "summary": "Padding sits inside the border",
+      "tags": [
+        "box-model"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Space between the content and the border is "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Space between the content and the border is padding."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "padding"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "The background colour shows in this space."
+      ],
+      "fullLine": "Space between the content and the border is padding.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "It sits between the content and the border, so the background shows behind it.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/browser-dev/images/box-model.svg",
+          "alt": "A box drawn as four nested rectangles: content, padding, border and margin"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "rIO5326FgPE",
+          "search": "Learn CSS Box Model in 8 Minutes",
+          "alt": "A visual explanation of content, padding, border and margin"
+        }
+      ],
+      "deckId": "styles-and-the-box-model"
+    },
+    {
+      "key": "box-margin",
+      "summary": "Margin sits outside the border",
+      "tags": [
+        "box-model"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Space outside the border is the "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Space outside the border is the margin."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "margin"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "It never takes the background colour."
+      ],
+      "fullLine": "Space outside the border is the margin.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "It pushes neighbours away and is never painted by the element.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "styles-and-the-box-model"
+    },
+    {
+      "key": "box-border-box",
+      "summary": "border-box includes padding",
+      "tags": [
+        "box-model"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "With `box-sizing: border-box`, the width includes what?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "content, padding and border"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "content, padding and border",
+          "only the content",
+          "content and margin"
+        ],
+        "correct": [
+          "content, padding and border"
+        ]
+      },
+      "hints": [
+        "The margin is never part of a width."
+      ],
+      "fullLine": "With box-sizing: border-box, the width includes content, padding and border.",
+      "deckId": "styles-and-the-box-model"
+    },
+    {
+      "key": "box-flex",
+      "summary": "Flex lays children in a line",
+      "tags": [
+        "layout"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which display value lays children out in a row or a column?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "flex"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "flex",
+          "display: flex",
+          "display:flex"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It is short for flexible."
+      ],
+      "fullLine": "The flex display value lays children out in a row or a column.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "It turns the children into a single line by default, in the direction you choose.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "styles-and-the-box-model"
+    },
+    {
+      "key": "box-specificity",
+      "summary": "Specificity breaks a tie",
+      "tags": [
+        "css"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "When two rules set the same property, the one with higher "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " wins."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "When two rules set the same property, the one with higher specificity wins."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "specificity"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "A more precise selector beats a broad one."
+      ],
+      "fullLine": "When two rules set the same property, the one with higher specificity wins.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "When two rules collide, the more precise selector takes the property.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "styles-and-the-box-model"
+    },
+    {
+      "key": "box-selector-wins",
+      "summary": "A longer selector wins",
+      "tags": [
+        "css",
+        "selectors"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which selector wins over `.title` when both set the same property?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": ".card .title"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          ".card .title",
+          ".title",
+          "p"
+        ],
+        "correct": [
+          ".card .title"
+        ]
+      },
+      "hints": [
+        "Count the parts that narrow the match."
+      ],
+      "fullLine": ".card .title wins over .title because it names two levels.",
+      "deckId": "styles-and-the-box-model"
+    },
+    {
+      "key": "box-later-rule",
+      "summary": "A later rule wins a tie",
+      "tags": [
+        "css"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Two rules match as closely as each other. The later rule "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " the earlier one."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Two rules match as closely as each other. The later rule wins over the earlier one."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "wins",
+              "wins over",
+              "overrides"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Order is the tie-breaker, not age."
+      ],
+      "fullLine": "Two rules match as closely as each other. The later rule wins over the earlier one.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Source order settles it only when the selectors match as precisely.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "styles-and-the-box-model"
+    },
+    {
+      "key": "box-rem",
+      "summary": "rem follows the root size",
+      "tags": [
+        "css",
+        "units"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which unit is relative to the root font size?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "rem"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "rem"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "The em version follows the current element instead."
+      ],
+      "fullLine": "The rem unit is relative to the root font size.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "It follows the page's base size, so a user's text setting changes it.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "styles-and-the-box-model"
+    },
+    {
+      "key": "box-gap",
+      "summary": "gap spaces flex children",
+      "tags": [
+        "layout"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which property spaces flex children without adding margins to them?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "gap"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "gap",
+          "padding",
+          "border"
+        ],
+        "correct": [
+          "gap"
+        ]
+      },
+      "hints": [
+        "It names the empty space between items."
+      ],
+      "fullLine": "The gap property spaces flex children without margins.",
+      "deckId": "styles-and-the-box-model"
+    }
+  ]
+}

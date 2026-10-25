@@ -23,6 +23,8 @@ interface RecordAttempt {
   seenBefore: number;
   outcome: Outcome;
   regions: RecordRegion[];
+  helpSeen?: boolean;
+  coldCheck?: boolean;
 }
 
 /** The attempts and rows the evidence endpoint returns. */
@@ -36,8 +38,21 @@ export interface EvidenceAnswer {
     kind: "answer" | "correction";
     supersedes?: string;
     at: string;
+    helpSeen?: boolean;
+    coldCheck?: boolean;
   }>;
   attempts: RecordAttempt[];
+}
+
+/** The two facts a teaching layer leaves on an attempt, when true. */
+function LayerFlags({ helpSeen, coldCheck }: { helpSeen?: boolean; coldCheck?: boolean }) {
+  if (!helpSeen && !coldCheck) return null;
+  return (
+    <>
+      {helpSeen ? <span className="chip">help seen</span> : null}{" "}
+      {coldCheck ? <span className="chip chip-cold">cold check</span> : null}
+    </>
+  );
 }
 
 /** A read-only drawer over the current screen; closing it changes no data. */
@@ -62,7 +77,8 @@ export default function RecordDrawer({ evidence, onClose }: { evidence: Evidence
                 <span className="muted">
                   {new Date(attempt.at).toLocaleString()} · {Math.round(attempt.timeMs / 1000)}s · seen{" "}
                   {attempt.seenBefore} time(s) before
-                </span>
+                </span>{" "}
+                <LayerFlags helpSeen={attempt.helpSeen} coldCheck={attempt.coldCheck} />
               </div>
               {attempt.regions.map((region) => (
                 <div className="muted" key={`${attempt.attemptId}-${region.region ?? "whole"}`}>
@@ -80,7 +96,8 @@ export default function RecordDrawer({ evidence, onClose }: { evidence: Evidence
             {evidence.rows.map((row) => (
               <li key={row.id} className="muted">
                 {row.kind === "correction" ? "correction of an earlier row" : "answer"} · {row.outcome} ·{" "}
-                {new Date(row.at).toLocaleString()}
+                {new Date(row.at).toLocaleString()}{" "}
+                <LayerFlags helpSeen={row.helpSeen} coldCheck={row.coldCheck} />
               </li>
             ))}
           </ul>

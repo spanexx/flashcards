@@ -53,7 +53,8 @@ export function stableStringify(value: unknown): string {
 /**
  * The content that decides whether two cards are the same card. Timestamps,
  * pack version and the display id never count, so a reinstall and an unchanged
- * update keep the learner's history attached.
+ * update keep the learner's history attached. The teaching layer is help, not
+ * content: editing it must never make the learner look like a new learner.
  */
 export function canonicalContent(source: CardSource): string {
   return stableStringify({
@@ -184,6 +185,7 @@ export function buildCard(
     answerDef: source.answerDef,
     hints: source.hints && source.hints.length > 0 ? source.hints : undefined,
     fullLine: source.fullLine,
+    teaching: source.teaching && source.teaching.length > 0 ? source.teaching : undefined,
     origin,
     createdAt: now,
   };

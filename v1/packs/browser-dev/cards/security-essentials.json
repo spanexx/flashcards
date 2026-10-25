@@ -1,0 +1,125 @@
+{
+  "cards": [
+    {
+      "key": "security-same-origin",
+      "summary": "Same origin needs three matches",
+      "topics": ["security-essentials"],
+      "tags": ["origin"],
+      "prompt": [{ "type": "text", "text": "Same-origin means the same scheme, host and what else?" }],
+      "answer": [{ "type": "text", "text": "port" }],
+      "answerDef": { "mode": "picks", "options": ["port", "path", "title"], "correct": ["port"] },
+      "hints": ["It is the number after a colon in a URL."],
+      "fullLine": "Same-origin means the same scheme, host and port.",
+      "teaching": [
+        { "type": "text", "text": "Two pages on different numbers here never share storage or permissions.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/browser-dev/images/same-origin.svg", "alt": "Three URL cards compared across scheme, host and port, with only the matching trio let through" },
+        { "type": "video", "source": "youtube", "src": "M2Cm_Q_i8PI", "search": "Frontend security XSS CSRF CORS explained", "alt": "An overview of common frontend security risks" }
+      ]
+    },
+    {
+      "key": "security-xss",
+      "summary": "User text can become script",
+      "topics": ["security-essentials"],
+      "tags": ["xss"],
+      "prompt": [{ "type": "text", "text": "Text from a user turned into HTML can cause cross-site " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": "." }],
+      "answer": [{ "type": "text", "text": "Text from a user turned into HTML can cause cross-site scripting." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["scripting", "XSS"] }] },
+      "hints": ["It is usually shortened to three letters."],
+      "fullLine": "Text from a user turned into HTML can cause cross-site scripting.",
+      "teaching": [{ "type": "text", "text": "User text becomes executable when it is inserted as markup.", "lang": "en" }]
+    },
+    {
+      "key": "security-cors-preflight",
+      "summary": "Custom headers trigger a preflight",
+      "topics": ["security-essentials"],
+      "tags": ["cors"],
+      "prompt": [{ "type": "text", "text": "Which request triggers a CORS preflight?" }],
+      "answer": [{ "type": "text", "text": "a cross-origin request with a custom header" }],
+      "answerDef": { "mode": "picks", "options": ["a cross-origin request with a custom header", "a same-origin GET", "any image request"], "correct": ["a cross-origin request with a custom header"] },
+      "hints": ["Simple requests skip the extra question."],
+      "fullLine": "A cross-origin request with a custom header triggers a CORS preflight."
+    },
+    {
+      "key": "security-https-transit",
+      "summary": "HTTPS protects data in transit",
+      "topics": ["security-essentials"],
+      "tags": ["https"],
+      "prompt": [{ "type": "text", "text": "HTTPS protects data in " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " between browser and server." }],
+      "answer": [{ "type": "text", "text": "HTTPS protects data in transit between browser and server." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["transit"] }] },
+      "hints": ["It covers the journey, not the storage at either end."],
+      "fullLine": "HTTPS protects data in transit between browser and server.",
+      "teaching": [{ "type": "text", "text": "It encrypts the hop but says nothing about the server's trust.", "lang": "en" }]
+    },
+    {
+      "key": "security-csp",
+      "summary": "CSP limits script sources",
+      "topics": ["security-essentials"],
+      "tags": ["csp"],
+      "prompt": [{ "type": "text", "text": "Which response header limits where scripts may load from?" }],
+      "answer": [{ "type": "text", "text": "Content-Security-Policy" }],
+      "answerDef": { "mode": "type", "expected": ["Content-Security-Policy", "CSP"], "judge": "loose" },
+      "hints": ["The name names two ideas: content and policy."],
+      "fullLine": "Content-Security-Policy limits where scripts may load from.",
+      "teaching": [{ "type": "text", "text": "It names the allowed sources for scripts, styles and images.", "lang": "en" }]
+    },
+    {
+      "key": "security-httponly",
+      "summary": "HttpOnly hides a cookie",
+      "topics": ["security-essentials"],
+      "tags": ["cookies"],
+      "prompt": [{ "type": "text", "text": "Which cookie flag hides the cookie from JavaScript?" }],
+      "answer": [{ "type": "text", "text": "HttpOnly" }],
+      "answerDef": { "mode": "picks", "options": ["HttpOnly", "Secure", "SameSite"], "correct": ["HttpOnly"] },
+      "hints": ["Only the network layer may read it."],
+      "fullLine": "The HttpOnly flag hides the cookie from JavaScript.",
+      "teaching": [{ "type": "text", "text": "Even a successful injection cannot read this flag's cookie.", "lang": "en" }]
+    },
+    {
+      "key": "security-secure-flag",
+      "summary": "Secure cookies need HTTPS",
+      "topics": ["security-essentials"],
+      "tags": ["cookies"],
+      "prompt": [{ "type": "text", "text": "A cookie marked " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " is only sent over HTTPS." }],
+      "answer": [{ "type": "text", "text": "A cookie marked Secure is only sent over HTTPS." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["Secure"] }] },
+      "hints": ["The flag describes the connection."],
+      "fullLine": "A cookie marked Secure is only sent over HTTPS."
+    },
+    {
+      "key": "security-csrf",
+      "summary": "CSRF abuses your session",
+      "topics": ["security-essentials"],
+      "tags": ["csrf"],
+      "prompt": [{ "type": "text", "text": "A form that changes data on another site while you are logged in is what?" }],
+      "answer": [{ "type": "text", "text": "cross-site request forgery" }],
+      "answerDef": { "mode": "picks", "options": ["cross-site request forgery", "a cache miss", "a layout shift"], "correct": ["cross-site request forgery"] },
+      "hints": ["The request is genuine; the intent is not."],
+      "fullLine": "A form that changes data on another site while you are logged in is cross-site request forgery.",
+      "teaching": [{ "type": "text", "text": "The browser attaches the session automatically, so the site must check intent.", "lang": "en" }]
+    },
+    {
+      "key": "security-text-not-markup",
+      "summary": "User text must stay text",
+      "topics": ["security-essentials"],
+      "tags": ["xss", "safety"],
+      "prompt": [{ "type": "text", "text": "User text must reach the page as " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": ", never as markup." }],
+      "answer": [{ "type": "text", "text": "User text must reach the page as text, never as markup." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["text", "plain text"] }] },
+      "hints": ["The browser should not parse it."],
+      "fullLine": "User text must reach the page as text, never as markup."
+    },
+    {
+      "key": "security-textcontent",
+      "summary": "textContent shows characters",
+      "topics": ["security-essentials"],
+      "tags": ["safety"],
+      "prompt": [{ "type": "text", "text": "Which is the safer way to show a learner's name?" }],
+      "answer": [{ "type": "text", "text": "textContent" }],
+      "answerDef": { "mode": "picks", "options": ["textContent", "innerHTML", "eval"], "correct": ["textContent"] },
+      "hints": ["One option executes its string."],
+      "fullLine": "textContent is the safer way to show a learner's name.",
+      "teaching": [{ "type": "text", "text": "It inserts characters without parsing tags.", "lang": "en" }]
+    }
+  ]
+}

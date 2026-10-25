@@ -1,0 +1,224 @@
+{
+  "cards": [
+    {
+      "key": "numbers-one",
+      "summary": "The number one",
+      "topics": ["numbers"],
+      "tags": [],
+      "prompt": [{ "type": "text", "text": "The number one" }],
+      "answer": [
+        { "type": "text", "text": "jeden" },
+        { "type": "text", "text": "one", "role": "translation" },
+        { "type": "text", "text": "YEH-den", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["jeden"], "judge": "loose" },
+      "hints": ["It changes form when it describes a feminine noun."],
+      "fullLine": "jeden",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The first counting word, and also the word for 'one' in a count.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "numbers-two",
+      "summary": "The number two",
+      "topics": ["numbers"],
+      "tags": [],
+      "prompt": [{ "type": "text", "text": "The number two" }],
+      "answer": [
+        { "type": "text", "text": "dwa" },
+        { "type": "text", "text": "two", "role": "translation" },
+        { "type": "text", "text": "dvah", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["dwa"], "judge": "loose" },
+      "hints": ["You will see it on doors marked with the digit two."],
+      "fullLine": "dwa",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A short counting word used with masculine and neuter nouns.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "numbers-three",
+      "summary": "The number three",
+      "topics": ["numbers"],
+      "tags": [],
+      "prompt": [{ "type": "text", "text": "The number three" }],
+      "answer": [
+        { "type": "text", "text": "trzy" },
+        { "type": "text", "text": "three", "role": "translation" },
+        { "type": "text", "text": "tshih", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["trzy"], "judge": "loose" },
+      "hints": ["It is the number you get after adding one to two."],
+      "fullLine": "trzy",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The counting word for three, used with any noun.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "numbers-four",
+      "summary": "The number four",
+      "topics": ["numbers"],
+      "tags": [],
+      "prompt": [{ "type": "text", "text": "The number four" }],
+      "answer": [
+        { "type": "text", "text": "cztery" },
+        { "type": "text", "text": "four", "role": "translation" },
+        { "type": "text", "text": "CHTEH-rih", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["cztery"], "judge": "loose" },
+      "hints": ["It has one more syllable than the word for three."],
+      "fullLine": "cztery",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The counting word that follows three in a simple count.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "numbers-five",
+      "summary": "The number five",
+      "topics": ["numbers"],
+      "tags": [],
+      "prompt": [{ "type": "text", "text": "The number five" }],
+      "answer": [
+        { "type": "text", "text": "pięć" },
+        { "type": "text", "text": "five", "role": "translation" },
+        { "type": "text", "text": "pyench", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["pięć"], "judge": "loose" },
+      "hints": ["It comes between the words for four and six."],
+      "fullLine": "pięć",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The counting word for five, used when counting people or things.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "numbers-six",
+      "summary": "The number six",
+      "topics": ["numbers"],
+      "tags": [],
+      "prompt": [{ "type": "text", "text": "The number six" }],
+      "answer": [
+        { "type": "text", "text": "sześć" },
+        { "type": "text", "text": "six", "role": "translation" },
+        { "type": "text", "text": "sheshch", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["sześć"], "judge": "loose" },
+      "hints": ["It sits between the words for five and seven."],
+      "fullLine": "sześć",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The counting word for six, common on clocks and timetables.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "numbers-seven",
+      "summary": "The number seven",
+      "topics": ["numbers"],
+      "tags": [],
+      "prompt": [{ "type": "text", "text": "The number seven" }],
+      "answer": [
+        { "type": "text", "text": "siedem" },
+        { "type": "text", "text": "seven", "role": "translation" },
+        { "type": "text", "text": "SHEH-dem", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["siedem"], "judge": "loose" },
+      "hints": ["It has two syllables, unlike the shorter numbers near it."],
+      "fullLine": "siedem",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The counting word for seven, used in dates and ages.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "numbers-eight",
+      "summary": "The number eight",
+      "topics": ["numbers"],
+      "tags": [],
+      "prompt": [{ "type": "text", "text": "The number eight" }],
+      "answer": [
+        { "type": "text", "text": "osiem" },
+        { "type": "text", "text": "eight", "role": "translation" },
+        { "type": "text", "text": "OH-shem", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["osiem"], "judge": "loose" },
+      "hints": ["It comes just before the word for nine."],
+      "fullLine": "osiem",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The counting word for eight, often seen on bus numbers.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "numbers-nine",
+      "summary": "The number nine",
+      "topics": ["numbers"],
+      "tags": [],
+      "prompt": [{ "type": "text", "text": "The number nine" }],
+      "answer": [
+        { "type": "text", "text": "dziewięć" },
+        { "type": "text", "text": "nine", "role": "translation" },
+        { "type": "text", "text": "JEV-yench", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["dziewięć"], "judge": "loose" },
+      "hints": ["It is the last single-digit number before ten."],
+      "fullLine": "dziewięć",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The counting word for nine, with a soft start.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "numbers-ten",
+      "summary": "The number ten",
+      "topics": ["numbers"],
+      "tags": [],
+      "prompt": [{ "type": "text", "text": "The number ten" }],
+      "answer": [
+        { "type": "text", "text": "dziesięć" },
+        { "type": "text", "text": "ten", "role": "translation" },
+        { "type": "text", "text": "JESH-yench", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["dziesięć"], "judge": "loose" },
+      "hints": ["Clocks and calendars use it constantly."],
+      "fullLine": "dziesięć",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The counting word for ten, the first two-digit number.",
+          "lang": "en"
+        }
+      ]
+    }
+  ]
+}

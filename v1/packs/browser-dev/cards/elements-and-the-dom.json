@@ -1,0 +1,124 @@
+{
+  "cards": [
+    {
+      "key": "dom-tree-shape",
+      "summary": "The DOM is a tree",
+      "topics": ["elements-and-the-dom"],
+      "tags": ["dom"],
+      "prompt": [{ "type": "text", "text": "Which shape best describes the DOM?" }],
+      "answer": [{ "type": "text", "text": "a tree" }],
+      "answerDef": { "mode": "picks", "options": ["a tree", "a flat list", "one long string"], "correct": ["a tree"] },
+      "hints": ["Parents hold children, and a child may hold more."],
+      "fullLine": "The DOM is a tree of elements.",
+      "teaching": [{ "type": "text", "text": "Every element can hold children, so the page has levels rather than one flat row.", "lang": "en" }]
+    },
+    {
+      "key": "dom-html-element",
+      "summary": "html wraps the page",
+      "topics": ["elements-and-the-dom"],
+      "tags": ["dom"],
+      "prompt": [{ "type": "text", "text": "The <html> element wraps the <head> and the " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": "." }],
+      "answer": [{ "type": "text", "text": "The <html> element wraps the <head> and the body." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["body"] }] },
+      "hints": ["It holds what is actually shown on the page."],
+      "fullLine": "The <html> element wraps the <head> and the body."
+    },
+    {
+      "key": "dom-head-metadata",
+      "summary": "The head describes the page",
+      "topics": ["elements-and-the-dom"],
+      "tags": ["dom"],
+      "prompt": [{ "type": "text", "text": "Title, meta tags and stylesheet links live in the " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": "." }],
+      "answer": [{ "type": "text", "text": "Title, meta tags and stylesheet links live in the head." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["head"] }] },
+      "hints": ["It is the part a reader never sees drawn."],
+      "fullLine": "Title, meta tags and stylesheet links live in the head.",
+      "teaching": [{ "type": "text", "text": "Metadata and stylesheet links describe the page but are never painted.", "lang": "en" }]
+    },
+    {
+      "key": "dom-query-selector",
+      "summary": "querySelector finds one element",
+      "topics": ["elements-and-the-dom"],
+      "tags": ["dom", "selectors"],
+      "prompt": [{ "type": "text", "text": "Which method returns the first element that matches a CSS selector?" }],
+      "answer": [{ "type": "text", "text": "querySelector" }],
+      "answerDef": { "mode": "type", "expected": ["querySelector", "document.querySelector"], "judge": "loose" },
+      "hints": ["The plural version returns a list instead."],
+      "fullLine": "querySelector returns the first element that matches a CSS selector.",
+      "teaching": [{ "type": "text", "text": "The plural form returns every match as a list, even when only one exists.", "lang": "en" }]
+    },
+    {
+      "key": "dom-classlist-live",
+      "summary": "classList changes the page",
+      "topics": ["elements-and-the-dom"],
+      "tags": ["dom"],
+      "prompt": [{ "type": "text", "text": "Changing an element's classList does what?" }],
+      "answer": [{ "type": "text", "text": "updates the live page" }],
+      "answerDef": { "mode": "picks", "options": ["updates the live page", "saves the HTML file", "waits for a reload"], "correct": ["updates the live page"] },
+      "hints": ["The DOM in memory is what the browser draws."],
+      "fullLine": "Changing an element's classList updates the live page."
+    },
+    {
+      "key": "dom-text-node",
+      "summary": "Words are text nodes",
+      "topics": ["elements-and-the-dom"],
+      "tags": ["dom"],
+      "prompt": [{ "type": "text", "text": "The words inside a paragraph form a " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " node." }],
+      "answer": [{ "type": "text", "text": "The words inside a paragraph form a text node." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["text"] }] },
+      "hints": ["It cannot hold children of its own."],
+      "fullLine": "The words inside a paragraph form a text node."
+    },
+    {
+      "key": "dom-text-content",
+      "summary": "textContent reads the words",
+      "topics": ["elements-and-the-dom"],
+      "tags": ["dom"],
+      "prompt": [{ "type": "text", "text": "Which property reads or replaces all the words inside an element?" }],
+      "answer": [{ "type": "text", "text": "textContent" }],
+      "answerDef": { "mode": "type", "expected": ["textContent"], "judge": "loose" },
+      "hints": ["The other common property parses its string as markup."],
+      "fullLine": "textContent reads or replaces all the words inside an element.",
+      "teaching": [{ "type": "text", "text": "innerHTML parses its string as markup; this property treats it as plain characters.", "lang": "en" }]
+    },
+    {
+      "key": "dom-text-content-safer",
+      "summary": "textContent is safer",
+      "topics": ["elements-and-the-dom"],
+      "tags": ["dom", "safety"],
+      "prompt": [{ "type": "text", "text": "Which is safer when showing text written by a learner?" }],
+      "answer": [{ "type": "text", "text": "textContent" }],
+      "answerDef": { "mode": "picks", "options": ["textContent", "innerHTML", "document.write"], "correct": ["textContent"] },
+      "hints": ["One of these would let a tag become real markup."],
+      "fullLine": "textContent is safer when showing text written by a learner."
+    },
+    {
+      "key": "dom-node",
+      "summary": "Everything is a node",
+      "topics": ["elements-and-the-dom"],
+      "tags": ["dom"],
+      "prompt": [{ "type": "text", "text": "Every element, text and comment in the DOM is a " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": "." }],
+      "answer": [{ "type": "text", "text": "Every element, text and comment in the DOM is a node." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["node"] }] },
+      "hints": ["Different kinds share the same tree vocabulary."],
+      "fullLine": "Every element, text and comment in the DOM is a node.",
+      "teaching": [
+        { "type": "text", "text": "Elements, words and comments all sit in one tree as separate points.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/browser-dev/images/dom-tree.svg", "alt": "A page drawn as a tree: html branching into head and body, body branching into a heading, a paragraph and a list" },
+        { "type": "video", "source": "youtube", "src": "NO5kUNxGIu0", "search": "The JavaScript DOM explained in 5 minutes", "alt": "A short tour of the DOM as a tree of nodes" }
+      ]
+    },
+    {
+      "key": "dom-source-vs-live",
+      "summary": "View Source is not the live DOM",
+      "topics": ["elements-and-the-dom"],
+      "tags": ["dom", "devtools"],
+      "prompt": [{ "type": "text", "text": "Why can the Elements panel show HTML that View Source does not?" }],
+      "answer": [{ "type": "text", "text": "script changed the live DOM" }],
+      "answerDef": { "mode": "picks", "options": ["script changed the live DOM", "the browser rewrote the file", "View Source refreshes late"], "correct": ["script changed the live DOM"] },
+      "hints": ["One view is the sent bytes; the other is what runs now."],
+      "fullLine": "The Elements panel differs from View Source because script changed the live DOM.",
+      "teaching": [{ "type": "text", "text": "View Source shows the bytes the server sent; the Elements panel shows what runs now.", "lang": "en" }]
+    }
+  ]
+}

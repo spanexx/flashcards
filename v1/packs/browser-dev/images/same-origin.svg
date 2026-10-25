@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 240" role="img" aria-label="Origin is scheme, host and port; a different port or scheme is a different origin">
+  <rect width="480" height="240" fill="#f8fafc"/>
+  <text x="240" y="34" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="700" fill="#1f2937">origin = scheme + host + port</text>
+  <g font-family="monospace" font-size="12">
+    <text x="32" y="76" fill="#1f2937">https://shop.example</text>
+    <text x="200" y="76" fill="#059669">same origin</text>
+    <text x="32" y="108" fill="#1f2937">https://shop.example/cart</text>
+    <text x="200" y="108" fill="#059669">same origin</text>
+    <text x="32" y="140" fill="#1f2937">https://shop.example:8443</text>
+    <text x="220" y="140" fill="#b91c1c">different port</text>
+    <text x="32" y="172" fill="#1f2937">http://shop.example</text>
+    <text x="200" y="172" fill="#b91c1c">different scheme</text>
+    <text x="32" y="204" fill="#1f2937">https://api.example</text>
+    <text x="200" y="204" fill="#b91c1c">different host</text>
+  </g>
+  <text x="240" y="230" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#64748b">a path never changes the origin</text>
+</svg>

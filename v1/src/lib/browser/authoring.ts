@@ -7,6 +7,8 @@
 // 2026-10-21 opencode: target-first Pack/Deck/Cards prompts, skill 2.0.0.
 // 2026-10-22 opencode: the learner's brief and the allowed library facts are now
 // part of every target's prompt, skill 3.0.0. [pack: creation-control]
+// 2026-10-25 opencode: the prompt teaches an optional layer that helps without
+// giving the answer away, skill 5.0.0. [pack: teaching-layers]
 
 import type { BrowserPack } from "@/lib/browser/repository";
 import {
@@ -18,7 +20,7 @@ import {
 import { packLanguagePair, type PackLanguagePair } from "@/lib/shared/language";
 
 /** Bump when the prompt or the JSON shape it teaches changes. */
-export const AUTHORING_SKILL_VERSION = "4.0.0";
+export const AUTHORING_SKILL_VERSION = "5.0.0";
 
 /** Where the chat is allowed to write. No learner-written name field exists. */
 export type AuthoringTarget =
@@ -37,17 +39,23 @@ function exampleLine(pair: PackLanguagePair): {
   fullLine: string;
   target: string;
   translation: string;
+  teaching: string;
 } {
-  const examples: Record<string, { fullLine: string; target: string }> = {
-    de: { fullLine: "Der Apfel ist süß.", target: "süß" },
-    en: { fullLine: "The red apple is sweet.", target: "sweet" },
-    es: { fullLine: "La manzana es dulce.", target: "dulce" },
-    fr: { fullLine: "La pomme est sucrée.", target: "sucrée" },
-    pl: { fullLine: "Czerwone jabłko jest słodkie.", target: "słodkie" },
+  const examples: Record<string, { fullLine: string; target: string; teaching: string }> = {
+    de: { fullLine: "Der Apfel ist süß.", target: "süß", teaching: "Ein Apfel ist eine Frucht." },
+    en: { fullLine: "The red apple is sweet.", target: "sweet", teaching: "An apple is a fruit." },
+    es: { fullLine: "La manzana es dulce.", target: "dulce", teaching: "Una manzana es una fruta." },
+    fr: { fullLine: "La pomme est sucrée.", target: "sucrée", teaching: "Une pomme est un fruit." },
+    pl: { fullLine: "Czerwone jabłko jest słodkie.", target: "słodkie", teaching: "Jabłko to owoc." },
   };
   const target = examples[pair.target.split("-")[0]] ?? examples.en;
   const source = examples[pair.source.split("-")[0]] ?? target;
-  return { fullLine: target.fullLine, target: target.target, translation: source.fullLine };
+  return {
+    fullLine: target.fullLine,
+    target: target.target,
+    translation: source.fullLine,
+    teaching: target.teaching,
+  };
 }
 
 function commonRules(pair: PackLanguagePair): string {
@@ -63,6 +71,13 @@ function commonRules(pair: PackLanguagePair): string {
   {"mode":"hear_type","expected":["..."]}
 - hints: one or two short sentences that name the rule, never the answer.
 - fullLine: the complete sentence or phrase the card is built from.
+- teaching: optional, at most three parts. Each part is one of:
+  {"type":"text","text":"...","lang":"${speakLang}"}
+  {"type":"image","source":"web","src":"https://...","alt":"..."}
+  {"type":"video","source":"youtube","src":"<11-character video id>","search":"..."}
+- A teaching part helps before the answer. It never contains the answer, the missing word, or a translation of either.
+- A picture or video earns its place only when it teaches the same point. A web address starts with https://; alt text describes the picture; a YouTube source is the video id alone, and nobody has checked that it still plays.
+- Leave "teaching" out when a short layer would only repeat the prompt.
 - Never include a "topics" field. The deck decides the topic.
 - Never include learner evidence, settings, a provider key, or a backup.`;
 }
@@ -73,6 +88,9 @@ function exampleCard(deckId: string, pair: PackLanguagePair): string {
   const after = line.fullLine.slice(
     line.fullLine.indexOf(line.target) + line.target.length,
   );
+  const teaching = pair.target
+    ? `{"type":"text","text":${JSON.stringify(line.teaching)},"lang":${JSON.stringify(pair.target)}}`
+    : `{"type":"text","text":${JSON.stringify(line.teaching)}}`;
   return `{
       "deckId": ${JSON.stringify(deckId)},
       "summary": "A sweet fruit",
@@ -80,7 +98,8 @@ function exampleCard(deckId: string, pair: PackLanguagePair): string {
       "answer": [{"type":"text","text":${JSON.stringify(line.fullLine)}},{"type":"text","text":${JSON.stringify(line.translation)},"role":"translation"}],
       "answerDef": {"mode":"cloze","blanks":[{"id":"b1","expected":[${JSON.stringify(line.target)}]}]},
       "hints": ["Name the grammar rule, not the missing word."],
-      "fullLine": ${JSON.stringify(line.fullLine)}
+      "fullLine": ${JSON.stringify(line.fullLine)},
+      "teaching": [${teaching}]
     }`;
 }
 
@@ -249,7 +268,7 @@ ${rules}
 Return JSON shaped like this:
 ${shapeForPack("basics", "Everyday basics", pair, studyInstruction)}
 
-Before you answer, check: every deck id is lowercase; every card has a deckId that exists in "decks"; every blank has one expected answer; every picks card has "correct" inside "options"; there is no "topics" field.`;
+Before you answer, check: every deck id is lowercase; every card has a deckId that exists in "decks"; every blank has one expected answer; every picks card has "correct" inside "options"; there is no "topics" field; and no teaching part gives the answer away.`;
   }
 
   if (!pack) {

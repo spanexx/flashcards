@@ -278,6 +278,12 @@ p.lead {
   color: var(--quiet);
 }
 
+.chip-cold {
+  color: var(--near);
+  border-color: color-mix(in srgb, var(--near) 45%, var(--line));
+  background: color-mix(in srgb, var(--near) 10%, transparent);
+}
+
 .status-pill {
   display: inline-block;
   border: 1px solid var(--line);
@@ -507,6 +513,22 @@ td {
 .notice.error {
   border-left-color: var(--miss);
   background: color-mix(in srgb, var(--miss) 12%, transparent);
+}
+
+.teaching-media {
+  display: block;
+  max-width: 100%;
+  max-height: 60vh;
+  border-radius: 8px;
+}
+
+.teaching-video {
+  display: block;
+  width: 100%;
+  max-height: 60vh;
+  border: 0;
+  border-radius: 8px;
+  background: #000;
 }
 
 .tabs {
@@ -1392,6 +1414,113 @@ body.full-stage {
 .study-instruction {
   margin: 2px 0 12px;
   font-size: 1.02rem;
+}
+
+/* A folded layer is a bar, never a missing feature. */
+.layer-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+  padding: 9px 12px;
+  border-left: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.layer-bar-icon {
+  color: var(--accent);
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.layer-bar-copy {
+  flex: 1;
+  min-width: 200px;
+}
+
+.layer-bar-copy strong {
+  display: block;
+  font-size: 0.9rem;
+}
+
+.layer-bar-copy span {
+  display: block;
+  color: var(--quiet);
+  font-size: 0.82rem;
+}
+
+.cold-note {
+  margin: 0 0 14px;
+  padding: 9px 12px;
+  border-left: 3px solid var(--near);
+  border-radius: 0 8px 8px 0;
+  background: color-mix(in srgb, var(--near) 12%, transparent);
+  font-size: 0.86rem;
+}
+
+/* The layer sits above the fixed stage but never blocks the answer below it. */
+.layer-panel {
+  position: fixed;
+  z-index: 95;
+  top: clamp(10px, 3vh, 28px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(700px, calc(100vw - 24px));
+  max-height: min(70vh, 720px);
+  overflow: auto;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 24px 70px color-mix(in srgb, var(--ink) 30%, transparent);
+}
+
+.layer-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 18px 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--card);
+}
+
+.layer-head h2 {
+  margin: 2px 0 4px;
+}
+
+.layer-kicker {
+  margin: 0;
+  text-transform: capitalize;
+}
+
+.layer-body {
+  display: grid;
+  gap: 12px;
+  padding: 16px 18px;
+}
+
+.layer-text {
+  margin: 0;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.layer-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  padding: 0 18px 16px;
+}
+
+.layer-foot p {
+  margin: 0;
 }
 
 .study-listen {

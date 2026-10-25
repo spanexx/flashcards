@@ -16,7 +16,7 @@ import { apiGet, apiSend } from "@/lib/client/api";
 import { onJobFinished } from "@/lib/browser/jobs";
 import { LIBRARY_FOCUS_EVENT, type LibraryFocus } from "@/lib/client/library-focus";
 import { normalizeLanguage } from "@/lib/shared/language";
-import type { Card, PackStatus, ProviderStatus } from "@/lib/shared/types";
+import type { Card, PackStatus, ProviderStatus, Settings, StudyLevel } from "@/lib/shared/types";
 import CardsPanel from "./CardsPanel";
 import CreatePanel from "./CreatePanel";
 import DeleteDialog from "./DeleteDialog";
@@ -37,6 +37,7 @@ export default function LibraryClient() {
   const [orphans, setOrphans] = useState<string[]>([]);
   const [cards, setCards] = useState<Card[]>([]);
   const [provider, setProvider] = useState<ProviderStatus | null>(null);
+  const [level, setLevel] = useState<StudyLevel>("intermediate");
   const [message, setMessage] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [tab, setTab] = useState<LibraryTab>("packs");
@@ -53,12 +54,13 @@ export default function LibraryClient() {
       const [packsAnswer, cardsAnswer, settingsAnswer] = await Promise.all([
         apiGet<{ packs: PackStatus[]; orphans: string[]; folder: string }>("/api/packs"),
         apiGet<{ cards: Card[] }>("/api/cards"),
-        apiGet<{ provider: ProviderStatus }>("/api/settings"),
+        apiGet<{ provider: ProviderStatus; settings: Settings }>("/api/settings"),
       ]);
       setPacks(packsAnswer.packs);
       setOrphans(packsAnswer.orphans);
       setCards(cardsAnswer.cards);
       setProvider(settingsAnswer.provider);
+      setLevel(settingsAnswer.settings.level);
       setMessage(null);
     } catch (problem) {
       setMessage(problem instanceof Error ? problem.message : "The library could not be read.");
@@ -261,6 +263,7 @@ export default function LibraryClient() {
           key={`create-${createSeed?.token ?? "initial"}`}
           packs={packs}
           provider={provider}
+          level={level}
           seed={createSeed}
           onCreated={created}
           onError={setMessage}

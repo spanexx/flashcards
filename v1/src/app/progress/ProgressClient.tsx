@@ -229,7 +229,9 @@ export default function ProgressClient() {
                         <span className="muted">
                           {row.region ?? "the answer"} · {new Date(row.at).toLocaleString()} ·{" "}
                           {row.kind === "correction" ? "a correction" : "as answered"}
-                        </span>
+                        </span>{" "}
+                        {row.helpSeen ? <span className="chip">help seen</span> : null}{" "}
+                        {row.coldCheck ? <span className="chip chip-cold">cold check</span> : null}
                       </div>
                       <div className="row">
                         {CORRECTIONS.map((choice) => (

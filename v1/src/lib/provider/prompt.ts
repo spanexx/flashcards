@@ -7,6 +7,8 @@
 // import. [pack: browser-app]
 // 2026-10-22 opencode: every structured prompt now carries the learner's brief,
 // the requested style and the allowed library facts. [pack: creation-control]
+// 2026-10-25 opencode: generation may add a short teaching layer that never
+// gives the answer away. [pack: teaching-layers]
 
 import type { Card } from "@/lib/shared/types";
 import type { PackPrompts, PackRecord } from "@/lib/packs/types";
@@ -47,8 +49,11 @@ export const DEFAULT_GENERATION_TEMPLATE = [
   "Weak topic categories (labels only): {{weakTopics}}.",
   "Do not mention the learner or repeat their words.",
   "Vary the nouns, verbs and sentence shapes; do not reuse a line.",
+  'A line may add "teaching": up to three parts that help before the answer. A part is {"type":"text","text":"...","lang":"..."} or {"type":"image","source":"web","src":"https://...","alt":"..."} or {"type":"video","source":"youtube","src":"<11-character video id>","search":"..."}.',
+  'A teaching part never contains the answer, the hidden word or a translation of either. Leave it out when it would only repeat the line.',
+  "Never claim a video is verified or reliable: the app can check that a YouTube id exists, not that it still plays.",
   "Return JSON only, shaped like:",
-  '{"lines":[{"style":"cloze","fullLine":"the complete correct line","target":"the exact word or phrase the app should hide","translation":"a plain translation","topics":["{{topic}}"],"tags":[],"summary":"one short plain sentence"}]}',
+  '{"lines":[{"style":"cloze","fullLine":"the complete correct line","target":"the exact word or phrase the app should hide","translation":"a plain translation","topics":["{{topic}}"],"tags":[],"summary":"one short plain sentence","teaching":[{"type":"text","text":"a short help line that never gives the answer","lang":"{{targetLanguage}}"}]}]}',
 ].join("\n");
 
 export const DEFAULT_TUTOR_SYSTEM =
@@ -177,17 +182,42 @@ function exampleLine(pair: PackLanguagePair): {
   fullLine: string;
   target: string;
   translation: string;
+  teaching: string;
 } {
-  const examples: Record<string, { fullLine: string; target: string }> = {
-    de: { fullLine: "Der Apfel ist süß.", target: "süß" },
-    en: { fullLine: "The red apple is sweet.", target: "sweet" },
-    es: { fullLine: "La manzana es dulce.", target: "dulce" },
-    fr: { fullLine: "La pomme est sucrée.", target: "sucrée" },
-    pl: { fullLine: "Czerwone jabłko jest słodkie.", target: "słodkie" },
+  const examples: Record<string, { fullLine: string; target: string; teaching: string }> = {
+    de: { fullLine: "Der Apfel ist süß.", target: "süß", teaching: "Ein Apfel ist eine Frucht." },
+    en: { fullLine: "The red apple is sweet.", target: "sweet", teaching: "An apple is a fruit." },
+    es: { fullLine: "La manzana es dulce.", target: "dulce", teaching: "Una manzana es una fruta." },
+    fr: { fullLine: "La pomme est sucrée.", target: "sucrée", teaching: "Une pomme est un fruit." },
+    pl: { fullLine: "Czerwone jabłko jest słodkie.", target: "słodkie", teaching: "Jabłko to owoc." },
   };
   const target = examples[pair.target.split("-")[0]] ?? examples.en;
   const source = examples[pair.source.split("-")[0]] ?? target;
-  return { fullLine: target.fullLine, target: target.target, translation: source.fullLine };
+  return {
+    fullLine: target.fullLine,
+    target: target.target,
+    translation: source.fullLine,
+    teaching: target.teaching,
+  };
+}
+
+/** The optional layer rules every structured prompt repeats. */
+function teachingPromptLines(): string[] {
+  return [
+    'A line may add "teaching": up to three parts that help before the answer. A part is {"type":"text","text":"...","lang":"..."} or {"type":"image","source":"web","src":"https://...","alt":"..."} or {"type":"video","source":"youtube","src":"<11-character video id>","search":"..."}.',
+    "A teaching part never contains the answer, the hidden word or a translation of either. Leave it out when it would only repeat the line.",
+    "Never claim a video is verified or reliable: the app can check that a YouTube id exists, not that it still plays.",
+  ];
+}
+
+/** The example layer for one line, with the pair's language when one is known. */
+function exampleTeaching(
+  line: { teaching: string },
+  pair: PackLanguagePair,
+): Record<string, unknown> {
+  return pair.target.length > 0
+    ? { type: "text", text: line.teaching, lang: pair.target }
+    : { type: "text", text: line.teaching };
 }
 
 /** The whole-pack example, with a style the provider can copy. */
@@ -218,6 +248,7 @@ function packShape(
         topics: ["Basics"],
         tags: [],
         summary: "A sweet fruit",
+        teaching: [exampleTeaching(line, pair)],
       },
     ],
   });
@@ -237,6 +268,7 @@ function deckShape(cardStyle: CardStyle, pair: PackLanguagePair): string {
         topics: ["Extra"],
         tags: [],
         summary: "A sweet fruit",
+        teaching: [exampleTeaching(line, pair)],
       },
     ],
   });
@@ -305,6 +337,7 @@ export function buildPackGenerationPrompt(
   userLines.push(
     `Learner level: ${slots.level}. Preferred learning style: ${slots.learningStyle}.`,
     "Every line must name one of your decks with deckId. The app turns each line into its exercise.",
+    ...teachingPromptLines(),
     "Return JSON only, shaped like:",
     packShape(brief?.cardStyle ?? "mixed", pair, studyInstruction),
   );
@@ -348,6 +381,7 @@ export function buildDeckGenerationPrompt(
   userLines.push(
     `Learner level: ${slots.level}. Preferred learning style: ${slots.learningStyle}.`,
     "The app turns each line into its exercise.",
+    ...teachingPromptLines(),
     "Return JSON only, shaped like:",
     deckShape(brief?.cardStyle ?? "mixed", pair),
   );

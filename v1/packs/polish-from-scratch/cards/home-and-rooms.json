@@ -1,0 +1,224 @@
+{
+  "cards": [
+    {
+      "key": "home-and-rooms-house",
+      "summary": "House",
+      "topics": ["home-and-rooms"],
+      "tags": ["masculine"],
+      "prompt": [{ "type": "text", "text": "House" }],
+      "answer": [
+        { "type": "text", "text": "dom" },
+        { "type": "text", "text": "house", "role": "translation" },
+        { "type": "text", "text": "dom", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["dom"], "judge": "loose" },
+      "hints": ["It also appears in many phrases about being at home."],
+      "fullLine": "dom",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun for a building where people live.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "home-and-rooms-flat",
+      "summary": "Flat",
+      "topics": ["home-and-rooms"],
+      "tags": ["neuter"],
+      "prompt": [{ "type": "text", "text": "Flat (an apartment)" }],
+      "answer": [
+        { "type": "text", "text": "mieszkanie" },
+        { "type": "text", "text": "flat, apartment", "role": "translation" },
+        { "type": "text", "text": "myesh-KAH-nyeh", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["mieszkanie"], "judge": "loose" },
+      "hints": ["It is the word you use when giving an address in a city."],
+      "fullLine": "mieszkanie",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A neuter noun for a home inside a block of flats.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "home-and-rooms-kitchen",
+      "summary": "Kitchen",
+      "topics": ["home-and-rooms"],
+      "tags": ["feminine"],
+      "prompt": [{ "type": "text", "text": "Kitchen" }],
+      "answer": [
+        { "type": "text", "text": "kuchnia" },
+        { "type": "text", "text": "kitchen", "role": "translation" },
+        { "type": "text", "text": "KOOKH-nyah", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["kuchnia"], "judge": "loose" },
+      "hints": ["It usually holds a stove, a sink and a fridge."],
+      "fullLine": "kuchnia",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun for the room where meals are cooked.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "home-and-rooms-bathroom",
+      "summary": "Bathroom",
+      "topics": ["home-and-rooms"],
+      "tags": ["feminine"],
+      "prompt": [{ "type": "text", "text": "Bathroom" }],
+      "answer": [
+        { "type": "text", "text": "łazienka" },
+        { "type": "text", "text": "bathroom", "role": "translation" },
+        { "type": "text", "text": "wah-ZHEN-kah", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["łazienka"], "judge": "loose" },
+      "hints": ["In many flats it is a separate room from the toilet."],
+      "fullLine": "łazienka",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun for the room with a bath or a shower.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "home-and-rooms-bedroom",
+      "summary": "Bedroom",
+      "topics": ["home-and-rooms"],
+      "tags": ["feminine"],
+      "prompt": [{ "type": "text", "text": "Bedroom" }],
+      "answer": [
+        { "type": "text", "text": "sypialnia" },
+        { "type": "text", "text": "bedroom", "role": "translation" },
+        { "type": "text", "text": "sih-PYAHL-nyah", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["sypialnia"], "judge": "loose" },
+      "hints": ["It usually holds the largest bed in the home."],
+      "fullLine": "sypialnia",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun for the room where you sleep.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "home-and-rooms-door",
+      "summary": "Door",
+      "topics": ["home-and-rooms"],
+      "tags": ["plural"],
+      "prompt": [{ "type": "text", "text": "Door" }],
+      "answer": [
+        { "type": "text", "text": "drzwi" },
+        { "type": "text", "text": "door", "role": "translation" },
+        { "type": "text", "text": "dzhvee", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["drzwi"], "judge": "loose" },
+      "hints": ["You knock on it or open it to enter."],
+      "fullLine": "drzwi",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A plural-only noun; Polish treats it as several leaves.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "home-and-rooms-window",
+      "summary": "Window",
+      "topics": ["home-and-rooms"],
+      "tags": ["neuter"],
+      "prompt": [{ "type": "text", "text": "Window" }],
+      "answer": [
+        { "type": "text", "text": "okno" },
+        { "type": "text", "text": "window", "role": "translation" },
+        { "type": "text", "text": "OHK-noh", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["okno"], "judge": "loose" },
+      "hints": ["It lets light into a room."],
+      "fullLine": "okno",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A neuter noun; you open it for fresh air.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "home-and-rooms-table",
+      "summary": "Table",
+      "topics": ["home-and-rooms"],
+      "tags": ["masculine"],
+      "prompt": [{ "type": "text", "text": "Table" }],
+      "answer": [
+        { "type": "text", "text": "stół" },
+        { "type": "text", "text": "table", "role": "translation" },
+        { "type": "text", "text": "stoow", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["stół"], "judge": "loose" },
+      "hints": ["It usually stands with chairs around it."],
+      "fullLine": "stół",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun for a piece of furniture you eat at.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "home-and-rooms-chair",
+      "summary": "Chair",
+      "topics": ["home-and-rooms"],
+      "tags": ["neuter"],
+      "prompt": [{ "type": "text", "text": "Chair" }],
+      "answer": [
+        { "type": "text", "text": "krzesło" },
+        { "type": "text", "text": "chair", "role": "translation" },
+        { "type": "text", "text": "KSHEH-swoh", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["krzesło"], "judge": "loose" },
+      "hints": ["You pull it out before sitting down."],
+      "fullLine": "krzesło",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A neuter noun for a seat with a back.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "home-and-rooms-bed",
+      "summary": "Bed",
+      "topics": ["home-and-rooms"],
+      "tags": ["neuter"],
+      "prompt": [{ "type": "text", "text": "Bed" }],
+      "answer": [
+        { "type": "text", "text": "łóżko" },
+        { "type": "text", "text": "bed", "role": "translation" },
+        { "type": "text", "text": "WOOZH-koh", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["łóżko"], "judge": "loose" },
+      "hints": ["It has a mattress, a pillow and a duvet."],
+      "fullLine": "łóżko",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A neuter noun for the furniture you sleep on.",
+          "lang": "en"
+        }
+      ]
+    }
+  ]
+}

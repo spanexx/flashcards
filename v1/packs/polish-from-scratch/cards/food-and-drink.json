@@ -1,0 +1,224 @@
+{
+  "cards": [
+    {
+      "key": "food-and-drink-water",
+      "summary": "Water",
+      "topics": ["food-and-drink"],
+      "tags": ["feminine"],
+      "prompt": [{ "type": "text", "text": "Water (a drink)" }],
+      "answer": [
+        { "type": "text", "text": "woda" },
+        { "type": "text", "text": "water", "role": "translation" },
+        { "type": "text", "text": "VOH-dah", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["woda"], "judge": "loose" },
+      "hints": ["It is what you ask for when the glass is empty."],
+      "fullLine": "woda",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun; you will see it on bottles and menus.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "food-and-drink-bread",
+      "summary": "Bread",
+      "topics": ["food-and-drink"],
+      "tags": ["masculine"],
+      "prompt": [{ "type": "text", "text": "Bread" }],
+      "answer": [
+        { "type": "text", "text": "chleb" },
+        { "type": "text", "text": "bread", "role": "translation" },
+        { "type": "text", "text": "hlep", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["chleb"], "judge": "loose" },
+      "hints": ["Poles buy it by the loaf, not by the slice."],
+      "fullLine": "chleb",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun found in every bakery and on every table.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "food-and-drink-milk",
+      "summary": "Milk",
+      "topics": ["food-and-drink"],
+      "tags": ["neuter"],
+      "prompt": [{ "type": "text", "text": "Milk" }],
+      "answer": [
+        { "type": "text", "text": "mleko" },
+        { "type": "text", "text": "milk", "role": "translation" },
+        { "type": "text", "text": "MLEH-koh", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["mleko"], "judge": "loose" },
+      "hints": ["It comes in cartons beside the butter."],
+      "fullLine": "mleko",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A neuter noun; it ends like many everyday neuter words.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "food-and-drink-coffee",
+      "summary": "Coffee",
+      "topics": ["food-and-drink"],
+      "tags": ["feminine"],
+      "prompt": [{ "type": "text", "text": "Coffee" }],
+      "answer": [
+        { "type": "text", "text": "kawa" },
+        { "type": "text", "text": "coffee", "role": "translation" },
+        { "type": "text", "text": "KAH-vah", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["kawa"], "judge": "loose" },
+      "hints": ["You can ask for it black or with milk."],
+      "fullLine": "kawa",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun; ordering it is a daily ritual for many.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "food-and-drink-tea",
+      "summary": "Tea",
+      "topics": ["food-and-drink"],
+      "tags": ["feminine"],
+      "prompt": [{ "type": "text", "text": "Tea" }],
+      "answer": [
+        { "type": "text", "text": "herbata" },
+        { "type": "text", "text": "tea", "role": "translation" },
+        { "type": "text", "text": "her-BAH-tah", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["herbata"], "judge": "loose" },
+      "hints": ["Poles often drink it hot with lemon."],
+      "fullLine": "herbata",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun whose name still mentions an herb.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "food-and-drink-apple",
+      "summary": "Apple",
+      "topics": ["food-and-drink"],
+      "tags": ["neuter"],
+      "prompt": [{ "type": "text", "text": "Apple" }],
+      "answer": [
+        { "type": "text", "text": "jabłko" },
+        { "type": "text", "text": "apple", "role": "translation" },
+        { "type": "text", "text": "YAHP-koh", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["jabłko"], "judge": "loose" },
+      "hints": ["It grows on a tree and is often eaten raw."],
+      "fullLine": "jabłko",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A neuter noun and the classic fruit in Polish orchards.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "food-and-drink-cheese",
+      "summary": "Cheese",
+      "topics": ["food-and-drink"],
+      "tags": ["masculine"],
+      "prompt": [{ "type": "text", "text": "Cheese" }],
+      "answer": [
+        { "type": "text", "text": "ser" },
+        { "type": "text", "text": "cheese", "role": "translation" },
+        { "type": "text", "text": "ser", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["ser"], "judge": "loose" },
+      "hints": ["It is a short word that ends in a consonant."],
+      "fullLine": "ser",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun for a dairy food, often sliced on bread.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "food-and-drink-meat",
+      "summary": "Meat",
+      "topics": ["food-and-drink"],
+      "tags": ["neuter"],
+      "prompt": [{ "type": "text", "text": "Meat" }],
+      "answer": [
+        { "type": "text", "text": "mięso" },
+        { "type": "text", "text": "meat", "role": "translation" },
+        { "type": "text", "text": "MYEN-soh", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["mięso"], "judge": "loose" },
+      "hints": ["You will see it in the phrase for cold cuts."],
+      "fullLine": "mięso",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A neuter noun for food from animals, sold at a butcher's.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "food-and-drink-soup",
+      "summary": "Soup",
+      "topics": ["food-and-drink"],
+      "tags": ["feminine"],
+      "prompt": [{ "type": "text", "text": "Soup" }],
+      "answer": [
+        { "type": "text", "text": "zupa" },
+        { "type": "text", "text": "soup", "role": "translation" },
+        { "type": "text", "text": "ZOO-pah", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["zupa"], "judge": "loose" },
+      "hints": ["It is eaten with a spoon from a bowl."],
+      "fullLine": "zupa",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun; a hot first course in a Polish dinner.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "food-and-drink-egg",
+      "summary": "Egg",
+      "topics": ["food-and-drink"],
+      "tags": ["neuter"],
+      "prompt": [{ "type": "text", "text": "Egg" }],
+      "answer": [
+        { "type": "text", "text": "jajko" },
+        { "type": "text", "text": "egg", "role": "translation" },
+        { "type": "text", "text": "YAY-koh", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["jajko"], "judge": "loose" },
+      "hints": ["It comes boiled, fried or scrambled."],
+      "fullLine": "jajko",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A neuter noun, essential at Easter and at breakfast.",
+          "lang": "en"
+        }
+      ]
+    }
+  ]
+}

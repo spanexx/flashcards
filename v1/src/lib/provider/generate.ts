@@ -9,10 +9,13 @@
 // 2026-10-22 opencode: a line may ask for cloze, type or hear_type, and a batch
 // that ignores the learner's requested style is refused whole.
 // [pack: creation-control]
+// 2026-10-25 opencode: a generated line may carry an optional teaching layer;
+// the same schema that guards stored cards checks it. [pack: teaching-layers]
 
 import { z } from "zod";
 import type { Card, CardPart, CardSource } from "@/lib/shared/types";
 import { buildCard, deckCardId, generatedCardId } from "@/lib/core/card";
+import { teachingPartSchema } from "@/lib/core/schema";
 import type { PackRecord } from "@/lib/packs/types";
 import { extractJson } from "@/lib/provider/client";
 import {
@@ -30,6 +33,7 @@ export const generatedLineSchema = z.object({
   topics: z.array(z.string()).optional(),
   tags: z.array(z.string()).optional(),
   summary: z.string().optional(),
+  teaching: teachingPartSchema.array().min(1).optional(),
 });
 
 export const generatedLinesSchema = z.object({
@@ -191,6 +195,7 @@ function sourceFromLine(
     answer: answerParts,
     answerDef: cardParts.answerDef,
     fullLine: line.fullLine,
+    ...(line.teaching && line.teaching.length > 0 ? { teaching: line.teaching } : {}),
   };
 }
 
@@ -245,6 +250,7 @@ function bundleCardFromLine(
     answerDef: source.answerDef,
     hints: source.hints,
     fullLine: source.fullLine,
+    teaching: source.teaching,
   };
 }
 
@@ -305,7 +311,7 @@ export function generatedPackBundle(
         ...(sourceLanguage ? { sourceLanguage } : {}),
         ...(studyInstruction ? { studyInstruction } : {}),
       },
-      decks: parsed.data.decks,
+      decks: parsed.data.decks.map((deck) => ({ ...deck, level: "intermediate" as const })),
       cards,
     },
   };
@@ -328,7 +334,10 @@ export function generatedDeckBundle(
       return { ok: false, message: refusalMessage(error) };
     }
   }
-  return { ok: true, bundle: { decks: [parsed.data.deck], cards } };
+  return {
+    ok: true,
+    bundle: { decks: [{ ...parsed.data.deck, level: "intermediate" as const }], cards },
+  };
 }
 
 /** Read a generated cards reply into a cards fragment for the chosen deck. */

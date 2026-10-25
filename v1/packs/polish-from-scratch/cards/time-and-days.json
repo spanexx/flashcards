@@ -1,0 +1,224 @@
+{
+  "cards": [
+    {
+      "key": "time-and-days-monday",
+      "summary": "Monday",
+      "topics": ["time-and-days"],
+      "tags": ["weekday", "masculine"],
+      "prompt": [{ "type": "text", "text": "Monday" }],
+      "answer": [
+        { "type": "text", "text": "poniedziałek" },
+        { "type": "text", "text": "Monday", "role": "translation" },
+        { "type": "text", "text": "poh-nyeh-JAH-wek", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["poniedziałek"], "judge": "loose" },
+      "hints": ["It is the first working day of the week."],
+      "fullLine": "poniedziałek",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun; Polish weekdays are not capitalised.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "time-and-days-tuesday",
+      "summary": "Tuesday",
+      "topics": ["time-and-days"],
+      "tags": ["weekday", "masculine"],
+      "prompt": [{ "type": "text", "text": "Tuesday" }],
+      "answer": [
+        { "type": "text", "text": "wtorek" },
+        { "type": "text", "text": "Tuesday", "role": "translation" },
+        { "type": "text", "text": "VTOH-rek", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["wtorek"], "judge": "loose" },
+      "hints": ["It comes right after the start of the working week."],
+      "fullLine": "wtorek",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun, the second working day in Poland.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "time-and-days-wednesday",
+      "summary": "Wednesday",
+      "topics": ["time-and-days"],
+      "tags": ["weekday", "feminine"],
+      "prompt": [{ "type": "text", "text": "Wednesday" }],
+      "answer": [
+        { "type": "text", "text": "środa" },
+        { "type": "text", "text": "Wednesday", "role": "translation" },
+        { "type": "text", "text": "SHROH-dah", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["środa"], "judge": "loose" },
+      "hints": ["It sits in the middle of the working week."],
+      "fullLine": "środa",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun; its name is linked to the word for 'middle'.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "time-and-days-thursday",
+      "summary": "Thursday",
+      "topics": ["time-and-days"],
+      "tags": ["weekday", "masculine"],
+      "prompt": [{ "type": "text", "text": "Thursday" }],
+      "answer": [
+        { "type": "text", "text": "czwartek" },
+        { "type": "text", "text": "Thursday", "role": "translation" },
+        { "type": "text", "text": "CHVAHR-tek", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["czwartek"], "judge": "loose" },
+      "hints": ["It is the day before Friday."],
+      "fullLine": "czwartek",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun whose name is built from the number four.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "time-and-days-friday",
+      "summary": "Friday",
+      "topics": ["time-and-days"],
+      "tags": ["weekday", "masculine"],
+      "prompt": [{ "type": "text", "text": "Friday" }],
+      "answer": [
+        { "type": "text", "text": "piątek" },
+        { "type": "text", "text": "Friday", "role": "translation" },
+        { "type": "text", "text": "PYON-tek", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["piątek"], "judge": "loose" },
+      "hints": ["It is the last working day for many people."],
+      "fullLine": "piątek",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun whose name is built from the number five.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "time-and-days-saturday",
+      "summary": "Saturday",
+      "topics": ["time-and-days"],
+      "tags": ["weekday", "feminine"],
+      "prompt": [{ "type": "text", "text": "Saturday" }],
+      "answer": [
+        { "type": "text", "text": "sobota" },
+        { "type": "text", "text": "Saturday", "role": "translation" },
+        { "type": "text", "text": "soh-BOH-tah", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["sobota"], "judge": "loose" },
+      "hints": ["Shops are often busy on this day."],
+      "fullLine": "sobota",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun, the first day of the weekend.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "time-and-days-sunday",
+      "summary": "Sunday",
+      "topics": ["time-and-days"],
+      "tags": ["weekday", "feminine"],
+      "prompt": [{ "type": "text", "text": "Sunday" }],
+      "answer": [
+        { "type": "text", "text": "niedziela" },
+        { "type": "text", "text": "Sunday", "role": "translation" },
+        { "type": "text", "text": "nyeh-JEH-lah", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["niedziela"], "judge": "loose" },
+      "hints": ["It is traditionally a day of rest."],
+      "fullLine": "niedziela",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun, the quiet day that closes the weekend.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "time-and-days-day",
+      "summary": "Day",
+      "topics": ["time-and-days"],
+      "tags": ["masculine"],
+      "prompt": [{ "type": "text", "text": "Day" }],
+      "answer": [
+        { "type": "text", "text": "dzień" },
+        { "type": "text", "text": "day", "role": "translation" },
+        { "type": "text", "text": "jen", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["dzień"], "judge": "loose" },
+      "hints": ["It is the unit between morning and night."],
+      "fullLine": "dzień",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun, short and very common in dates.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "time-and-days-week",
+      "summary": "Week",
+      "topics": ["time-and-days"],
+      "tags": ["masculine"],
+      "prompt": [{ "type": "text", "text": "Week" }],
+      "answer": [
+        { "type": "text", "text": "tydzień" },
+        { "type": "text", "text": "week", "role": "translation" },
+        { "type": "text", "text": "TIH-jen", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["tydzień"], "judge": "loose" },
+      "hints": ["It is the unit a calendar shows as one row of seven."],
+      "fullLine": "tydzień",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun for seven days taken together.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "time-and-days-year",
+      "summary": "Year",
+      "topics": ["time-and-days"],
+      "tags": ["masculine"],
+      "prompt": [{ "type": "text", "text": "Year" }],
+      "answer": [
+        { "type": "text", "text": "rok" },
+        { "type": "text", "text": "year", "role": "translation" },
+        { "type": "text", "text": "rok", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["rok"], "judge": "loose" },
+      "hints": ["It is the unit that has twelve months."],
+      "fullLine": "rok",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun used in dates and ages.",
+          "lang": "en"
+        }
+      ]
+    }
+  ]
+}

@@ -122,12 +122,13 @@ describe("create flow simulation", () => {
     expect(duplicate).toContain("already here");
     line("Write pack -> one deck, zero cards; duplicate refused");
 
-    const extra = await localSend<{ deck: { id: string; name: string } }>(
+    const extra = await localSend<{ deck: { id: string; name: string; level: string } }>(
       "/api/packs/sim-create/decks",
       "POST",
       { name: "Second" },
     );
-    expect(extra.deck).toEqual({ id: "second", name: "Second" });
+    // A new deck follows the learner's current level, and a fresh store is beginner.
+    expect(extra.deck).toEqual({ id: "second", name: "Second", level: "beginner" });
     const written = await localSend<{ card: Card }>("/api/cards", "POST", {
       front: "To jest kot.",
       back: "This is a cat.",
@@ -179,7 +180,7 @@ describe("create flow simulation", () => {
     }>("/api/provider/generate", "POST", { requestId: deckPrompt.requestId });
     expect(generatedDeck.kind).toBe("deck");
     expect(generatedDeck.deckId).toBe("first-2");
-    expect(generatedDeck.pack.decks).toContainEqual({ id: "first-2", name: "First 2" });
+    expect(generatedDeck.pack.decks).toContainEqual({ id: "first-2", name: "First 2", level: "intermediate" });
 
     providerReply(JSON.stringify({ lines: [{ fullLine: "To jest dom.", target: "dom" }] }));
     const cardsPrompt = await localSend<{ requestId: string }>("/api/provider/prepare", "POST", {
@@ -252,7 +253,7 @@ describe("create flow simulation", () => {
     });
     expect(chatDeck.deckIds).toEqual(["first-3"]);
     const afterChatDeck = await readPack("sim-create", store);
-    expect(afterChatDeck?.decks).toContainEqual({ id: "first-3", name: "First 3" });
+    expect(afterChatDeck?.decks).toContainEqual({ id: "first-3", name: "First 3", level: "intermediate" });
     line("Chat prompt has no name field; Chat Pack/Deck collision auto-numbers");
 
     const cardsImport = await localSend<{ cardsAdded: number; deckIds: string[] }>("/api/packs/import", "POST", {

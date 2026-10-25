@@ -4,29 +4,31 @@
 // PACK: browser-app
 // 2026-10-20 opencode: created for the browser-owned build.
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { MemoryStore, setBrowserStore, type Store } from "@/lib/browser/store";
 import {
-  ensureSeeded,
+  buildBackup,
   exportBackup,
   exportPackBundle,
   importBundle,
+  parseBackup,
   parseBundle,
   restoreBackup,
   PACK_BUNDLE_SCHEMA,
 } from "@/lib/browser/bundle";
 import {
+  appendEvidence,
   readCards,
-  readMeta,
+  readEvidence,
   readPack,
   readPacks,
   readProviderKey,
   readSettings,
-  writeMeta,
-  writePack,
+  readTombstones,
   writeProviderKey,
-  type BrowserPack,
+  writeTombstone,
 } from "@/lib/browser/repository";
+import { putMedia, readAllMedia } from "@/lib/browser/media";
 
 const now = "2026-10-20T10:00:00.000Z";
 
@@ -53,16 +55,24 @@ function bundle(version = "1.0.0", extra = false, name = "starter") {
   });
 }
 
-function deckFragment(decks: Array<{ id: string; name: string }>, cards: unknown[] = []): string {
+function teachingBundle(version: string, teaching: unknown[], name = "starter"): string {
+  return JSON.stringify({
+    schema: PACK_BUNDLE_SCHEMA,
+    pack: { name, version, language: "pl" },
+    decks: [{ id: "basics", name: "Basics" }],
+    cards: [{ ...source("Piję kawę"), deckId: "basics", teaching }],
+  });
+}
+
+function deckFragment(
+  decks: Array<{ id: string; name: string; level?: "beginner" | "intermediate" | "advanced" }>,
+  cards: unknown[] = [],
+): string {
   return JSON.stringify({ decks, cards });
 }
 
 function cardsFragment(cards: unknown[]): string {
   return JSON.stringify({ cards });
-}
-
-function packRecord(name = "starter", version = "1.0.0", decks = [{ id: "basics", name: "Basics" }]): BrowserPack {
-  return { id: name, name, version, decks, prompts: null, createdAt: now, updatedAt: now };
 }
 
 let store: Store;
@@ -94,7 +104,7 @@ describe("importBundle", () => {
     expect(result.cardsAdded).toBe(1);
     expect(result.decksAdded).toBe(1);
     const pack = await readPack("starter", store);
-    expect(pack?.decks).toEqual([{ id: "basics", name: "Basics" }]);
+    expect(pack?.decks).toEqual([{ id: "basics", name: "Basics", level: "intermediate" }]);
     const cards = await readCards(store);
     expect(cards[0].deckId).toBe("basics");
     expect(cards[0].topics).toEqual(["Basics"]);
@@ -154,7 +164,7 @@ describe("importBundle", () => {
     expect(result.decksAdded).toBe(1);
     expect(result.deckIds).toEqual(["cases"]);
     const pack = await readPack("starter", store);
-    expect(pack?.decks).toContainEqual({ id: "cases", name: "Cases" });
+    expect(pack?.decks).toContainEqual({ id: "cases", name: "Cases", level: "intermediate" });
     const card = (await readCards(store)).find((entry) => entry.summary === "Nowa karta");
     expect(card?.deckId).toBe("cases");
     expect(card?.topics).toEqual(["Cases"]);
@@ -216,7 +226,7 @@ describe("importBundle", () => {
     expect(result.ok).toBe(true);
     if (result.ok) expect(result.deckIds).toEqual(["basics-2"]);
     const pack = await readPack("starter", store);
-    expect(pack?.decks).toContainEqual({ id: "basics-2", name: "Basics 2" });
+    expect(pack?.decks).toContainEqual({ id: "basics-2", name: "Basics 2", level: "intermediate" });
   });
 
   it("refuses a duplicate deck id when names are strict", async () => {
@@ -253,7 +263,7 @@ describe("importBundle", () => {
 
     expect(result.ok).toBe(true);
     const pack = await readPack("starter", store);
-    expect(pack?.decks).toEqual([{ id: "basics", name: "Basics" }]);
+    expect(pack?.decks).toEqual([{ id: "basics", name: "Basics", level: "intermediate" }]);
     expect(pack?.description).toBe("New words");
   });
 
@@ -313,6 +323,151 @@ describe("importBundle", () => {
     });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.issues[0].field).toBe("deckId");
+  });
+});
+
+describe("pack updates and the teaching layer", () => {
+  const layer = [{ type: "text" as const, text: "Read it slowly." }];
+
+  it("updates the layer in place when the sides are unchanged", async () => {
+    await importBundle(bundle("1.0.0"), { kind: "pack" });
+    const before = (await readCards(store))[0];
+    await appendEvidence(
+      [
+        {
+          id: "row-1",
+          cardId: before.id,
+          attemptId: "a",
+          region: null,
+          outcome: "got_it",
+          timeMs: 900,
+          seenBefore: 0,
+          at: now,
+          kind: "answer",
+          helpSeen: true,
+        },
+      ],
+      store,
+    );
+
+    const result = await importBundle(teachingBundle("1.1.0", layer), { kind: "pack" });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.cardsAdded).toBe(0);
+      expect(result.cardsUpdated).toBe(1);
+      expect(result.cardsRetired).toBe(0);
+      expect(result.duplicates).toBe(1);
+    }
+
+    const after = (await readCards(store))[0];
+    expect(after.id).toBe(before.id);
+    expect(after.createdAt).toBe(before.createdAt);
+    expect(after.teaching).toEqual(layer);
+    expect(after.origin).toMatchObject({ kind: "pack", packVersion: "1.1.0" });
+    expect(await readEvidence(store)).toHaveLength(1);
+  });
+
+  it("retires a pack card whose sides changed and adds the new one", async () => {
+    await importBundle(bundle("1.0.0"), { kind: "pack" });
+    const before = (await readCards(store))[0];
+    await appendEvidence(
+      [
+        {
+          id: "row-1",
+          cardId: before.id,
+          attemptId: "a",
+          region: null,
+          outcome: "no",
+          timeMs: 900,
+          seenBefore: 0,
+          at: now,
+          kind: "answer",
+        },
+      ],
+      store,
+    );
+
+    const changed = {
+      ...source("Piję mleko"),
+      prompt: [{ type: "text", text: "Piję " }, { type: "blank", id: "b1" }, { type: "text", text: " mleko." }],
+      answer: [{ type: "text", text: "Piję mleko." }],
+      answerDef: { mode: "cloze", blanks: [{ id: "b1", expected: ["mleko"] }] },
+      fullLine: "Piję mleko.",
+      deckId: "basics",
+      teaching: layer,
+    };
+    const result = await importBundle(
+      JSON.stringify({
+        schema: PACK_BUNDLE_SCHEMA,
+        pack: { name: "starter", version: "1.1.0", language: "pl" },
+        decks: [{ id: "basics", name: "Basics" }],
+        cards: [changed],
+      }),
+      { kind: "pack" },
+    );
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.cardsAdded).toBe(1);
+      expect(result.cardsRetired).toBe(1);
+    }
+    const cards = await readCards(store);
+    expect(cards).toHaveLength(2);
+    expect(cards.find((card) => card.id === before.id)?.retired).toBe(true);
+    const fresh = cards.find((card) => card.id !== before.id);
+    expect(fresh?.teaching).toEqual(layer);
+    expect(await readEvidence(store)).toHaveLength(1);
+  });
+
+  it("never retires an imported card in a deck the file names", async () => {
+    await importBundle(bundle("1.0.0"), { kind: "pack" });
+    await importBundle(cardsFragment([{ ...source("Moja karta") }]), {
+      kind: "cards",
+      packName: "starter",
+      deckId: "basics",
+    });
+    const imported = (await readCards(store)).find((card) => card.summary === "Moja karta");
+
+    const result = await importBundle(teachingBundle("1.1.0", layer), { kind: "pack" });
+    expect(result.ok).toBe(true);
+    const after = (await readCards(store)).find((card) => card.id === imported?.id);
+    expect(after?.retired).toBeFalsy();
+  });
+
+  it("takes the bundle's level but keeps the installed deck name", async () => {
+    await importBundle(bundle("1.0.0"), { kind: "pack" });
+    const result = await importBundle(
+      JSON.stringify({
+        schema: PACK_BUNDLE_SCHEMA,
+        pack: { name: "starter", version: "1.1.0", language: "pl" },
+        decks: [{ id: "basics", name: "Renamed by the file", level: "advanced" }],
+        cards: [{ ...source("Piję kawę"), deckId: "basics" }],
+      }),
+      { kind: "pack" },
+    );
+    expect(result.ok).toBe(true);
+    expect((await readPack("starter", store))?.decks).toEqual([
+      { id: "basics", name: "Basics", level: "advanced" },
+    ]);
+  });
+
+  it("never retires anything on a deck or cards fragment", async () => {
+    await importBundle(bundle("1.0.0"), { kind: "pack" });
+    const deckResult = await importBundle(
+      deckFragment(
+        [{ id: "cases", name: "Cases", level: "beginner" }],
+        [{ ...source("Nowa"), deckId: "cases" }],
+      ),
+      { kind: "deck", packName: "starter" },
+    );
+    expect(deckResult.ok).toBe(true);
+    const cardsResult = await importBundle(cardsFragment([{ ...source("Kolejna") }]), {
+      kind: "cards",
+      packName: "starter",
+      deckId: "basics",
+    });
+    expect(cardsResult.ok).toBe(true);
+    expect((await readCards(store)).filter((card) => card.retired)).toHaveLength(0);
   });
 });
 
@@ -380,6 +535,65 @@ describe("export and backup", () => {
     expect(JSON.parse(text).schema).toBe("flashcards.backup/v1");
   });
 
+  it("carries layers, evidence flags, tombstones and only referenced media", async () => {
+    await importBundle(
+      teachingBundle("1.0.0", [
+        { type: "text", text: "Read it." },
+        { type: "image", source: "local", src: "media-used", alt: "A cup" },
+      ]),
+      { kind: "pack" },
+    );
+    const card = (await readCards(store))[0];
+    await appendEvidence(
+      [
+        {
+          id: "row-1",
+          cardId: card.id,
+          attemptId: "a",
+          region: null,
+          outcome: "got_it",
+          timeMs: 900,
+          seenBefore: 0,
+          at: now,
+          kind: "answer",
+          helpSeen: true,
+          coldCheck: true,
+        },
+      ],
+      store,
+    );
+    await writeTombstone({ id: "pack-old", kind: "pack", at: now }, store);
+    await putMedia(
+      { id: "media-used", blob: new Blob(["used"]), mime: "image/png", kind: "image" },
+      store,
+    );
+    await putMedia(
+      { id: "media-orphan", blob: new Blob(["orphan"]), mime: "image/png", kind: "image" },
+      store,
+    );
+
+    const content = await buildBackup();
+    const parsed = parseBackup(content.json);
+    expect(parsed.ok).toBe(true);
+    if (parsed.ok) {
+      expect(parsed.backup.cards[0].teaching).toHaveLength(2);
+      expect(parsed.backup.evidence[0]).toMatchObject({ helpSeen: true, coldCheck: true });
+      expect(parsed.backup.tombstones).toEqual([{ id: "pack-old", kind: "pack", at: now }]);
+    }
+    expect(content.media.map((record) => record.id)).toEqual(["media-used"]);
+
+    const restored = await restoreBackup(content.json);
+    expect(restored.ok).toBe(true);
+    expect((await readCards(store))[0].teaching).toHaveLength(2);
+    expect((await readEvidence(store))[0]).toMatchObject({ helpSeen: true, coldCheck: true });
+    expect((await readTombstones(store)).map((row) => row.id)).toContain("pack-old");
+    // Media is never deleted during restore, even when no restored card wants it.
+    expect((await readAllMedia(store)).map((record) => record.id).sort()).toEqual([
+      "media-orphan",
+      "media-used",
+    ]);
+  });
+
   it("restores a backup and keeps the key that was already here", async () => {
     await importBundle(bundle(), { kind: "pack" });
     await writeProviderKey("secret", store);
@@ -418,44 +632,5 @@ describe("export and backup", () => {
     const result = await restoreBackup(text);
     expect(result.ok).toBe(true);
     expect(await readProviderKey(store)).toBe("");
-  });
-});
-
-describe("ensureSeeded", () => {
-  it("fetches the starter once and remembers it", async () => {
-    const fetchMock = vi.fn(async () =>
-      new Response(bundle(), { status: 200, headers: { "content-type": "application/json" } }),
-    );
-    vi.stubGlobal("fetch", fetchMock);
-
-    await ensureSeeded();
-    expect(await readMeta("seeded", store)).toBe("yes");
-    expect(await readCards(store)).toHaveLength(1);
-
-    await ensureSeeded();
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-  });
-
-  it("does not fetch when the library already has a pack", async () => {
-    await writePack(packRecord(), store);
-    const fetchMock = vi.fn();
-    vi.stubGlobal("fetch", fetchMock);
-    await ensureSeeded();
-    expect(fetchMock).not.toHaveBeenCalled();
-    expect(await readMeta("seeded", store)).toBe("yes");
-  });
-
-  it("does not fetch after a previous seed marker", async () => {
-    await writeMeta("seeded", "yes", store);
-    const fetchMock = vi.fn();
-    vi.stubGlobal("fetch", fetchMock);
-    await ensureSeeded();
-    expect(fetchMock).not.toHaveBeenCalled();
-  });
-
-  it("silently survives a missing seed asset", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => new Response("", { status: 404 })));
-    await ensureSeeded();
-    expect(await readMeta("seeded", store)).toBeNull();
   });
 });

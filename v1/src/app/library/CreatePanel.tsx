@@ -11,7 +11,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { apiGet, apiSend } from "@/lib/client/api";
 import type { JobView } from "@/lib/browser/jobs";
-import type { PackStatus, ProviderStatus } from "@/lib/shared/types";
+import type { PackStatus, ProviderStatus, StudyLevel } from "@/lib/shared/types";
 import {
   defaultCreationBrief,
   withBriefOnPackText,
@@ -67,13 +67,15 @@ function InheritedPackFacts({ target, pack }: { target: "deck" | "cards"; pack: 
 interface CreatePanelProps {
   packs: PackStatus[];
   provider: ProviderStatus | null;
+  /** The learner's global level, the starting level for a new deck. */
+  level: StudyLevel;
   seed: CreateSeed | null;
   onCreated: (result: CreateResult, notice: string) => void;
   onError: (message: string | null) => void;
   onNotice: (message: string | null) => void;
 }
 
-export default function CreatePanel({ packs, provider, seed, onCreated, onError, onNotice }: CreatePanelProps) {
+export default function CreatePanel({ packs, provider, level, seed, onCreated, onError, onNotice }: CreatePanelProps) {
   const [target, setTarget] = useState<CreateTarget>(seed?.target ?? "pack");
   const [method, setMethod] = useState<CreateMethod>(seed?.method ?? "write");
   const [packChoice, setPackChoice] = useState(seed?.packName ?? "");
@@ -87,6 +89,7 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
     studyInstruction: "",
   });
   const [deckName, setDeckName] = useState("");
+  const [deckLevel, setDeckLevel] = useState<StudyLevel>(level);
   const [cardDraft, setCardDraft] = useState({
     front: "",
     back: "",
@@ -285,7 +288,7 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
       const data = await apiSend<{ pack: { name: string }; deck: { id: string; name: string } | null }>(
         `/api/packs/${encodeURIComponent(packName)}/decks`,
         "POST",
-        { name: deckName },
+        { name: deckName, level: deckLevel },
       );
       if (!data.deck) throw new Error("The deck was not returned after it was saved.");
       setDeckName("");
@@ -694,6 +697,23 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
                   placeholder="Everyday verbs"
                 />
               </label>
+              <label className="field-label">
+                How this deck teaches
+                <span className="select-wrap">
+                  <select
+                    className="field"
+                    value={deckLevel}
+                    onChange={(event) => setDeckLevel(event.target.value as StudyLevel)}
+                  >
+                    <option value="beginner">Beginner: the layer is open</option>
+                    <option value="intermediate">Intermediate: the layer is folded</option>
+                    <option value="advanced">Advanced: the layer waits for the answer</option>
+                  </select>
+                </span>
+              </label>
+              <p className="muted" style={{ margin: 0 }}>
+                The level changes how the teaching layer is shown, never the cards.
+              </p>
               <p className="muted" style={{ margin: 0 }}>
                 The deck can start empty. Cards come later through Create → Cards.
               </p>

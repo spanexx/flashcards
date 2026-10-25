@@ -123,6 +123,45 @@ if (manifest) {
   check(maskable, "manifest needs a maskable icon");
 }
 
+const seedIndexPath = join(output, "packs", "index.json");
+let seedIndex = null;
+try {
+  seedIndex = JSON.parse(await readFile(seedIndexPath, "utf8"));
+} catch (problem) {
+  fail(`packs/index.json is not valid JSON: ${problem instanceof Error ? problem.message : problem}`);
+}
+
+if (seedIndex) {
+  check(seedIndex.schema === "flashcards.pack-index/v1", "packs/index.json has the wrong schema");
+  check(Array.isArray(seedIndex.packs), "packs/index.json has no packs list");
+  for (const entry of seedIndex.packs ?? []) {
+    if (
+      !entry ||
+      typeof entry.name !== "string" ||
+      typeof entry.version !== "string" ||
+      typeof entry.file !== "string" ||
+      !entry.file.startsWith("/packs/") ||
+      entry.file.split("/").includes("..")
+    ) {
+      fail("packs/index.json has an invalid entry");
+      continue;
+    }
+    const packFile = entry.file.replace(/^\/+/, "");
+    if (!files.includes(packFile)) {
+      fail(`packs/index.json points at a missing file: ${entry.file}`);
+      continue;
+    }
+    try {
+      const bundle = JSON.parse(await readFile(join(output, packFile), "utf8"));
+      check(bundle.schema === "flashcards.pack/v1", `${packFile} has the wrong schema`);
+      check(bundle.pack?.name === entry.name, `${packFile} pack name does not match the manifest`);
+      check(String(bundle.pack?.version) === entry.version, `${packFile} version does not match the manifest`);
+    } catch (problem) {
+      fail(`${packFile} is not valid JSON: ${problem instanceof Error ? problem.message : problem}`);
+    }
+  }
+}
+
 const htmlFiles = files.filter((file) => file.endsWith(".html"));
 for (const file of htmlFiles) {
   const html = await readFile(join(output, file), "utf8");

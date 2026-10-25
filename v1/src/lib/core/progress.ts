@@ -5,7 +5,7 @@
 // 2026-10-19 opencode: created for the v1 prototype [pack: v1-prototype]
 
 import type { Card, EvidenceRow, ProgressCardItem, ProgressView, TopicItem } from "@/lib/shared/types";
-import { attemptsByCard, type AttemptSummary } from "@/lib/core/evidence";
+import { attemptsByCard, realAttempts, type AttemptSummary } from "@/lib/core/evidence";
 import { humanizeTopic } from "@/lib/core/algorithm/default";
 
 /** How many named topics to show before the rest folds away. */
@@ -34,14 +34,14 @@ function isFaster(attempts: AttemptSummary[]): boolean {
   return false;
 }
 
-/** Read the latest attempt outcome per card for one topic. */
+/** Read the latest real attempt outcome per card for one topic. */
 function latestOutcomes(
   cardIds: string[],
   attempts: Map<string, AttemptSummary[]>,
 ): AttemptSummary[] {
   const latest: AttemptSummary[] = [];
   for (const cardId of cardIds) {
-    const history = attempts.get(cardId) ?? [];
+    const history = realAttempts(attempts.get(cardId) ?? []);
     if (history.length > 0) latest.push(history[history.length - 1]);
   }
   return latest;
@@ -73,7 +73,7 @@ export function deriveWeakTopics(cards: Card[], rows: EvidenceRow[], limit = 5):
 
   for (const card of cards) {
     if (card.retired) continue;
-    const history = attempts.get(card.id) ?? [];
+    const history = realAttempts(attempts.get(card.id) ?? []);
     const last = history[history.length - 1];
     if (!last) continue;
     if (last.outcome !== "again" && last.outcome !== "no" && last.outcome !== "nearly") continue;
@@ -113,7 +113,8 @@ export function readProgress(
   const faster: ProgressCardItem[] = [];
 
   for (const card of active) {
-    const history = attempts.get(card.id) ?? [];
+    // WHY: A cold check must never become a progress claim on its own.
+    const history = realAttempts(attempts.get(card.id) ?? []);
     if (history.length === 0) continue;
     if (isImproved(history)) {
       improvements.push({
@@ -173,7 +174,7 @@ export function readProgress(
 
   const cardList = active
     .map((card) => {
-      const history = attempts.get(card.id) ?? [];
+      const history = realAttempts(attempts.get(card.id) ?? []);
       const last = history[history.length - 1];
       return {
         cardId: card.id,

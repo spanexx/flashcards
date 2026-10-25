@@ -1,0 +1,224 @@
+{
+  "cards": [
+    {
+      "key": "places-and-travel-city",
+      "summary": "City",
+      "topics": ["places-and-travel"],
+      "tags": ["neuter"],
+      "prompt": [{ "type": "text", "text": "City" }],
+      "answer": [
+        { "type": "text", "text": "miasto" },
+        { "type": "text", "text": "city", "role": "translation" },
+        { "type": "text", "text": "MYAHS-toh", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["miasto"], "judge": "loose" },
+      "hints": ["It is bigger than a village and has a mayor."],
+      "fullLine": "miasto",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A neuter noun for a large town with its own centre.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "places-and-travel-village",
+      "summary": "Village",
+      "topics": ["places-and-travel"],
+      "tags": ["feminine"],
+      "prompt": [{ "type": "text", "text": "Village" }],
+      "answer": [
+        { "type": "text", "text": "wieś" },
+        { "type": "text", "text": "village", "role": "translation" },
+        { "type": "text", "text": "vyesh", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["wieś"], "judge": "loose" },
+      "hints": ["It is smaller than a town and often surrounded by fields."],
+      "fullLine": "wieś",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun for a small settlement in the countryside.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "places-and-travel-street",
+      "summary": "Street",
+      "topics": ["places-and-travel"],
+      "tags": ["feminine"],
+      "prompt": [{ "type": "text", "text": "Street" }],
+      "answer": [
+        { "type": "text", "text": "ulica" },
+        { "type": "text", "text": "street", "role": "translation" },
+        { "type": "text", "text": "oo-LEE-tsah", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["ulica"], "judge": "loose" },
+      "hints": ["You will find its name on a blue sign at the corner."],
+      "fullLine": "ulica",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun used in addresses after the word for 'at'.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "places-and-travel-shop",
+      "summary": "Shop",
+      "topics": ["places-and-travel"],
+      "tags": ["masculine"],
+      "prompt": [{ "type": "text", "text": "Shop" }],
+      "answer": [
+        { "type": "text", "text": "sklep" },
+        { "type": "text", "text": "shop", "role": "translation" },
+        { "type": "text", "text": "sklep", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["sklep"], "judge": "loose" },
+      "hints": ["It is where you go for bread and milk."],
+      "fullLine": "sklep",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun for a place where you buy things.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "places-and-travel-station",
+      "summary": "Station",
+      "topics": ["places-and-travel"],
+      "tags": ["masculine"],
+      "prompt": [{ "type": "text", "text": "Station (railway)" }],
+      "answer": [
+        { "type": "text", "text": "dworzec" },
+        { "type": "text", "text": "station", "role": "translation" },
+        { "type": "text", "text": "DVOH-zhets", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["dworzec"], "judge": "loose" },
+      "hints": ["Trains and long-distance buses leave from it."],
+      "fullLine": "dworzec",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun for the main railway building in a town.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "places-and-travel-train",
+      "summary": "Train",
+      "topics": ["places-and-travel"],
+      "tags": ["masculine"],
+      "prompt": [{ "type": "text", "text": "Train" }],
+      "answer": [
+        { "type": "text", "text": "pociąg" },
+        { "type": "text", "text": "train", "role": "translation" },
+        { "type": "text", "text": "POH-chonk", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["pociąg"], "judge": "loose" },
+      "hints": ["You buy a ticket and find the platform for it."],
+      "fullLine": "pociąg",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun; it runs on rails between cities.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "places-and-travel-bus",
+      "summary": "Bus",
+      "topics": ["places-and-travel"],
+      "tags": ["masculine"],
+      "prompt": [{ "type": "text", "text": "Bus" }],
+      "answer": [
+        { "type": "text", "text": "autobus" },
+        { "type": "text", "text": "bus", "role": "translation" },
+        { "type": "text", "text": "ow-TOH-boos", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["autobus"], "judge": "loose" },
+      "hints": ["It stops at marked poles along the street."],
+      "fullLine": "autobus",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun for a large road vehicle with many seats.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "places-and-travel-ticket",
+      "summary": "Ticket",
+      "topics": ["places-and-travel"],
+      "tags": ["masculine"],
+      "prompt": [{ "type": "text", "text": "Ticket" }],
+      "answer": [
+        { "type": "text", "text": "bilet" },
+        { "type": "text", "text": "ticket", "role": "translation" },
+        { "type": "text", "text": "BEE-let", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["bilet"], "judge": "loose" },
+      "hints": ["You show it to an inspector on the tram."],
+      "fullLine": "bilet",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun for a small paper or phone pass.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "places-and-travel-airport",
+      "summary": "Airport",
+      "topics": ["places-and-travel"],
+      "tags": ["neuter"],
+      "prompt": [{ "type": "text", "text": "Airport" }],
+      "answer": [
+        { "type": "text", "text": "lotnisko" },
+        { "type": "text", "text": "airport", "role": "translation" },
+        { "type": "text", "text": "lot-NEES-koh", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["lotnisko"], "judge": "loose" },
+      "hints": ["Planes take off and land there."],
+      "fullLine": "lotnisko",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A neuter noun whose name shares a root with the word for 'flight'.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "places-and-travel-hotel",
+      "summary": "Hotel",
+      "topics": ["places-and-travel"],
+      "tags": ["masculine"],
+      "prompt": [{ "type": "text", "text": "Hotel" }],
+      "answer": [
+        { "type": "text", "text": "hotel" },
+        { "type": "text", "text": "hotel", "role": "translation" },
+        { "type": "text", "text": "HOH-tel", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["hotel"], "judge": "loose" },
+      "hints": ["You book a room there for the night."],
+      "fullLine": "hotel",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun for a building where travellers sleep.",
+          "lang": "en"
+        }
+      ]
+    }
+  ]
+}

@@ -1,8 +1,8 @@
 # Pack format
 
 A pack is one folder inside `packs/`. Everything is plain JSON, readable and
-writable by hand. Files: `pack.json` (required), `cards.json` (optional) and
-`prompts.json` (optional).
+writable by hand. Files: `pack.json` (required), `cards.json` or a `cards/`
+folder (optional) and `prompts.json` (optional).
 
 ```
 packs/
@@ -10,7 +10,19 @@ packs/
     pack.json
     cards.json
     prompts.json
+  browser-dev/
+    pack.json
+    cards/
+      console.json
+      network.json
+    images/
+      dom-tree.svg
 ```
+
+A large pack may keep one file per deck inside `cards/`; `make-seed.mjs` reads
+`cards.json` first, then every `.json` in `cards/` in name order. Files in
+`images/` are copied beside the bundle, so a teaching part can point at
+`/packs/<pack>/images/<file>` as a built-in source.
 
 ## pack.json
 
@@ -22,7 +34,8 @@ packs/
   "language": "pl",
   "coreRange": "*",
   "topics": ["cases", "aspect", "basics"],
-  "topicLabels": { "cases": "Cases", "aspect": "Verb aspect" }
+  "topicLabels": { "cases": "Cases", "aspect": "Verb aspect" },
+  "topicLevels": { "cases": "intermediate", "aspect": "advanced", "basics": "beginner" }
 }
 ```
 
@@ -32,6 +45,8 @@ packs/
   half-way.
 - `topics` — the allowed topic words for the pack's cards.
 - `topicLabels` — human words shown on screens and in plans.
+- `topicLevels` — how each deck presents help: `beginner`, `intermediate`
+  (the default when absent) or `advanced`.
 
 ## cards.json
 
@@ -57,7 +72,10 @@ packs/
 ```
 
 A card is one side (`prompt`) and one answer (`answer`), plus the rule the
-local judge follows (`answerDef`). Four answering surfaces exist:
+local judge follows (`answerDef`). An optional `teaching` layer helps before the
+answer without giving it away: up to three parts, each a `text` part, an
+`image` part (`builtin`, `web` or `local`) or a video part. Four answering
+surfaces exist:
 
 | `mode`      | What the learner does                          | `answerDef` fields              |
 | ----------- | ---------------------------------------------- | ------------------------------- |

@@ -1,0 +1,224 @@
+{
+  "cards": [
+    {
+      "key": "weather-and-seasons-weather",
+      "summary": "Weather",
+      "topics": ["weather-and-seasons"],
+      "tags": ["feminine"],
+      "prompt": [{ "type": "text", "text": "Weather" }],
+      "answer": [
+        { "type": "text", "text": "pogoda" },
+        { "type": "text", "text": "weather", "role": "translation" },
+        { "type": "text", "text": "poh-GOH-dah", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["pogoda"], "judge": "loose" },
+      "hints": ["You check it before leaving the house."],
+      "fullLine": "pogoda",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun; the word appears in every forecast.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "weather-and-seasons-sun",
+      "summary": "Sun",
+      "topics": ["weather-and-seasons"],
+      "tags": ["neuter"],
+      "prompt": [{ "type": "text", "text": "Sun" }],
+      "answer": [
+        { "type": "text", "text": "słońce" },
+        { "type": "text", "text": "sun", "role": "translation" },
+        { "type": "text", "text": "SWON-tseh", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["słońce"], "judge": "loose" },
+      "hints": ["It rises in the east and sets in the west."],
+      "fullLine": "słońce",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A neuter noun; it shines and gives warmth.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "weather-and-seasons-rain",
+      "summary": "Rain",
+      "topics": ["weather-and-seasons"],
+      "tags": ["masculine"],
+      "prompt": [{ "type": "text", "text": "Rain" }],
+      "answer": [
+        { "type": "text", "text": "deszcz" },
+        { "type": "text", "text": "rain", "role": "translation" },
+        { "type": "text", "text": "deshch", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["deszcz"], "judge": "loose" },
+      "hints": ["You need an umbrella for it."],
+      "fullLine": "deszcz",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun that falls from grey clouds.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "weather-and-seasons-snow",
+      "summary": "Snow",
+      "topics": ["weather-and-seasons"],
+      "tags": ["masculine"],
+      "prompt": [{ "type": "text", "text": "Snow" }],
+      "answer": [
+        { "type": "text", "text": "śnieg" },
+        { "type": "text", "text": "snow", "role": "translation" },
+        { "type": "text", "text": "shnyek", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["śnieg"], "judge": "loose" },
+      "hints": ["It covers the ground white when it is cold."],
+      "fullLine": "śnieg",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun; children love it in winter.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "weather-and-seasons-wind",
+      "summary": "Wind",
+      "topics": ["weather-and-seasons"],
+      "tags": ["masculine"],
+      "prompt": [{ "type": "text", "text": "Wind" }],
+      "answer": [
+        { "type": "text", "text": "wiatr" },
+        { "type": "text", "text": "wind", "role": "translation" },
+        { "type": "text", "text": "VYAHTR", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["wiatr"], "judge": "loose" },
+      "hints": ["It fills the sails of a boat."],
+      "fullLine": "wiatr",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun that moves the leaves and the clouds.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "weather-and-seasons-spring",
+      "summary": "Spring",
+      "topics": ["weather-and-seasons"],
+      "tags": ["feminine"],
+      "prompt": [{ "type": "text", "text": "Spring (the season)" }],
+      "answer": [
+        { "type": "text", "text": "wiosna" },
+        { "type": "text", "text": "spring", "role": "translation" },
+        { "type": "text", "text": "VYOHS-nah", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["wiosna"], "judge": "loose" },
+      "hints": ["It follows winter and comes before summer."],
+      "fullLine": "wiosna",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun; the season when flowers return.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "weather-and-seasons-summer",
+      "summary": "Summer",
+      "topics": ["weather-and-seasons"],
+      "tags": ["neuter"],
+      "prompt": [{ "type": "text", "text": "Summer" }],
+      "answer": [
+        { "type": "text", "text": "lato" },
+        { "type": "text", "text": "summer", "role": "translation" },
+        { "type": "text", "text": "LAH-toh", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["lato"], "judge": "loose" },
+      "hints": ["It is the season of holidays by the sea."],
+      "fullLine": "lato",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A neuter noun; the warmest season of the year.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "weather-and-seasons-autumn",
+      "summary": "Autumn",
+      "topics": ["weather-and-seasons"],
+      "tags": ["feminine"],
+      "prompt": [{ "type": "text", "text": "Autumn" }],
+      "answer": [
+        { "type": "text", "text": "jesień" },
+        { "type": "text", "text": "autumn", "role": "translation" },
+        { "type": "text", "text": "YESH-yen", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["jesień"], "judge": "loose" },
+      "hints": ["It comes between summer and winter."],
+      "fullLine": "jesień",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun; the season of falling leaves.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "weather-and-seasons-winter",
+      "summary": "Winter",
+      "topics": ["weather-and-seasons"],
+      "tags": ["feminine"],
+      "prompt": [{ "type": "text", "text": "Winter" }],
+      "answer": [
+        { "type": "text", "text": "zima" },
+        { "type": "text", "text": "winter", "role": "translation" },
+        { "type": "text", "text": "ZHEE-mah", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["zima"], "judge": "loose" },
+      "hints": ["It brings frost and short days."],
+      "fullLine": "zima",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun; the coldest season.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "weather-and-seasons-cloud",
+      "summary": "Cloud",
+      "topics": ["weather-and-seasons"],
+      "tags": ["feminine"],
+      "prompt": [{ "type": "text", "text": "Cloud" }],
+      "answer": [
+        { "type": "text", "text": "chmura" },
+        { "type": "text", "text": "cloud", "role": "translation" },
+        { "type": "text", "text": "KHMOO-rah", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["chmura"], "judge": "loose" },
+      "hints": ["It floats across the sky."],
+      "fullLine": "chmura",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun; it can bring rain or shade.",
+          "lang": "en"
+        }
+      ]
+    }
+  ]
+}

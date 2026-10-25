@@ -28,6 +28,16 @@ export interface AttemptSummary {
   seenBefore: number;
   outcome: Outcome;
   regions: ResolvedRow[];
+  /** The layer was visible before this attempt. */
+  helpSeen: boolean;
+  /** This attempt was the unaided repeat after a peek. */
+  coldCheck: boolean;
+}
+
+/** The two facts a new answer may carry. Old rows simply do not have them. */
+export interface AttemptFlags {
+  helpSeen?: boolean;
+  coldCheck?: boolean;
 }
 
 /** Group key: one correction answers the same attempt and region it disagrees with. */
@@ -43,6 +53,7 @@ export function makeAnswerRows(
   timeMs: number,
   seenBefore: number,
   at: string,
+  flags: AttemptFlags = {},
 ): EvidenceRow[] {
   return regions.map((region) => ({
     id: newId(),
@@ -54,6 +65,8 @@ export function makeAnswerRows(
     seenBefore,
     at,
     kind: "answer" as const,
+    helpSeen: flags.helpSeen === true,
+    coldCheck: flags.coldCheck === true,
   }));
 }
 
@@ -74,6 +87,10 @@ export function makeCorrectionRow(
     at,
     kind: "correction",
     supersedes: original.id,
+    // WHY: A correction answers the same attempt, so it must not lose the facts
+    // that attempt carried; otherwise fixing an outcome could hide a cold check.
+    helpSeen: original.helpSeen,
+    coldCheck: original.coldCheck,
   };
 }
 
@@ -133,6 +150,9 @@ export function groupAttempts(rows: EvidenceRow[], cardId?: string): AttemptSumm
       seenBefore: regions.reduce((most, row) => Math.max(most, row.seenBefore), 0),
       outcome: worstOutcome(regions.map((region) => region.outcome)),
       regions,
+      // A flag belongs to the whole attempt; every region row is written with it.
+      helpSeen: regions.some((row) => row.helpSeen === true),
+      coldCheck: regions.some((row) => row.coldCheck === true),
     });
   }
 
@@ -148,4 +168,12 @@ export function attemptsByCard(rows: EvidenceRow[]): Map<string, AttemptSummary[
     else map.set(attempt.cardId, [attempt]);
   }
   return map;
+}
+
+/**
+ * The attempts that count as learning. A cold check proves short-term recall,
+ * so progress and scheduling never read it as evidence.
+ */
+export function realAttempts(attempts: AttemptSummary[]): AttemptSummary[] {
+  return attempts.filter((attempt) => !attempt.coldCheck);
 }

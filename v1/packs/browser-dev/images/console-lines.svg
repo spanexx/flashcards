@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 240" role="img" aria-label="Console lines: a log, a warning and an error, each with its own colour">
+  <rect width="480" height="240" fill="#f8fafc"/>
+  <rect x="28" y="28" width="424" height="184" rx="8" fill="#0f172a"/>
+  <g font-family="monospace" font-size="13">
+    <text x="48" y="66" fill="#e2e8f0">&gt; console.log("ready")</text>
+    <text x="48" y="86" fill="#94a3b8">ready</text>
+    <text x="48" y="120" fill="#fde68a">&gt; console.warn("slow image")</text>
+    <text x="48" y="140" fill="#fde68a">slow image</text>
+    <text x="48" y="174" fill="#fca5a5">&gt; console.error("request failed")</text>
+    <text x="48" y="194" fill="#fca5a5">request failed</text>
+  </g>
+  <text x="240" y="232" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#64748b">colour separates a note, a warning and an error</text>
+</svg>

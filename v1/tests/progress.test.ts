@@ -75,6 +75,58 @@ describe("readProgress", () => {
     const view = readProgress([card], rows, {});
     expect(view.nextTopics[0].label).toBe("Past tense");
   });
+
+  it("never turns a cold check into an improvement or a faster read", () => {
+    const card = makeCard("card:a", { summary: "A" });
+    const rows = [
+      makeRow({ cardId: "card:a", attemptId: "a1", outcome: "no", at: "2026-10-01T10:00:00.000Z" }),
+      makeRow({
+        cardId: "card:a",
+        attemptId: "a2",
+        outcome: "got_it",
+        at: "2026-10-02T10:00:00.000Z",
+        helpSeen: true,
+        coldCheck: true,
+      }),
+    ];
+    const view = readProgress([card], rows, {});
+    expect(view.improvements).toHaveLength(0);
+    expect(view.faster).toHaveLength(0);
+    expect(view.cards[0].lastOutcome).toBe("no");
+    expect(view.cards[0].attempts).toBe(1);
+  });
+
+  it("keeps a cold quick answer out of the faster read", () => {
+    const card = makeCard("card:a", { summary: "A" });
+    const rows = [
+      makeRow({ cardId: "card:a", attemptId: "a1", outcome: "got_it", timeMs: 12000, at: "2026-10-01T10:00:00.000Z" }),
+      makeRow({
+        cardId: "card:a",
+        attemptId: "a2",
+        outcome: "got_it",
+        timeMs: 4000,
+        at: "2026-10-02T10:00:00.000Z",
+        coldCheck: true,
+      }),
+    ];
+    const view = readProgress([card], rows, {});
+    expect(view.faster).toHaveLength(0);
+  });
+
+  it("does not let a cold miss put a topic back on the next list", () => {
+    const card = makeCard("card:a", { summary: "A", topics: ["cases"] });
+    const rows = [
+      makeRow({ cardId: "card:a", attemptId: "a1", outcome: "got_it", at: "2026-10-01T10:00:00.000Z" }),
+      makeRow({
+        cardId: "card:a",
+        attemptId: "a2",
+        outcome: "no",
+        at: "2026-10-02T10:00:00.000Z",
+        coldCheck: true,
+      }),
+    ];
+    expect(readProgress([card], rows, {}).nextTopics).toHaveLength(0);
+  });
 });
 
 describe("deriveWeakTopics", () => {
@@ -116,5 +168,20 @@ describe("deriveWeakTopics", () => {
       }),
     );
     expect(deriveWeakTopics(cards, many, 3)).toHaveLength(3);
+  });
+
+  it("reads the last real answer, not a cold check", () => {
+    const card = makeCard("card:a", { summary: "A", topics: ["cases"] });
+    const rows = [
+      makeRow({ cardId: "card:a", attemptId: "a1", outcome: "no", at: "2026-10-01T10:00:00.000Z" }),
+      makeRow({
+        cardId: "card:a",
+        attemptId: "a2",
+        outcome: "got_it",
+        at: "2026-10-02T10:00:00.000Z",
+        coldCheck: true,
+      }),
+    ];
+    expect(deriveWeakTopics([card], rows)).toEqual(["cases"]);
   });
 });

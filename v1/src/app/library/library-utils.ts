@@ -5,7 +5,7 @@
 // PACK: library-create-flow
 // 2026-10-21 opencode: created during the panel split [pack: library-create-flow]
 
-import type { Card, PackStatus } from "@/lib/shared/types";
+import type { Card, PackStatus, StudyLevel } from "@/lib/shared/types";
 import type { CreationBrief } from "@/lib/shared/creation";
 import { normalizeLanguage } from "@/lib/shared/language";
 import { ApiError } from "@/lib/client/api";
@@ -71,9 +71,16 @@ export function readDeckValue(value: string): { packName: string; deckId: string
  * A pack's decks as a plain list. Older packs only carry topic ids, so those
  * stand in as decks; a pack that failed to load is left out of every picker.
  */
-export function packDecks(pack: PackStatus): Array<{ id: string; name: string }> {
+export function packDecks(
+  pack: PackStatus,
+): Array<{ id: string; name: string; level: StudyLevel }> {
   if (pack.decks && pack.decks.length > 0) return pack.decks;
-  return pack.topics.map((topic) => ({ id: topic, name: pack.topicLabels[topic] ?? topic }));
+  // A topic-only pack predates levels, and the app treats a missing level as intermediate.
+  return pack.topics.map((topic) => ({
+    id: topic,
+    name: pack.topicLabels[topic] ?? topic,
+    level: "intermediate" as const,
+  }));
 }
 
 /** Every real deck in every readable pack, tagged with its pack. */

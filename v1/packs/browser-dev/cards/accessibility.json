@@ -1,0 +1,124 @@
+{
+  "cards": [
+    {
+      "key": "a11y-visible-label",
+      "summary": "A field needs a visible label",
+      "topics": ["accessibility"],
+      "tags": ["forms"],
+      "prompt": [{ "type": "text", "text": "What gives a form field its accessible name?" }],
+      "answer": [{ "type": "text", "text": "a connected visible label" }],
+      "answerDef": { "mode": "picks", "options": ["a connected visible label", "placeholder text alone", "a bright border"], "correct": ["a connected visible label"] },
+      "hints": ["It should stay visible after the field is filled."],
+      "fullLine": "A connected visible label gives a form field its accessible name."
+    },
+    {
+      "key": "a11y-alt-text",
+      "summary": "Meaningful images need alt text",
+      "topics": ["accessibility"],
+      "tags": ["images"],
+      "prompt": [{ "type": "text", "text": "An image that carries meaning needs a useful " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " text." }],
+      "answer": [{ "type": "text", "text": "An image that carries meaning needs a useful alt text." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["alt", "alternative"] }] },
+      "hints": ["It sits on the image tag itself."],
+      "fullLine": "An image that carries meaning needs a useful alt text.",
+      "teaching": [{ "type": "text", "text": "Describe what the picture adds to the page, not every pixel.", "lang": "en" }]
+    },
+    {
+      "key": "a11y-contrast",
+      "summary": "Normal text needs 4.5 to 1",
+      "topics": ["accessibility"],
+      "tags": ["contrast"],
+      "prompt": [{ "type": "text", "text": "Which contrast ratio meets the WCAG AA level for normal text?" }],
+      "answer": [{ "type": "text", "text": "4.5:1" }],
+      "answerDef": { "mode": "picks", "options": ["4.5:1", "2:1", "1.5:1"], "correct": ["4.5:1"] },
+      "hints": ["The smallest passing value is a little under five to one."],
+      "fullLine": "Normal text meets WCAG AA at a contrast ratio of 4.5:1.",
+      "teaching": [{ "type": "text", "text": "Small text needs a stronger difference than large text.", "lang": "en" }]
+    },
+    {
+      "key": "a11y-tab-key",
+      "summary": "Tab moves through controls",
+      "topics": ["accessibility"],
+      "tags": ["keyboard"],
+      "prompt": [{ "type": "text", "text": "Keyboard users reach controls by pressing " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": "." }],
+      "answer": [{ "type": "text", "text": "Keyboard users reach controls by pressing Tab." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["Tab", "tab"] }] },
+      "hints": ["It is the key above Caps Lock."],
+      "fullLine": "Keyboard users reach controls by pressing Tab."
+    },
+    {
+      "key": "a11y-aria-label",
+      "summary": "aria-label adds an invisible name",
+      "topics": ["accessibility"],
+      "tags": ["aria"],
+      "prompt": [{ "type": "text", "text": "Which attribute adds a name when no visible label exists?" }],
+      "answer": [{ "type": "text", "text": "aria-label" }],
+      "answerDef": { "mode": "type", "expected": ["aria-label"], "judge": "loose" },
+      "hints": ["It belongs to the ARIA family."],
+      "fullLine": "aria-label adds a name when no visible label exists.",
+      "teaching": [{ "type": "text", "text": "It supplies a name that only assistive software reads.", "lang": "en" }]
+    },
+    {
+      "key": "a11y-aria-last-resort",
+      "summary": "Prefer native HTML over ARIA",
+      "topics": ["accessibility"],
+      "tags": ["aria"],
+      "prompt": [{ "type": "text", "text": "When should you reach for ARIA?" }],
+      "answer": [{ "type": "text", "text": "only when native HTML cannot express it" }],
+      "answerDef": { "mode": "picks", "options": ["only when native HTML cannot express it", "whenever a div is used", "to replace every label"], "correct": ["only when native HTML cannot express it"] },
+      "hints": ["A real button already does the job."],
+      "fullLine": "Reach for ARIA only when native HTML cannot express it."
+    },
+    {
+      "key": "a11y-focus-visible",
+      "summary": "Focus must stay visible",
+      "topics": ["accessibility"],
+      "tags": ["keyboard"],
+      "prompt": [{ "type": "text", "text": "A focus outline must be visible " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": "." }],
+      "answer": [{ "type": "text", "text": "A focus outline must be visible clearly." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["clearly", "plainly"] }] },
+      "hints": ["Removing it strands keyboard users."],
+      "fullLine": "A focus outline must be visible clearly.",
+      "teaching": [{ "type": "text", "text": "Never remove the focus outline without replacing it.", "lang": "en" }]
+    },
+    {
+      "key": "a11y-heading-order",
+      "summary": "Headings step down one level",
+      "topics": ["accessibility"],
+      "tags": ["headings"],
+      "prompt": [{ "type": "text", "text": "Which heading order is correct?" }],
+      "answer": [{ "type": "text", "text": "h1 then h2" }],
+      "answerDef": { "mode": "picks", "options": ["h1 then h2", "h2 then h1", "h1 then h4"], "correct": ["h1 then h2"] },
+      "hints": ["Do not skip a level just for size."],
+      "fullLine": "The correct heading order is h1 then h2."
+    },
+    {
+      "key": "a11y-tree",
+      "summary": "Screen readers walk a tree",
+      "topics": ["accessibility"],
+      "tags": ["screen-readers"],
+      "prompt": [{ "type": "text", "text": "Screen readers navigate by the accessibility " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " built from the DOM." }],
+      "answer": [{ "type": "text", "text": "Screen readers navigate by the accessibility tree built from the DOM." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["tree"] }] },
+      "hints": ["It branches from the page down to each control."],
+      "fullLine": "Screen readers navigate by the accessibility tree built from the DOM.",
+      "teaching": [
+        { "type": "text", "text": "Assistive software walks the page the same way the browser does.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/browser-dev/images/accessible-name.svg", "alt": "A text field joined by an arrow to its visible label, with the announced name written above" },
+        { "type": "video", "source": "youtube", "src": "e2nkq3h1P68", "search": "Learn Accessibility full a11y tutorial", "alt": "An introduction to building accessible interfaces" }
+      ]
+    },
+    {
+      "key": "a11y-div-click",
+      "summary": "A clickable div is not a button",
+      "topics": ["accessibility"],
+      "tags": ["keyboard"],
+      "prompt": [{ "type": "text", "text": "A container with a click handler has no keyboard access of its own. What is missing?" }],
+      "answer": [{ "type": "text", "text": "a role and a keyboard handler" }],
+      "answerDef": { "mode": "picks", "options": ["a role and a keyboard handler", "a border", "a title attribute"], "correct": ["a role and a keyboard handler"] },
+      "hints": ["A real button would bring both for free."],
+      "fullLine": "A clickable container is missing a role and a keyboard handler.",
+      "teaching": [{ "type": "text", "text": "A bare container has no keyboard behaviour of its own.", "lang": "en" }]
+    }
+  ]
+}

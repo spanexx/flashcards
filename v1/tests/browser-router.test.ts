@@ -103,7 +103,7 @@ describe("library reads and writes", () => {
       { name: "other", language: "pl", version: "1.0.0", deckName: "Basics", deckId: "basics" },
     );
     expect(made.pack.name).toBe("other");
-    expect(made.pack.decks).toEqual([{ id: "basics", name: "Basics" }]);
+    expect(made.pack.decks).toEqual([{ id: "basics", name: "Basics", level: "intermediate" }]);
 
     const created = await localSend<{ card: Card }>("/api/cards", "POST", {
       front: "Mam kota",
@@ -369,6 +369,29 @@ describe("plan, answer and progress", () => {
     expect(ended.ok).toBe(true);
   });
 
+  it("writes help and cold flags and copies them onto a correction", async () => {
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
+    const plan = await localGet<{ plan: Plan | null }>("/api/plan");
+    const card = plan.plan?.cards[0];
+    if (!card) throw new Error("no card planned");
+
+    const answered = await localSend<AnswerResult>("/api/answer", "POST", {
+      cardId: card.id,
+      answers: { b1: "kawę" },
+      timeMs: 900,
+      helpSeen: true,
+      coldCheck: true,
+    });
+    expect(answered.rows[0]).toMatchObject({ helpSeen: true, coldCheck: true });
+
+    const correction = await localSend<{ correction: { helpSeen: boolean; coldCheck: boolean } }>(
+      "/api/evidence/correction",
+      "POST",
+      { rowId: answered.rows[0].id, outcome: "no" },
+    );
+    expect(correction.correction).toMatchObject({ helpSeen: true, coldCheck: true });
+  });
+
   it("says there is nothing to study in an empty library", async () => {
     const plan = await localGet<{ plan: null; message: string }>("/api/plan");
     expect(plan.plan).toBeNull();
@@ -448,6 +471,79 @@ describe("plan, answer and progress", () => {
     const empty = await localGet<{ plan: null; message: string }>("/api/plan?pack=empty");
     expect(empty.plan).toBeNull();
     expect(empty.message).toContain("No cards in");
+  });
+});
+
+describe("teaching layers through the router", () => {
+  async function firstCard(): Promise<Card> {
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
+    const cards = await localGet<{ cards: Card[] }>("/api/cards");
+    const card = cards.cards.find((entry) => !entry.retired);
+    if (!card) throw new Error("no card imported");
+    return card;
+  }
+
+  it("saves a layer on the same card and takes it off again", async () => {
+    const card = await firstCard();
+    const teaching = [
+      { type: "text", text: "Kawa to napój." },
+      { type: "image", source: "web", src: "https://example.test/cup.png", alt: "A cup of coffee" },
+    ];
+    const saved = await localSend<{ card: Card }>(`/api/cards/${card.id}/teaching`, "PATCH", { teaching });
+    expect(saved.card.id).toBe(card.id);
+    expect(saved.card.teaching).toEqual(teaching);
+    expect(saved.card.retired).toBeUndefined();
+
+    const cards = await localGet<{ cards: Card[] }>("/api/cards");
+    expect(cards.cards).toHaveLength(1);
+    expect(cards.cards[0].teaching).toEqual(teaching);
+
+    const removed = await localSend<{ card: Card }>(`/api/cards/${card.id}/teaching`, "PATCH", { teaching: null });
+    expect(removed.card.teaching).toBeUndefined();
+    expect((await localGet<{ cards: Card[] }>("/api/cards")).cards[0].teaching).toBeUndefined();
+  });
+
+  it("refuses a layer the schema cannot trust and keeps the old one", async () => {
+    const card = await firstCard();
+    await localSend(`/api/cards/${card.id}/teaching`, "PATCH", {
+      teaching: [{ type: "text", text: "Keep me." }],
+    });
+    await expect(
+      localSend(`/api/cards/${card.id}/teaching`, "PATCH", {
+        teaching: [{ type: "image", source: "web", src: "https://example.test/cup.png" }],
+      }),
+    ).rejects.toThrow(/needs fixing/);
+    const cards = await localGet<{ cards: Card[] }>("/api/cards");
+    expect(cards.cards[0].teaching).toEqual([{ type: "text", text: "Keep me." }]);
+  });
+
+  it("copies the layer to the card a side edit makes", async () => {
+    const card = await firstCard();
+    const teaching = [{ type: "text", text: "Kawa to napój." }];
+    await localSend(`/api/cards/${card.id}/teaching`, "PATCH", { teaching });
+    const edited = await localSend<{ card: Card; retired: string }>(`/api/cards/${card.id}`, "PATCH", {
+      front: "Mam psa",
+      back: "I have a dog",
+    });
+    expect(edited.card.id).not.toBe(card.id);
+    expect(edited.card.teaching).toEqual(teaching);
+  });
+
+  it("starts a new deck at the learner's level unless the form chose one", async () => {
+    await firstCard();
+    await localSend("/api/settings", "PATCH", { level: "advanced" });
+    const followed = await localSend<{ deck: { level: string } }>("/api/packs/starter/decks", "POST", {
+      name: "Idioms",
+    });
+    expect(followed.deck.level).toBe("advanced");
+    const chosen = await localSend<{ deck: { level: string } }>("/api/packs/starter/decks", "POST", {
+      name: "Drills",
+      level: "beginner",
+    });
+    expect(chosen.deck.level).toBe("beginner");
+    await expect(
+      localSend("/api/packs/starter/decks", "POST", { name: "Broken", level: "expert" }),
+    ).rejects.toThrow(/level/);
   });
 });
 
@@ -588,7 +684,7 @@ describe("provider calls", () => {
     expect(generated.packName).toBe("starter-2");
     expect(generated.count).toBe(1);
     expect(generated.cards[0].origin.kind).toBe("generated");
-    expect(generated.pack.decks).toContainEqual({ id: "basics", name: "Basics" });
+    expect(generated.pack.decks).toContainEqual({ id: "basics", name: "Basics", level: "intermediate" });
   });
 
   it("generates one deck with a paired id and label suffix", async () => {
@@ -626,7 +722,7 @@ describe("provider calls", () => {
     expect(generated.packName).toBe("starter");
     expect(generated.deckId).toBe("basics-2");
     expect(generated.count).toBe(1);
-    expect(generated.pack.decks).toContainEqual({ id: "basics-2", name: "Basics 2" });
+    expect(generated.pack.decks).toContainEqual({ id: "basics-2", name: "Basics 2", level: "intermediate" });
   });
 
   it("reports a test failure when no provider is set up", async () => {

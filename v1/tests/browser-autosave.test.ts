@@ -1,10 +1,14 @@
 // WHY: Autosave promises that one chosen file is rewritten after every change
-// and that the key never enters it. These tests use a direct store so the fake
-// file handle keeps its own write function, which IndexedDB would carry anyway.
+// and that the key never enters it. The file is now a zip so local media can
+// travel with the text, and an old .json handle is retired instead of losing
+// media. These tests use a direct store so the fake file handle keeps its own
+// write function, which IndexedDB would carry anyway.
 // PACK: browser-app
 // 2026-10-20 opencode: created for the browser-owned build.
+// 2026-10-25 opencode: autosave writes the media zip. [pack: teaching-layers]
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { strFromU8, unzipSync } from "fflate";
 import {
   autosaveNow,
   autosaveState,
@@ -72,20 +76,26 @@ function bundle(): string {
 }
 
 let store: DirectStore;
-let writes: string[];
+let writes: Blob[];
 let permission: PermissionState;
 
-function handle() {
+function handle(name = "my-backup.zip") {
   return {
-    name: "my-backup.json",
+    name,
     queryPermission: async () => permission,
     createWritable: async () => ({
-      write: async (text: string) => {
-        writes.push(text);
+      write: async (data: Blob) => {
+        writes.push(data);
       },
       close: async () => undefined,
     }),
   };
+}
+
+/** The text half of one written zip, the same way a future restore reads it. */
+async function writtenBackup(index = 0): Promise<Record<string, unknown>> {
+  const files = unzipSync(new Uint8Array(await writes[index].arrayBuffer()));
+  return JSON.parse(strFromU8(files["backup.json"])) as Record<string, unknown>;
 }
 
 beforeEach(async () => {
@@ -114,15 +124,15 @@ async function settle(): Promise<void> {
 }
 
 describe("autosave", () => {
-  it("rewrites the chosen file with the whole backup", async () => {
+  it("rewrites the chosen zip with the whole backup", async () => {
     const result = await autosaveNow(store);
     expect(result.ok).toBe(true);
     expect(writes).toHaveLength(1);
-    const backup = JSON.parse(writes[0]);
+    const backup = await writtenBackup();
     expect(backup.schema).toBe("flashcards.backup/v1");
     expect(backup.cards).toHaveLength(1);
     const state = await autosaveState(store);
-    expect(state.fileName).toBe("my-backup.json");
+    expect(state.fileName).toBe("my-backup.zip");
     expect(state.lastSavedAt).toBeTruthy();
     expect(state.permission).toBe("granted");
   });
@@ -130,7 +140,7 @@ describe("autosave", () => {
   it("never writes the provider key into the file", async () => {
     await writeProviderKey("super-secret", store);
     await autosaveNow(store);
-    expect(writes[0]).not.toContain("super-secret");
+    expect(JSON.stringify(await writtenBackup())).not.toContain("super-secret");
   });
 
   it("does not write when permission was not granted", async () => {
@@ -148,6 +158,18 @@ describe("autosave", () => {
     expect(result.message).toContain("No backup file");
   });
 
+  it("retires an old .json handle once and asks for a zip", async () => {
+    await store.put("autosave", { id: "file", handle: handle("old-backup.json"), lastSavedAt: null });
+    const result = await autosaveNow(store);
+    expect(result.ok).toBe(false);
+    expect(result.message).toContain(".zip");
+    expect(writes).toHaveLength(0);
+    expect(await store.get("autosave", "file")).toBeNull();
+
+    const again = await autosaveNow(store);
+    expect(again.message).toContain("No backup file");
+  });
+
   it("reads a phone-friendly state with no connected file", async () => {
     const state: AutosaveState = await autosaveState(store);
     expect(state.supported).toBe(false);
@@ -163,7 +185,7 @@ describe("autosave", () => {
     expect(picker).toHaveBeenCalledTimes(1);
     expect(writes).toHaveLength(1);
     expect(state.supported).toBe(true);
-    expect(state.fileName).toBe("my-backup.json");
+    expect(state.fileName).toBe("my-backup.zip");
     expect(state.lastSavedAt).toBeTruthy();
   });
 

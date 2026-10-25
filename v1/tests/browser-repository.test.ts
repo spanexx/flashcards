@@ -25,12 +25,15 @@ import {
   readPromptLog,
   readProviderKey,
   readSettings,
+  readTombstones,
   recordAlgorithmRun,
   upsertCards,
   writePack,
   writeProviderKey,
+  writeTombstone,
   type BrowserPack,
 } from "@/lib/browser/repository";
+import { putMedia, readAllMedia } from "@/lib/browser/media";
 import type { Card, EvidenceRow } from "@/lib/shared/types";
 
 const now = "2026-10-20T10:00:00.000Z";
@@ -43,8 +46,8 @@ function pack(name = "starter"): BrowserPack {
     description: "A starter",
     language: "pl",
     decks: [
-      { id: "basics", name: "Basics" },
-      { id: "cases", name: "Cases" },
+      { id: "basics", name: "Basics", level: "intermediate" },
+      { id: "cases", name: "Cases", level: "intermediate" },
     ],
     prompts: null,
     createdAt: now,
@@ -114,6 +117,22 @@ describe("packs and cards", () => {
     expect((await readPacks(store))[0].name).toBe("starter");
   });
 
+  it("gives an old deck row the intermediate level", async () => {
+    const legacy = {
+      ...pack(),
+      decks: [
+        { id: "basics", name: "Basics" },
+        { id: "cases", name: "Cases", level: "beginner" },
+      ],
+    };
+    await store.put("packs", legacy as unknown as BrowserPack);
+    expect((await readPack("starter", store))?.decks).toEqual([
+      { id: "basics", name: "Basics", level: "intermediate" },
+      { id: "cases", name: "Cases", level: "beginner" },
+    ]);
+    expect((await readPacks(store))[0].decks[0].level).toBe("intermediate");
+  });
+
   it("counts only live cards for a pack and names orphaned packs", async () => {
     await writePack(pack(), store);
     await upsertCards([card("one"), { ...card("two"), retired: true }, { ...card("three"), packName: "gone" }], store);
@@ -155,7 +174,7 @@ describe("the record", () => {
 describe("deletion", () => {
   it("deletes a pack with its cards and evidence, and leaves other packs alone", async () => {
     await writePack(pack(), store);
-    await writePack({ ...pack("other"), decks: [{ id: "extra", name: "Extra" }] }, store);
+    await writePack({ ...pack("other"), decks: [{ id: "extra", name: "Extra", level: "intermediate" }] }, store);
     await upsertCards([card("one"), card("two"), { ...card("three"), packName: "other", deckId: "extra" }], store);
     await appendEvidence([row("r1", "one"), row("r2", "two"), row("r3", "three")], store);
 
@@ -173,13 +192,15 @@ describe("deletion", () => {
 
     const result = await deleteDeck("starter", "basics", store);
     expect(result).toMatchObject({ ok: true, removedDecks: 1, removedCards: 1, removedEvidenceRows: 1 });
-    expect((await readPack("starter", store))?.decks).toEqual([{ id: "cases", name: "Cases" }]);
+    expect((await readPack("starter", store))?.decks).toEqual([
+      { id: "cases", name: "Cases", level: "intermediate" },
+    ]);
     expect((await readCards(store)).map((entry) => entry.id)).toEqual(["two"]);
     expect((await readEvidence(store)).map((entry) => entry.id)).toEqual(["r2"]);
   });
 
   it("refuses to delete the last deck and names missing rows", async () => {
-    await writePack({ ...pack(), decks: [{ id: "basics", name: "Basics" }] }, store);
+    await writePack({ ...pack(), decks: [{ id: "basics", name: "Basics", level: "intermediate" }] }, store);
     expect(await deleteDeck("starter", "basics", store)).toEqual({ ok: false, reason: "last-deck" });
     expect(await deleteDeck("gone", "basics", store)).toEqual({ ok: false, reason: "missing-pack" });
     expect(await deleteDeck("starter", "gone", store)).toEqual({ ok: false, reason: "missing-deck" });
@@ -188,15 +209,24 @@ describe("deletion", () => {
 });
 
 describe("clearLibrary", () => {
-  it("removes every store", async () => {
+  it("removes the library but keeps media and removal tombstones", async () => {
     await writePack(pack(), store);
     await upsertCards([card("one")], store);
     await appendEvidence([row("one", "one")], store);
     await writeProviderKey("secret", store);
+    await putMedia(
+      { id: "media-kept", blob: new Blob(["pixels"]), mime: "image/png", kind: "image" },
+      store,
+    );
+    await writeTombstone({ id: "pack-old", kind: "pack", at: now }, store);
+
     await clearLibrary(store);
+
     expect(await readPacks(store)).toEqual([]);
     expect(await readCards(store)).toEqual([]);
     expect(await readEvidence(store)).toEqual([]);
     expect(await readProviderKey(store)).toBe("");
+    expect((await readAllMedia(store)).map((record) => record.id)).toEqual(["media-kept"]);
+    expect((await readTombstones(store)).map((row) => row.id)).toEqual(["pack-old"]);
   });
 });

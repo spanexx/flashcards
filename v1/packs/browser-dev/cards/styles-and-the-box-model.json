@@ -1,0 +1,124 @@
+{
+  "cards": [
+    {
+      "key": "box-four-layers",
+      "summary": "A box has four layers",
+      "topics": ["styles-and-the-box-model"],
+      "tags": ["box-model"],
+      "prompt": [{ "type": "text", "text": "From the inside out, which order is correct?" }],
+      "answer": [{ "type": "text", "text": "content, padding, border, margin" }],
+      "answerDef": { "mode": "picks", "options": ["content, padding, border, margin", "margin, border, padding, content", "content, margin, border, padding"], "correct": ["content, padding, border, margin"] },
+      "hints": ["The space that pushes neighbours away is always last."],
+      "fullLine": "A box runs from content, through padding and border, out to margin."
+    },
+    {
+      "key": "box-padding",
+      "summary": "Padding sits inside the border",
+      "topics": ["styles-and-the-box-model"],
+      "tags": ["box-model"],
+      "prompt": [{ "type": "text", "text": "Space between the content and the border is " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": "." }],
+      "answer": [{ "type": "text", "text": "Space between the content and the border is padding." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["padding"] }] },
+      "hints": ["The background colour shows in this space."],
+      "fullLine": "Space between the content and the border is padding.",
+      "teaching": [
+        { "type": "text", "text": "It sits between the content and the border, so the background shows behind it.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/browser-dev/images/box-model.svg", "alt": "A box drawn as four nested rectangles: content, padding, border and margin" },
+        { "type": "video", "source": "youtube", "src": "rIO5326FgPE", "search": "Learn CSS Box Model in 8 Minutes", "alt": "A visual explanation of content, padding, border and margin" }
+      ]
+    },
+    {
+      "key": "box-margin",
+      "summary": "Margin sits outside the border",
+      "topics": ["styles-and-the-box-model"],
+      "tags": ["box-model"],
+      "prompt": [{ "type": "text", "text": "Space outside the border is the " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": "." }],
+      "answer": [{ "type": "text", "text": "Space outside the border is the margin." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["margin"] }] },
+      "hints": ["It never takes the background colour."],
+      "fullLine": "Space outside the border is the margin.",
+      "teaching": [{ "type": "text", "text": "It pushes neighbours away and is never painted by the element.", "lang": "en" }]
+    },
+    {
+      "key": "box-border-box",
+      "summary": "border-box includes padding",
+      "topics": ["styles-and-the-box-model"],
+      "tags": ["box-model"],
+      "prompt": [{ "type": "text", "text": "With `box-sizing: border-box`, the width includes what?" }],
+      "answer": [{ "type": "text", "text": "content, padding and border" }],
+      "answerDef": { "mode": "picks", "options": ["content, padding and border", "only the content", "content and margin"], "correct": ["content, padding and border"] },
+      "hints": ["The margin is never part of a width."],
+      "fullLine": "With box-sizing: border-box, the width includes content, padding and border."
+    },
+    {
+      "key": "box-flex",
+      "summary": "Flex lays children in a line",
+      "topics": ["styles-and-the-box-model"],
+      "tags": ["layout"],
+      "prompt": [{ "type": "text", "text": "Which display value lays children out in a row or a column?" }],
+      "answer": [{ "type": "text", "text": "flex" }],
+      "answerDef": { "mode": "type", "expected": ["flex", "display: flex", "display:flex"], "judge": "loose" },
+      "hints": ["It is short for flexible."],
+      "fullLine": "The flex display value lays children out in a row or a column.",
+      "teaching": [{ "type": "text", "text": "It turns the children into a single line by default, in the direction you choose.", "lang": "en" }]
+    },
+    {
+      "key": "box-specificity",
+      "summary": "Specificity breaks a tie",
+      "topics": ["styles-and-the-box-model"],
+      "tags": ["css"],
+      "prompt": [{ "type": "text", "text": "When two rules set the same property, the one with higher " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " wins." }],
+      "answer": [{ "type": "text", "text": "When two rules set the same property, the one with higher specificity wins." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["specificity"] }] },
+      "hints": ["A more precise selector beats a broad one."],
+      "fullLine": "When two rules set the same property, the one with higher specificity wins.",
+      "teaching": [{ "type": "text", "text": "When two rules collide, the more precise selector takes the property.", "lang": "en" }]
+    },
+    {
+      "key": "box-selector-wins",
+      "summary": "A longer selector wins",
+      "topics": ["styles-and-the-box-model"],
+      "tags": ["css", "selectors"],
+      "prompt": [{ "type": "text", "text": "Which selector wins over `.title` when both set the same property?" }],
+      "answer": [{ "type": "text", "text": ".card .title" }],
+      "answerDef": { "mode": "picks", "options": [".card .title", ".title", "p"], "correct": [".card .title"] },
+      "hints": ["Count the parts that narrow the match."],
+      "fullLine": ".card .title wins over .title because it names two levels."
+    },
+    {
+      "key": "box-later-rule",
+      "summary": "A later rule wins a tie",
+      "topics": ["styles-and-the-box-model"],
+      "tags": ["css"],
+      "prompt": [{ "type": "text", "text": "Two rules match as closely as each other. The later rule " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " the earlier one." }],
+      "answer": [{ "type": "text", "text": "Two rules match as closely as each other. The later rule wins over the earlier one." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["wins", "wins over", "overrides"] }] },
+      "hints": ["Order is the tie-breaker, not age."],
+      "fullLine": "Two rules match as closely as each other. The later rule wins over the earlier one.",
+      "teaching": [{ "type": "text", "text": "Source order settles it only when the selectors match as precisely.", "lang": "en" }]
+    },
+    {
+      "key": "box-rem",
+      "summary": "rem follows the root size",
+      "topics": ["styles-and-the-box-model"],
+      "tags": ["css", "units"],
+      "prompt": [{ "type": "text", "text": "Which unit is relative to the root font size?" }],
+      "answer": [{ "type": "text", "text": "rem" }],
+      "answerDef": { "mode": "type", "expected": ["rem"], "judge": "loose" },
+      "hints": ["The em version follows the current element instead."],
+      "fullLine": "The rem unit is relative to the root font size.",
+      "teaching": [{ "type": "text", "text": "It follows the page's base size, so a user's text setting changes it.", "lang": "en" }]
+    },
+    {
+      "key": "box-gap",
+      "summary": "gap spaces flex children",
+      "topics": ["styles-and-the-box-model"],
+      "tags": ["layout"],
+      "prompt": [{ "type": "text", "text": "Which property spaces flex children without adding margins to them?" }],
+      "answer": [{ "type": "text", "text": "gap" }],
+      "answerDef": { "mode": "picks", "options": ["gap", "padding", "border"], "correct": ["gap"] },
+      "hints": ["It names the empty space between items."],
+      "fullLine": "The gap property spaces flex children without margins."
+    }
+  ]
+}

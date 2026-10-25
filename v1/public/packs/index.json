@@ -1,0 +1,15 @@
+{
+  "schema": "flashcards.pack-index/v1",
+  "packs": [
+    {
+      "name": "browser-dev",
+      "version": "1.0.0",
+      "file": "/packs/browser-dev.json"
+    },
+    {
+      "name": "polish-from-scratch",
+      "version": "1.0.0",
+      "file": "/packs/polish-from-scratch.json"
+    }
+  ]
+}

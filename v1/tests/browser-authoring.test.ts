@@ -45,8 +45,8 @@ const pack: BrowserPack = {
   name: "starter",
   version: "1.2.3",
   decks: [
-    { id: "basics", name: "Basics" },
-    { id: "cases", name: "Cases" },
+    { id: "basics", name: "Basics", level: "intermediate" },
+    { id: "cases", name: "Cases", level: "intermediate" },
   ],
   prompts: null,
   createdAt: "2026-10-20T10:00:00.000Z",
@@ -131,7 +131,10 @@ describe("buildAuthoringPrompt", () => {
   });
 
   it("picks a new deck id that does not collide with an existing one", () => {
-    const withExtra: BrowserPack = { ...pack, decks: [...pack.decks, { id: "extra", name: "Extra" }] };
+    const withExtra: BrowserPack = {
+      ...pack,
+      decks: [...pack.decks, { id: "extra", name: "Extra", level: "intermediate" }],
+    };
     const prompt = buildAuthoringPrompt({ kind: "deck", packName: "starter" }, withExtra);
     expect(prompt).toContain('"id": "extra-2"');
   });
@@ -193,6 +196,19 @@ describe("buildAuthoringPrompt", () => {
     expect(prompt).toContain("starter");
     expect(prompt).toContain("Basics");
     expect(prompt).not.toContain("ignored");
+  });
+
+  it("asks for a teaching layer that never gives the answer away", () => {
+    const prompt = buildAuthoringPrompt({ kind: "cards", packName: "starter", deckId: "cases" }, pack);
+    expect(prompt).toContain('"teaching"');
+    expect(prompt).toContain("never contains the answer");
+    expect(prompt).toContain("nobody has checked that it still plays");
+    expect(buildAuthoringPrompt({ kind: "pack" })).toContain("no teaching part gives the answer away");
+    const parsed = parseCardsBundle(example(prompt));
+    expect(parsed.ok, JSON.stringify(parsed)).toBe(true);
+    if (parsed.ok) {
+      expect(parsed.bundle.cards[0].teaching?.[0]).toMatchObject({ type: "text" });
+    }
   });
 
   it("still returns a parseable example when the brief is present", () => {

@@ -1,0 +1,123 @@
+{
+  "cards": [
+    {
+      "key": "memory-leak",
+      "summary": "Memory that never falls back",
+      "topics": ["memory-and-leaks"],
+      "tags": ["memory"],
+      "prompt": [{ "type": "text", "text": "A page's memory keeps growing after you close a panel. What is likely?" }],
+      "answer": [{ "type": "text", "text": "a memory leak" }],
+      "answerDef": { "mode": "picks", "options": ["a memory leak", "a slow network", "a CSS error"], "correct": ["a memory leak"] },
+      "hints": ["Something is still holding on after it should be free."],
+      "fullLine": "Memory that keeps growing after you close a panel suggests a memory leak."
+    },
+    {
+      "key": "memory-detached",
+      "summary": "Detached nodes leave the page",
+      "topics": ["memory-and-leaks"],
+      "tags": ["memory", "dom"],
+      "prompt": [{ "type": "text", "text": "Elements removed from the page but still held in JavaScript are " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " nodes." }],
+      "answer": [{ "type": "text", "text": "Elements removed from the page but still held in JavaScript are detached nodes." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["detached"] }] },
+      "hints": ["They are no longer part of the tree."],
+      "fullLine": "Elements removed from the page but still held in JavaScript are detached nodes.",
+      "teaching": [
+        { "type": "text", "text": "The page no longer shows it, but script may still hold a reference.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/browser-dev/images/detached-nodes.svg", "alt": "A page tree with one node cut away, still tied by a line to a script variable" },
+        { "type": "video", "source": "youtube", "src": "6IlTjqU_Tc0", "search": "How To Detect Memory Leaks In Your Web App", "alt": "Finding memory leaks with browser developer tools" }
+      ]
+    },
+    {
+      "key": "memory-js-reference",
+      "summary": "A live reference keeps a node",
+      "topics": ["memory-and-leaks"],
+      "tags": ["memory"],
+      "prompt": [{ "type": "text", "text": "Which keeps a detached element alive?" }],
+      "answer": [{ "type": "text", "text": "a live JavaScript reference" }],
+      "answerDef": { "mode": "picks", "options": ["a live JavaScript reference", "a CSS class name", "an alt attribute"], "correct": ["a live JavaScript reference"] },
+      "hints": ["Somewhere in script, a variable still points at it."],
+      "fullLine": "A live JavaScript reference keeps a detached element alive."
+    },
+    {
+      "key": "memory-panel",
+      "summary": "The Memory panel takes snapshots",
+      "topics": ["memory-and-leaks"],
+      "tags": ["devtools"],
+      "prompt": [{ "type": "text", "text": "Which DevTools panel takes heap snapshots?" }],
+      "answer": [{ "type": "text", "text": "Memory" }],
+      "answerDef": { "mode": "type", "expected": ["Memory"], "judge": "loose" },
+      "hints": ["Its name is what is being measured."],
+      "fullLine": "The Memory panel takes heap snapshots.",
+      "teaching": [{ "type": "text", "text": "It records what the heap holds at one moment.", "lang": "en" }]
+    },
+    {
+      "key": "memory-closure",
+      "summary": "A closure can hold an object",
+      "topics": ["memory-and-leaks"],
+      "tags": ["memory"],
+      "prompt": [{ "type": "text", "text": "A " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " that captures a large object can keep it alive." }],
+      "answer": [{ "type": "text", "text": "A closure that captures a large object can keep it alive." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["closure"] }] },
+      "hints": ["It is a function that remembers its outer variables."],
+      "fullLine": "A closure that captures a large object can keep it alive.",
+      "teaching": [{ "type": "text", "text": "A function can keep outer variables alive after their scope ends.", "lang": "en" }]
+    },
+    {
+      "key": "memory-weakmap",
+      "summary": "WeakMap lets a key go",
+      "topics": ["memory-and-leaks"],
+      "tags": ["memory"],
+      "prompt": [{ "type": "text", "text": "Which structure lets a key be collected when nothing else holds it?" }],
+      "answer": [{ "type": "text", "text": "WeakMap" }],
+      "answerDef": { "mode": "picks", "options": ["WeakMap", "Map", "Array"], "correct": ["WeakMap"] },
+      "hints": ["Its first word says how firmly it holds anything."],
+      "fullLine": "A WeakMap lets a key be collected when nothing else holds it."
+    },
+    {
+      "key": "memory-collector",
+      "summary": "The collector reclaims unused objects",
+      "topics": ["memory-and-leaks"],
+      "tags": ["memory"],
+      "prompt": [{ "type": "text", "text": "When nothing references an object, the garbage " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " may reclaim it." }],
+      "answer": [{ "type": "text", "text": "When nothing references an object, the garbage collector may reclaim it." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["collector"] }] },
+      "hints": ["It tidies what nobody points at."],
+      "fullLine": "When nothing references an object, the garbage collector may reclaim it.",
+      "teaching": [{ "type": "text", "text": "Unused objects are reclaimed automatically when nothing points to them.", "lang": "en" }]
+    },
+    {
+      "key": "memory-heap-snapshot",
+      "summary": "A rising heap suggests a reference",
+      "topics": ["memory-and-leaks"],
+      "tags": ["memory"],
+      "prompt": [{ "type": "text", "text": "A heap snapshot taken after the same action shows memory only rising. What does that suggest?" }],
+      "answer": [{ "type": "text", "text": "something is still referenced" }],
+      "answerDef": { "mode": "picks", "options": ["something is still referenced", "the collector is disabled forever", "the page is caching properly"], "correct": ["something is still referenced"] },
+      "hints": ["If the count falls back, the claim is safe."],
+      "fullLine": "A heap that only rises after the same action suggests something is still referenced."
+    },
+    {
+      "key": "memory-listener-leak",
+      "summary": "Unremoved listeners leak",
+      "topics": ["memory-and-leaks"],
+      "tags": ["memory", "events"],
+      "prompt": [{ "type": "text", "text": "A listener added on every render without removal is a common " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": "." }],
+      "answer": [{ "type": "text", "text": "A listener added on every render without removal is a common leak." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["leak"] }] },
+      "hints": ["The heap grows with each new copy."],
+      "fullLine": "A listener added on every render without removal is a common leak.",
+      "teaching": [{ "type": "text", "text": "Every render adds another one, and none are removed.", "lang": "en" }]
+    },
+    {
+      "key": "memory-allocation-timeline",
+      "summary": "Record what allocates memory",
+      "topics": ["memory-and-leaks"],
+      "tags": ["memory", "devtools"],
+      "prompt": [{ "type": "text", "text": "Which recording shows what creates memory while an action runs?" }],
+      "answer": [{ "type": "text", "text": "record an allocation timeline" }],
+      "answerDef": { "mode": "picks", "options": ["record an allocation timeline", "delete the cache", "reload the page"], "correct": ["record an allocation timeline"] },
+      "hints": ["It plots creation over time, not just a final total."],
+      "fullLine": "Recording an allocation timeline shows what creates memory while an action runs."
+    }
+  ]
+}

@@ -3,8 +3,10 @@
 // download. The file handle stays in IndexedDB; the key never enters the file.
 // PACK: browser-app
 // 2026-10-20 opencode: created for the browser-owned build.
+// 2026-10-25 opencode: the standing file is a zip so it can carry local media;
+// an old .json handle is retired once. [pack: teaching-layers]
 
-import { exportBackup } from "@/lib/browser/bundle";
+import { exportBackupZip } from "@/lib/browser/archive";
 import { onLibraryChange } from "@/lib/browser/changes";
 import { browserStore, type StoredValue, type Store } from "@/lib/browser/store";
 
@@ -20,7 +22,7 @@ export interface AutosaveState {
 interface AutosaveHandle {
   name: string;
   queryPermission?(descriptor: { mode: "readwrite" }): Promise<PermissionState>;
-  createWritable(): Promise<{ write(data: string): Promise<void>; close(): Promise<void> }>;
+  createWritable(): Promise<{ write(data: Blob): Promise<void>; close(): Promise<void> }>;
 }
 
 interface AutosaveRow extends StoredValue {
@@ -69,8 +71,8 @@ export async function chooseAutosaveFile(store: Store = browserStore()): Promise
   const picker = (window as SavePickerWindow).showSaveFilePicker;
   if (!picker) throw new Error("This browser cannot rewrite a file by itself. Download a backup instead.");
   const handle = await picker({
-    suggestedName: "flashcards-backup.json",
-    types: [{ description: "JSON backup", accept: { "application/json": [".json"] } }],
+    suggestedName: "flashcards-backup.zip",
+    types: [{ description: "Flashcards backup", accept: { "application/zip": [".zip"] } }],
   });
   const row: AutosaveRow = { id: ROW_ID, handle, lastSavedAt: null };
   await store.put("autosave", row);
@@ -88,6 +90,15 @@ export async function disconnectAutosave(store: Store = browserStore()): Promise
 export async function autosaveNow(store: Store = browserStore()): Promise<{ ok: boolean; message: string }> {
   const row = await store.get<AutosaveRow>("autosave", ROW_ID);
   if (!row) return { ok: false, message: "No backup file is connected." };
+  // WHY: A .json file cannot carry local images or videos. Retire the old
+  // handle instead of writing a backup that silently loses them.
+  if (row.handle.name.toLowerCase().endsWith(".json")) {
+    await store.delete("autosave", ROW_ID);
+    return {
+      ok: false,
+      message: "The connected file is an old .json backup. Choose a new .zip backup file in Settings.",
+    };
+  }
   if (row.handle.queryPermission) {
     const permission = await row.handle.queryPermission({ mode: "readwrite" });
     if (permission !== "granted") {
@@ -95,9 +106,9 @@ export async function autosaveNow(store: Store = browserStore()): Promise<{ ok: 
     }
   }
   try {
-    const text = await exportBackup();
+    const blob = await exportBackupZip();
     const writable = await row.handle.createWritable();
-    await writable.write(text);
+    await writable.write(blob);
     await writable.close();
     const savedAt = new Date().toISOString();
     await store.put("autosave", { ...row, lastSavedAt: savedAt });

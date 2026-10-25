@@ -33,6 +33,37 @@ describe("makeAnswerRows", () => {
     expect(rows[1].region).toBe("b2");
     expect(rows[0].seenBefore).toBe(2);
   });
+
+  it("writes the help and cold flags on every region of the attempt", () => {
+    const rows = makeAnswerRows(
+      "card:1",
+      "attempt-10",
+      [
+        { region: "b1", outcome: "got_it", given: "kawę", expected: ["kawę"], nearMiss: false },
+        { region: "b2", outcome: "no", given: "", expected: ["ciasto"], nearMiss: false },
+      ],
+      900,
+      1,
+      "2026-10-05T09:00:00.000Z",
+      { helpSeen: true, coldCheck: false },
+    );
+    expect(rows.map((row) => [row.helpSeen, row.coldCheck])).toEqual([
+      [true, false],
+      [true, false],
+    ]);
+  });
+
+  it("writes explicit false flags when none are given", () => {
+    const rows = makeAnswerRows(
+      "card:1",
+      "attempt-11",
+      [{ region: null, outcome: "got_it", given: "kawę", expected: ["kawę"], nearMiss: false }],
+      900,
+      0,
+      "2026-10-05T09:00:00.000Z",
+    );
+    expect(rows[0]).toMatchObject({ helpSeen: false, coldCheck: false });
+  });
 });
 
 describe("resolveRows", () => {
@@ -70,6 +101,13 @@ describe("makeCorrectionRow", () => {
     expect(correction.region).toBe(original.region);
     expect(original.outcome).toBe("no");
     expect(original.kind).toBe("answer");
+  });
+
+  it("copies help seen and cold check from the row it corrects", () => {
+    const original = makeRow({ id: "row-8", helpSeen: true, coldCheck: true });
+    const correction = makeCorrectionRow(original, "got_it", "2026-10-02T12:00:00.000Z");
+    expect(correction.helpSeen).toBe(true);
+    expect(correction.coldCheck).toBe(true);
   });
 });
 
@@ -120,6 +158,17 @@ describe("groupAttempts", () => {
     const attempts = groupAttempts(rows);
     expect(attempts[0].timeMs).toBe(9000);
     expect(attempts[0].seenBefore).toBe(4);
+  });
+
+  it("reads the help and cold flags for the whole attempt", () => {
+    const rows = [
+      makeRow({ attemptId: "helped", region: "b1", helpSeen: true, coldCheck: false }),
+      makeRow({ attemptId: "helped", region: "b2", helpSeen: true, coldCheck: false }),
+      makeRow({ attemptId: "cold", region: "b1", coldCheck: true }),
+    ];
+    const attempts = groupAttempts(rows);
+    expect(attempts[0]).toMatchObject({ helpSeen: true, coldCheck: false });
+    expect(attempts[1]).toMatchObject({ helpSeen: false, coldCheck: true });
   });
 });
 

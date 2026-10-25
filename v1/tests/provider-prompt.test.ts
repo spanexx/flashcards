@@ -83,6 +83,15 @@ describe("buildGenerationPrompt", () => {
     const built = buildGenerationPrompt(makePack(), slots, { topic: "cases", count: 3 });
     expect(built.messages[1].content).toContain("Vary the nouns, verbs and sentence shapes");
   });
+
+  it("offers an optional teaching layer without leaking the answer", () => {
+    const built = buildGenerationPrompt(makePack(), slots, { topic: "cases", count: 3 });
+    const text = built.messages[1].content;
+    expect(text).toContain('may add "teaching"');
+    expect(text).toContain("never contains the answer");
+    expect(text).toContain("not that it still plays");
+    expect(text).toContain('"teaching"');
+  });
 });
 
 const inventory = libraryInventoryFromPacks([
@@ -202,6 +211,17 @@ describe("structured generation prompts", () => {
     const packPrompt = buildPackGenerationPrompt(slots, 3, {});
     expect(packPrompt.messages[1].content).not.toContain("Polish");
     expect(packPrompt.messages[1].content).toContain("The red apple is sweet.");
+  });
+
+  it("puts the same teaching rule in the pack and deck shapes", () => {
+    const pack = buildPackGenerationPrompt(slots, 4);
+    const deck = buildDeckGenerationPrompt(makePack(), slots, 3);
+    for (const built of [pack, deck]) {
+      const text = built.messages[1].content;
+      expect(text).toContain('may add "teaching"');
+      expect(text).toContain("never contains the answer");
+      expect(text).toContain('"teaching":[{"type":"text"');
+    }
   });
 
   it("lets a mixed brief reuse an omitted style as cloze", () => {

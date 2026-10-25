@@ -7,7 +7,7 @@
 // 2026-10-21 opencode: created during the Packs browse and delete rework [pack: library-create-flow]
 
 import { useState } from "react";
-import { apiGet } from "@/lib/client/api";
+import { exportPackArchive, importPackFile } from "@/lib/browser/archive";
 import { languagePairLabel } from "@/lib/shared/language";
 import type { Card, PackStatus } from "@/lib/shared/types";
 import PackEditor from "./PackEditor";
@@ -61,22 +61,51 @@ export default function PacksPanel({
     });
   };
 
-  // Export is unchanged: one pack file, no learner evidence inside.
+  // Export one pack: JSON when it has no local media, a zip when it does.
   const exportPack = async (name: string) => {
     onError(null);
     setBusy(true);
     try {
-      const data = await apiGet<{ json: string }>(`/api/packs/export?name=${encodeURIComponent(name)}`);
-      const blob = new Blob([data.json], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
+      const exported = await exportPackArchive(name);
+      if (!exported.ok) throw new Error(exported.message);
+      const url = URL.createObjectURL(exported.blob);
       const anchor = document.createElement("a");
       anchor.href = url;
-      anchor.download = `${name}.json`;
+      anchor.download = exported.fileName;
       anchor.click();
       URL.revokeObjectURL(url);
-      onNotice(`Exported ${name}. Learner evidence stays out of the file.`);
+      onNotice(`Exported ${name} as ${exported.fileName}. Learner evidence stays out of the file.`);
     } catch (problem) {
       onError(problem instanceof Error ? problem.message : "The pack could not be exported.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // A shared pack may arrive as JSON or as a zip that carries its own media.
+  const importPack = async (file: File) => {
+    onError(null);
+    onNotice(null);
+    setBusy(true);
+    try {
+      const result = await importPackFile(file, { kind: "pack" });
+      if (!result.ok) {
+        const first = result.issues[0];
+        onError(
+          `The pack was not imported: ${first ? `${first.field}: ${first.message}` : "the file needs fixing."}`,
+        );
+        return;
+      }
+      await onRefresh();
+      const counts = [
+        `${result.decksAdded} deck(s)`,
+        `${result.cardsAdded} card(s)`,
+        result.cardsUpdated ? `${result.cardsUpdated} updated in place` : "",
+        result.cardsRetired ? `${result.cardsRetired} retired` : "",
+      ].filter((line) => line.length > 0);
+      onNotice(`Imported ${result.packName}: ${counts.join(", ")}.`);
+    } catch (problem) {
+      onError(problem instanceof Error ? problem.message : "That pack file could not be read.");
     } finally {
       setBusy(false);
     }
@@ -123,6 +152,20 @@ export default function PacksPanel({
         <button className="btn" type="button" onClick={() => void refresh()} disabled={busy}>
           Refresh
         </button>
+        <label className="btn">
+          Import a pack file
+          <input
+            type="file"
+            accept=".json,.zip,application/json,application/zip"
+            style={{ display: "none" }}
+            disabled={busy}
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) void importPack(file);
+              event.target.value = "";
+            }}
+          />
+        </label>
       </div>
 
       {packs.length === 0 ? (
@@ -197,7 +240,9 @@ export default function PacksPanel({
                       <div className="deck-row" key={deck.id}>
                         <div className="pack-main">
                           <div>{deck.name}</div>
-                          <div className="muted">{deckCardCount(pack.name, deck.id)} cards</div>
+                          <div className="muted">
+                            {deckCardCount(pack.name, deck.id)} cards · {deck.level}
+                          </div>
                         </div>
                         <div className="row">
                           <button className="btn small" type="button" onClick={() => onAddCards(pack.name, deck.id)}>

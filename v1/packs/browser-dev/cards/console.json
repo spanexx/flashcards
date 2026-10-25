@@ -1,0 +1,124 @@
+{
+  "cards": [
+    {
+      "key": "console-log",
+      "summary": "console.log prints a value",
+      "topics": ["console"],
+      "tags": ["console"],
+      "prompt": [{ "type": "text", "text": "console." }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " prints a value in the console." }],
+      "answer": [{ "type": "text", "text": "console.log prints a value in the console." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["log"] }] },
+      "hints": ["It is the same word as a written record."],
+      "fullLine": "console.log prints a value in the console.",
+      "teaching": [
+        { "type": "text", "text": "Each line carries a time, a level and the value you passed.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/browser-dev/images/console-lines.svg", "alt": "A console panel with one message, one warning and one error line" },
+        { "type": "video", "source": "youtube", "src": "NmH7qRscP28", "search": "Chrome Developer Tools guide Elements Console Network tabs", "alt": "A tour of the DevTools tabs, including the Console" }
+      ]
+    },
+    {
+      "key": "console-error",
+      "summary": "console.error marks a failure",
+      "topics": ["console"],
+      "tags": ["console"],
+      "prompt": [{ "type": "text", "text": "Which call prints a red error line?" }],
+      "answer": [{ "type": "text", "text": "console.error" }],
+      "answerDef": { "mode": "picks", "options": ["console.error", "console.log", "console.table"], "correct": ["console.error"] },
+      "hints": ["The name says what went wrong."],
+      "fullLine": "console.error prints a red error line.",
+      "teaching": [{ "type": "text", "text": "The level stands out from ordinary output so a failure is hard to miss.", "lang": "en" }]
+    },
+    {
+      "key": "console-dollar-zero",
+      "summary": "$0 is the selected element",
+      "topics": ["console"],
+      "tags": ["console", "devtools"],
+      "prompt": [{ "type": "text", "text": "In DevTools, `$0` refers to the element selected in the " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " panel." }],
+      "answer": [{ "type": "text", "text": "In DevTools, `$0` refers to the element selected in the Elements panel." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["Elements"] }] },
+      "hints": ["It is where the page structure is shown."],
+      "fullLine": "In DevTools, $0 refers to the element selected in the Elements panel."
+    },
+    {
+      "key": "console-copy",
+      "summary": "copy sends a value to the clipboard",
+      "topics": ["console"],
+      "tags": ["console"],
+      "prompt": [{ "type": "text", "text": "Which console helper copies its argument to the clipboard?" }],
+      "answer": [{ "type": "text", "text": "copy" }],
+      "answerDef": { "mode": "type", "expected": ["copy", "copy()"], "judge": "loose" },
+      "hints": ["It is the everyday verb for duplicating text."],
+      "fullLine": "The copy helper sends its argument to the clipboard.",
+      "teaching": [{ "type": "text", "text": "It saves a value so you can paste it into a bug report.", "lang": "en" }]
+    },
+    {
+      "key": "console-table",
+      "summary": "console.table shows rows",
+      "topics": ["console"],
+      "tags": ["console"],
+      "prompt": [{ "type": "text", "text": "Which prints an array of objects as rows and columns?" }],
+      "answer": [{ "type": "text", "text": "console.table" }],
+      "answerDef": { "mode": "picks", "options": ["console.table", "console.log", "console.group"], "correct": ["console.table"] },
+      "hints": ["The output looks like a spreadsheet."],
+      "fullLine": "console.table prints an array of objects as rows and columns."
+    },
+    {
+      "key": "console-warn",
+      "summary": "Warnings are yellow",
+      "topics": ["console"],
+      "tags": ["console"],
+      "prompt": [{ "type": "text", "text": "A console.warn line is usually " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": "." }],
+      "answer": [{ "type": "text", "text": "A console.warn line is usually yellow." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["yellow"] }] },
+      "hints": ["It sits between calm white text and a red failure."],
+      "fullLine": "A console.warn line is usually yellow.",
+      "teaching": [{ "type": "text", "text": "The colour is a hint, not a rule; the words carry the meaning.", "lang": "en" }]
+    },
+    {
+      "key": "console-clear",
+      "summary": "console.clear empties the console",
+      "topics": ["console"],
+      "tags": ["console"],
+      "prompt": [{ "type": "text", "text": "Which call empties the console?" }],
+      "answer": [{ "type": "text", "text": "console.clear" }],
+      "answerDef": { "mode": "type", "expected": ["console.clear", "clear", "clear()"], "judge": "loose" },
+      "hints": ["The verb also describes wiping a whiteboard."],
+      "fullLine": "console.clear empties the console.",
+      "teaching": [{ "type": "text", "text": "An empty window is easier to read when a new run starts.", "lang": "en" }]
+    },
+    {
+      "key": "console-leftover-log",
+      "summary": "Leftover logs can leak data",
+      "topics": ["console"],
+      "tags": ["console", "production"],
+      "prompt": [{ "type": "text", "text": "Why can a leftover console.log be a problem in production?" }],
+      "answer": [{ "type": "text", "text": "it can expose private data" }],
+      "answerDef": { "mode": "picks", "options": ["it can expose private data", "it slows the network", "it deletes storage"], "correct": ["it can expose private data"] },
+      "hints": ["Anyone with the tools can read the output."],
+      "fullLine": "A leftover console.log can expose private data in production."
+    },
+    {
+      "key": "console-live-object",
+      "summary": "Logged objects stay live",
+      "topics": ["console"],
+      "tags": ["console"],
+      "prompt": [{ "type": "text", "text": "A logged object is a live reference, so its fields can change " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " you logged it." }],
+      "answer": [{ "type": "text", "text": "A logged object is a live reference, so its fields can change after you logged it." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["after"] }] },
+      "hints": ["The panel reads the object, not a frozen copy."],
+      "fullLine": "A logged object is a live reference, so its fields can change after you logged it.",
+      "teaching": [{ "type": "text", "text": "The panel keeps a reference to the object, not a copy of its fields.", "lang": "en" }]
+    },
+    {
+      "key": "console-group",
+      "summary": "console.group folds lines",
+      "topics": ["console"],
+      "tags": ["console"],
+      "prompt": [{ "type": "text", "text": "Which call folds several log lines under one heading?" }],
+      "answer": [{ "type": "text", "text": "console.group" }],
+      "answerDef": { "mode": "picks", "options": ["console.group", "console.count", "console.time"], "correct": ["console.group"] },
+      "hints": ["The folded lines belong together."],
+      "fullLine": "console.group folds several log lines under one heading."
+    }
+  ]
+}

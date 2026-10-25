@@ -1,0 +1,224 @@
+{
+  "cards": [
+    {
+      "key": "shopping-and-money-money",
+      "summary": "Money",
+      "topics": ["shopping-and-money"],
+      "tags": ["plural"],
+      "prompt": [{ "type": "text", "text": "Money" }],
+      "answer": [
+        { "type": "text", "text": "pieniądze" },
+        { "type": "text", "text": "money", "role": "translation" },
+        { "type": "text", "text": "pyeh-NYON-dzeh", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["pieniądze"], "judge": "loose" },
+      "hints": ["You need it to pay for anything."],
+      "fullLine": "pieniądze",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A plural-only noun in everyday use, though a singular form exists.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "shopping-and-money-price",
+      "summary": "Price",
+      "topics": ["shopping-and-money"],
+      "tags": ["feminine"],
+      "prompt": [{ "type": "text", "text": "Price" }],
+      "answer": [
+        { "type": "text", "text": "cena" },
+        { "type": "text", "text": "price", "role": "translation" },
+        { "type": "text", "text": "TSEH-nah", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["cena"], "judge": "loose" },
+      "hints": ["It is what you check before deciding to buy."],
+      "fullLine": "cena",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun shown on a label or a tag.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "shopping-and-money-change",
+      "summary": "Change (coins)",
+      "topics": ["shopping-and-money"],
+      "tags": ["feminine"],
+      "prompt": [{ "type": "text", "text": "Change (coins handed back)" }],
+      "answer": [
+        { "type": "text", "text": "reszta" },
+        { "type": "text", "text": "change", "role": "translation" },
+        { "type": "text", "text": "RESH-tah", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["reszta"], "judge": "loose" },
+      "hints": ["You get it when you pay with a large note."],
+      "fullLine": "reszta",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun for the coins handed back to you.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "shopping-and-money-cash",
+      "summary": "Cash",
+      "topics": ["shopping-and-money"],
+      "tags": ["feminine"],
+      "prompt": [{ "type": "text", "text": "Cash" }],
+      "answer": [
+        { "type": "text", "text": "gotówka" },
+        { "type": "text", "text": "cash", "role": "translation" },
+        { "type": "text", "text": "goh-TOOF-kah", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["gotówka"], "judge": "loose" },
+      "hints": ["Some small shops accept only this."],
+      "fullLine": "gotówka",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun for notes and coins rather than a card.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "shopping-and-money-card",
+      "summary": "Card",
+      "topics": ["shopping-and-money"],
+      "tags": ["feminine"],
+      "prompt": [{ "type": "text", "text": "Card (for paying)" }],
+      "answer": [
+        { "type": "text", "text": "karta" },
+        { "type": "text", "text": "card", "role": "translation" },
+        { "type": "text", "text": "KAR-tah", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["karta"], "judge": "loose" },
+      "hints": ["You tap it on a reader to pay."],
+      "fullLine": "karta",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun that also means a playing card or a chart.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "shopping-and-money-shop",
+      "summary": "Shop",
+      "topics": ["shopping-and-money"],
+      "tags": ["masculine"],
+      "prompt": [{ "type": "text", "text": "Shop (where you pay at a till)" }],
+      "answer": [
+        { "type": "text", "text": "sklep" },
+        { "type": "text", "text": "shop", "role": "translation" },
+        { "type": "text", "text": "sklep", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["sklep"], "judge": "loose" },
+      "hints": ["You walk in, choose, and pay at the counter."],
+      "fullLine": "sklep",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun for a place with a counter and a till.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "shopping-and-money-to-buy",
+      "summary": "To buy",
+      "topics": ["shopping-and-money"],
+      "tags": ["verb"],
+      "prompt": [{ "type": "text", "text": "to buy" }],
+      "answer": [
+        { "type": "text", "text": "kupować" },
+        { "type": "text", "text": "to buy", "role": "translation" },
+        { "type": "text", "text": "koo-POH-vahch", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["kupować"], "judge": "loose" },
+      "hints": ["It is what you do with money in a shop."],
+      "fullLine": "kupować",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "An imperfective verb; the perfective form adds a prefix.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "shopping-and-money-cheap",
+      "summary": "Cheap",
+      "topics": ["shopping-and-money"],
+      "tags": ["adjective"],
+      "prompt": [{ "type": "text", "text": "Cheap" }],
+      "answer": [
+        { "type": "text", "text": "tani" },
+        { "type": "text", "text": "cheap", "role": "translation" },
+        { "type": "text", "text": "TAH-nee", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["tani"], "judge": "loose" },
+      "hints": ["It is the opposite of the word for costly."],
+      "fullLine": "tani",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine adjective; it agrees with the noun it describes.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "shopping-and-money-expensive",
+      "summary": "Expensive",
+      "topics": ["shopping-and-money"],
+      "tags": ["adjective"],
+      "prompt": [{ "type": "text", "text": "Expensive" }],
+      "answer": [
+        { "type": "text", "text": "drogi" },
+        { "type": "text", "text": "expensive", "role": "translation" },
+        { "type": "text", "text": "DROH-ghee", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["drogi"], "judge": "loose" },
+      "hints": ["It describes something that costs a lot."],
+      "fullLine": "drogi",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine adjective that also means 'dear' to someone.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "shopping-and-money-receipt",
+      "summary": "Receipt",
+      "topics": ["shopping-and-money"],
+      "tags": ["masculine"],
+      "prompt": [{ "type": "text", "text": "Receipt" }],
+      "answer": [
+        { "type": "text", "text": "paragon" },
+        { "type": "text", "text": "receipt", "role": "translation" },
+        { "type": "text", "text": "pah-RAH-gon", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["paragon"], "judge": "loose" },
+      "hints": ["Keep it if you might return the item."],
+      "fullLine": "paragon",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun for the printed slip from a till.",
+          "lang": "en"
+        }
+      ]
+    }
+  ]
+}

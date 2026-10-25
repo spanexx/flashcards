@@ -1,0 +1,135 @@
+{
+  "cards": [
+    {
+      "key": "browser-http-request",
+      "summary": "The browser asks for a page",
+      "topics": ["how-the-browser-works"],
+      "tags": ["http"],
+      "prompt": [
+        { "type": "text", "text": "The browser asks the server for a page with an HTTP " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": "." }
+      ],
+      "answer": [{ "type": "text", "text": "The browser asks the server for a page with an HTTP request." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["request"] }] },
+      "hints": ["Name the message the browser sends."],
+      "fullLine": "The browser asks the server for a page with an HTTP request.",
+      "teaching": [
+        { "type": "text", "text": "The server answers with a response: a status, headers and a body.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/browser-dev/images/request-response.svg", "alt": "Browser and server exchanging a request and a response" },
+        { "type": "video", "source": "youtube", "src": "VSMqUF6kNA0", "search": "How Browsers Work Explained DOM CSSOM Render Tree", "alt": "A walk through the browser's rendering pipeline, from HTML to pixels" }
+      ]
+    },
+    {
+      "key": "browser-builds-dom",
+      "summary": "HTML becomes the DOM",
+      "topics": ["how-the-browser-works"],
+      "tags": ["dom"],
+      "prompt": [{ "type": "text", "text": "What does the browser build from the HTML it receives?" }],
+      "answer": [
+        { "type": "text", "text": "the DOM" },
+        { "type": "text", "text": "A tree of objects that JavaScript can read.", "role": "translation" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["the DOM", "DOM"], "judge": "loose" },
+      "hints": ["The name has three letters and stands for an object model."],
+      "fullLine": "The browser builds the DOM from the HTML it receives.",
+      "teaching": [{ "type": "text", "text": "HTML describes the page; the browser turns those tags into objects that scripts can change.", "lang": "en" }]
+    },
+    {
+      "key": "browser-dns-ip",
+      "summary": "DNS finds the address",
+      "topics": ["how-the-browser-works"],
+      "tags": ["dns"],
+      "prompt": [{ "type": "text", "text": "DNS turns a host name into an " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " address." }],
+      "answer": [{ "type": "text", "text": "DNS turns a host name into an IP address." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["IP"] }] },
+      "hints": ["Two letters, short for Internet Protocol."],
+      "fullLine": "DNS turns a host name into an IP address.",
+      "teaching": [{ "type": "text", "text": "Without DNS the browser would not know which machine to contact.", "lang": "en" }]
+    },
+    {
+      "key": "browser-main-thread",
+      "summary": "JavaScript runs on one thread",
+      "topics": ["how-the-browser-works"],
+      "tags": ["main-thread"],
+      "prompt": [{ "type": "text", "text": "Which one runs a page's JavaScript?" }],
+      "answer": [{ "type": "text", "text": "the main thread" }],
+      "answerDef": { "mode": "picks", "options": ["the main thread", "the network process", "the DNS resolver"], "correct": ["the main thread"] },
+      "hints": ["It is the same place where layout and clicks are handled."],
+      "fullLine": "A page's JavaScript runs on the main thread.",
+      "teaching": [{ "type": "text", "text": "A long script keeps clicks and paints waiting until it finishes.", "lang": "en" }]
+    },
+    {
+      "key": "browser-cssom",
+      "summary": "CSS becomes the CSSOM",
+      "topics": ["how-the-browser-works"],
+      "tags": ["css"],
+      "prompt": [{ "type": "text", "text": "CSS rules become a second tree, the " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": "." }],
+      "answer": [{ "type": "text", "text": "CSS rules become a second tree, the CSSOM." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["CSSOM"] }] },
+      "hints": ["It ends with the same three letters as the DOM."],
+      "fullLine": "CSS rules become a second tree, the CSSOM.",
+      "teaching": [{ "type": "text", "text": "That second tree holds the parsed style rules, and scripts can read or change them.", "lang": "en" }]
+    },
+    {
+      "key": "browser-render-tree",
+      "summary": "Two trees make the render tree",
+      "topics": ["how-the-browser-works"],
+      "tags": ["render-tree"],
+      "prompt": [{ "type": "text", "text": "The render tree is built from which two trees?" }],
+      "answer": [{ "type": "text", "text": "the DOM and the CSSOM" }],
+      "answerDef": { "mode": "picks", "options": ["the DOM and the CSSOM", "the DOM and the cache", "HTML and DNS"], "correct": ["the DOM and the CSSOM"] },
+      "hints": ["One side is structure, the other is style."],
+      "fullLine": "The render tree is built from the DOM and the CSSOM.",
+      "teaching": [{ "type": "text", "text": "Only content that will be shown reaches the render tree.", "lang": "en" }]
+    },
+    {
+      "key": "browser-paint",
+      "summary": "Painting fills the pixels",
+      "topics": ["how-the-browser-works"],
+      "tags": ["paint"],
+      "prompt": [{ "type": "text", "text": "After layout, the browser " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " the pixels." }],
+      "answer": [{ "type": "text", "text": "After layout, the browser paints the pixels." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["paints"] }] },
+      "hints": ["One word: what an artist does with a brush."],
+      "fullLine": "After layout, the browser paints the pixels.",
+      "teaching": [{ "type": "text", "text": "Painting comes after layout has decided where every box sits.", "lang": "en" }]
+    },
+    {
+      "key": "browser-layout",
+      "summary": "Layout places the boxes",
+      "topics": ["how-the-browser-works"],
+      "tags": ["layout"],
+      "prompt": [{ "type": "text", "text": "Which step decides where each box goes?" }],
+      "answer": [{ "type": "text", "text": "layout" }],
+      "answerDef": { "mode": "type", "expected": ["layout"], "judge": "loose" },
+      "hints": ["A viewport change makes this step run again."],
+      "fullLine": "Layout decides where each box goes.",
+      "teaching": [{ "type": "text", "text": "When the viewport or content size changes, positions and sizes are recomputed.", "lang": "en" }]
+    },
+    {
+      "key": "browser-pipeline-order",
+      "summary": "The rendering order",
+      "topics": ["how-the-browser-works"],
+      "tags": ["pipeline"],
+      "prompt": [{ "type": "text", "text": "Which order is correct?" }],
+      "answer": [{ "type": "text", "text": "parse, DOM, styles, layout, paint" }],
+      "answerDef": { "mode": "picks", "options": ["parse, DOM, styles, layout, paint", "paint, layout, DOM, parse", "DOM, paint, parse, layout"], "correct": ["parse, DOM, styles, layout, paint"] },
+      "hints": ["Nothing can be styled before the page is parsed."],
+      "fullLine": "The order is parse, DOM, styles, layout, paint.",
+      "teaching": [{ "type": "text", "text": "Parsing comes first; styling and layout need the DOM.", "lang": "en" }]
+    },
+    {
+      "key": "browser-main-thread-name",
+      "summary": "Page script uses the main thread",
+      "topics": ["how-the-browser-works"],
+      "tags": ["main-thread"],
+      "prompt": [{ "type": "text", "text": "Page JavaScript usually runs on the browser's " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " thread." }],
+      "answer": [{ "type": "text", "text": "Page JavaScript usually runs on the browser's main thread." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["main"] }] },
+      "hints": ["The opposite of a worker."],
+      "fullLine": "Page JavaScript usually runs on the browser's main thread.",
+      "teaching": [{ "type": "text", "text": "A Web Worker runs script somewhere else, so the page stays responsive.", "lang": "en" }]
+    }
+  ]
+}

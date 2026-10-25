@@ -293,7 +293,7 @@ describe("structured generation bundles", () => {
     expect(read.ok).toBe(true);
     if (!read.ok) return;
     expect(read.bundle.pack).toMatchObject({ name: "slow-polish" });
-    expect(read.bundle.decks).toEqual([{ id: "basics", name: "Basics" }]);
+    expect(read.bundle.decks).toEqual([{ id: "basics", name: "Basics", level: "intermediate" }]);
     const cards = read.bundle.cards as Array<{ deckId: string }>;
     expect(cards[0].deckId).toBe("basics");
   });
@@ -315,7 +315,7 @@ describe("structured generation bundles", () => {
       lines: [{ fullLine: "Piję kawę.", target: "kawę" }],
     }));
     expect(deck.ok).toBe(true);
-    if (deck.ok) expect(deck.bundle.decks).toEqual([{ id: "extra", name: "Extra" }]);
+    if (deck.ok) expect(deck.bundle.decks).toEqual([{ id: "extra", name: "Extra", level: "intermediate" }]);
 
     const cards = generatedCardsBundle(
       JSON.stringify({ lines: [{ fullLine: "Piję kawę.", target: "kawę" }] }),
@@ -399,6 +399,48 @@ describe("structured generation bundles", () => {
     const read = generatedCardsBundle(text, { id: "cases", name: "Cases" }, { cardStyle: "cloze" });
     expect(read.ok).toBe(false);
     if (!read.ok) expect(read.message).toMatch(/cloze|style/i);
+  });
+
+  it("carries a line's teaching layer into the card it builds", () => {
+    const teaching = [{ type: "text", text: "Kawa to napój.", lang: "pl" }];
+    const cards = generatedCardsBundle(
+      JSON.stringify({ lines: [{ fullLine: "Piję kawę.", target: "kawę", teaching }] }),
+      { id: "cases", name: "Cases" },
+    );
+    expect(cards.ok).toBe(true);
+    if (cards.ok) {
+      const built = cards.bundle.cards as Array<{ teaching?: unknown }>;
+      expect(built[0]).toMatchObject({ teaching });
+    }
+
+    const pack = generatedPackBundle(
+      JSON.stringify({
+        pack: { name: "slow-polish" },
+        decks: [{ id: "basics", name: "Basics" }],
+        lines: [{ deckId: "basics", fullLine: "Piję kawę.", target: "kawę", teaching }],
+      }),
+    );
+    expect(pack.ok).toBe(true);
+    if (pack.ok) {
+      const built = pack.bundle.cards as Array<{ teaching?: unknown }>;
+      expect(built[0]).toMatchObject({ teaching });
+    }
+  });
+
+  it("refuses a line whose teaching layer is not valid", () => {
+    const read = generatedCardsBundle(
+      JSON.stringify({
+        lines: [
+          {
+            fullLine: "Piję kawę.",
+            target: "kawę",
+            teaching: [{ type: "image", source: "web", src: "https://example.test/cup.png" }],
+          },
+        ],
+      }),
+      { id: "cases", name: "Cases" },
+    );
+    expect(read.ok).toBe(false);
   });
 
   it("refuses a whole bundle whose style is not one the app knows", () => {

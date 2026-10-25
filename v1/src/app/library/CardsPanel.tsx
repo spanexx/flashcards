@@ -9,6 +9,7 @@
 import { useState } from "react";
 import { apiSend } from "@/lib/client/api";
 import type { Card, PackStatus } from "@/lib/shared/types";
+import TeachingEditor from "./TeachingEditor";
 import {
   cardMatches,
   cardsInFocus,
@@ -45,6 +46,7 @@ export default function CardsPanel({
     focus ? { packName: focus.packName, deckId: focus.deckId } : null,
   );
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [teachingId, setTeachingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ front: "", back: "", topics: "", summary: "" });
 
   // A new create result mounts this panel through a fresh token, so the focus
@@ -58,6 +60,7 @@ export default function CardsPanel({
 
   // Editing starts from the visible sides, not the stored parts.
   const beginEdit = (card: Card) => {
+    setTeachingId(null);
     setEditingId(card.id);
     setEditForm({
       front: plainText(card.prompt),
@@ -65,6 +68,12 @@ export default function CardsPanel({
       topics: card.topics.join(", "),
       summary: card.summary,
     });
+  };
+
+  // The layer editor is its own action: saving it keeps the card and its record.
+  const beginTeaching = (card: Card) => {
+    setEditingId(null);
+    setTeachingId((current) => (current === card.id ? null : card.id));
   };
 
   // A saved edit becomes a new copy; the old one stays retired in the record.
@@ -160,11 +169,19 @@ export default function CardsPanel({
                     ))}
                     {card.packName ?? "unknown"} → {deckLabel(packs, card.packName, card.deckId)} · from a{" "}
                     {card.origin.kind === "learner" ? "card you wrote" : card.origin.kind} · {card.origin.note}
+                    {card.teaching && card.teaching.length > 0 ? (
+                      <span className="chip" style={{ marginLeft: 6 }}>
+                        layer
+                      </span>
+                    ) : null}
                   </div>
                 </div>
                 <div className="row">
                   <button className="btn small" type="button" onClick={() => onOpenRecord(card.id)}>
                     Record
+                  </button>
+                  <button className="btn small" type="button" onClick={() => beginTeaching(card)}>
+                    {teachingId === card.id ? "Close teaching" : "Teaching"}
                   </button>
                   <button className="btn small" type="button" onClick={() => beginEdit(card)}>
                     Edit
@@ -174,6 +191,17 @@ export default function CardsPanel({
                   </button>
                 </div>
               </div>
+
+              {teachingId === card.id ? (
+                <TeachingEditor
+                  key={`teaching-${card.id}`}
+                  card={card}
+                  onSaved={onChanged}
+                  onClose={() => setTeachingId(null)}
+                  onError={onError}
+                  onNotice={onNotice}
+                />
+              ) : null}
 
               {editingId === card.id ? (
                 <div className="stack" style={{ marginTop: 10 }}>

@@ -1,0 +1,729 @@
+Teaching Layers - Grill Notes
+
+Status: Locked
+Date: 2026-10-25
+Source: user prompt pasted 2026-10-25 (shared/prompts); current build in
+        flashcards/v1; locked decisions in
+        docs/features/v1-prototype/GRILL-v1-prototype.txt and
+        wayfinder/anything-learning-spec/tickets/
+
+What this feature is about
+
+- Each card may carry one optional teaching layer. It sits before the
+  question and the answer.
+- A teaching layer can hold text, an image, a video, or any mix. It is
+  one layer, not three separate layers.
+- The deck carries a level: beginner, intermediate, advanced. The level
+  decides how the teaching layer is presented.
+- Images and videos can come from the app's own files, the web, or the
+  learner's computer. Local media is copied into IndexedDB.
+- A YouTube video may be suggested by the model, with a start and end
+  time. The model's choice is a suggestion, never a verified fact.
+- The app ships two built-in packs: Browser Dev and Polish from
+  Scratch.
+- It does NOT change the card's two sides. The question and answer stay
+  exactly as they are.
+- It does NOT make the teaching layer part of card identity.
+- It does NOT require a provider, a login, or an internet connection to
+  study a card.
+
+Questions and answers locked so far
+
+1. "no you are missing the point, the fucking layer is not a deck side
+   thing."
+
+Answer:
+- The teaching layer belongs to the card. It is optional on each card.
+- It sits before the question. The question and answer stay where they
+  are.
+- It is one layer that can hold text, an image, a video, or any mix.
+- The deck's level only decides whether and how the layer is shown. It
+  does not split the layer into pieces.
+
+Why:
+- The user corrected an earlier reading that treated the layer as a deck
+  property. A card is the smallest unit; the layer teaches that card.
+- Source: user message 2026-10-25; matches the locked card shape in
+  wayfinder/anything-learning-spec/tickets/card-shape.md (one flat card,
+  optional fields).
+
+2. "teaching layers it is"
+
+Answer:
+- The umbrella name is "teaching layers".
+- Each item inside keeps its own name: explanation, image, video.
+
+Why:
+- An image and a video are not explanations; a neutral umbrella avoids
+  misnaming them.
+- Source: user message 2026-10-25.
+
+3. "Beginner — the layer is open before the question.
+   Intermediate — the layer is folded; the learner clicks once to open it
+   but this adds more cards to their current learning plan, it adds that
+   same card at the end but without the layers.
+   Master — the layer is not shown; the question comes first and then the
+   layers later folded ofcourse"
+
+Answer (final; "master" was later renamed "advanced"):
+- Beginner: the teaching layer is open before the question. No extra
+  card.
+- Intermediate: the layer is folded before the question. Opening it adds
+  the same card at the end of the current session, with no teaching
+  layer.
+- Advanced: the question comes first. After the answer is revealed, the
+  teaching layer is available, folded. Opening it adds no extra card.
+- The level belongs to the deck. The learner chooses a level by choosing
+  a deck. The learner can hide help but cannot invent help the author
+  did not write.
+
+Why:
+- Three levels need three distinct behaviours, not one behaviour with
+  three labels.
+- The intermediate repeat is the cost of peeking. The advanced order is
+  "try first, learn after".
+- Source: user message 2026-10-25; the "master" wording was replaced by
+  "advanced" in entry 15.
+
+4. "When exactly does the extra card get added, and what if the card is
+   also wrong?" (agent question; user: "This is right")
+
+Answer:
+- The extra card is added only if the learner opens the layer before
+  answering. Opening it after the answer adds nothing.
+- One return per card per session. If the learner peeked and also
+  answered wrongly, the card returns once, without the teaching layer.
+- Advanced: opening the post-answer layer adds nothing.
+- Beginner: hiding or reopening the open layer adds nothing.
+
+Why:
+- Before answering is the only moment help can change the answer.
+- One return keeps the session finite and matches the locked rule that a
+  wrong card returns once.
+- Source: user answer 2026-10-25; docs/features/v1-prototype/
+  GRILL-v1-prototype.txt (wrong cards return once).
+
+5. "Does seeing the teaching layer count against the answer, like a hint
+   does?" (agent question; user: "agreed")
+
+Answer:
+- No cap. The teaching layer is teaching, not a hint.
+- The evidence row records helpSeen: true when the layer was visible
+  before the answer (open at beginner, opened at intermediate).
+- The four outcomes stay Again, Got it, Nearly, No, plus Unjudged. No
+  fifth outcome.
+- The Hint button still caps the card at Nearly, as locked.
+
+Why:
+- Capping every beginner answer would make beginner progress
+  meaningless, because the layer is open by default.
+- The intermediate repeat is already the cost of peeking; a cap would
+  punish twice.
+- Source: docs/features/v1-prototype/GRILL-v1-prototype.txt (hint caps
+  at Nearly); user answer 2026-10-25.
+
+6. "Should the cold repeat happen at the end of the same session, or in
+   the next session?" (agent question; user: "continue")
+
+Answer:
+- Same session, as originally asked.
+- The repeat is recorded with coldCheck: true.
+- The progress screen never turns a cold check into an "improved" or
+  "faster" conclusion on its own.
+- The card still returns in the next session on the normal schedule.
+  That attempt is the real evidence.
+
+Why:
+- A same-session repeat proves short-term memory, not durable learning.
+  It must not read as progress.
+- Keeping it in the session preserves the immediate "you peeked, now
+  prove it" moment the user asked for.
+- Source: user message 2026-10-25; locked principle "Familiarity is
+  never sold as progress" (GRILL-v1-prototype.txt).
+
+7. "The image has to come from somewhere, but displays in the card's
+   image layer. I would want us to talk about where the image would be
+   reading from, if its sometimes internal it should read from the
+   learner's computer, or internet. It will bloat the IndexedDB if we
+   save it there."
+
+Answer:
+- Three image sources:
+  1. Built-in pack image: shipped in the app's own folder. No IndexedDB
+     cost, works offline.
+  2. Web image: only the URL is stored. Needs internet, can break, and
+     makes a third-party request.
+  3. Local image: the learner picks a file; the app resizes it (max
+     ~1600 px wide), stores it as a Blob in a separate media store in
+     IndexedDB, capped at 1 MB per image, and includes it in the full
+     backup.
+- The image layer records which source it uses.
+- The question side keeps its existing media part for an image the
+  question actually needs. That image is content, not help, and is not
+  gated by the level.
+
+Why:
+- A web page cannot read C:\... . The learner must pick the file, and
+  IndexedDB is the only durable browser-only store.
+- A separate Blob store keeps cards small; total storage still grows.
+- Built-in images should not inflate every learner's IndexedDB.
+- Source: user message 2026-10-25; browser-owned data rule in
+  wayfinder/anything-learning-spec/tickets/browser-owned-packs.md.
+
+8. "The video is supposed to read same from user's computer and/or the
+   internet, but i need it to be smart, we should give the llm the power
+   to tag youtube videos and/or a section of youtube videos that will
+   play at the card video layer. I am not sure how possible this is, the
+   user has to log into youtube anyway to be able to play videos with no
+   issue correct?"
+
+Answer:
+- A video layer is one of: a YouTube video ID with optional start and
+  end seconds; a direct web video URL; a local file copied into the
+  media store, capped at 20 MB.
+- "A section" means a time range inside one video, not a playlist or a
+  channel section. Playlists are out of scope.
+- Public YouTube videos play without a login. Private, age-restricted
+  or members-only videos may ask for sign-in or refuse to embed; the
+  layer shows a plain "Open on YouTube" fallback.
+- The card works without the video.
+
+Why:
+- A model cannot browse YouTube. It writes an ID from memory.
+- Login is not the common blocker; dead IDs, disabled embedding and
+  restricted videos are.
+- Source: user message 2026-10-25; YouTube embed behaviour (public
+  videos need no login).
+
+9. "Who chooses the video, and what happens when the model is wrong?"
+   (agent question; user: "it i right")
+
+Answer:
+- Pack author curates videos for built-in packs.
+- The learner can always replace a video: paste a YouTube link, paste a
+  web video link, or pick a local file. The replacement is stored on the
+  card and wins.
+- The model may suggest an ID, a time range and a search query. It is a
+  suggestion, never verified.
+- Before play, the app checks the video's thumbnail. If it fails, it
+  shows the search query and an "Open on YouTube" link instead of a
+  broken player.
+- A pack author's curated video is never replaced by the model.
+
+Why:
+- The model cannot judge relevance and can invent or misremember IDs.
+- The thumbnail check catches dead IDs; only a person can judge whether
+  the video is the right one.
+- Source: user answer 2026-10-25.
+
+10. "We then need to create some inbuilt packs" (user) and "Which
+    built-in packs do we ship, and what is in them?" (agent question;
+    user: "continue")
+
+Answer:
+- First batch: three packs, three decks each, ten cards per deck.
+  1. Browser-Dev: DevTools Basics (beginner), Network and Console
+     (intermediate), Performance and Memory (advanced).
+  2. Polish Starter: Cases (beginner), Verb aspect (intermediate), Past
+     tense (advanced).
+  3. Anatomy Basics: chosen as the third subject (agent choice; user
+     said continue).
+- Text-first. Teaching layers are text plus a simple SVG diagram where
+  it helps.
+- No videos in the first batch unless the user supplies a working
+  YouTube ID.
+- A person must check the facts; an agent cannot verify a language,
+  anatomy or DevTools fact.
+
+Why:
+- Three subjects prove the card shape is subject-agnostic.
+- Ten cards per deck is enough to study and small enough to check.
+- Shipping wrong videos or fake screenshots is worse than shipping no
+  media.
+- Source: user message 2026-10-25; wayfinder map's subject-agnostic
+  destination.
+
+11. "How do built-in packs get in, and how do they update?" (agent
+    question; user: "i agree")
+
+Answer:
+- A seed manifest at /packs/index.json lists each built-in pack with
+  name, version and file.
+- On start: not installed and not dismissed -> install; older version ->
+  update additively with the same import rule; same or newer -> do
+  nothing.
+- A pack the learner removes is remembered as dismissed and is not
+  re-added.
+- A built-in card the learner deletes stays deleted after an update, as
+  long as its content has not changed.
+- A failure is silent and retried next start. Seeding never blocks the
+  app.
+
+Why:
+- The current single "seeded" flag means a new built-in pack can never
+  reach an existing learner.
+- Reusing the import rule keeps one code path and never deletes a card.
+- Source: v1/src/lib/browser/bundle.ts:743 (current ensureSeeded);
+  wayfinder/anything-learning-spec/tickets/browser-owned-packs.md
+  (additive update, no import deletes a card).
+
+12. "Does changing a teaching layer change the card's identity?" (agent
+    question; user: "this is too long" then "Continue where you left
+    off" — taken as acceptance of the recommendation)
+
+Answer:
+- No. Teaching layers are not part of card identity.
+- Changing a teaching layer updates the card in place. Evidence stays.
+- Changing the question or the answer creates a new card; the old card
+  is retired and keeps its evidence.
+- A pack update that only changes teaching layers updates in place.
+- The learner's "edit the teaching layer" action is separate from "edit
+  the card".
+
+Why:
+- The layer is help, not the thing being judged.
+- Retiring a card because an author fixed an explanation would punish
+  the learner for someone else's edit.
+- Source: v1/src/lib/core/card.ts:58 (canonicalContent); teaching is
+  added to the exclusion list; GRILL-v1-prototype.txt R2/R3.
+
+13. "the layer has to be a collapsible modal"
+
+Answer:
+- The teaching layer is shown as a collapsible modal over the study
+  card.
+- It can be collapsed to a bar so the question is visible, and reopened.
+- Beginner: it opens automatically.
+- Intermediate: it opens when the learner presses "Show the teaching
+  layer".
+- Advanced: it is available after the answer is revealed, folded.
+
+Why:
+- A modal keeps the card itself unchanged and gives the layer room for
+  text, image and video.
+- Collapsing lets the learner answer without closing the layer
+  permanently.
+- Source: user message 2026-10-25.
+
+14. "Do the authoring skill and the generation prompt write teaching
+    layers?" (agent question; user: "continue")
+
+Answer:
+- Yes, both. The card JSON gains a teaching field.
+- The prompt asks for a short explanation and an optional image or
+  video only when it helps, and never puts the answer in the
+  explanation.
+- Media is optional; a card with no teaching layer is valid.
+- The manual create/edit form gets a teaching section.
+
+Why:
+- Otherwise only hand-written packs can carry layers.
+- Source: user answer 2026-10-25; the authoring skill and generation
+  prompt already own the card JSON shape.
+
+15. "we can stick to advanced"
+
+Answer:
+- The three levels are beginner, intermediate, advanced. There is no
+  "master".
+- A deck's level wins for generation inside that deck. The global
+  learner level is the fallback when no deck is chosen.
+- No rename and no migration of stored settings.
+
+Why:
+- The app already stores beginner/intermediate/advanced; adding master
+  would create a fourth word for the same thing.
+- Source: user message 2026-10-25; v1/src/lib/shared/types.ts:230.
+
+16. "Backup and export with media: does the full backup include local
+    images and videos? Does an exported pack embed its media?" (agent
+    question; user: "Use zip backup to safely keep all videos")
+
+Answer:
+- The full backup is a zip archive, not one JSON file.
+- The zip holds `backup.json` (packs, decks, cards, evidence, sessions,
+  settings, prompt log - never the provider key) plus a `media/` folder
+  with every local image and video, stored as-is, not turned into text.
+- Media keeps its id, and each card points to that id, so restore
+  reconnects media without duplicating it.
+- Restore chooses the zip file. Pasting an older JSON backup still works;
+  its local media is simply missing.
+- Autosave rewrites the same zip after changes, and stays desktop-only
+  as already locked.
+- Built-in pack media and web URLs are not copied into the zip. They are
+  already shipped with the app or live on the web.
+
+Why:
+- IndexedDB is the only copy. Local videos are the most likely thing to
+  be irreplaceable, and as text they grow by about a third. A 70 MB
+  library would become a 93 MB JSON and be rewritten after every change.
+- A zip carries the bytes unchanged and keeps the one-file promise.
+- Revises browser-owned-packs.md #9 ("one JSON file"); that ticket needs
+  the same correction when this GRILL locks.
+- Source: user message 2026-10-25; browser-owned-packs.md #9 (backup
+  holds everything, never the key); GRILL entries 7 and 8 (media caps).
+
+17. "Export with media: does an exported pack become a zip when it has
+    local media?" (agent question; user: "yes, make sure shared packs
+    use zip too")
+
+Answer:
+- A pack that has local media exports as a zip: `pack.json` plus a
+  `media/` folder with the images and videos as-is.
+- A pack with no local media still exports as one plain JSON file.
+- Import accepts both. A zip is chosen from a file picker; a JSON pack
+  can still be pasted or chosen.
+- The exported pack stays content only: no evidence, no sessions, no
+  settings, no key.
+- Media keeps its id so cards reconnect on import. An import never
+  overwrites media that already exists on the device.
+- Built-in pack media and web URLs are not embedded; they are already
+  shipped with the app or live on the web.
+- A pack zip is not a backup: importing merges by the existing pack
+  rule and never replaces the library.
+
+Why:
+- A shared pack with local media must arrive complete, or the friend
+  gets cards pointing at files nobody has.
+- Keeping plain JSON for media-free packs preserves the simple paste
+  path.
+- Source: user message 2026-10-25; browser-owned-packs.md #3/#5 (one
+  bundle for create, import and export; export is content only);
+  GRILL entry 16 (zip backup).
+
+18. "Offline and failure behaviour for images and videos." (agent
+    question; user: "go ahead with these rules")
+
+Answer:
+- The card never depends on media. Text, question and answer stay
+  usable.
+- YouTube offline, blocked or dead: the locked fallback applies - the
+  search text and an "Open on YouTube" link. No player, no endless
+  spinner.
+- A web image that fails: a placeholder with the alt text and a link to
+  open it.
+- A local image or video: works offline from the browser's media store.
+- Local media missing (browser eviction, or an older JSON backup
+  restore): "This file is not on this device" plus "Choose the file
+  again". The card still works.
+- Built-in pack media must be in the offline app cache, so it works
+  offline like the app does. Otherwise it fails like a web image.
+- Every failure ends in one plain message. There is no silent retry
+  loop; the app tries again only when the learner reopens the layer or
+  the card.
+- The layer still opens and collapses when its media fails. The failure
+  lives inside the layer, not on the card.
+
+Why:
+- Studying must work with no internet (locked).
+- A spinner that never ends is a broken card in disguise; a plain
+  message keeps the learner moving.
+- Source: user message 2026-10-25; GRILL entries 8 and 13;
+  GRILL-v1-prototype.txt (study works offline).
+
+19. "The exact card JSON shape for the teaching layer: one object with
+    text/image/video, or an ordered list of parts, and the display
+    order." (agent question; user: "yes, go ahead with the ordered
+    list")
+
+Answer:
+- A card gains one optional field: `teaching`, an ordered list of
+  parts. No teaching field means the card has no layer.
+- A teaching part is exactly one of three kinds, in any order:
+  - text: `{ type: "text", text: string }`
+  - image: `{ type: "image", source: "builtin" | "web" | "local",
+    src: string, alt: string }`
+  - video: `{ type: "video", source: "youtube" | "web" | "local",
+    src: string, start?: number, end?: number, search?: string,
+    alt?: string }`
+- `src` is whatever the source names: an app path for builtin, a URL
+  for web, a media id for local. For YouTube, `src` is the video id.
+- Display order is the list order, top to bottom inside the modal.
+- `start` and `end` are whole seconds inside one YouTube video. They
+  are optional and may be omitted.
+- Only text, image and video belong in a teaching layer. Code, speak
+  and blank parts stay on the card's two sides.
+- The field is optional and is not part of card identity (entry 12).
+  Editing it updates the card in place.
+
+Why:
+- "Any mix" needs an order; a closed text/image/video object cannot
+  put a closing note after a clip.
+- The card sides already use ordered parts, so this reuses the same
+  idea instead of adding a second one.
+- Source: user message 2026-10-25; GRILL entries 1, 7, 8, 12 and 14;
+  v1/src/lib/shared/types.ts:20-25 (CardPart) and :58-75 (Card).
+
+20. "The manual editor's fields for a teaching layer." (agent question;
+    user: "go ahead with the manual editor specs")
+
+Answer:
+- The manual create/edit card form gains one optional "Teaching layer"
+  section.
+- Three add buttons: text, image, video. Each row moves up or down and
+  can be removed.
+- Text is plain and multiline. Line breaks only; no formatting.
+- Image source is a web address or a file from this computer. Built-in
+  is not offered here; a learner cannot add files to the app. Alt text
+  is required.
+- Video source is a YouTube link, a web address, or a file. A YouTube
+  link is reduced to its id. Start and end are optional whole seconds,
+  and end must be after start. Search text is optional.
+- Local media obeys the locked caps: images at most 1600 px wide and
+  1 MB, videos at most 20 MB. Both are copied into the media store.
+- A preview shows the layer as the learner will see it.
+- Save writes the layer with the card, in place. A layer-only edit
+  changes no identity and keeps evidence.
+- The same field and editor apply to hand-written, imported and
+  generated cards.
+
+Why:
+- One editor and one shape, so the authoring skill, the generation
+  prompt and hand-written cards cannot drift.
+- Required alt text feeds the offline and broken-image fallback and a
+  screen reader.
+- Plain text avoids a rich-text editor and any third-party script.
+- Source: user message 2026-10-25; GRILL entries 7, 8, 14 and 19;
+  v1/src/lib/shared/types.ts:20-25.
+
+21. "The level field on a deck: where it is stored and how it appears
+    in the pack bundle." (agent question; user: "confirm the deck level
+    rule")
+
+Answer:
+- The level lives on the deck record, which becomes `{ id, name,
+  level }`. Level is one of beginner, intermediate, advanced.
+- In a pack file, each deck carries its level next to its name:
+  `"decks": [{ "id": "cases", "name": "Cases", "level": "beginner" }]`.
+- The level is not copied onto cards and is not a learner setting. The
+  learner chooses a level by choosing a deck (entry 3).
+- A deck with no level, from an older pack or an older local deck,
+  defaults to intermediate: the layer is folded and the learner opens
+  it.
+- A new deck starts at the learner's current global level.
+- Changing a level changes presentation only: no card identity change,
+  no evidence reset, no card rewrite.
+- The global `Settings.level` stays only as the generation fallback
+  when no deck is chosen (entry 15).
+- A pack update may change a deck's level like any other pack content.
+
+Why:
+- A level per card would duplicate one rule hundreds of times and
+  drift. The deck is the unit the learner already chooses.
+- Intermediate is the neutral default: beginner forces help open,
+  advanced hides authored help until after the answer.
+- Source: user messages 2026-10-25; GRILL entries 3, 11 and 15;
+  v1/src/lib/shared/types.ts:11 (Deck).
+
+22. "So, I want a Browser Dev pack... that is for beginner. That will
+    teach me everything about browser dev tool. So it should be one
+    pack and have a lot of decks on it. So each deck will have cards
+    that are related to it... and then the next one is Polish from the
+    scratch... dedicated only for learning polish words... just for
+    polish words, not sentences... be a beginner... I think just text
+    is okay... I forgot to say that each text layer should have the
+    button that I will click to listen to the text instead of reading
+    it... the polish from the scratch should have greetings deck,
+    written deck... a lot of decks depending, just you can recommend."
+    (dictated; user message 2026-10-25)
+
+Answer:
+- The built-in pack plan is revised. Entry 10's pack names and its
+  three-deck split are replaced for the first two packs.
+- Browser Dev: one pack with many decks, beginner. Each deck is one
+  related slice of browser developer tools, and the pack teaches the
+  subject end to end.
+- Polish from Scratch: one pack for Polish words only. It never
+  teaches whole sentences. Beginner. Its teaching layers are text
+  only; no images or videos in this pack.
+- Polish decks begin with Greetings and Written. "Written" is the
+  dictated word; read it as the writing or spelling of words. The
+  agent recommends the remaining decks, built from the same word-only
+  rule.
+- Each deck still holds about ten cards, as in entry 10.
+- Entry 10's media rule still applies to Browser Dev: text plus a
+  simple diagram where it helps, and no videos unless the user
+  supplies a working YouTube id.
+- Every teaching layer that contains text gets a Listen button. The
+  learner clicks it to hear the text instead of reading it. The
+  details are still to confirm.
+
+Why:
+- One Browser Dev pack with many decks matches how the learner wants
+  to move through the subject: related cards together, many slices.
+- A word-only Polish pack keeps each question and answer honest and
+  keeps the decks small.
+- Source: user message 2026-10-25 (dictated); replaces the pack list
+  in entry 10.
+
+23. "Drop it, just stick with Browser Dev and Polish. I would rather
+    focus on these two. I need you to add as much. And. And. Browser
+    dev, choose from beginning to end. So you have to add one deck.
+    For one, two. So I can learn everything about it." (dictated; user
+    message 2026-10-25)
+
+Answer:
+- Two built-in packs only. Anatomy Basics is dropped.
+- Browser Dev: one beginner pack, ordered from first principles to
+  advanced debugging, one deck per area, about ten cards per deck.
+  The order is:
+  1. How the Browser Works
+  2. DevTools Basics
+  3. Elements and the DOM
+  4. Styles and the Box Model
+  5. Console
+  6. Network
+  7. Sources and Debugging
+  8. Application and Storage
+  9. Performance
+  10. Memory and Leaks
+  11. Accessibility
+  12. Responsive and Device Mode
+  13. Security Essentials
+  14. Debugging Recipes
+- Polish from Scratch: words only, beginner, text-only layers,
+  about ten words per deck. Greetings and Written come first. The
+  rest is the agent's recommendation:
+  1. Greetings
+  2. Written
+  3. Numbers
+  4. People and Family
+  5. Food and Drink
+  6. Home and Rooms
+  7. Common Verbs
+  8. Time and Days
+  9. Places and Travel
+  10. Shopping and Money
+  11. Body and Health
+  12. Weather and Seasons
+- "Written" is read as the writing or spelling of words. The user can
+  correct the word.
+- A person must check the facts. The agent cannot verify DevTools
+  behaviour or Polish meaning from memory.
+- No videos unless the user supplies a working YouTube id. Browser
+  Dev uses text plus a simple diagram where it helps.
+
+Why:
+- The user chose depth on two subjects over breadth across three.
+- A fixed order lets the learner move from beginning to end instead of
+  picking at random.
+- Source: user message 2026-10-25 (dictated); replaces entry 10 and
+  answers the third-pack question in entry 22.
+
+24. "Yeah, not just browser, i mean the also the Polish words. It
+    should be beginner. The browser can be intermediate sometime...
+    and it should be, it should grow as it goes. For Polish words, I
+    think you have enough Polish words in your memory to create it.
+    It's just Polish words. I'm not saying you should change the words
+    in particular context, like when it's a man, when it's a woman.
+    No, I just need to learn the words." (dictated; user message
+    2026-10-25)
+
+Answer:
+- Browser Dev keeps fourteen decks, and the level rises with the
+  order. The order in entry 23 is revised to make that clean:
+  - Beginner: How the Browser Works, DevTools Basics, Elements and
+    the DOM, Styles and the Box Model, Console, Responsive and Device
+    Mode.
+  - Intermediate: Network, Sources and Debugging, Application and
+    Storage, Accessibility.
+  - Advanced: Performance, Memory and Leaks, Security Essentials,
+    Debugging Recipes.
+- Polish from Scratch stays beginner in every deck.
+- Polish cards are words only: no sentences, no gender forms, no
+  case forms, no "he/she" variants. One word per card, with its plain
+  meaning and an optional pronunciation note.
+- The agent drafts the words. A Polish speaker must check every word
+  before it ships.
+- The card's question and answer still keep the locked shape (entry
+  1). How a word card uses them is the next question.
+
+Why:
+- The learner wants a rising path in Browser Dev and a flat beginner
+  path in Polish.
+- "Just the words" removes inflection. Adding gender or case would
+  turn the pack into a grammar pack.
+- Source: user message 2026-10-25 (dictated); revises the deck order
+  in entry 23.
+
+25. "Word-card shape: at beginner the teaching layer opens before the
+    question. If the layer teaches the word, the answer is visible
+    first. Confirm that flow." (agent question; user: "Yes, go with
+    the lesson-first flow")
+
+Answer:
+- A word card teaches first, then asks the learner to produce the
+  word. Example: prompt "dog", answer "pies", teaching layer "pies -
+  pronounced pyes, the Polish word for dog" with a Listen button.
+- The layer may contain the answer. This is a deliberate exception to
+  entry 14's rule, and it applies only to the built-in word packs.
+  The layer is the lesson; typing the word is the practice.
+- The card's question and answer keep the locked shape. Nothing is
+  added to either side.
+- At beginner the layer opens automatically (entry 3). The learner
+  may collapse it before answering.
+- Evidence still records `helpSeen: true` when the layer was visible
+  before the answer (entry 5).
+
+Why:
+- A true beginner cannot answer a word question without first being
+  taught the word.
+- The exception is narrow: ordinary generated cards still never put
+  the answer in the teaching layer.
+- Source: user message 2026-10-25; GRILL entries 1, 3, 5 and 14.
+
+26. "Listen button details: one button per layer, the device's built-in
+    speech, per-part language, a stop control, and a plain message when
+    no voice is installed." (agent question; user: "Confirm the listen
+    button rules and proceed")
+
+Answer:
+- One Listen button per teaching layer that has at least one text
+  part. It reads every text part in order, top to bottom, and skips
+  images and video.
+- The button toggles to Stop. Collapsing the layer or leaving the
+  card stops it. There is no autoplay, and each press starts from the
+  top.
+- It uses the device's built-in speech (the browser speech feature).
+  No third-party script, no provider, no stored audio and no network
+  call from the app.
+- A text part gains an optional `lang` (for example `pl-PL` or
+  `en-US`), extending the shape in entry 19. It defaults to the
+  pack's language. The reader uses the matching voice for each part,
+  so a Polish word and an English note each sound right.
+- If the device has no voice for a part's language, that part is
+  skipped and a plain note names the missing language. Other parts
+  still read.
+- If speech is unavailable entirely, the button is disabled with a
+  plain message.
+- The button reads teaching text only. It never reads the question,
+  the answer, alt text or captions.
+- The button carries a text label, not only an icon.
+
+Why:
+- The learner asked to listen instead of read, and a language pack
+  needs the right voice per part.
+- Built-in speech keeps the app offline, provider-free and free of
+  third-party scripts.
+- Source: user message 2026-10-25; GRILL entries 19, 20, 22 and 24.
+
+27. "Entry 12 (teaching layers are not part of card identity) still
+    needs an explicit yes." (agent question; user: "Confirm the card
+    identity rule and mark the grill as locked")
+
+Answer:
+- Yes. Teaching layers are not part of card identity.
+- Changing only a teaching layer updates the card in place and keeps
+  its evidence.
+- Changing the question or the answer creates a new card. The old
+  card is retired and keeps its evidence.
+- A pack update that changes only teaching layers updates in place.
+- Canonical content excludes the `teaching` field.
+
+Why:
+- The layer is help, not the thing judged. Retiring a card because an
+  author fixed an explanation would punish the learner.
+- Source: user message 2026-10-25; entry 12;
+  v1/src/lib/core/card.ts:58 (canonicalContent).
+
+No remaining open questions

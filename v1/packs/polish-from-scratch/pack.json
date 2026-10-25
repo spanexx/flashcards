@@ -1,0 +1,51 @@
+{
+  "name": "polish-from-scratch",
+  "version": "1.0.0",
+  "author": "flashcards v1 prototype",
+  "description": "Absolute beginner Polish: twelve decks of single words with a plain pronunciation respelling.",
+  "language": "pl",
+  "sourceLanguage": "en",
+  "coreRange": "*",
+  "topics": [
+    "greetings",
+    "written",
+    "numbers",
+    "people-and-family",
+    "food-and-drink",
+    "home-and-rooms",
+    "common-verbs",
+    "time-and-days",
+    "places-and-travel",
+    "shopping-and-money",
+    "body-and-health",
+    "weather-and-seasons"
+  ],
+  "topicLabels": {
+    "greetings": "Greetings",
+    "written": "Written Polish",
+    "numbers": "Numbers",
+    "people-and-family": "People and family",
+    "food-and-drink": "Food and drink",
+    "home-and-rooms": "Home and rooms",
+    "common-verbs": "Common verbs",
+    "time-and-days": "Time and days",
+    "places-and-travel": "Places and travel",
+    "shopping-and-money": "Shopping and money",
+    "body-and-health": "Body and health",
+    "weather-and-seasons": "Weather and seasons"
+  },
+  "topicLevels": {
+    "greetings": "beginner",
+    "written": "beginner",
+    "numbers": "beginner",
+    "people-and-family": "beginner",
+    "food-and-drink": "beginner",
+    "home-and-rooms": "beginner",
+    "common-verbs": "beginner",
+    "time-and-days": "beginner",
+    "places-and-travel": "beginner",
+    "shopping-and-money": "beginner",
+    "body-and-health": "beginner",
+    "weather-and-seasons": "beginner"
+  }
+}

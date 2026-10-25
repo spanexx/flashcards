@@ -38,10 +38,12 @@ content; the app is fully usable with no provider.
 3. Is the algorithm fixed to one deck? -> No. A deck is a container, not a
    session boundary. A lesson may draw cards from different decks, and exams or
    tests will too; exam/test design is a later conversation, noted now.
-4. What does a pack look like when created or imported? -> One JSON file holding
-   the pack, its decks and its cards (plus optional prompts). The same file is
-   used for import and export; the in-app create form builds it. At least one
-   deck is required; cards may start empty.
+4. What does a pack look like when created or imported? -> One bundle holding
+   the pack, its decks and its cards (plus optional prompts). The same bundle is
+   used for import and export; the in-app create form builds it. A pack with no
+   local media is one JSON file. A pack with local media is a zip holding
+   `pack.json` plus a `media/` folder. At least one deck is required; cards may
+   start empty.
 5. How do provider-less learners create content? -> A copyable "authoring
    skill": a prompt a learner pastes into a browser chat (for example
    ChatGPT), which returns the same JSON to paste or load into the app. It must
@@ -63,10 +65,12 @@ content; the app is fully usable with no provider.
    by identity, so evidence survives. No import deletes a card; removal is a
    separate learner action, and an older version is refused with a plain reason.
 9. How does a learner back up and restore? -> Three paths. "Back up everything"
-   is one JSON file with all packs, decks, cards, evidence, sessions and
-   settings, never the key. "Restore" replaces the whole library after a
-   confirmation; per-pack import stays the merge path. "Export this pack" is
-   content only, no evidence, for sharing.
+   is one zip file holding `backup.json` (all packs, decks, cards, evidence,
+   sessions and settings, never the key) plus a `media/` folder with every local
+   image and video. "Restore" replaces the whole library after a confirmation;
+   per-pack import stays the merge path. "Export this pack" is content only, no
+   evidence, for sharing; it is a zip when the pack has local media and plain
+   JSON when it does not.
 10. Can the library autosave? -> Partly. On desktop Chrome or Edge, the learner
     picks a backup file once and the app rewrites it after changes (File System
     Access API; installing the site as an app helps the permission stick). Phone
@@ -110,21 +114,28 @@ content; the app is fully usable with no provider.
    pack declares its decks. Decks replace topics; tags stay free cross-cutting
    labels. A deck is a container, not a session boundary: lessons and later
    exams may draw across decks.
-3. **One bundle.** A pack is one JSON file: pack, decks, cards, optional
-   prompts. The in-app create form builds it; import and export use it. At least
-   one deck; cards may start empty. A whole pack creates a new pack; decks-only
-   or cards-only go into a chosen existing pack (cards also choose a deck).
-   Same name plus a newer version updates additively by identity and evidence
-   survives; no import deletes a card; an older version is refused with a plain
-   reason.
+3. **One bundle.** A pack is one bundle: pack, decks, cards, optional prompts.
+   It is a plain JSON file when the pack has no local media, and a zip holding
+   `pack.json` plus `media/` when it does. The in-app create form builds it;
+   import and export use it. At least one deck; cards may start empty. A whole
+   pack creates a new pack; decks-only or cards-only go into a chosen existing
+   pack (cards also choose a deck). Same name plus a newer version updates
+   additively by identity and evidence survives; no import deletes a card; an
+   older version is refused with a plain reason.
 4. **Provider direct.** The key lives in IndexedDB and the browser calls the
    provider directly, with no relay. The host never sees the key or a prompt.
    No third-party scripts. CORS may block some providers or local models; with
    no key the app still works and generation/tutoring stay off.
-5. **Backup.** A full backup JSON includes evidence, sessions and settings and
-   never the key; restore replaces the library after confirmation; per-pack
-   export is content only. Desktop Chrome or Edge can autosave to a
-   learner-picked file; phones save manually; cloud/WebDAV sync is later.
+5. **Backup.** A full backup is a zip holding `backup.json` (packs, decks,
+   cards, evidence, sessions and settings, never the key) plus a `media/` folder
+   with local images and videos. Restore replaces the library after
+   confirmation; per-pack export is content only and uses the zip rule when the
+   pack has local media. Desktop Chrome or Edge can autosave to a learner-picked
+   file; phones save manually; cloud/WebDAV sync is later.
+
+   Revised 2026-10-25 by `docs/features/teaching-layers/GRILL-teaching-layers.txt`
+   (entries 16 and 17), because local videos cannot ride in a JSON file without
+   growing by about a third and being rewritten on every autosave.
 6. **Authoring skill.** A copyable, target-tailored prompt lets provider-less
    learners make a pack, decks, or cards in a browser chat and bring the JSON
    back. Ticket 17.

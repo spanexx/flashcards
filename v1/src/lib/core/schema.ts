@@ -38,6 +38,97 @@ export const cardPartSchema = z.discriminatedUnion("type", [
   }),
 ]);
 
+/** How a deck presents help. A missing level means intermediate. */
+export const studyLevelSchema = z.enum(["beginner", "intermediate", "advanced"]);
+
+/** A built-in file stays inside the app's own packs folder. */
+const builtinSourceSchema = z
+  .string()
+  .regex(/^\/packs\/[A-Za-z0-9._/-]+$/, "a built-in source lives under /packs/")
+  .refine((value) => !value.split("/").includes(".."), "a built-in source cannot leave the packs folder");
+
+/** A web source is an ordinary http or https address. */
+const webSourceSchema = z.string().refine((value) => {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}, "a web source must be an http or https address");
+
+/** A local source names a record in the media store. */
+const localSourceSchema = z
+  .string()
+  .regex(/^media-[A-Za-z0-9-]+$/, "a local source must be a media id");
+
+/** A YouTube source is the video id alone, never a whole link. */
+const youTubeSourceSchema = z
+  .string()
+  .regex(/^[A-Za-z0-9_-]{11}$/, "a YouTube source is an 11-character video id");
+
+/** The problem with one media source, or null when the source matches its kind. */
+function sourceProblem(source: "builtin" | "web" | "local" | "youtube", value: string): string | null {
+  const checked =
+    source === "builtin"
+      ? builtinSourceSchema
+      : source === "youtube"
+        ? youTubeSourceSchema
+        : source === "web"
+          ? webSourceSchema
+          : localSourceSchema;
+  const result = checked.safeParse(value);
+  return result.success ? null : (result.error.issues[0]?.message ?? "the source is not valid");
+}
+
+/** A teaching part is text, an image or a video, in any order. */
+export const teachingPartSchema = z.union([
+  z.object({
+    type: z.literal("text"),
+    text: z.string().min(1, "a text part needs words"),
+    lang: z.string().min(1).optional(),
+  }),
+  z
+    .object({
+      type: z.literal("image"),
+      source: z.enum(["builtin", "web", "local"]),
+      src: z.string().min(1, "an image part needs a source"),
+      alt: z.string().min(1, "an image part needs alt text"),
+    })
+    .superRefine((part, ctx) => {
+      const problem = sourceProblem(part.source, part.src);
+      if (problem) ctx.addIssue({ code: "custom", path: ["src"], message: problem });
+    }),
+  z
+    .object({
+      type: z.literal("video"),
+      source: z.enum(["youtube", "web", "local"]),
+      src: z.string().min(1, "a video part needs a source"),
+      start: z.number().int().min(0, "a start time is a whole number of seconds").optional(),
+      end: z.number().int().min(0, "an end time is a whole number of seconds").optional(),
+      search: z.string().min(1).optional(),
+      alt: z.string().optional(),
+    })
+    .superRefine((part, ctx) => {
+      const problem = sourceProblem(part.source, part.src);
+      if (problem) ctx.addIssue({ code: "custom", path: ["src"], message: problem });
+      if (part.source !== "youtube" && (part.start !== undefined || part.end !== undefined)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["start"],
+          message: "start and end belong to a YouTube video",
+        });
+      }
+      if (part.start !== undefined && part.end !== undefined && part.end <= part.start) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["end"],
+          message: "the end time must be after the start time",
+        });
+      }
+    }),
+]);
+
 /** One blank's expected answers and optional local options. */
 export const blankDefSchema = z.object({
   id: z.string().min(1, "a blank needs an id"),
@@ -70,6 +161,10 @@ export const cardSourceSchema = z.object({
   answerDef: answerDefSchema,
   hints: z.array(z.string()).optional(),
   fullLine: z.string().optional(),
+  teaching: z
+    .array(teachingPartSchema)
+    .min(1, "a teaching layer needs at least one part")
+    .optional(),
 });
 
 /** The pack manifest. Name and version identify the pack; version is not card identity. */

@@ -1,0 +1,125 @@
+{
+  "cards": [
+    {
+      "key": "storage-local",
+      "summary": "localStorage keeps strings",
+      "topics": ["application-and-storage"],
+      "tags": ["storage"],
+      "prompt": [{ "type": "text", "text": "Which store keeps key-value strings until they are deleted?" }],
+      "answer": [{ "type": "text", "text": "localStorage" }],
+      "answerDef": { "mode": "picks", "options": ["localStorage", "sessionStorage", "IndexedDB"], "correct": ["localStorage"] },
+      "hints": ["Its name suggests it lasts on this device."],
+      "fullLine": "localStorage keeps key-value strings until they are deleted.",
+      "teaching": [{ "type": "text", "text": "It survives reloads and browser restarts until something removes the entry.", "lang": "en" }]
+    },
+    {
+      "key": "storage-session",
+      "summary": "sessionStorage ends with the tab",
+      "topics": ["application-and-storage"],
+      "tags": ["storage"],
+      "prompt": [{ "type": "text", "text": "sessionStorage is cleared when the " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " closes." }],
+      "answer": [{ "type": "text", "text": "sessionStorage is cleared when the tab closes." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["tab", "browser tab"] }] },
+      "hints": ["It lasts as long as one browsing context."],
+      "fullLine": "sessionStorage is cleared when the tab closes.",
+      "teaching": [{ "type": "text", "text": "Each browsing context gets its own copy, and closing it discards the data.", "lang": "en" }]
+    },
+    {
+      "key": "storage-indexeddb",
+      "summary": "IndexedDB holds many records",
+      "topics": ["application-and-storage"],
+      "tags": ["storage"],
+      "prompt": [{ "type": "text", "text": "Which store is best for thousands of structured records?" }],
+      "answer": [{ "type": "text", "text": "IndexedDB" }],
+      "answerDef": { "mode": "picks", "options": ["IndexedDB", "localStorage", "a cookie"], "correct": ["IndexedDB"] },
+      "hints": ["It has an index and a database in its name."],
+      "fullLine": "IndexedDB is best for thousands of structured records.",
+      "teaching": [
+        { "type": "text", "text": "It holds many structured records and can be searched by key.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/browser-dev/images/storage-shelves.svg", "alt": "Three storage shelves labelled for a single session, this device, and a full database" },
+        { "type": "video", "source": "youtube", "src": "07c9vKj47vk", "search": "localStorage sessionStorage IndexedDB explained", "alt": "A comparison of the browser storage options" }
+      ]
+    },
+    {
+      "key": "storage-cookies-request",
+      "summary": "Cookies travel with requests",
+      "topics": ["application-and-storage"],
+      "tags": ["cookies"],
+      "prompt": [{ "type": "text", "text": "Cookies are sent to the server with " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " request to the same origin." }],
+      "answer": [{ "type": "text", "text": "Cookies are sent to the server with every request to the same origin." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["each", "every"] }] },
+      "hints": ["They ride along automatically."],
+      "fullLine": "Cookies are sent to the server with every request to the same origin.",
+      "teaching": [{ "type": "text", "text": "They travel with the request, so keep them small.", "lang": "en" }]
+    },
+    {
+      "key": "storage-local-strings",
+      "summary": "localStorage stores text",
+      "topics": ["application-and-storage"],
+      "tags": ["storage"],
+      "prompt": [{ "type": "text", "text": "Which store takes only strings, so objects must be converted with JSON?" }],
+      "answer": [{ "type": "text", "text": "localStorage" }],
+      "answerDef": { "mode": "type", "expected": ["localStorage"], "judge": "loose" },
+      "hints": ["Its sibling for one session behaves the same way."],
+      "fullLine": "localStorage takes only strings, so objects must be converted with JSON.",
+      "teaching": [{ "type": "text", "text": "Values come back as text, so objects need JSON in and out.", "lang": "en" }]
+    },
+    {
+      "key": "storage-cache-storage",
+      "summary": "Cache Storage serves responses",
+      "topics": ["application-and-storage"],
+      "tags": ["caching", "service-worker"],
+      "prompt": [{ "type": "text", "text": "Which storage does a service worker's fetch handling read from?" }],
+      "answer": [{ "type": "text", "text": "Cache Storage" }],
+      "answerDef": { "mode": "picks", "options": ["Cache Storage", "localStorage", "sessionStorage"], "correct": ["Cache Storage"] },
+      "hints": ["It holds whole responses, not single values."],
+      "fullLine": "A service worker's fetch handling reads from Cache Storage."
+    },
+    {
+      "key": "storage-caches-api",
+      "summary": "The caches API opens storage",
+      "topics": ["application-and-storage"],
+      "tags": ["caching"],
+      "prompt": [{ "type": "text", "text": "Scripts reach Cache Storage through the " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " API." }],
+      "answer": [{ "type": "text", "text": "Scripts reach Cache Storage through the caches API." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["caches", "Cache"] }] },
+      "hints": ["The global object is named after what it holds."],
+      "fullLine": "Scripts reach Cache Storage through the caches API."
+    },
+    {
+      "key": "storage-session-survives-reload",
+      "summary": "sessionStorage survives a reload",
+      "topics": ["application-and-storage"],
+      "tags": ["storage"],
+      "prompt": [{ "type": "text", "text": "Which store survives a reload but not a new tab?" }],
+      "answer": [{ "type": "text", "text": "sessionStorage" }],
+      "answerDef": { "mode": "picks", "options": ["sessionStorage", "localStorage", "IndexedDB"], "correct": ["sessionStorage"] },
+      "hints": ["Think of one sitting in one window."],
+      "fullLine": "sessionStorage survives a reload but not a new tab."
+    },
+    {
+      "key": "storage-strings",
+      "summary": "Web storage holds strings",
+      "topics": ["application-and-storage"],
+      "tags": ["storage"],
+      "prompt": [{ "type": "text", "text": "localStorage stores only " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": "." }],
+      "answer": [{ "type": "text", "text": "localStorage stores only strings." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["strings", "text"] }] },
+      "hints": ["Numbers and objects must be converted first."],
+      "fullLine": "localStorage stores only strings.",
+      "teaching": [{ "type": "text", "text": "Numbers and objects must be converted before they are stored.", "lang": "en" }]
+    },
+    {
+      "key": "storage-origin-parts",
+      "summary": "An origin is three parts",
+      "topics": ["application-and-storage"],
+      "tags": ["origin"],
+      "prompt": [{ "type": "text", "text": "Two pages share storage only when they share which three parts?" }],
+      "answer": [{ "type": "text", "text": "scheme, host and port" }],
+      "answerDef": { "mode": "picks", "options": ["scheme, host and port", "path, query and title", "tab, window and frame"], "correct": ["scheme, host and port"] },
+      "hints": ["A path is not one of them."],
+      "fullLine": "Two pages share storage only when they share scheme, host and port.",
+      "teaching": [{ "type": "text", "text": "A path or a query string does not change which pages share a store.", "lang": "en" }]
+    }
+  ]
+}

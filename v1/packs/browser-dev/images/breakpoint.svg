@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 240" role="img" aria-label="A paused script with a breakpoint marker, a call stack and scope variables">
+  <rect width="480" height="240" fill="#f8fafc"/>
+  <rect x="24" y="28" width="250" height="184" rx="8" fill="#0f172a"/>
+  <g font-family="monospace" font-size="12" fill="#e2e8f0">
+    <text x="44" y="60">function total(items) {</text>
+    <text x="44" y="84">  let sum = 0;</text>
+    <circle cx="38" cy="108" r="5" fill="#ef4444"/>
+    <text x="44" y="112" fill="#fca5a5">  for (const item of items) {</text>
+    <text x="44" y="136">    sum += item.price;</text>
+    <text x="44" y="160">  }</text>
+    <text x="44" y="184">  return sum;</text>
+  </g>
+  <rect x="296" y="28" width="160" height="84" rx="8" fill="#ffffff" stroke="#1f2937"/>
+  <text x="376" y="50" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#1f2937">Call stack</text>
+  <text x="312" y="72" font-family="monospace" font-size="11" fill="#1f2937">total</text>
+  <text x="312" y="90" font-family="monospace" font-size="11" fill="#64748b">checkout</text>
+  <rect x="296" y="128" width="160" height="84" rx="8" fill="#ffffff" stroke="#1f2937"/>
+  <text x="376" y="150" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#1f2937">Scope</text>
+  <text x="312" y="172" font-family="monospace" font-size="11" fill="#1f2937">items = [...]</text>
+  <text x="312" y="190" font-family="monospace" font-size="11" fill="#1f2937">sum = 0</text>
+  <text x="240" y="228" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#64748b">the pause happens before the marked line runs</text>
+</svg>

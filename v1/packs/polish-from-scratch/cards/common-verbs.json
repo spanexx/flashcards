@@ -1,0 +1,224 @@
+{
+  "cards": [
+    {
+      "key": "common-verbs-to-be",
+      "summary": "To be",
+      "topics": ["common-verbs"],
+      "tags": ["verb"],
+      "prompt": [{ "type": "text", "text": "to be" }],
+      "answer": [
+        { "type": "text", "text": "być" },
+        { "type": "text", "text": "to be", "role": "translation" },
+        { "type": "text", "text": "bihch", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["być"], "judge": "loose" },
+      "hints": ["It is the most common verb in the language."],
+      "fullLine": "być",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "An irregular infinitive; its present forms change a lot.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "common-verbs-to-have",
+      "summary": "To have",
+      "topics": ["common-verbs"],
+      "tags": ["verb"],
+      "prompt": [{ "type": "text", "text": "to have" }],
+      "answer": [
+        { "type": "text", "text": "mieć" },
+        { "type": "text", "text": "to have", "role": "translation" },
+        { "type": "text", "text": "myech", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["mieć"], "judge": "loose" },
+      "hints": ["Its present forms are short and change with the subject."],
+      "fullLine": "mieć",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "An irregular infinitive used to show possession.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "common-verbs-to-go",
+      "summary": "To go",
+      "topics": ["common-verbs"],
+      "tags": ["verb"],
+      "prompt": [{ "type": "text", "text": "to go (on foot)" }],
+      "answer": [
+        { "type": "text", "text": "iść" },
+        { "type": "text", "text": "to go", "role": "translation" },
+        { "type": "text", "text": "eeshch", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["iść"], "judge": "loose" },
+      "hints": ["Use a different verb when the journey is by vehicle."],
+      "fullLine": "iść",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "An imperfective verb for going somewhere on foot.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "common-verbs-to-eat",
+      "summary": "To eat",
+      "topics": ["common-verbs"],
+      "tags": ["verb"],
+      "prompt": [{ "type": "text", "text": "to eat" }],
+      "answer": [
+        { "type": "text", "text": "jeść" },
+        { "type": "text", "text": "to eat", "role": "translation" },
+        { "type": "text", "text": "yeshch", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["jeść"], "judge": "loose" },
+      "hints": ["Its past tense forms differ for men and women."],
+      "fullLine": "jeść",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "An imperfective verb for taking food.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "common-verbs-to-drink",
+      "summary": "To drink",
+      "topics": ["common-verbs"],
+      "tags": ["verb"],
+      "prompt": [{ "type": "text", "text": "to drink" }],
+      "answer": [
+        { "type": "text", "text": "pić" },
+        { "type": "text", "text": "to drink", "role": "translation" },
+        { "type": "text", "text": "peech", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["pić"], "judge": "loose" },
+      "hints": ["It pairs naturally with a cup or a glass."],
+      "fullLine": "pić",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "An imperfective verb; the perfective partner adds a prefix.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "common-verbs-to-sleep",
+      "summary": "To sleep",
+      "topics": ["common-verbs"],
+      "tags": ["verb"],
+      "prompt": [{ "type": "text", "text": "to sleep" }],
+      "answer": [
+        { "type": "text", "text": "spać" },
+        { "type": "text", "text": "to sleep", "role": "translation" },
+        { "type": "text", "text": "spahch", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["spać"], "judge": "loose" },
+      "hints": ["It is what you do in a bed at night."],
+      "fullLine": "spać",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "An imperfective verb for resting through the night.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "common-verbs-to-see",
+      "summary": "To see",
+      "topics": ["common-verbs"],
+      "tags": ["verb"],
+      "prompt": [{ "type": "text", "text": "to see" }],
+      "answer": [
+        { "type": "text", "text": "widzieć" },
+        { "type": "text", "text": "to see", "role": "translation" },
+        { "type": "text", "text": "VEE-jech", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["widzieć"], "judge": "loose" },
+      "hints": ["It is not the same verb as the one for watching."],
+      "fullLine": "widzieć",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "An imperfective verb for perceiving with your eyes.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "common-verbs-to-know",
+      "summary": "To know",
+      "topics": ["common-verbs"],
+      "tags": ["verb"],
+      "prompt": [{ "type": "text", "text": "to know (a fact)" }],
+      "answer": [
+        { "type": "text", "text": "wiedzieć" },
+        { "type": "text", "text": "to know", "role": "translation" },
+        { "type": "text", "text": "VYEH-jech", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["wiedzieć"], "judge": "loose" },
+      "hints": ["Use a different verb when you mean knowing a person."],
+      "fullLine": "wiedzieć",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "An imperfective verb for holding information in your mind.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "common-verbs-to-want",
+      "summary": "To want",
+      "topics": ["common-verbs"],
+      "tags": ["verb"],
+      "prompt": [{ "type": "text", "text": "to want" }],
+      "answer": [
+        { "type": "text", "text": "chcieć" },
+        { "type": "text", "text": "to want", "role": "translation" },
+        { "type": "text", "text": "hchech", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["chcieć"], "judge": "loose" },
+      "hints": ["It often comes before another verb in a sentence."],
+      "fullLine": "chcieć",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "An irregular infinitive whose present forms are worth learning by heart.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "common-verbs-to-speak",
+      "summary": "To speak",
+      "topics": ["common-verbs"],
+      "tags": ["verb"],
+      "prompt": [{ "type": "text", "text": "to speak" }],
+      "answer": [
+        { "type": "text", "text": "mówić" },
+        { "type": "text", "text": "to speak", "role": "translation" },
+        { "type": "text", "text": "MOO-veech", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["mówić"], "judge": "loose" },
+      "hints": ["It also appears in the phrase for speaking a language."],
+      "fullLine": "mówić",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "An imperfective verb for using your voice in words.",
+          "lang": "en"
+        }
+      ]
+    }
+  ]
+}

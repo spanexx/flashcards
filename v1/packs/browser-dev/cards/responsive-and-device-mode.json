@@ -1,0 +1,124 @@
+{
+  "cards": [
+    {
+      "key": "responsive-viewport-meta",
+      "summary": "The viewport meta tag lives in the head",
+      "topics": ["responsive-and-device-mode"],
+      "tags": ["responsive"],
+      "prompt": [{ "type": "text", "text": "The viewport meta tag lives in the " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " of the page." }],
+      "answer": [{ "type": "text", "text": "The viewport meta tag lives in the head of the page." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["head"] }] },
+      "hints": ["It is the part that describes rather than draws."],
+      "fullLine": "The viewport meta tag lives in the head of the page."
+    },
+    {
+      "key": "responsive-device-mode",
+      "summary": "Device mode changes the viewport",
+      "topics": ["responsive-and-device-mode"],
+      "tags": ["device-mode"],
+      "prompt": [{ "type": "text", "text": "What does device mode change?" }],
+      "answer": [{ "type": "text", "text": "the viewport size the page sees" }],
+      "answerDef": { "mode": "picks", "options": ["the viewport size the page sees", "the server's files", "the network speed only"], "correct": ["the viewport size the page sees"] },
+      "hints": ["It changes the frame around the page."],
+      "fullLine": "Device mode changes the viewport size the page sees.",
+      "teaching": [
+        { "type": "text", "text": "A preset changes the frame the page is drawn in; it does not touch the files on the server.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/browser-dev/images/device-widths.svg", "alt": "The same page drawn in three frames: narrow phone, tablet and wide desktop" },
+        { "type": "video", "source": "youtube", "src": "69IbzTWg5PM", "search": "CSS media queries responsive web design tutorial", "alt": "Media queries and how a layout adapts to screen size" }
+      ]
+    },
+    {
+      "key": "responsive-media-query",
+      "summary": "A media query is a condition",
+      "topics": ["responsive-and-device-mode"],
+      "tags": ["responsive", "css"],
+      "prompt": [{ "type": "text", "text": "A `@media` query applies rules only when its " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " matches." }],
+      "answer": [{ "type": "text", "text": "A @media query applies rules only when its condition matches." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["condition"] }] },
+      "hints": ["It is the same word for an if-check in code."],
+      "fullLine": "A @media query applies rules only when its condition matches.",
+      "teaching": [{ "type": "text", "text": "A width rule can switch on only below or above a chosen size.", "lang": "en" }]
+    },
+    {
+      "key": "responsive-device-width",
+      "summary": "width=device-width matches the screen",
+      "topics": ["responsive-and-device-mode"],
+      "tags": ["responsive"],
+      "prompt": [{ "type": "text", "text": "Which meta value makes the viewport equal the device width?" }],
+      "answer": [{ "type": "text", "text": "width=device-width" }],
+      "answerDef": { "mode": "type", "expected": ["width=device-width"], "judge": "loose" },
+      "hints": ["It names the measured value twice."],
+      "fullLine": "The viewport meta value width=device-width makes the viewport equal the device width.",
+      "teaching": [{ "type": "text", "text": "This value tells the layout to match the screen instead of a default 980 pixels.", "lang": "en" }]
+    },
+    {
+      "key": "responsive-rem",
+      "summary": "rem follows the user setting",
+      "topics": ["responsive-and-device-mode"],
+      "tags": ["responsive", "units"],
+      "prompt": [{ "type": "text", "text": "Which unit makes text scale with the user's browser setting?" }],
+      "answer": [{ "type": "text", "text": "rem" }],
+      "answerDef": { "mode": "picks", "options": ["rem", "px", "cm"], "correct": ["rem"] },
+      "hints": ["It ties size to the page's base size."],
+      "fullLine": "The rem unit makes text scale with the user's browser setting."
+    },
+    {
+      "key": "responsive-mobile-first",
+      "summary": "Mobile-first starts narrow",
+      "topics": ["responsive-and-device-mode"],
+      "tags": ["responsive", "css"],
+      "prompt": [{ "type": "text", "text": "Mobile-first CSS starts with the " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " layout and adds wider rules later." }],
+      "answer": [{ "type": "text", "text": "Mobile-first CSS starts with the small layout and adds wider rules later." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["small", "narrow", "mobile"] }] },
+      "hints": ["Begin with the tightest space you must support."],
+      "fullLine": "Mobile-first CSS starts with the small layout and adds wider rules later.",
+      "teaching": [{ "type": "text", "text": "The base stylesheet is the one rule set every screen starts from.", "lang": "en" }]
+    },
+    {
+      "key": "responsive-device-mode-files",
+      "summary": "Device mode does not change files",
+      "topics": ["responsive-and-device-mode"],
+      "tags": ["device-mode"],
+      "prompt": [{ "type": "text", "text": "Does device mode change which files the server sends?" }],
+      "answer": [{ "type": "text", "text": "no, it only changes the simulated frame" }],
+      "answerDef": { "mode": "picks", "options": ["no, it only changes the simulated frame", "yes, it requests the mobile site", "yes, it rewrites the HTML"], "correct": ["no, it only changes the simulated frame"] },
+      "hints": ["It is a preview inside your own browser."],
+      "fullLine": "Device mode does not change which files the server sends; it only changes the simulated frame."
+    },
+    {
+      "key": "responsive-media-at-rule",
+      "summary": "@media wraps conditional rules",
+      "topics": ["responsive-and-device-mode"],
+      "tags": ["responsive", "css"],
+      "prompt": [{ "type": "text", "text": "Which at-rule targets a screen width?" }],
+      "answer": [{ "type": "text", "text": "@media" }],
+      "answerDef": { "mode": "type", "expected": ["@media"], "judge": "loose" },
+      "hints": ["It begins with the at sign."],
+      "fullLine": "@media targets a screen width.",
+      "teaching": [{ "type": "text", "text": "It wraps CSS rules that only apply when a screen size or feature matches.", "lang": "en" }]
+    },
+    {
+      "key": "responsive-text-zoom",
+      "summary": "Responsive text avoids zooming",
+      "topics": ["responsive-and-device-mode"],
+      "tags": ["responsive"],
+      "prompt": [{ "type": "text", "text": "Text that stays readable without zooming is an example of a " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " layout." }],
+      "answer": [{ "type": "text", "text": "Text that stays readable without zooming is an example of a responsive layout." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["responsive", "flexible"] }] },
+      "hints": ["It answers to the screen instead of fighting it."],
+      "fullLine": "Text that stays readable without zooming is an example of a responsive layout."
+    },
+    {
+      "key": "responsive-tap-target",
+      "summary": "Small targets hurt touch users",
+      "topics": ["responsive-and-device-mode"],
+      "tags": ["responsive", "accessibility"],
+      "prompt": [{ "type": "text", "text": "A button that is only 12 pixels tall is mainly a problem for whom?" }],
+      "answer": [{ "type": "text", "text": "touch users" }],
+      "answerDef": { "mode": "picks", "options": ["touch users", "screen readers only", "slow networks"], "correct": ["touch users"] },
+      "hints": ["Think about what a finger cannot aim at."],
+      "fullLine": "A button that is only 12 pixels tall is mainly a problem for touch users.",
+      "teaching": [{ "type": "text", "text": "A control needs enough area for a thumb to hit it reliably.", "lang": "en" }]
+    }
+  ]
+}

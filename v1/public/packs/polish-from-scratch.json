@@ -1,0 +1,5801 @@
+{
+  "schema": "flashcards.pack/v1",
+  "pack": {
+    "name": "polish-from-scratch",
+    "version": "1.0.0",
+    "description": "Absolute beginner Polish: twelve decks of single words with a plain pronunciation respelling.",
+    "language": "pl",
+    "sourceLanguage": "en"
+  },
+  "decks": [
+    {
+      "id": "greetings",
+      "name": "Greetings",
+      "level": "beginner"
+    },
+    {
+      "id": "written",
+      "name": "Written Polish",
+      "level": "beginner"
+    },
+    {
+      "id": "numbers",
+      "name": "Numbers",
+      "level": "beginner"
+    },
+    {
+      "id": "people-and-family",
+      "name": "People and family",
+      "level": "beginner"
+    },
+    {
+      "id": "food-and-drink",
+      "name": "Food and drink",
+      "level": "beginner"
+    },
+    {
+      "id": "home-and-rooms",
+      "name": "Home and rooms",
+      "level": "beginner"
+    },
+    {
+      "id": "common-verbs",
+      "name": "Common verbs",
+      "level": "beginner"
+    },
+    {
+      "id": "time-and-days",
+      "name": "Time and days",
+      "level": "beginner"
+    },
+    {
+      "id": "places-and-travel",
+      "name": "Places and travel",
+      "level": "beginner"
+    },
+    {
+      "id": "shopping-and-money",
+      "name": "Shopping and money",
+      "level": "beginner"
+    },
+    {
+      "id": "body-and-health",
+      "name": "Body and health",
+      "level": "beginner"
+    },
+    {
+      "id": "weather-and-seasons",
+      "name": "Weather and seasons",
+      "level": "beginner"
+    }
+  ],
+  "cards": [
+    {
+      "key": "body-and-health-head",
+      "summary": "Head",
+      "tags": [
+        "feminine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Head"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "głowa"
+        },
+        {
+          "type": "text",
+          "text": "head",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "GWOH-vah",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "głowa"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "You nod it to say yes."
+      ],
+      "fullLine": "głowa",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun for the top part of the body.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "body-and-health"
+    },
+    {
+      "key": "body-and-health-hand",
+      "summary": "Hand",
+      "tags": [
+        "feminine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Hand"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "ręka"
+        },
+        {
+          "type": "text",
+          "text": "hand",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "REN-kah",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "ręka"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "You use it to hold a cup."
+      ],
+      "fullLine": "ręka",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun that covers the whole arm in Polish.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "body-and-health"
+    },
+    {
+      "key": "body-and-health-eye",
+      "summary": "Eye",
+      "tags": [
+        "neuter"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Eye"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "oko"
+        },
+        {
+          "type": "text",
+          "text": "eye",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "OH-koh",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "oko"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "You close it when you sleep."
+      ],
+      "fullLine": "oko",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A neuter noun with an irregular plural.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "body-and-health"
+    },
+    {
+      "key": "body-and-health-ear",
+      "summary": "Ear",
+      "tags": [
+        "neuter"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Ear"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "ucho"
+        },
+        {
+          "type": "text",
+          "text": "ear",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "OO-hoh",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "ucho"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "You listen with it."
+      ],
+      "fullLine": "ucho",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A neuter noun used for hearing.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "body-and-health"
+    },
+    {
+      "key": "body-and-health-tooth",
+      "summary": "Tooth",
+      "tags": [
+        "masculine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Tooth"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "ząb"
+        },
+        {
+          "type": "text",
+          "text": "tooth",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "zomp",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "ząb"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "You brush it twice a day."
+      ],
+      "fullLine": "ząb",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun; the plural changes the stem.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "body-and-health"
+    },
+    {
+      "key": "body-and-health-heart",
+      "summary": "Heart",
+      "tags": [
+        "neuter"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Heart"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "serce"
+        },
+        {
+          "type": "text",
+          "text": "heart",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "SER-tseh",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "serce"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It beats faster when you run."
+      ],
+      "fullLine": "serce",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A neuter noun for the organ that pumps blood.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "body-and-health"
+    },
+    {
+      "key": "body-and-health-doctor",
+      "summary": "Doctor",
+      "tags": [
+        "masculine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Doctor"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "lekarz"
+        },
+        {
+          "type": "text",
+          "text": "doctor",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "LEH-kahsh",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "lekarz"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "You visit one when you feel ill."
+      ],
+      "fullLine": "lekarz",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun for a medical professional.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "body-and-health"
+    },
+    {
+      "key": "body-and-health-medicine",
+      "summary": "Medicine",
+      "tags": [
+        "neuter"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Medicine"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "lekarstwo"
+        },
+        {
+          "type": "text",
+          "text": "medicine",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "leh-KAR-stvoh",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "lekarstwo"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "The chemist sells it in small boxes."
+      ],
+      "fullLine": "lekarstwo",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A neuter noun for something you take when ill.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "body-and-health"
+    },
+    {
+      "key": "body-and-health-pain",
+      "summary": "Pain",
+      "tags": [
+        "masculine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Pain"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "ból"
+        },
+        {
+          "type": "text",
+          "text": "pain",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "bool",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "ból"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "You feel it after an injury."
+      ],
+      "fullLine": "ból",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun for an ache or a sharp hurt.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "body-and-health"
+    },
+    {
+      "key": "body-and-health-healthy",
+      "summary": "Healthy",
+      "tags": [
+        "adjective"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Healthy"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "zdrowy"
+        },
+        {
+          "type": "text",
+          "text": "healthy",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "ZDROH-vih",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "zdrowy"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It is the opposite of ill."
+      ],
+      "fullLine": "zdrowy",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine adjective; it describes a person or a meal.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "body-and-health"
+    },
+    {
+      "key": "common-verbs-to-be",
+      "summary": "To be",
+      "tags": [
+        "verb"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "to be"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "być"
+        },
+        {
+          "type": "text",
+          "text": "to be",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "bihch",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "być"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It is the most common verb in the language."
+      ],
+      "fullLine": "być",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "An irregular infinitive; its present forms change a lot.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "common-verbs"
+    },
+    {
+      "key": "common-verbs-to-have",
+      "summary": "To have",
+      "tags": [
+        "verb"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "to have"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "mieć"
+        },
+        {
+          "type": "text",
+          "text": "to have",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "myech",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "mieć"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "Its present forms are short and change with the subject."
+      ],
+      "fullLine": "mieć",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "An irregular infinitive used to show possession.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "common-verbs"
+    },
+    {
+      "key": "common-verbs-to-go",
+      "summary": "To go",
+      "tags": [
+        "verb"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "to go (on foot)"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "iść"
+        },
+        {
+          "type": "text",
+          "text": "to go",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "eeshch",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "iść"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "Use a different verb when the journey is by vehicle."
+      ],
+      "fullLine": "iść",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "An imperfective verb for going somewhere on foot.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "common-verbs"
+    },
+    {
+      "key": "common-verbs-to-eat",
+      "summary": "To eat",
+      "tags": [
+        "verb"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "to eat"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "jeść"
+        },
+        {
+          "type": "text",
+          "text": "to eat",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "yeshch",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "jeść"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "Its past tense forms differ for men and women."
+      ],
+      "fullLine": "jeść",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "An imperfective verb for taking food.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "common-verbs"
+    },
+    {
+      "key": "common-verbs-to-drink",
+      "summary": "To drink",
+      "tags": [
+        "verb"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "to drink"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "pić"
+        },
+        {
+          "type": "text",
+          "text": "to drink",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "peech",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "pić"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It pairs naturally with a cup or a glass."
+      ],
+      "fullLine": "pić",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "An imperfective verb; the perfective partner adds a prefix.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "common-verbs"
+    },
+    {
+      "key": "common-verbs-to-sleep",
+      "summary": "To sleep",
+      "tags": [
+        "verb"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "to sleep"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "spać"
+        },
+        {
+          "type": "text",
+          "text": "to sleep",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "spahch",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "spać"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It is what you do in a bed at night."
+      ],
+      "fullLine": "spać",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "An imperfective verb for resting through the night.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "common-verbs"
+    },
+    {
+      "key": "common-verbs-to-see",
+      "summary": "To see",
+      "tags": [
+        "verb"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "to see"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "widzieć"
+        },
+        {
+          "type": "text",
+          "text": "to see",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "VEE-jech",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "widzieć"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It is not the same verb as the one for watching."
+      ],
+      "fullLine": "widzieć",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "An imperfective verb for perceiving with your eyes.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "common-verbs"
+    },
+    {
+      "key": "common-verbs-to-know",
+      "summary": "To know",
+      "tags": [
+        "verb"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "to know (a fact)"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "wiedzieć"
+        },
+        {
+          "type": "text",
+          "text": "to know",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "VYEH-jech",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "wiedzieć"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "Use a different verb when you mean knowing a person."
+      ],
+      "fullLine": "wiedzieć",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "An imperfective verb for holding information in your mind.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "common-verbs"
+    },
+    {
+      "key": "common-verbs-to-want",
+      "summary": "To want",
+      "tags": [
+        "verb"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "to want"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "chcieć"
+        },
+        {
+          "type": "text",
+          "text": "to want",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "hchech",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "chcieć"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It often comes before another verb in a sentence."
+      ],
+      "fullLine": "chcieć",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "An irregular infinitive whose present forms are worth learning by heart.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "common-verbs"
+    },
+    {
+      "key": "common-verbs-to-speak",
+      "summary": "To speak",
+      "tags": [
+        "verb"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "to speak"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "mówić"
+        },
+        {
+          "type": "text",
+          "text": "to speak",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "MOO-veech",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "mówić"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It also appears in the phrase for speaking a language."
+      ],
+      "fullLine": "mówić",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "An imperfective verb for using your voice in words.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "common-verbs"
+    },
+    {
+      "key": "food-and-drink-water",
+      "summary": "Water",
+      "tags": [
+        "feminine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Water (a drink)"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "woda"
+        },
+        {
+          "type": "text",
+          "text": "water",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "VOH-dah",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "woda"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It is what you ask for when the glass is empty."
+      ],
+      "fullLine": "woda",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun; you will see it on bottles and menus.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "food-and-drink"
+    },
+    {
+      "key": "food-and-drink-bread",
+      "summary": "Bread",
+      "tags": [
+        "masculine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Bread"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "chleb"
+        },
+        {
+          "type": "text",
+          "text": "bread",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "hlep",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "chleb"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "Poles buy it by the loaf, not by the slice."
+      ],
+      "fullLine": "chleb",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun found in every bakery and on every table.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "food-and-drink"
+    },
+    {
+      "key": "food-and-drink-milk",
+      "summary": "Milk",
+      "tags": [
+        "neuter"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Milk"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "mleko"
+        },
+        {
+          "type": "text",
+          "text": "milk",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "MLEH-koh",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "mleko"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It comes in cartons beside the butter."
+      ],
+      "fullLine": "mleko",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A neuter noun; it ends like many everyday neuter words.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "food-and-drink"
+    },
+    {
+      "key": "food-and-drink-coffee",
+      "summary": "Coffee",
+      "tags": [
+        "feminine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Coffee"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "kawa"
+        },
+        {
+          "type": "text",
+          "text": "coffee",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "KAH-vah",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "kawa"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "You can ask for it black or with milk."
+      ],
+      "fullLine": "kawa",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun; ordering it is a daily ritual for many.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "food-and-drink"
+    },
+    {
+      "key": "food-and-drink-tea",
+      "summary": "Tea",
+      "tags": [
+        "feminine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Tea"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "herbata"
+        },
+        {
+          "type": "text",
+          "text": "tea",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "her-BAH-tah",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "herbata"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "Poles often drink it hot with lemon."
+      ],
+      "fullLine": "herbata",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun whose name still mentions an herb.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "food-and-drink"
+    },
+    {
+      "key": "food-and-drink-apple",
+      "summary": "Apple",
+      "tags": [
+        "neuter"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Apple"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "jabłko"
+        },
+        {
+          "type": "text",
+          "text": "apple",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "YAHP-koh",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "jabłko"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It grows on a tree and is often eaten raw."
+      ],
+      "fullLine": "jabłko",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A neuter noun and the classic fruit in Polish orchards.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "food-and-drink"
+    },
+    {
+      "key": "food-and-drink-cheese",
+      "summary": "Cheese",
+      "tags": [
+        "masculine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Cheese"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "ser"
+        },
+        {
+          "type": "text",
+          "text": "cheese",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "ser",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "ser"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It is a short word that ends in a consonant."
+      ],
+      "fullLine": "ser",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun for a dairy food, often sliced on bread.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "food-and-drink"
+    },
+    {
+      "key": "food-and-drink-meat",
+      "summary": "Meat",
+      "tags": [
+        "neuter"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Meat"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "mięso"
+        },
+        {
+          "type": "text",
+          "text": "meat",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "MYEN-soh",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "mięso"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "You will see it in the phrase for cold cuts."
+      ],
+      "fullLine": "mięso",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A neuter noun for food from animals, sold at a butcher's.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "food-and-drink"
+    },
+    {
+      "key": "food-and-drink-soup",
+      "summary": "Soup",
+      "tags": [
+        "feminine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Soup"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "zupa"
+        },
+        {
+          "type": "text",
+          "text": "soup",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "ZOO-pah",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "zupa"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It is eaten with a spoon from a bowl."
+      ],
+      "fullLine": "zupa",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun; a hot first course in a Polish dinner.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "food-and-drink"
+    },
+    {
+      "key": "food-and-drink-egg",
+      "summary": "Egg",
+      "tags": [
+        "neuter"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Egg"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "jajko"
+        },
+        {
+          "type": "text",
+          "text": "egg",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "YAY-koh",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "jajko"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It comes boiled, fried or scrambled."
+      ],
+      "fullLine": "jajko",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A neuter noun, essential at Easter and at breakfast.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "food-and-drink"
+    },
+    {
+      "key": "greetings-hello",
+      "summary": "Hello",
+      "tags": [],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Hello (at any time of day)"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "cześć"
+        },
+        {
+          "type": "text",
+          "text": "Hello",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "cheshch",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "cześć"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "Only use it with people you already know well."
+      ],
+      "fullLine": "cześć",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "An informal greeting you can use with friends at any hour.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "greetings"
+    },
+    {
+      "key": "greetings-hi",
+      "summary": "Hi (very casual)",
+      "tags": [],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Hi (very casual, between friends)"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "hej"
+        },
+        {
+          "type": "text",
+          "text": "Hi",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "hey",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "hej"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "You will hear it in messages far more than in formal speech."
+      ],
+      "fullLine": "hej",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A very casual word borrowed from English, common among young people.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "greetings"
+    },
+    {
+      "key": "greetings-good-morning",
+      "summary": "Good morning",
+      "tags": [],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Good morning (a polite greeting)"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "dzień dobry"
+        },
+        {
+          "type": "text",
+          "text": "Good morning",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "jen DOH-brih",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "dzień dobry"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "Use it when entering a shop, an office or a lift."
+      ],
+      "fullLine": "dzień dobry",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The standard polite greeting used from morning until dusk.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "greetings"
+    },
+    {
+      "key": "greetings-good-evening",
+      "summary": "Good evening",
+      "tags": [],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Good evening (a polite greeting)"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "dobry wieczór"
+        },
+        {
+          "type": "text",
+          "text": "Good evening",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "DOH-brih VYEH-choor",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "dobry wieczór"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "Say it after dark when you meet someone politely."
+      ],
+      "fullLine": "dobry wieczór",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A polite greeting saved for the evening, slightly more formal in tone.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "greetings"
+    },
+    {
+      "key": "greetings-goodbye",
+      "summary": "Goodbye",
+      "tags": [],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Goodbye"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "do widzenia"
+        },
+        {
+          "type": "text",
+          "text": "Goodbye",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "doh vee-DZEH-nyah",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "do widzenia"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It literally wishes a future meeting, so it fits most partings."
+      ],
+      "fullLine": "do widzenia",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The everyday parting phrase, suitable for shops and strangers.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "greetings"
+    },
+    {
+      "key": "greetings-please",
+      "summary": "Please",
+      "tags": [],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Please"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "proszę"
+        },
+        {
+          "type": "text",
+          "text": "Please",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "PROH-sheh",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "proszę"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It also means 'go ahead' when you invite someone to do something."
+      ],
+      "fullLine": "proszę",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "One word covers asking politely and handing something over.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "greetings"
+    },
+    {
+      "key": "greetings-thank-you",
+      "summary": "Thank you",
+      "tags": [],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Thank you"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "dziękuję"
+        },
+        {
+          "type": "text",
+          "text": "Thank you",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "jen-KOO-yeh",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "dziękuję"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "The ending changes when you thank a group instead of one person."
+      ],
+      "fullLine": "dziękuję",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A polite reply used whenever someone helps you.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "greetings"
+    },
+    {
+      "key": "greetings-sorry",
+      "summary": "Sorry",
+      "tags": [],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Sorry (also excuse me)"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "przepraszam"
+        },
+        {
+          "type": "text",
+          "text": "Sorry, excuse me",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "psheh-PRAH-shahm",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "przepraszam"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "Say it before asking a stranger for directions."
+      ],
+      "fullLine": "przepraszam",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "It works both for a small apology and for getting attention.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "greetings"
+    },
+    {
+      "key": "greetings-yes",
+      "summary": "Yes",
+      "tags": [],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Yes"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "tak"
+        },
+        {
+          "type": "text",
+          "text": "Yes",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "tahk",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "tak"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "In casual speech people often repeat the verb instead of this."
+      ],
+      "fullLine": "tak",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A short word that agrees with a statement or question.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "greetings"
+    },
+    {
+      "key": "greetings-no",
+      "summary": "No",
+      "tags": [],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "No"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "nie"
+        },
+        {
+          "type": "text",
+          "text": "No",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "nyeh",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "nie"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "Poles often soften it by adding a polite word before it."
+      ],
+      "fullLine": "nie",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The basic refusal, used in speech and on signs.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "greetings"
+    },
+    {
+      "key": "home-and-rooms-house",
+      "summary": "House",
+      "tags": [
+        "masculine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "House"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "dom"
+        },
+        {
+          "type": "text",
+          "text": "house",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "dom",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "dom"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It also appears in many phrases about being at home."
+      ],
+      "fullLine": "dom",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun for a building where people live.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "home-and-rooms"
+    },
+    {
+      "key": "home-and-rooms-flat",
+      "summary": "Flat",
+      "tags": [
+        "neuter"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Flat (an apartment)"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "mieszkanie"
+        },
+        {
+          "type": "text",
+          "text": "flat, apartment",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "myesh-KAH-nyeh",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "mieszkanie"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It is the word you use when giving an address in a city."
+      ],
+      "fullLine": "mieszkanie",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A neuter noun for a home inside a block of flats.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "home-and-rooms"
+    },
+    {
+      "key": "home-and-rooms-kitchen",
+      "summary": "Kitchen",
+      "tags": [
+        "feminine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Kitchen"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "kuchnia"
+        },
+        {
+          "type": "text",
+          "text": "kitchen",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "KOOKH-nyah",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "kuchnia"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It usually holds a stove, a sink and a fridge."
+      ],
+      "fullLine": "kuchnia",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun for the room where meals are cooked.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "home-and-rooms"
+    },
+    {
+      "key": "home-and-rooms-bathroom",
+      "summary": "Bathroom",
+      "tags": [
+        "feminine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Bathroom"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "łazienka"
+        },
+        {
+          "type": "text",
+          "text": "bathroom",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "wah-ZHEN-kah",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "łazienka"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "In many flats it is a separate room from the toilet."
+      ],
+      "fullLine": "łazienka",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun for the room with a bath or a shower.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "home-and-rooms"
+    },
+    {
+      "key": "home-and-rooms-bedroom",
+      "summary": "Bedroom",
+      "tags": [
+        "feminine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Bedroom"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "sypialnia"
+        },
+        {
+          "type": "text",
+          "text": "bedroom",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "sih-PYAHL-nyah",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "sypialnia"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It usually holds the largest bed in the home."
+      ],
+      "fullLine": "sypialnia",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun for the room where you sleep.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "home-and-rooms"
+    },
+    {
+      "key": "home-and-rooms-door",
+      "summary": "Door",
+      "tags": [
+        "plural"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Door"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "drzwi"
+        },
+        {
+          "type": "text",
+          "text": "door",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "dzhvee",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "drzwi"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "You knock on it or open it to enter."
+      ],
+      "fullLine": "drzwi",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A plural-only noun; Polish treats it as several leaves.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "home-and-rooms"
+    },
+    {
+      "key": "home-and-rooms-window",
+      "summary": "Window",
+      "tags": [
+        "neuter"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Window"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "okno"
+        },
+        {
+          "type": "text",
+          "text": "window",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "OHK-noh",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "okno"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It lets light into a room."
+      ],
+      "fullLine": "okno",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A neuter noun; you open it for fresh air.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "home-and-rooms"
+    },
+    {
+      "key": "home-and-rooms-table",
+      "summary": "Table",
+      "tags": [
+        "masculine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Table"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "stół"
+        },
+        {
+          "type": "text",
+          "text": "table",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "stoow",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "stół"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It usually stands with chairs around it."
+      ],
+      "fullLine": "stół",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun for a piece of furniture you eat at.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "home-and-rooms"
+    },
+    {
+      "key": "home-and-rooms-chair",
+      "summary": "Chair",
+      "tags": [
+        "neuter"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Chair"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "krzesło"
+        },
+        {
+          "type": "text",
+          "text": "chair",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "KSHEH-swoh",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "krzesło"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "You pull it out before sitting down."
+      ],
+      "fullLine": "krzesło",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A neuter noun for a seat with a back.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "home-and-rooms"
+    },
+    {
+      "key": "home-and-rooms-bed",
+      "summary": "Bed",
+      "tags": [
+        "neuter"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Bed"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "łóżko"
+        },
+        {
+          "type": "text",
+          "text": "bed",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "WOOZH-koh",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "łóżko"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It has a mattress, a pillow and a duvet."
+      ],
+      "fullLine": "łóżko",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A neuter noun for the furniture you sleep on.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "home-and-rooms"
+    },
+    {
+      "key": "numbers-one",
+      "summary": "The number one",
+      "tags": [],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "The number one"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "jeden"
+        },
+        {
+          "type": "text",
+          "text": "one",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "YEH-den",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "jeden"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It changes form when it describes a feminine noun."
+      ],
+      "fullLine": "jeden",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The first counting word, and also the word for 'one' in a count.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "numbers"
+    },
+    {
+      "key": "numbers-two",
+      "summary": "The number two",
+      "tags": [],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "The number two"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "dwa"
+        },
+        {
+          "type": "text",
+          "text": "two",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "dvah",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "dwa"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "You will see it on doors marked with the digit two."
+      ],
+      "fullLine": "dwa",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A short counting word used with masculine and neuter nouns.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "numbers"
+    },
+    {
+      "key": "numbers-three",
+      "summary": "The number three",
+      "tags": [],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "The number three"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "trzy"
+        },
+        {
+          "type": "text",
+          "text": "three",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "tshih",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "trzy"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It is the number you get after adding one to two."
+      ],
+      "fullLine": "trzy",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The counting word for three, used with any noun.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "numbers"
+    },
+    {
+      "key": "numbers-four",
+      "summary": "The number four",
+      "tags": [],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "The number four"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "cztery"
+        },
+        {
+          "type": "text",
+          "text": "four",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "CHTEH-rih",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "cztery"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It has one more syllable than the word for three."
+      ],
+      "fullLine": "cztery",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The counting word that follows three in a simple count.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "numbers"
+    },
+    {
+      "key": "numbers-five",
+      "summary": "The number five",
+      "tags": [],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "The number five"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "pięć"
+        },
+        {
+          "type": "text",
+          "text": "five",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "pyench",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "pięć"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It comes between the words for four and six."
+      ],
+      "fullLine": "pięć",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The counting word for five, used when counting people or things.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "numbers"
+    },
+    {
+      "key": "numbers-six",
+      "summary": "The number six",
+      "tags": [],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "The number six"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "sześć"
+        },
+        {
+          "type": "text",
+          "text": "six",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "sheshch",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "sześć"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It sits between the words for five and seven."
+      ],
+      "fullLine": "sześć",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The counting word for six, common on clocks and timetables.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "numbers"
+    },
+    {
+      "key": "numbers-seven",
+      "summary": "The number seven",
+      "tags": [],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "The number seven"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "siedem"
+        },
+        {
+          "type": "text",
+          "text": "seven",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "SHEH-dem",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "siedem"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It has two syllables, unlike the shorter numbers near it."
+      ],
+      "fullLine": "siedem",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The counting word for seven, used in dates and ages.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "numbers"
+    },
+    {
+      "key": "numbers-eight",
+      "summary": "The number eight",
+      "tags": [],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "The number eight"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "osiem"
+        },
+        {
+          "type": "text",
+          "text": "eight",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "OH-shem",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "osiem"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It comes just before the word for nine."
+      ],
+      "fullLine": "osiem",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The counting word for eight, often seen on bus numbers.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "numbers"
+    },
+    {
+      "key": "numbers-nine",
+      "summary": "The number nine",
+      "tags": [],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "The number nine"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "dziewięć"
+        },
+        {
+          "type": "text",
+          "text": "nine",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "JEV-yench",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "dziewięć"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It is the last single-digit number before ten."
+      ],
+      "fullLine": "dziewięć",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The counting word for nine, with a soft start.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "numbers"
+    },
+    {
+      "key": "numbers-ten",
+      "summary": "The number ten",
+      "tags": [],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "The number ten"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "dziesięć"
+        },
+        {
+          "type": "text",
+          "text": "ten",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "JESH-yench",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "dziesięć"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "Clocks and calendars use it constantly."
+      ],
+      "fullLine": "dziesięć",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The counting word for ten, the first two-digit number.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "numbers"
+    },
+    {
+      "key": "people-and-family-mother",
+      "summary": "Mother",
+      "tags": [
+        "feminine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Mother"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "matka"
+        },
+        {
+          "type": "text",
+          "text": "mother",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "MAHT-kah",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "matka"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "You will hear the warmer, shorter family word far more at home."
+      ],
+      "fullLine": "matka",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun for a parent; a more affectionate form also exists.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "people-and-family"
+    },
+    {
+      "key": "people-and-family-father",
+      "summary": "Father",
+      "tags": [
+        "masculine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Father"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "ojciec"
+        },
+        {
+          "type": "text",
+          "text": "father",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "OY-chets",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "ojciec"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "The casual family word for him sounds like 'tata'."
+      ],
+      "fullLine": "ojciec",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun, and the everyday word for a male parent.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "people-and-family"
+    },
+    {
+      "key": "people-and-family-sister",
+      "summary": "Sister",
+      "tags": [
+        "feminine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Sister"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "siostra"
+        },
+        {
+          "type": "text",
+          "text": "sister",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "SHOHS-trah",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "siostra"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "The word for a male sibling looks quite different."
+      ],
+      "fullLine": "siostra",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun for a female sibling.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "people-and-family"
+    },
+    {
+      "key": "people-and-family-brother",
+      "summary": "Brother",
+      "tags": [
+        "masculine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Brother"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "brat"
+        },
+        {
+          "type": "text",
+          "text": "brother",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "braht",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "brat"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It is short and follows the same cases as other masculine nouns."
+      ],
+      "fullLine": "brat",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun for a male sibling.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "people-and-family"
+    },
+    {
+      "key": "people-and-family-son",
+      "summary": "Son",
+      "tags": [
+        "masculine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Son"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "syn"
+        },
+        {
+          "type": "text",
+          "text": "son",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "sihn",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "syn"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It is often paired with the word for the female child in family lists."
+      ],
+      "fullLine": "syn",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun for a male child of his parents.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "people-and-family"
+    },
+    {
+      "key": "people-and-family-daughter",
+      "summary": "Daughter",
+      "tags": [
+        "feminine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Daughter"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "córka"
+        },
+        {
+          "type": "text",
+          "text": "daughter",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "TSOOR-kah",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "córka"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It is the female counterpart of the word for a male child."
+      ],
+      "fullLine": "córka",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun for a female child of her parents.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "people-and-family"
+    },
+    {
+      "key": "people-and-family-child",
+      "summary": "Child",
+      "tags": [
+        "neuter"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Child"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "dziecko"
+        },
+        {
+          "type": "text",
+          "text": "child",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "JETS-koh",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "dziecko"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "Its plural is irregular, so learn the two forms as a pair."
+      ],
+      "fullLine": "dziecko",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A neuter noun for a young person, used for either gender.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "people-and-family"
+    },
+    {
+      "key": "people-and-family-friend",
+      "summary": "Friend",
+      "tags": [
+        "masculine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Friend (close, male)"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "przyjaciel"
+        },
+        {
+          "type": "text",
+          "text": "friend",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "pshih-YAH-chel",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "przyjaciel"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "A shorter, more casual word exists for pals."
+      ],
+      "fullLine": "przyjaciel",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun for a close friend, not just an acquaintance.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "people-and-family"
+    },
+    {
+      "key": "people-and-family-man",
+      "summary": "Man",
+      "tags": [
+        "masculine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Man"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "mężczyzna"
+        },
+        {
+          "type": "text",
+          "text": "man",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "men-SHCHIZ-nah",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "mężczyzna"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It is one of the longest everyday words for a person."
+      ],
+      "fullLine": "mężczyzna",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun for an adult male, despite its feminine-looking ending.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "people-and-family"
+    },
+    {
+      "key": "people-and-family-woman",
+      "summary": "Woman",
+      "tags": [
+        "feminine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Woman"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "kobieta"
+        },
+        {
+          "type": "text",
+          "text": "woman",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "koh-BYEH-tah",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "kobieta"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It is the polite word you see on signs and forms."
+      ],
+      "fullLine": "kobieta",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun for an adult female.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "people-and-family"
+    },
+    {
+      "key": "places-and-travel-city",
+      "summary": "City",
+      "tags": [
+        "neuter"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "City"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "miasto"
+        },
+        {
+          "type": "text",
+          "text": "city",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "MYAHS-toh",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "miasto"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It is bigger than a village and has a mayor."
+      ],
+      "fullLine": "miasto",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A neuter noun for a large town with its own centre.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "places-and-travel"
+    },
+    {
+      "key": "places-and-travel-village",
+      "summary": "Village",
+      "tags": [
+        "feminine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Village"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "wieś"
+        },
+        {
+          "type": "text",
+          "text": "village",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "vyesh",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "wieś"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It is smaller than a town and often surrounded by fields."
+      ],
+      "fullLine": "wieś",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun for a small settlement in the countryside.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "places-and-travel"
+    },
+    {
+      "key": "places-and-travel-street",
+      "summary": "Street",
+      "tags": [
+        "feminine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Street"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "ulica"
+        },
+        {
+          "type": "text",
+          "text": "street",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "oo-LEE-tsah",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "ulica"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "You will find its name on a blue sign at the corner."
+      ],
+      "fullLine": "ulica",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun used in addresses after the word for 'at'.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "places-and-travel"
+    },
+    {
+      "key": "places-and-travel-shop",
+      "summary": "Shop",
+      "tags": [
+        "masculine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Shop"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "sklep"
+        },
+        {
+          "type": "text",
+          "text": "shop",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "sklep",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "sklep"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It is where you go for bread and milk."
+      ],
+      "fullLine": "sklep",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun for a place where you buy things.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "places-and-travel"
+    },
+    {
+      "key": "places-and-travel-station",
+      "summary": "Station",
+      "tags": [
+        "masculine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Station (railway)"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "dworzec"
+        },
+        {
+          "type": "text",
+          "text": "station",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "DVOH-zhets",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "dworzec"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "Trains and long-distance buses leave from it."
+      ],
+      "fullLine": "dworzec",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun for the main railway building in a town.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "places-and-travel"
+    },
+    {
+      "key": "places-and-travel-train",
+      "summary": "Train",
+      "tags": [
+        "masculine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Train"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "pociąg"
+        },
+        {
+          "type": "text",
+          "text": "train",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "POH-chonk",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "pociąg"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "You buy a ticket and find the platform for it."
+      ],
+      "fullLine": "pociąg",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun; it runs on rails between cities.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "places-and-travel"
+    },
+    {
+      "key": "places-and-travel-bus",
+      "summary": "Bus",
+      "tags": [
+        "masculine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Bus"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "autobus"
+        },
+        {
+          "type": "text",
+          "text": "bus",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "ow-TOH-boos",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "autobus"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It stops at marked poles along the street."
+      ],
+      "fullLine": "autobus",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun for a large road vehicle with many seats.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "places-and-travel"
+    },
+    {
+      "key": "places-and-travel-ticket",
+      "summary": "Ticket",
+      "tags": [
+        "masculine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Ticket"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "bilet"
+        },
+        {
+          "type": "text",
+          "text": "ticket",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "BEE-let",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "bilet"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "You show it to an inspector on the tram."
+      ],
+      "fullLine": "bilet",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun for a small paper or phone pass.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "places-and-travel"
+    },
+    {
+      "key": "places-and-travel-airport",
+      "summary": "Airport",
+      "tags": [
+        "neuter"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Airport"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "lotnisko"
+        },
+        {
+          "type": "text",
+          "text": "airport",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "lot-NEES-koh",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "lotnisko"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "Planes take off and land there."
+      ],
+      "fullLine": "lotnisko",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A neuter noun whose name shares a root with the word for 'flight'.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "places-and-travel"
+    },
+    {
+      "key": "places-and-travel-hotel",
+      "summary": "Hotel",
+      "tags": [
+        "masculine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Hotel"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "hotel"
+        },
+        {
+          "type": "text",
+          "text": "hotel",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "HOH-tel",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "hotel"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "You book a room there for the night."
+      ],
+      "fullLine": "hotel",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun for a building where travellers sleep.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "places-and-travel"
+    },
+    {
+      "key": "shopping-and-money-money",
+      "summary": "Money",
+      "tags": [
+        "plural"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Money"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "pieniądze"
+        },
+        {
+          "type": "text",
+          "text": "money",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "pyeh-NYON-dzeh",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "pieniądze"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "You need it to pay for anything."
+      ],
+      "fullLine": "pieniądze",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A plural-only noun in everyday use, though a singular form exists.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "shopping-and-money"
+    },
+    {
+      "key": "shopping-and-money-price",
+      "summary": "Price",
+      "tags": [
+        "feminine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Price"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "cena"
+        },
+        {
+          "type": "text",
+          "text": "price",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "TSEH-nah",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "cena"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It is what you check before deciding to buy."
+      ],
+      "fullLine": "cena",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun shown on a label or a tag.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "shopping-and-money"
+    },
+    {
+      "key": "shopping-and-money-change",
+      "summary": "Change (coins)",
+      "tags": [
+        "feminine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Change (coins handed back)"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "reszta"
+        },
+        {
+          "type": "text",
+          "text": "change",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "RESH-tah",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "reszta"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "You get it when you pay with a large note."
+      ],
+      "fullLine": "reszta",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun for the coins handed back to you.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "shopping-and-money"
+    },
+    {
+      "key": "shopping-and-money-cash",
+      "summary": "Cash",
+      "tags": [
+        "feminine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Cash"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "gotówka"
+        },
+        {
+          "type": "text",
+          "text": "cash",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "goh-TOOF-kah",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "gotówka"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "Some small shops accept only this."
+      ],
+      "fullLine": "gotówka",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun for notes and coins rather than a card.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "shopping-and-money"
+    },
+    {
+      "key": "shopping-and-money-card",
+      "summary": "Card",
+      "tags": [
+        "feminine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Card (for paying)"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "karta"
+        },
+        {
+          "type": "text",
+          "text": "card",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "KAR-tah",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "karta"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "You tap it on a reader to pay."
+      ],
+      "fullLine": "karta",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun that also means a playing card or a chart.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "shopping-and-money"
+    },
+    {
+      "key": "shopping-and-money-shop",
+      "summary": "Shop",
+      "tags": [
+        "masculine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Shop (where you pay at a till)"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "sklep"
+        },
+        {
+          "type": "text",
+          "text": "shop",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "sklep",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "sklep"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "You walk in, choose, and pay at the counter."
+      ],
+      "fullLine": "sklep",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun for a place with a counter and a till.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "shopping-and-money"
+    },
+    {
+      "key": "shopping-and-money-to-buy",
+      "summary": "To buy",
+      "tags": [
+        "verb"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "to buy"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "kupować"
+        },
+        {
+          "type": "text",
+          "text": "to buy",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "koo-POH-vahch",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "kupować"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It is what you do with money in a shop."
+      ],
+      "fullLine": "kupować",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "An imperfective verb; the perfective form adds a prefix.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "shopping-and-money"
+    },
+    {
+      "key": "shopping-and-money-cheap",
+      "summary": "Cheap",
+      "tags": [
+        "adjective"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Cheap"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "tani"
+        },
+        {
+          "type": "text",
+          "text": "cheap",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "TAH-nee",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "tani"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It is the opposite of the word for costly."
+      ],
+      "fullLine": "tani",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine adjective; it agrees with the noun it describes.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "shopping-and-money"
+    },
+    {
+      "key": "shopping-and-money-expensive",
+      "summary": "Expensive",
+      "tags": [
+        "adjective"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Expensive"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "drogi"
+        },
+        {
+          "type": "text",
+          "text": "expensive",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "DROH-ghee",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "drogi"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It describes something that costs a lot."
+      ],
+      "fullLine": "drogi",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine adjective that also means 'dear' to someone.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "shopping-and-money"
+    },
+    {
+      "key": "shopping-and-money-receipt",
+      "summary": "Receipt",
+      "tags": [
+        "masculine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Receipt"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "paragon"
+        },
+        {
+          "type": "text",
+          "text": "receipt",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "pah-RAH-gon",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "paragon"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "Keep it if you might return the item."
+      ],
+      "fullLine": "paragon",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun for the printed slip from a till.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "shopping-and-money"
+    },
+    {
+      "key": "time-and-days-monday",
+      "summary": "Monday",
+      "tags": [
+        "weekday",
+        "masculine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Monday"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "poniedziałek"
+        },
+        {
+          "type": "text",
+          "text": "Monday",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "poh-nyeh-JAH-wek",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "poniedziałek"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It is the first working day of the week."
+      ],
+      "fullLine": "poniedziałek",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun; Polish weekdays are not capitalised.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "time-and-days"
+    },
+    {
+      "key": "time-and-days-tuesday",
+      "summary": "Tuesday",
+      "tags": [
+        "weekday",
+        "masculine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Tuesday"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "wtorek"
+        },
+        {
+          "type": "text",
+          "text": "Tuesday",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "VTOH-rek",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "wtorek"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It comes right after the start of the working week."
+      ],
+      "fullLine": "wtorek",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun, the second working day in Poland.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "time-and-days"
+    },
+    {
+      "key": "time-and-days-wednesday",
+      "summary": "Wednesday",
+      "tags": [
+        "weekday",
+        "feminine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Wednesday"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "środa"
+        },
+        {
+          "type": "text",
+          "text": "Wednesday",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "SHROH-dah",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "środa"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It sits in the middle of the working week."
+      ],
+      "fullLine": "środa",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun; its name is linked to the word for 'middle'.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "time-and-days"
+    },
+    {
+      "key": "time-and-days-thursday",
+      "summary": "Thursday",
+      "tags": [
+        "weekday",
+        "masculine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Thursday"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "czwartek"
+        },
+        {
+          "type": "text",
+          "text": "Thursday",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "CHVAHR-tek",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "czwartek"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It is the day before Friday."
+      ],
+      "fullLine": "czwartek",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun whose name is built from the number four.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "time-and-days"
+    },
+    {
+      "key": "time-and-days-friday",
+      "summary": "Friday",
+      "tags": [
+        "weekday",
+        "masculine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Friday"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "piątek"
+        },
+        {
+          "type": "text",
+          "text": "Friday",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "PYON-tek",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "piątek"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It is the last working day for many people."
+      ],
+      "fullLine": "piątek",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun whose name is built from the number five.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "time-and-days"
+    },
+    {
+      "key": "time-and-days-saturday",
+      "summary": "Saturday",
+      "tags": [
+        "weekday",
+        "feminine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Saturday"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "sobota"
+        },
+        {
+          "type": "text",
+          "text": "Saturday",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "soh-BOH-tah",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "sobota"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "Shops are often busy on this day."
+      ],
+      "fullLine": "sobota",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun, the first day of the weekend.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "time-and-days"
+    },
+    {
+      "key": "time-and-days-sunday",
+      "summary": "Sunday",
+      "tags": [
+        "weekday",
+        "feminine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Sunday"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "niedziela"
+        },
+        {
+          "type": "text",
+          "text": "Sunday",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "nyeh-JEH-lah",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "niedziela"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It is traditionally a day of rest."
+      ],
+      "fullLine": "niedziela",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun, the quiet day that closes the weekend.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "time-and-days"
+    },
+    {
+      "key": "time-and-days-day",
+      "summary": "Day",
+      "tags": [
+        "masculine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Day"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "dzień"
+        },
+        {
+          "type": "text",
+          "text": "day",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "jen",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "dzień"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It is the unit between morning and night."
+      ],
+      "fullLine": "dzień",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun, short and very common in dates.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "time-and-days"
+    },
+    {
+      "key": "time-and-days-week",
+      "summary": "Week",
+      "tags": [
+        "masculine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Week"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "tydzień"
+        },
+        {
+          "type": "text",
+          "text": "week",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "TIH-jen",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "tydzień"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It is the unit a calendar shows as one row of seven."
+      ],
+      "fullLine": "tydzień",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun for seven days taken together.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "time-and-days"
+    },
+    {
+      "key": "time-and-days-year",
+      "summary": "Year",
+      "tags": [
+        "masculine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Year"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "rok"
+        },
+        {
+          "type": "text",
+          "text": "year",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "rok",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "rok"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It is the unit that has twelve months."
+      ],
+      "fullLine": "rok",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun used in dates and ages.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "time-and-days"
+    },
+    {
+      "key": "weather-and-seasons-weather",
+      "summary": "Weather",
+      "tags": [
+        "feminine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Weather"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "pogoda"
+        },
+        {
+          "type": "text",
+          "text": "weather",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "poh-GOH-dah",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "pogoda"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "You check it before leaving the house."
+      ],
+      "fullLine": "pogoda",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun; the word appears in every forecast.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "weather-and-seasons"
+    },
+    {
+      "key": "weather-and-seasons-sun",
+      "summary": "Sun",
+      "tags": [
+        "neuter"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Sun"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "słońce"
+        },
+        {
+          "type": "text",
+          "text": "sun",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "SWON-tseh",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "słońce"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It rises in the east and sets in the west."
+      ],
+      "fullLine": "słońce",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A neuter noun; it shines and gives warmth.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "weather-and-seasons"
+    },
+    {
+      "key": "weather-and-seasons-rain",
+      "summary": "Rain",
+      "tags": [
+        "masculine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Rain"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "deszcz"
+        },
+        {
+          "type": "text",
+          "text": "rain",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "deshch",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "deszcz"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "You need an umbrella for it."
+      ],
+      "fullLine": "deszcz",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun that falls from grey clouds.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "weather-and-seasons"
+    },
+    {
+      "key": "weather-and-seasons-snow",
+      "summary": "Snow",
+      "tags": [
+        "masculine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Snow"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "śnieg"
+        },
+        {
+          "type": "text",
+          "text": "snow",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "shnyek",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "śnieg"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It covers the ground white when it is cold."
+      ],
+      "fullLine": "śnieg",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun; children love it in winter.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "weather-and-seasons"
+    },
+    {
+      "key": "weather-and-seasons-wind",
+      "summary": "Wind",
+      "tags": [
+        "masculine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Wind"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "wiatr"
+        },
+        {
+          "type": "text",
+          "text": "wind",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "VYAHTR",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "wiatr"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It fills the sails of a boat."
+      ],
+      "fullLine": "wiatr",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A masculine noun that moves the leaves and the clouds.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "weather-and-seasons"
+    },
+    {
+      "key": "weather-and-seasons-spring",
+      "summary": "Spring",
+      "tags": [
+        "feminine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Spring (the season)"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "wiosna"
+        },
+        {
+          "type": "text",
+          "text": "spring",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "VYOHS-nah",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "wiosna"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It follows winter and comes before summer."
+      ],
+      "fullLine": "wiosna",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun; the season when flowers return.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "weather-and-seasons"
+    },
+    {
+      "key": "weather-and-seasons-summer",
+      "summary": "Summer",
+      "tags": [
+        "neuter"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Summer"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "lato"
+        },
+        {
+          "type": "text",
+          "text": "summer",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "LAH-toh",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "lato"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It is the season of holidays by the sea."
+      ],
+      "fullLine": "lato",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A neuter noun; the warmest season of the year.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "weather-and-seasons"
+    },
+    {
+      "key": "weather-and-seasons-autumn",
+      "summary": "Autumn",
+      "tags": [
+        "feminine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Autumn"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "jesień"
+        },
+        {
+          "type": "text",
+          "text": "autumn",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "YESH-yen",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "jesień"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It comes between summer and winter."
+      ],
+      "fullLine": "jesień",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun; the season of falling leaves.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "weather-and-seasons"
+    },
+    {
+      "key": "weather-and-seasons-winter",
+      "summary": "Winter",
+      "tags": [
+        "feminine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Winter"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "zima"
+        },
+        {
+          "type": "text",
+          "text": "winter",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "ZHEE-mah",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "zima"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It brings frost and short days."
+      ],
+      "fullLine": "zima",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun; the coldest season.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "weather-and-seasons"
+    },
+    {
+      "key": "weather-and-seasons-cloud",
+      "summary": "Cloud",
+      "tags": [
+        "feminine"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Cloud"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "chmura"
+        },
+        {
+          "type": "text",
+          "text": "cloud",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "KHMOO-rah",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "chmura"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It floats across the sky."
+      ],
+      "fullLine": "chmura",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A feminine noun; it can bring rain or shade.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "weather-and-seasons"
+    },
+    {
+      "key": "written-be",
+      "summary": "The letter B",
+      "tags": [
+        "alphabet"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "The Polish name of the letter B"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "be"
+        },
+        {
+          "type": "text",
+          "text": "The name of the letter B",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "beh",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "be"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It sits just after the nasal vowel A in the spelling order."
+      ],
+      "fullLine": "be",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The third letter of the Polish spelling order.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "written"
+    },
+    {
+      "key": "written-ce",
+      "summary": "The letter C",
+      "tags": [
+        "alphabet"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "The Polish name of the letter C"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "ce"
+        },
+        {
+          "type": "text",
+          "text": "The name of the letter C",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "tseh",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "ce"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It often stands before the letter H in Polish words."
+      ],
+      "fullLine": "ce",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The fourth letter of the Polish spelling order.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "written"
+    },
+    {
+      "key": "written-de",
+      "summary": "The letter D",
+      "tags": [
+        "alphabet"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "The Polish name of the letter D"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "de"
+        },
+        {
+          "type": "text",
+          "text": "The name of the letter D",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "deh",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "de"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It pairs with Z to make a common Polish sound."
+      ],
+      "fullLine": "de",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The sixth letter, sitting just before the vowel E.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "written"
+    },
+    {
+      "key": "written-ef",
+      "summary": "The letter F",
+      "tags": [
+        "alphabet"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "The Polish name of the letter F"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "ef"
+        },
+        {
+          "type": "text",
+          "text": "The name of the letter F",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "ef",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "ef"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It follows the nasal vowel E with a tail in the spelling order."
+      ],
+      "fullLine": "ef",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The ninth letter, near the start of the Polish spelling order.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "written"
+    },
+    {
+      "key": "written-gie",
+      "summary": "The letter G",
+      "tags": [
+        "alphabet"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "The Polish name of the letter G"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "gie"
+        },
+        {
+          "type": "text",
+          "text": "The name of the letter G",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "gyeh",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "gie"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It appears at the start of the Polish word for 'mountain'."
+      ],
+      "fullLine": "gie",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The tenth letter; Polish adds a soft vowel sound to its name.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "written"
+    },
+    {
+      "key": "written-jot",
+      "summary": "The letter J",
+      "tags": [
+        "alphabet"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "The Polish name of the letter J"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "jot"
+        },
+        {
+          "type": "text",
+          "text": "The name of the letter J",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "yot",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "jot"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It usually comes before a vowel at the start of a word."
+      ],
+      "fullLine": "jot",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The thirteenth letter of the Polish spelling order.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "written"
+    },
+    {
+      "key": "written-wu",
+      "summary": "The letter W",
+      "tags": [
+        "alphabet"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "The Polish name of the letter W"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "wu"
+        },
+        {
+          "type": "text",
+          "text": "The name of the letter W",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "voo",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "wu"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It appears in the Polish word for 'island'."
+      ],
+      "fullLine": "wu",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The twenty-eighth letter of the Polish spelling order.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "written"
+    },
+    {
+      "key": "written-zet",
+      "summary": "The letter Z",
+      "tags": [
+        "alphabet"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "The Polish name of the letter Z"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "zet"
+        },
+        {
+          "type": "text",
+          "text": "The name of the letter Z",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "zet",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "zet"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It appears in the Polish word for 'west'."
+      ],
+      "fullLine": "zet",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The thirtieth letter, close to the very end of the Polish spelling order.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "written"
+    },
+    {
+      "key": "written-em",
+      "summary": "The letter M",
+      "tags": [
+        "alphabet"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "The Polish name of the letter M"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "em"
+        },
+        {
+          "type": "text",
+          "text": "The name of the letter M",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "em",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "em"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "You will find it in the Polish word for 'mother'."
+      ],
+      "fullLine": "em",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The seventeenth letter of the Polish spelling order.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "written"
+    },
+    {
+      "key": "written-en",
+      "summary": "The letter N",
+      "tags": [
+        "alphabet"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "The Polish name of the letter N"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "en"
+        },
+        {
+          "type": "text",
+          "text": "The name of the letter N",
+          "role": "translation"
+        },
+        {
+          "type": "text",
+          "text": "en",
+          "role": "note"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "en"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It appears in the Polish word for 'no'."
+      ],
+      "fullLine": "en",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "It sits halfway through the Polish spelling order.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "written"
+    }
+  ]
+}

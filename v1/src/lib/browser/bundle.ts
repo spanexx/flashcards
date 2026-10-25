@@ -6,22 +6,22 @@
 
 import semver from "semver";
 import { z } from "zod";
-import type { Card, CardOrigin, CardSource } from "@/lib/shared/types";
+import type { Card, CardOrigin, CardSource, Deck, MediaRecord, Tombstone } from "@/lib/shared/types";
 import { buildCard, deckCardId, hardRuleIssues } from "@/lib/core/card";
+import { referencedMediaIds } from "@/lib/core/media";
 import {
   cardSourceSchema,
   packPromptsSchema,
+  studyLevelSchema,
   type ValidationIssue,
 } from "@/lib/core/schema";
 import { normalizeSettings } from "@/lib/core/settings-shape";
-import { withBasePath } from "@/lib/shared/paths";
 import { markChanged, resumeChanges, suspendChanges } from "@/lib/browser/changes";
 import { uniqueDeckIdentity, uniquePackName } from "@/lib/browser/creation";
 import {
   clearLibrary,
   readCards,
   readEvidence,
-  readMeta,
   readPack,
   readPacks,
   readPromptLog,
@@ -36,9 +36,11 @@ import {
   appendPrompt,
   appendSession,
   clearProviderKey,
-  writeMeta,
+  readTombstones,
+  writeTombstones,
   type BrowserPack,
 } from "@/lib/browser/repository";
+import { readAllMedia } from "@/lib/browser/media";
 
 /** The one bundle schema. The skill and the app both speak this. */
 export const PACK_BUNDLE_SCHEMA = "flashcards.pack/v1";
@@ -50,10 +52,11 @@ const deckIdSchema = z
   .min(1, "a deck needs an id")
   .regex(/^[a-z0-9][a-z0-9-]*$/, "a deck id uses lowercase letters, numbers and dashes");
 
-/** One deck as it appears inside a bundle. */
+/** One deck as it appears inside a bundle; an old file means intermediate. */
 export const deckSchema = z.object({
   id: deckIdSchema,
   name: z.string().min(1, "a deck needs a name"),
+  level: studyLevelSchema.default("intermediate"),
 });
 
 /** A bundle card is a card source plus the deck it belongs to. */
@@ -116,6 +119,8 @@ export interface ImportOptions {
   namePolicy?: "strict" | "auto-suffix";
   /** Provider batches keep their generated origin while sharing this validator. */
   origin?: "generated";
+  /** Card ids the learner deliberately removed; only a seed import passes this. */
+  suppressCardIds?: ReadonlySet<string>;
   requestId?: string;
 }
 
@@ -128,6 +133,10 @@ export interface ImportSuccess {
   cardsAdded: number;
   duplicates: number;
   deckIds: string[];
+  /** Matching cards whose teaching layer or version note changed in place. */
+  cardsUpdated?: number;
+  /** Pack cards a whole-pack update took out of study, with evidence kept. */
+  cardsRetired?: number;
 }
 
 /** An import either happened or named every problem. */
@@ -204,7 +213,7 @@ export function parseCardsBundle(text: string): { ok: true; bundle: CardsBundle 
 }
 
 /** Compare two author-written versions. Null means they cannot be compared. */
-function compareVersions(left: string, right: string): number | null {
+export function compareVersions(left: string, right: string): number | null {
   if (left === right) return 0;
   const a = semver.coerce(left);
   const b = semver.coerce(right);
@@ -216,9 +225,9 @@ function compareVersions(left: string, right: string): number | null {
 function deckFor(
   card: BundleCard,
   index: number,
-  decks: Map<string, { id: string; name: string }>,
+  decks: Map<string, Deck>,
   fallback: string | null,
-): { deck: { id: string; name: string } } | { issues: ValidationIssue[] } {
+): { deck: Deck } | { issues: ValidationIssue[] } {
   const wanted = card.deckId ?? fallback;
   if (!wanted) {
     return { issues: [issue("cards.deckId", "a card must name the deck it belongs to", index)] };
@@ -237,7 +246,7 @@ function deckFor(
 function cardFromBundle(
   bundleCard: BundleCard,
   index: number,
-  deck: { id: string; name: string },
+  deck: Deck,
   pack: { name: string; version: string },
   kind: "pack" | "imported" | "generated",
   now: string,
@@ -290,6 +299,76 @@ async function keepFreshCards(cards: Card[]): Promise<{ fresh: Card[]; duplicate
   return { fresh, duplicates };
 }
 
+/** Replace or remove a layer without leaving an empty `teaching: []` behind. */
+function withTeaching(card: Card, teaching: CardSource["teaching"]): Card {
+  const next = { ...card };
+  if (teaching && teaching.length > 0) next.teaching = teaching;
+  else delete next.teaching;
+  return next;
+}
+
+interface PackReconciliation {
+  added: Card[];
+  updated: Card[];
+  retired: Card[];
+  duplicates: number;
+}
+
+/**
+ * Apply a whole-pack bundle to the learner's library. Matching content keeps
+ * its id and evidence and only the help changes; pack cards the new version no
+ * longer names leave study but keep their evidence. Learner and imported cards
+ * are never retired by a pack update.
+ */
+async function reconcilePackCards(
+  incoming: Card[],
+  packName: string,
+  version: string,
+  deckIds: Set<string>,
+): Promise<PackReconciliation> {
+  const existing = await readCards();
+  const known = new Map(existing.map((card) => [card.id, card]));
+  const seen = new Set<string>();
+  const added: Card[] = [];
+  const updated: Card[] = [];
+  let duplicates = 0;
+
+  for (const card of incoming) {
+    if (seen.has(card.id)) {
+      duplicates += 1;
+      continue;
+    }
+    seen.add(card.id);
+    const old = known.get(card.id);
+    if (!old) {
+      added.push(card);
+      continue;
+    }
+    duplicates += 1;
+    const merged = withTeaching(old, card.teaching);
+    delete merged.retired;
+    merged.origin =
+      old.origin.kind === "pack"
+        ? {
+            ...old.origin,
+            packVersion: version,
+            note: `From the pack ${packName}, version ${version}.`,
+          }
+        : old.origin;
+    updated.push(merged);
+  }
+
+  const retired: Card[] = [];
+  for (const old of existing) {
+    if (old.packName !== packName || old.retired) continue;
+    if (old.origin.kind !== "pack" || !old.deckId) continue;
+    if (!deckIds.has(old.deckId) || seen.has(old.id)) continue;
+    retired.push({ ...old, retired: true });
+  }
+
+  return { added, updated, retired, duplicates };
+}
+
 /** Create or update a whole pack. */
 async function importPack(text: string, options: ImportOptions): Promise<ImportResult> {
   const namePolicy = options.namePolicy ?? "strict";
@@ -339,14 +418,20 @@ async function importPack(text: string, options: ImportOptions): Promise<ImportR
     issues.push(issue("decks", "a new pack needs at least one deck", 0));
   }
 
-  const decks = new Map<string, { id: string; name: string }>();
+  const decks = new Map<string, Deck>();
   if (installed) for (const deck of installed.decks) decks.set(deck.id, deck);
   const decksBefore = new Set(decks.keys());
   for (const deck of bundle.decks) {
-    if (decks.has(deck.id)) continue;
+    const old = decks.get(deck.id);
     // WHY: A deck id is the identity; a display name is the learner's label.
-    // An import may add a deck but never renames one behind their back.
-    decks.set(deck.id, { id: deck.id, name: deck.name });
+    // An import may add a deck but never renames one behind their back. The
+    // bundle's level is authoritative because it describes the new help.
+    decks.set(
+      deck.id,
+      old
+        ? { id: old.id, name: old.name, level: deck.level }
+        : { id: deck.id, name: deck.name, level: deck.level },
+    );
   }
 
   const now = new Date().toISOString();
@@ -372,7 +457,16 @@ async function importPack(text: string, options: ImportOptions): Promise<ImportR
 
   if (issues.length > 0) return { ok: false, issues };
 
-  const { fresh, duplicates } = await keepFreshCards(cards);
+  // WHY: A seed must not bring back a card the learner deliberately deleted.
+  // The id is content-based, so changed words arrive as a new card.
+  const suppression = options.suppressCardIds;
+  const incoming = suppression ? cards.filter((card) => !suppression.has(card.id)) : cards;
+  const reconciled = await reconcilePackCards(
+    incoming,
+    bundle.pack.name,
+    bundle.pack.version,
+    new Set(bundle.decks.map((deck) => deck.id)),
+  );
   const pack: BrowserPack = {
     id: bundle.pack.name,
     name: bundle.pack.name,
@@ -387,15 +481,18 @@ async function importPack(text: string, options: ImportOptions): Promise<ImportR
     updatedAt: now,
   };
   await writePack(pack);
-  if (fresh.length > 0) await upsertCards(fresh);
+  const writes = [...reconciled.added, ...reconciled.updated, ...reconciled.retired];
+  if (writes.length > 0) await upsertCards(writes);
 
   return {
     ok: true,
     kind: "pack",
     packName: pack.name,
     decksAdded: [...decks.keys()].filter((id) => !decksBefore.has(id)).length,
-    cardsAdded: fresh.length,
-    duplicates,
+    cardsAdded: reconciled.added.length,
+    duplicates: reconciled.duplicates,
+    cardsUpdated: reconciled.updated.length,
+    cardsRetired: reconciled.retired.length,
     deckIds: [...decks.keys()].filter((id) => !decksBefore.has(id)),
   };
 }
@@ -413,7 +510,7 @@ async function importDeck(text: string, packName: string, options: ImportOptions
 
   const issues: ValidationIssue[] = [];
   const decks = [...pack.decks];
-  const added: Array<{ id: string; name: string }> = [];
+  const added: Deck[] = [];
   const renamed = new Map<string, string>();
   for (const [index, deck] of bundle.decks.entries()) {
     if (renamed.has(deck.id)) {
@@ -428,8 +525,9 @@ async function importDeck(text: string, packName: string, options: ImportOptions
       issues.push(issue(`decks.${index}.id`, `a deck with the id "${identity.id}" is already here`, index));
       continue;
     }
-    decks.push(identity);
-    added.push(identity);
+    const placed: Deck = { id: identity.id, name: identity.name, level: deck.level };
+    decks.push(placed);
+    added.push(placed);
     renamed.set(deck.id, identity.id);
   }
 
@@ -562,6 +660,7 @@ function cardToBundleCard(card: Card): BundleCard {
     answerDef: card.answerDef,
     hints: card.hints,
     fullLine: card.fullLine,
+    ...(card.teaching ? { teaching: card.teaching } : {}),
   };
 }
 
@@ -635,6 +734,8 @@ export const backupSchema = z.object({
       at: z.string(),
       kind: z.enum(["answer", "correction"]),
       supersedes: z.string().optional(),
+      helpSeen: z.boolean().optional(),
+      coldCheck: z.boolean().optional(),
     }),
   ),
   sessions: z.array(
@@ -659,19 +760,40 @@ export const backupSchema = z.object({
       prompt: z.string(),
     }),
   ),
+  tombstones: z
+    .array(
+      z.object({
+        id: z.string(),
+        kind: z.enum(["pack", "card"]),
+        at: z.string(),
+      }),
+    )
+    .optional(),
 });
 
+export type Backup = z.infer<typeof backupSchema>;
+
+/** What a backup export needs: the text and the Blobs kept beside it. */
+export interface BackupContent {
+  json: string;
+  media: MediaRecord[];
+}
+
 /** Export everything the learner owns, but never the key. */
-export async function exportBackup(): Promise<string> {
-  const [packs, cards, evidence, sessions, settings, prompts] = await Promise.all([
+export async function buildBackup(): Promise<BackupContent> {
+  const [packs, cards, evidence, sessions, settings, prompts, tombstones, allMedia] = await Promise.all([
     readPacks(),
     readCards(),
     readEvidence(),
     readSessions(),
     readSettings(),
     readPromptLog(500),
+    readTombstones(),
+    readAllMedia(),
   ]);
-  return JSON.stringify(
+  const wanted = referencedMediaIds(cards);
+  const media = allMedia.filter((record) => wanted.has(record.id));
+  const json = JSON.stringify(
     {
       schema: BACKUP_SCHEMA,
       exportedAt: new Date().toISOString(),
@@ -681,30 +803,47 @@ export async function exportBackup(): Promise<string> {
       sessions,
       settings,
       prompts,
+      tombstones,
     },
     null,
     2,
   );
+  return { json, media };
 }
 
-/** Restore a backup as a whole. A malformed file changes nothing. */
-export async function restoreBackup(
+/** The text half of a backup, for the paste path. */
+export async function exportBackup(): Promise<string> {
+  return (await buildBackup()).json;
+}
+
+/** Read a backup without changing anything. */
+export function parseBackup(
   text: string,
-  options: { beforeApply?: () => Promise<void> } = {},
-): Promise<{ ok: true; packs: number; cards: number } | { ok: false; issues: ValidationIssue[] }> {
+): { ok: true; backup: Backup } | { ok: false; issues: ValidationIssue[] } {
   let raw: unknown;
   try {
     raw = JSON.parse(text) as unknown;
   } catch (error) {
     return {
       ok: false,
-      issues: [issue("(backup)", `the text is not valid JSON: ${error instanceof Error ? error.message : "unknown parse error"}`)],
+      issues: [
+        issue(
+          "(backup)",
+          `the text is not valid JSON: ${error instanceof Error ? error.message : "unknown parse error"}`,
+        ),
+      ],
     };
   }
   const parsed = backupSchema.safeParse(raw);
   if (!parsed.success) return { ok: false, issues: schemaIssues(parsed.error) };
+  return { ok: true, backup: parsed.data };
+}
 
-  const backup = parsed.data;
+/** Apply a backup that has already passed validation. */
+export async function applyBackup(
+  backup: Backup,
+  options: { beforeApply?: () => Promise<void> } = {},
+): Promise<{ ok: true; packs: number; cards: number }> {
   const key = await readProviderKey();
   // The caller may stop background work after validation, but before the
   // library changes. A malformed backup must not kill a healthy job.
@@ -727,10 +866,10 @@ export async function restoreBackup(
     if (backup.evidence.length > 0) await appendEvidence(backup.evidence);
     for (const event of backup.sessions) await appendSession(event);
     for (const entry of backup.prompts) await appendPrompt(entry);
+    await writeTombstones((backup.tombstones ?? []) as Tombstone[]);
     await patchSettings(normalizeSettings(backup.settings));
     if (key) await writeProviderKey(key);
     else await clearProviderKey();
-    await writeMeta("seeded", "yes");
     restored = true;
     return { ok: true, packs: backup.packs.length, cards: backup.cards.length };
   } finally {
@@ -739,20 +878,12 @@ export async function restoreBackup(
   }
 }
 
-/** Seed the converted Polish pack once, on a library that has never opened. */
-export async function ensureSeeded(): Promise<void> {
-  if ((await readMeta("seeded")) === "yes") return;
-  if ((await readPacks()).length > 0) {
-    await writeMeta("seeded", "yes");
-    return;
-  }
-  try {
-    const response = await fetch(withBasePath("/packs/polish-starter.json"), { cache: "no-store" });
-    if (!response.ok) return;
-    const text = await response.text();
-    const result = await importBundle(text, { kind: "pack" });
-    if (result.ok) await writeMeta("seeded", "yes");
-  } catch {
-    // A missing seed must never stop the app; the learner can import or create.
-  }
+/** Restore a backup as a whole. A malformed file changes nothing. */
+export async function restoreBackup(
+  text: string,
+  options: { beforeApply?: () => Promise<void> } = {},
+): Promise<{ ok: true; packs: number; cards: number } | { ok: false; issues: ValidationIssue[] }> {
+  const read = parseBackup(text);
+  if (!read.ok) return read;
+  return applyBackup(read.backup, options);
 }

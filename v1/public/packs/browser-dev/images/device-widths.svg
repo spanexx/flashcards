@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 240" role="img" aria-label="One page shown at a wide viewport and at a narrow phone viewport">
+  <rect width="480" height="240" fill="#f8fafc"/>
+  <rect x="36" y="40" width="230" height="140" rx="10" fill="#ffffff" stroke="#1f2937" stroke-width="2"/>
+  <rect x="56" y="58" width="190" height="20" rx="4" fill="#dbeafe"/>
+  <rect x="56" y="88" width="120" height="10" rx="4" fill="#cbd5e1"/>
+  <rect x="56" y="106" width="160" height="10" rx="4" fill="#cbd5e1"/>
+  <rect x="56" y="124" width="90" height="10" rx="4" fill="#cbd5e1"/>
+  <text x="151" y="200" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#64748b">wide viewport</text>
+  <rect x="320" y="30" width="90" height="164" rx="14" fill="#ffffff" stroke="#1f2937" stroke-width="2"/>
+  <rect x="332" y="48" width="66" height="14" rx="4" fill="#dbeafe"/>
+  <rect x="332" y="72" width="50" height="8" rx="4" fill="#cbd5e1"/>
+  <rect x="332" y="88" width="60" height="8" rx="4" fill="#cbd5e1"/>
+  <rect x="332" y="104" width="44" height="8" rx="4" fill="#cbd5e1"/>
+  <rect x="332" y="132" width="60" height="22" rx="4" fill="#e2e8f0"/>
+  <text x="365" y="216" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#64748b">narrow viewport</text>
+  <text x="240" y="230" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#64748b">the same HTML, a different layout</text>
+</svg>

@@ -34,7 +34,7 @@ function makePack(overrides: Partial<PackStatus> = {}): PackStatus {
     topics: ["basics"],
     topicLabels: {},
     cardCount: 2,
-    decks: [{ id: "basics", name: "Basics" }],
+    decks: [{ id: "basics", name: "Basics", level: "intermediate" }],
     ...overrides,
   };
 }

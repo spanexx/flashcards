@@ -21,6 +21,8 @@ import {
   disconnectAutosave,
   type AutosaveState,
 } from "@/lib/browser/autosave";
+import { exportBackupZip, restoreBackupFile } from "@/lib/browser/archive";
+import { interruptJobs } from "@/lib/browser/jobs";
 import type { ProviderStatus, Settings } from "@/lib/shared/types";
 
 interface PromptLogEntry {
@@ -189,19 +191,46 @@ export default function SettingsClient() {
   const exportBackup = useCallback(async () => {
     setMessage(null);
     try {
-      const data = await apiGet<{ json: string }>("/api/backup/export");
-      const blob = new Blob([data.json], { type: "application/json" });
+      const blob = await exportBackupZip();
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
       anchor.href = url;
-      anchor.download = `flashcards-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      anchor.download = `flashcards-backup-${new Date().toISOString().slice(0, 10)}.zip`;
       anchor.click();
       URL.revokeObjectURL(url);
-      setNotice("The backup was downloaded. It holds everything except the provider key.");
+      setNotice("The backup was downloaded as a zip. It holds everything except the provider key.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "The backup could not be exported.");
     }
   }, []);
+
+  // A chosen zip may carry local media; an older JSON backup simply has none.
+  const restoreFromFile = useCallback(
+    async (file: File) => {
+      if (!window.confirm("Restoring replaces everything in this browser. The provider key stays. Continue?")) {
+        return;
+      }
+      setMessage(null);
+      setNotice(null);
+      try {
+        const result = await restoreBackupFile(file, {
+          beforeApply: () => interruptJobs("The library was restored."),
+        });
+        if (!result.ok) {
+          const first = result.issues[0];
+          setMessage(
+            `Nothing was restored: ${first ? `${first.field}: ${first.message}` : "the backup needs fixing."}`,
+          );
+          return;
+        }
+        setNotice(`Restored ${result.packs} pack(s) and ${result.cards} card(s).`);
+        await refresh();
+      } catch (error) {
+        setMessage(error instanceof Error ? error.message : "The backup file could not be read.");
+      }
+    },
+    [refresh],
+  );
 
   const chooseAutoFile = useCallback(async () => {
     setMessage(null);
@@ -543,14 +572,31 @@ export default function SettingsClient() {
           <div className="card stack">
             <h2>Backup</h2>
             <p className="muted" style={{ margin: 0 }}>
-              A backup holds packs, cards, the record, sessions, settings and the prompt log. The provider key is never
-              included. Restoring replaces everything here; the key stays in this browser.
+              A backup holds packs, cards, the record, sessions, settings, the prompt log and any pictures or videos on
+              cards. The provider key is never included. It downloads as a zip; restoring replaces everything here and
+              the key stays in this browser.
             </p>
             <div className="row">
               <button className="btn" type="button" onClick={() => void exportBackup()}>
                 Download a backup
               </button>
+              <label className="btn">
+                Restore from a file
+                <input
+                  type="file"
+                  accept=".zip,.json,application/zip,application/json"
+                  style={{ display: "none" }}
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (file) void restoreFromFile(file);
+                    event.target.value = "";
+                  }}
+                />
+              </label>
             </div>
+            <p className="muted" style={{ margin: 0 }}>
+              An older JSON backup can still be pasted below.
+            </p>
             <textarea
               className="answer-input"
               rows={5}

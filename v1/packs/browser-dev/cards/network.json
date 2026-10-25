@@ -1,0 +1,123 @@
+{
+  "cards": [
+    {
+      "key": "network-ttfb",
+      "summary": "TTFB measures the first byte",
+      "topics": ["network"],
+      "tags": ["timing"],
+      "prompt": [{ "type": "text", "text": "Which timing measures the wait before the first byte arrives?" }],
+      "answer": [{ "type": "text", "text": "Time to first byte" }],
+      "answerDef": { "mode": "picks", "options": ["Time to first byte", "download size", "DNS name"], "correct": ["Time to first byte"] },
+      "hints": ["It counts the wait before anything has arrived."],
+      "fullLine": "Time to first byte measures the wait before the first byte arrives.",
+      "teaching": [{ "type": "text", "text": "A late start can hurt even when the file itself is small.", "lang": "en" }]
+    },
+    {
+      "key": "network-preflight",
+      "summary": "A preflight checks permission",
+      "topics": ["network"],
+      "tags": ["cors"],
+      "prompt": [{ "type": "text", "text": "A cross-origin request with a non-simple header is preceded by a " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " request." }],
+      "answer": [{ "type": "text", "text": "A cross-origin request with a non-simple header is preceded by a preflight request." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["preflight"] }] },
+      "hints": ["The browser asks permission before sending the real one."],
+      "fullLine": "A cross-origin request with a non-simple header is preceded by a preflight request."
+    },
+    {
+      "key": "network-404",
+      "summary": "404 means not found",
+      "topics": ["network"],
+      "tags": ["status"],
+      "prompt": [{ "type": "text", "text": "A 404 status means what?" }],
+      "answer": [{ "type": "text", "text": "the file was not found" }],
+      "answerDef": { "mode": "picks", "options": ["the file was not found", "the server crashed", "the file was cached"], "correct": ["the file was not found"] },
+      "hints": ["The address exists; the resource does not."],
+      "fullLine": "A 404 status means the file was not found."
+    },
+    {
+      "key": "network-cache-control",
+      "summary": "Cache-Control sets reuse",
+      "topics": ["network"],
+      "tags": ["caching"],
+      "prompt": [{ "type": "text", "text": "The `Cache-Control` header tells the browser how long a response may be " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " without asking again." }],
+      "answer": [{ "type": "text", "text": "The Cache-Control header tells the browser how long a response may be cached without asking again." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["cached", "stored", "reused"] }] },
+      "hints": ["It decides how long a saved copy stays useful."],
+      "fullLine": "The Cache-Control header tells the browser how long a response may be cached without asking again.",
+      "teaching": [{ "type": "text", "text": "Skipping the round trip is what makes a repeat visit feel instant.", "lang": "en" }]
+    },
+    {
+      "key": "network-failed-image",
+      "summary": "Check status and response first",
+      "topics": ["network"],
+      "tags": ["debugging"],
+      "prompt": [{ "type": "text", "text": "An image failed to load. Where do you look first?" }],
+      "answer": [{ "type": "text", "text": "the request's status and response" }],
+      "answerDef": { "mode": "picks", "options": ["the request's status and response", "the CSS file", "the favicon"], "correct": ["the request's status and response"] },
+      "hints": ["Start with the exchange that failed."],
+      "fullLine": "When an image fails, check the request's status and response first."
+    },
+    {
+      "key": "network-get",
+      "summary": "GET asks for a resource",
+      "topics": ["network"],
+      "tags": ["methods"],
+      "prompt": [{ "type": "text", "text": "Which method asks the server to return a resource without changing it?" }],
+      "answer": [{ "type": "text", "text": "GET" }],
+      "answerDef": { "mode": "type", "expected": ["GET"], "judge": "loose" },
+      "hints": ["It is the everyday reading method."],
+      "fullLine": "GET asks the server to return a resource without changing it.",
+      "teaching": [{ "type": "text", "text": "This method asks for data and should not change anything on the server.", "lang": "en" }]
+    },
+    {
+      "key": "network-queueing",
+      "summary": "Queueing waits for a connection",
+      "topics": ["network"],
+      "tags": ["timing"],
+      "prompt": [{ "type": "text", "text": "A request that waits for a free connection is shown as " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": "." }],
+      "answer": [{ "type": "text", "text": "A request that waits for a free connection is shown as queueing." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["queueing", "queued", "waiting"] }] },
+      "hints": ["It is standing in line, not travelling."],
+      "fullLine": "A request that waits for a free connection is shown as queueing.",
+      "teaching": [
+        { "type": "text", "text": "The browser waits for a free connection before it can start.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/browser-dev/images/network-waterfall.svg", "alt": "A network waterfall: several request bars starting at different times, with one long wait at the left" },
+        { "type": "video", "source": "youtube", "src": "2CC0fugc_2o", "search": "Understand Browser DevTools Network Tab", "alt": "Reading requests, sizes and timings in the Network panel" }
+      ]
+    },
+    {
+      "key": "network-disable-cache",
+      "summary": "Disable cache re-requests files",
+      "topics": ["network"],
+      "tags": ["caching", "devtools"],
+      "prompt": [{ "type": "text", "text": "What does the Disable cache checkbox do while DevTools is open?" }],
+      "answer": [{ "type": "text", "text": "bypasses the browser cache" }],
+      "answerDef": { "mode": "picks", "options": ["bypasses the browser cache", "deletes the server cache", "clears cookies"], "correct": ["bypasses the browser cache"] },
+      "hints": ["It changes what the browser may reuse."],
+      "fullLine": "The Disable cache checkbox bypasses the browser cache while DevTools is open.",
+      "teaching": [{ "type": "text", "text": "While the panel is open, every request goes to the server again.", "lang": "en" }]
+    },
+    {
+      "key": "network-panel-purpose",
+      "summary": "Network shows request order",
+      "topics": ["network"],
+      "tags": ["devtools"],
+      "prompt": [{ "type": "text", "text": "To see request order and timing, open the " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " panel." }],
+      "answer": [{ "type": "text", "text": "To see request order and timing, open the Network panel." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["Network"] }] },
+      "hints": ["Its rows are sorted by when they started."],
+      "fullLine": "To see request order and timing, open the Network panel."
+    },
+    {
+      "key": "network-method-url",
+      "summary": "Method and URL identify a request",
+      "topics": ["network"],
+      "tags": ["requests"],
+      "prompt": [{ "type": "text", "text": "Two requests are otherwise identical. Which pair tells them apart?" }],
+      "answer": [{ "type": "text", "text": "method and URL" }],
+      "answerDef": { "mode": "picks", "options": ["method and URL", "status and size", "colour and font"], "correct": ["method and URL"] },
+      "hints": ["One says what to do, the other says where."],
+      "fullLine": "The method and URL tell two otherwise identical requests apart."
+    }
+  ]
+}

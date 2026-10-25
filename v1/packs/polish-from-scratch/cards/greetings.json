@@ -1,0 +1,224 @@
+{
+  "cards": [
+    {
+      "key": "greetings-hello",
+      "summary": "Hello",
+      "topics": ["greetings"],
+      "tags": [],
+      "prompt": [{ "type": "text", "text": "Hello (at any time of day)" }],
+      "answer": [
+        { "type": "text", "text": "cześć" },
+        { "type": "text", "text": "Hello", "role": "translation" },
+        { "type": "text", "text": "cheshch", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["cześć"], "judge": "loose" },
+      "hints": ["Only use it with people you already know well."],
+      "fullLine": "cześć",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "An informal greeting you can use with friends at any hour.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "greetings-hi",
+      "summary": "Hi (very casual)",
+      "topics": ["greetings"],
+      "tags": [],
+      "prompt": [{ "type": "text", "text": "Hi (very casual, between friends)" }],
+      "answer": [
+        { "type": "text", "text": "hej" },
+        { "type": "text", "text": "Hi", "role": "translation" },
+        { "type": "text", "text": "hey", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["hej"], "judge": "loose" },
+      "hints": ["You will hear it in messages far more than in formal speech."],
+      "fullLine": "hej",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A very casual word borrowed from English, common among young people.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "greetings-good-morning",
+      "summary": "Good morning",
+      "topics": ["greetings"],
+      "tags": [],
+      "prompt": [{ "type": "text", "text": "Good morning (a polite greeting)" }],
+      "answer": [
+        { "type": "text", "text": "dzień dobry" },
+        { "type": "text", "text": "Good morning", "role": "translation" },
+        { "type": "text", "text": "jen DOH-brih", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["dzień dobry"], "judge": "loose" },
+      "hints": ["Use it when entering a shop, an office or a lift."],
+      "fullLine": "dzień dobry",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The standard polite greeting used from morning until dusk.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "greetings-good-evening",
+      "summary": "Good evening",
+      "topics": ["greetings"],
+      "tags": [],
+      "prompt": [{ "type": "text", "text": "Good evening (a polite greeting)" }],
+      "answer": [
+        { "type": "text", "text": "dobry wieczór" },
+        { "type": "text", "text": "Good evening", "role": "translation" },
+        { "type": "text", "text": "DOH-brih VYEH-choor", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["dobry wieczór"], "judge": "loose" },
+      "hints": ["Say it after dark when you meet someone politely."],
+      "fullLine": "dobry wieczór",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A polite greeting saved for the evening, slightly more formal in tone.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "greetings-goodbye",
+      "summary": "Goodbye",
+      "topics": ["greetings"],
+      "tags": [],
+      "prompt": [{ "type": "text", "text": "Goodbye" }],
+      "answer": [
+        { "type": "text", "text": "do widzenia" },
+        { "type": "text", "text": "Goodbye", "role": "translation" },
+        { "type": "text", "text": "doh vee-DZEH-nyah", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["do widzenia"], "judge": "loose" },
+      "hints": ["It literally wishes a future meeting, so it fits most partings."],
+      "fullLine": "do widzenia",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The everyday parting phrase, suitable for shops and strangers.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "greetings-please",
+      "summary": "Please",
+      "topics": ["greetings"],
+      "tags": [],
+      "prompt": [{ "type": "text", "text": "Please" }],
+      "answer": [
+        { "type": "text", "text": "proszę" },
+        { "type": "text", "text": "Please", "role": "translation" },
+        { "type": "text", "text": "PROH-sheh", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["proszę"], "judge": "loose" },
+      "hints": ["It also means 'go ahead' when you invite someone to do something."],
+      "fullLine": "proszę",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "One word covers asking politely and handing something over.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "greetings-thank-you",
+      "summary": "Thank you",
+      "topics": ["greetings"],
+      "tags": [],
+      "prompt": [{ "type": "text", "text": "Thank you" }],
+      "answer": [
+        { "type": "text", "text": "dziękuję" },
+        { "type": "text", "text": "Thank you", "role": "translation" },
+        { "type": "text", "text": "jen-KOO-yeh", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["dziękuję"], "judge": "loose" },
+      "hints": ["The ending changes when you thank a group instead of one person."],
+      "fullLine": "dziękuję",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A polite reply used whenever someone helps you.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "greetings-sorry",
+      "summary": "Sorry",
+      "topics": ["greetings"],
+      "tags": [],
+      "prompt": [{ "type": "text", "text": "Sorry (also excuse me)" }],
+      "answer": [
+        { "type": "text", "text": "przepraszam" },
+        { "type": "text", "text": "Sorry, excuse me", "role": "translation" },
+        { "type": "text", "text": "psheh-PRAH-shahm", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["przepraszam"], "judge": "loose" },
+      "hints": ["Say it before asking a stranger for directions."],
+      "fullLine": "przepraszam",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "It works both for a small apology and for getting attention.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "greetings-yes",
+      "summary": "Yes",
+      "topics": ["greetings"],
+      "tags": [],
+      "prompt": [{ "type": "text", "text": "Yes" }],
+      "answer": [
+        { "type": "text", "text": "tak" },
+        { "type": "text", "text": "Yes", "role": "translation" },
+        { "type": "text", "text": "tahk", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["tak"], "judge": "loose" },
+      "hints": ["In casual speech people often repeat the verb instead of this."],
+      "fullLine": "tak",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A short word that agrees with a statement or question.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "greetings-no",
+      "summary": "No",
+      "topics": ["greetings"],
+      "tags": [],
+      "prompt": [{ "type": "text", "text": "No" }],
+      "answer": [
+        { "type": "text", "text": "nie" },
+        { "type": "text", "text": "No", "role": "translation" },
+        { "type": "text", "text": "nyeh", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["nie"], "judge": "loose" },
+      "hints": ["Poles often soften it by adding a polite word before it."],
+      "fullLine": "nie",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The basic refusal, used in speech and on signs.",
+          "lang": "en"
+        }
+      ]
+    }
+  ]
+}

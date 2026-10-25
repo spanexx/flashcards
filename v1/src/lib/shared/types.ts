@@ -7,14 +7,40 @@
 // reports its decks, and the provider key can live in the browser.
 // [pack: browser-app]
 
+/** How a deck presents help. The level belongs to the deck, never the card. */
+export type StudyLevel = "beginner" | "intermediate" | "advanced";
+
 /** One deck inside a pack. The id is stable across versions. */
 export interface Deck {
   id: string;
   name: string;
+  level: StudyLevel;
 }
 
 /** One outcome word. Unjudged is its own state, never a kind of wrong. */
 export type Outcome = "again" | "got_it" | "nearly" | "no" | "unjudged";
+
+/**
+ * One ordered part of a teaching layer. A layer teaches the card without
+ * changing either of its sides, so only text, image and video belong here.
+ */
+export type TeachingPart =
+  | { type: "text"; text: string; lang?: string }
+  | {
+      type: "image";
+      source: "builtin" | "web" | "local";
+      src: string;
+      alt: string;
+    }
+  | {
+      type: "video";
+      source: "youtube" | "web" | "local";
+      src: string;
+      start?: number;
+      end?: number;
+      search?: string;
+      alt?: string;
+    };
 
 /** An ordered piece of a card side. The core lays these out, never interprets. */
 export type CardPart =
@@ -68,6 +94,7 @@ export interface Card {
   answerDef: AnswerDef;
   hints?: string[];
   fullLine?: string;
+  teaching?: TeachingPart[];
   origin: CardOrigin;
   retired?: boolean;
   editedFrom?: string;
@@ -85,6 +112,7 @@ export interface CardSource {
   answerDef: AnswerDef;
   hints?: string[];
   fullLine?: string;
+  teaching?: TeachingPart[];
 }
 
 /** One answer, appended and never edited. */
@@ -99,6 +127,29 @@ export interface EvidenceRow {
   at: string;
   kind: "answer" | "correction";
   supersedes?: string;
+  /** The teaching layer was visible before this answer. */
+  helpSeen?: boolean;
+  /** This answer was the unaided repeat after a peek. */
+  coldCheck?: boolean;
+}
+
+/** One local image or video. The blob is the only copy the browser keeps. */
+export interface MediaRecord {
+  id: string;
+  blob: Blob;
+  mime: string;
+  kind: "image" | "video";
+  width?: number;
+  height?: number;
+  bytes: number;
+  createdAt: string;
+}
+
+/** A deliberate removal that new seeds must respect. */
+export interface Tombstone {
+  id: string;
+  kind: "pack" | "card";
+  at: string;
 }
 
 /** A session fact: the offer, what the learner answered, and whether they stopped. */

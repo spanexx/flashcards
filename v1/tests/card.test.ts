@@ -6,6 +6,7 @@
 
 import { describe, expect, it } from "vitest";
 import {
+  buildCard,
   canonicalContent,
   generatedCardId,
   hardRuleIssues,
@@ -46,6 +47,13 @@ describe("card identity", () => {
     expect(canonicalContent(changed)).not.toBe(canonicalContent(makeSource()));
   });
 
+  it("ignores the teaching layer, which is help rather than content", () => {
+    const withLayer = makeSource({
+      teaching: [{ type: "text", text: "Read it slowly." }],
+    });
+    expect(canonicalContent(withLayer)).toBe(canonicalContent(makeSource()));
+  });
+
   it("scopes pack identity to the pack name", () => {
     const source = makeSource();
     expect(packCardId("pack-a", source)).not.toBe(packCardId("pack-b", source));
@@ -68,6 +76,26 @@ describe("card identity", () => {
 
   it("makes manual identity deliberately unique", () => {
     expect(manualCardId("a")).not.toBe(manualCardId("b"));
+  });
+});
+
+describe("buildCard", () => {
+  it("carries the teaching layer and leaves it absent when there is none", () => {
+    const teaching = [{ type: "text" as const, text: "Read it slowly." }];
+    const built = buildCard(
+      makeSource({ teaching }),
+      { kind: "pack", note: "From the test pack." },
+      "pack-test:1",
+      "2026-10-25T00:00:00.000Z",
+    );
+    expect(built.teaching).toEqual(teaching);
+    const plain = buildCard(
+      makeSource(),
+      { kind: "pack", note: "From the test pack." },
+      "pack-test:2",
+      "2026-10-25T00:00:00.000Z",
+    );
+    expect(plain.teaching).toBeUndefined();
   });
 });
 

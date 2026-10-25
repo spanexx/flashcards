@@ -1,0 +1,124 @@
+{
+  "cards": [
+    {
+      "key": "debug-breakpoint",
+      "summary": "A breakpoint pauses code",
+      "topics": ["sources-and-debugging"],
+      "tags": ["breakpoints"],
+      "prompt": [{ "type": "text", "text": "What does a breakpoint do?" }],
+      "answer": [{ "type": "text", "text": "pauses code on that line" }],
+      "answerDef": { "mode": "picks", "options": ["pauses code on that line", "deletes the line", "speeds up the line"], "correct": ["pauses code on that line"] },
+      "hints": ["It gives you time to look around."],
+      "fullLine": "A breakpoint pauses code on that line.",
+      "teaching": [{ "type": "text", "text": "A pause lets you read values before the next statement runs.", "lang": "en" }]
+    },
+    {
+      "key": "debug-debugger-statement",
+      "summary": "The debugger statement pauses",
+      "topics": ["sources-and-debugging"],
+      "tags": ["breakpoints"],
+      "prompt": [{ "type": "text", "text": "Writing the `debugger` statement in code makes the browser " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " there." }],
+      "answer": [{ "type": "text", "text": "Writing the debugger statement in code makes the browser pause there." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["pause", "stop"] }] },
+      "hints": ["It behaves like a line marked by hand."],
+      "fullLine": "Writing the debugger statement in code makes the browser pause there.",
+      "teaching": [{ "type": "text", "text": "The keyword is a statement, so it only acts when execution reaches it.", "lang": "en" }]
+    },
+    {
+      "key": "debug-step-into",
+      "summary": "Step into enters a function",
+      "topics": ["sources-and-debugging"],
+      "tags": ["stepping"],
+      "prompt": [{ "type": "text", "text": "Which debugger action enters the function called on the current line?" }],
+      "answer": [{ "type": "text", "text": "Step into" }],
+      "answerDef": { "mode": "picks", "options": ["Step into", "Step over", "Resume"], "correct": ["Step into"] },
+      "hints": ["The other step command treats the call as one line."],
+      "fullLine": "Step into enters the function called on the current line."
+    },
+    {
+      "key": "debug-scope",
+      "summary": "Scope lists visible variables",
+      "topics": ["sources-and-debugging"],
+      "tags": ["scopes"],
+      "prompt": [{ "type": "text", "text": "The " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " panel lists the variables the paused code can see." }],
+      "answer": [{ "type": "text", "text": "The Scope panel lists the variables the paused code can see." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["Scope", "scope"] }] },
+      "hints": ["It answers: what is in reach here?"],
+      "fullLine": "The Scope panel lists the variables the paused code can see.",
+      "teaching": [
+        { "type": "text", "text": "It lists the variables visible at the paused line.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/browser-dev/images/breakpoint.svg", "alt": "A script paused on a highlighted line with a breakpoint dot in the margin" },
+        { "type": "video", "source": "youtube", "src": "ZaOZFkHTloM", "search": "Debugging JavaScript in Chrome DevTools", "alt": "Setting breakpoints and stepping through code in the Sources panel" }
+      ]
+    },
+    {
+      "key": "debug-source-map",
+      "summary": "A source map points back",
+      "topics": ["sources-and-debugging"],
+      "tags": ["source-maps"],
+      "prompt": [{ "type": "text", "text": "Which file maps minified code back to the original source?" }],
+      "answer": [{ "type": "text", "text": "a source map" }],
+      "answerDef": { "mode": "type", "expected": ["a source map", "source map"], "judge": "loose" },
+      "hints": ["The debugger can then show the names you wrote."],
+      "fullLine": "A source map maps minified code back to the original source.",
+      "teaching": [{ "type": "text", "text": "Without one, a paused line may point at a tiny, renamed bundle.", "lang": "en" }]
+    },
+    {
+      "key": "debug-call-stack",
+      "summary": "The call stack shows the path",
+      "topics": ["sources-and-debugging"],
+      "tags": ["call-stack"],
+      "prompt": [{ "type": "text", "text": "What does the call stack show?" }],
+      "answer": [{ "type": "text", "text": "the functions that led to this point" }],
+      "answerDef": { "mode": "picks", "options": ["the functions that led to this point", "the page's CSS", "the network order"], "correct": ["the functions that led to this point"] },
+      "hints": ["Read it bottom-up for the arrival path."],
+      "fullLine": "The call stack shows the functions that led to this point."
+    },
+    {
+      "key": "debug-conditional",
+      "summary": "A conditional breakpoint checks an expression",
+      "topics": ["sources-and-debugging"],
+      "tags": ["breakpoints"],
+      "prompt": [{ "type": "text", "text": "A conditional breakpoint pauses only when its expression is " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": "." }],
+      "answer": [{ "type": "text", "text": "A conditional breakpoint pauses only when its expression is true." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["true"] }] },
+      "hints": ["It is the same test an if statement uses."],
+      "fullLine": "A conditional breakpoint pauses only when its expression is true.",
+      "teaching": [{ "type": "text", "text": "The expression is checked each time the line is reached.", "lang": "en" }]
+    },
+    {
+      "key": "debug-reproduce-small",
+      "summary": "Reproduce with small steps",
+      "topics": ["sources-and-debugging"],
+      "tags": ["method"],
+      "prompt": [{ "type": "text", "text": "What is the best first move when debugging?" }],
+      "answer": [{ "type": "text", "text": "reproduce it with the smallest steps" }],
+      "answerDef": { "mode": "picks", "options": ["reproduce it with the smallest steps", "rewrite the module", "add console.log everywhere"], "correct": ["reproduce it with the smallest steps"] },
+      "hints": ["A short path is easier to trust."],
+      "fullLine": "The best first move when debugging is to reproduce it with the smallest steps."
+    },
+    {
+      "key": "debug-resume",
+      "summary": "Resume continues the script",
+      "topics": ["sources-and-debugging"],
+      "tags": ["stepping"],
+      "prompt": [{ "type": "text", "text": "After reading the paused state, press " }, { "type": "blank", "id": "b1" }, { "type": "text", "text": " to let the code continue." }],
+      "answer": [{ "type": "text", "text": "After reading the paused state, press Resume to let the code continue." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["Resume", "resume", "continue"] }] },
+      "hints": ["It means carry on from here."],
+      "fullLine": "After reading the paused state, press Resume to let the code continue.",
+      "teaching": [{ "type": "text", "text": "The button lets the rest of the script run to the next pause.", "lang": "en" }]
+    },
+    {
+      "key": "debug-blackbox",
+      "summary": "Blackboxing skips a script",
+      "topics": ["sources-and-debugging"],
+      "tags": ["stepping"],
+      "prompt": [{ "type": "text", "text": "What does blackboxing a script do?" }],
+      "answer": [{ "type": "text", "text": "hides its frames so you step past it" }],
+      "answerDef": { "mode": "picks", "options": ["hides its frames so you step past it", "deletes it", "minifies it"], "correct": ["hides its frames so you step past it"] },
+      "hints": ["Think of a library you do not want to read."],
+      "fullLine": "Blackboxing a script hides its frames so you step past it."
+    }
+  ]
+}

@@ -1,0 +1,224 @@
+{
+  "cards": [
+    {
+      "key": "written-be",
+      "summary": "The letter B",
+      "topics": ["written"],
+      "tags": ["alphabet"],
+      "prompt": [{ "type": "text", "text": "The Polish name of the letter B" }],
+      "answer": [
+        { "type": "text", "text": "be" },
+        { "type": "text", "text": "The name of the letter B", "role": "translation" },
+        { "type": "text", "text": "beh", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["be"], "judge": "loose" },
+      "hints": ["It sits just after the nasal vowel A in the spelling order."],
+      "fullLine": "be",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The third letter of the Polish spelling order.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "written-ce",
+      "summary": "The letter C",
+      "topics": ["written"],
+      "tags": ["alphabet"],
+      "prompt": [{ "type": "text", "text": "The Polish name of the letter C" }],
+      "answer": [
+        { "type": "text", "text": "ce" },
+        { "type": "text", "text": "The name of the letter C", "role": "translation" },
+        { "type": "text", "text": "tseh", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["ce"], "judge": "loose" },
+      "hints": ["It often stands before the letter H in Polish words."],
+      "fullLine": "ce",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The fourth letter of the Polish spelling order.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "written-de",
+      "summary": "The letter D",
+      "topics": ["written"],
+      "tags": ["alphabet"],
+      "prompt": [{ "type": "text", "text": "The Polish name of the letter D" }],
+      "answer": [
+        { "type": "text", "text": "de" },
+        { "type": "text", "text": "The name of the letter D", "role": "translation" },
+        { "type": "text", "text": "deh", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["de"], "judge": "loose" },
+      "hints": ["It pairs with Z to make a common Polish sound."],
+      "fullLine": "de",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The sixth letter, sitting just before the vowel E.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "written-ef",
+      "summary": "The letter F",
+      "topics": ["written"],
+      "tags": ["alphabet"],
+      "prompt": [{ "type": "text", "text": "The Polish name of the letter F" }],
+      "answer": [
+        { "type": "text", "text": "ef" },
+        { "type": "text", "text": "The name of the letter F", "role": "translation" },
+        { "type": "text", "text": "ef", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["ef"], "judge": "loose" },
+      "hints": ["It follows the nasal vowel E with a tail in the spelling order."],
+      "fullLine": "ef",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The ninth letter, near the start of the Polish spelling order.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "written-gie",
+      "summary": "The letter G",
+      "topics": ["written"],
+      "tags": ["alphabet"],
+      "prompt": [{ "type": "text", "text": "The Polish name of the letter G" }],
+      "answer": [
+        { "type": "text", "text": "gie" },
+        { "type": "text", "text": "The name of the letter G", "role": "translation" },
+        { "type": "text", "text": "gyeh", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["gie"], "judge": "loose" },
+      "hints": ["It appears at the start of the Polish word for 'mountain'."],
+      "fullLine": "gie",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The tenth letter; Polish adds a soft vowel sound to its name.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "written-jot",
+      "summary": "The letter J",
+      "topics": ["written"],
+      "tags": ["alphabet"],
+      "prompt": [{ "type": "text", "text": "The Polish name of the letter J" }],
+      "answer": [
+        { "type": "text", "text": "jot" },
+        { "type": "text", "text": "The name of the letter J", "role": "translation" },
+        { "type": "text", "text": "yot", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["jot"], "judge": "loose" },
+      "hints": ["It usually comes before a vowel at the start of a word."],
+      "fullLine": "jot",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The thirteenth letter of the Polish spelling order.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "written-wu",
+      "summary": "The letter W",
+      "topics": ["written"],
+      "tags": ["alphabet"],
+      "prompt": [{ "type": "text", "text": "The Polish name of the letter W" }],
+      "answer": [
+        { "type": "text", "text": "wu" },
+        { "type": "text", "text": "The name of the letter W", "role": "translation" },
+        { "type": "text", "text": "voo", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["wu"], "judge": "loose" },
+      "hints": ["It appears in the Polish word for 'island'."],
+      "fullLine": "wu",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The twenty-eighth letter of the Polish spelling order.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "written-zet",
+      "summary": "The letter Z",
+      "topics": ["written"],
+      "tags": ["alphabet"],
+      "prompt": [{ "type": "text", "text": "The Polish name of the letter Z" }],
+      "answer": [
+        { "type": "text", "text": "zet" },
+        { "type": "text", "text": "The name of the letter Z", "role": "translation" },
+        { "type": "text", "text": "zet", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["zet"], "judge": "loose" },
+      "hints": ["It appears in the Polish word for 'west'."],
+      "fullLine": "zet",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The thirtieth letter, close to the very end of the Polish spelling order.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "written-em",
+      "summary": "The letter M",
+      "topics": ["written"],
+      "tags": ["alphabet"],
+      "prompt": [{ "type": "text", "text": "The Polish name of the letter M" }],
+      "answer": [
+        { "type": "text", "text": "em" },
+        { "type": "text", "text": "The name of the letter M", "role": "translation" },
+        { "type": "text", "text": "em", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["em"], "judge": "loose" },
+      "hints": ["You will find it in the Polish word for 'mother'."],
+      "fullLine": "em",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The seventeenth letter of the Polish spelling order.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "key": "written-en",
+      "summary": "The letter N",
+      "topics": ["written"],
+      "tags": ["alphabet"],
+      "prompt": [{ "type": "text", "text": "The Polish name of the letter N" }],
+      "answer": [
+        { "type": "text", "text": "en" },
+        { "type": "text", "text": "The name of the letter N", "role": "translation" },
+        { "type": "text", "text": "en", "role": "note" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["en"], "judge": "loose" },
+      "hints": ["It appears in the Polish word for 'no'."],
+      "fullLine": "en",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "It sits halfway through the Polish spelling order.",
+          "lang": "en"
+        }
+      ]
+    }
+  ]
+}

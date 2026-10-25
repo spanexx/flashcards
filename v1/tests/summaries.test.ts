@@ -67,4 +67,23 @@ describe("buildSummaries", () => {
     const summaries = buildSummaries([first, second], []);
     expect(summaries.size).toBe(2);
   });
+
+  it("leaves a cold check out of the facts that schedule the card", () => {
+    const card = makeCard();
+    const rows = [
+      makeRow({ attemptId: "a1", outcome: "no", at: "2026-10-01T10:00:00.000Z" }),
+      makeRow({
+        attemptId: "a2",
+        outcome: "got_it",
+        at: "2026-10-02T10:00:00.000Z",
+        helpSeen: true,
+        coldCheck: true,
+      }),
+    ];
+    const summary = buildSummaries([card], rows).get(card.id);
+    expect(summary?.attempts).toBe(1);
+    expect(summary?.lastOutcome).toBe("no");
+    expect(summary?.correctStreak).toBe(0);
+    expect(summary?.wrongCount).toBe(1);
+  });
 });
