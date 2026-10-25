@@ -6,7 +6,8 @@
 
 import type { PackStatus } from "@/lib/shared/types";
 import type { CardStyle, CreationBrief, SubjectMode } from "@/lib/shared/creation";
-import { COMMON_LANGUAGES, languagePairLabel } from "@/lib/shared/language";
+import { languagePairLabel } from "@/lib/shared/language";
+import LanguageField from "./LanguageField";
 import type { CreateTarget } from "./library-utils";
 
 /** One label and one plain sentence for each style the learner may request. */
@@ -128,53 +129,41 @@ export default function CreationBriefFields({
 
         <label className="field-label">
           Card style
-          <select
-            className="field"
-            value={brief.cardStyle}
-            onChange={(event) => onChange({ cardStyle: event.target.value as CardStyle })}
-          >
-            {STYLE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          <span className="select-wrap">
+            <select
+              className="field"
+              value={brief.cardStyle}
+              onChange={(event) => onChange({ cardStyle: event.target.value as CardStyle })}
+            >
+              {STYLE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </span>
         </label>
 
         <p className="brief-note brief-wide" style={{ margin: 0 }}>
           {style.note}
         </p>
 
-        <label className="field-label">
-          Cards teach
-          <input
-            className="field"
-            list="creation-language-options"
-            value={brief.targetLanguage}
-            onChange={(event) => onChange({ targetLanguage: event.target.value })}
-            placeholder="e.g. Polish"
-            disabled={pairLocked}
-            required
-          />
-        </label>
+        <LanguageField
+          label="Cards teach"
+          value={brief.targetLanguage}
+          onChange={(value) => onChange({ targetLanguage: value })}
+          required
+          disabled={pairLocked}
+        />
 
-        <label className="field-label">
-          Questions in
-          <input
-            className="field"
-            list="creation-language-options"
-            value={brief.sourceLanguage}
-            onChange={(event) => onChange({ sourceLanguage: event.target.value })}
-            placeholder="e.g. English"
-            disabled={pairLocked}
-          />
-        </label>
-
-        <datalist id="creation-language-options">
-          {COMMON_LANGUAGES.map((language) => (
-            <option key={language.code} value={language.name} />
-          ))}
-        </datalist>
+        <LanguageField
+          label="Questions in"
+          value={brief.sourceLanguage}
+          onChange={(value) => onChange({ sourceLanguage: value })}
+          allowUnset
+          unsetLabel="Not set"
+          disabled={pairLocked}
+        />
 
         <label className="field-label brief-wide">
           Study instruction (optional)

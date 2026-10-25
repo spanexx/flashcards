@@ -43,24 +43,28 @@ export default function PlacementPicker({
     <div className="row">
       <label className="field-label">
         {packLabel}
-        <select className="field" value={packName} onChange={(event) => onPack(event.target.value)}>
-          {readable.map((entry) => (
-            <option key={entry.name} value={entry.name}>
-              {entry.name} · v{entry.version}
-            </option>
-          ))}
-        </select>
+        <span className="select-wrap">
+          <select className="field" value={packName} onChange={(event) => onPack(event.target.value)}>
+            {readable.map((entry) => (
+              <option key={entry.name} value={entry.name}>
+                {entry.name} · v{entry.version}
+              </option>
+            ))}
+          </select>
+        </span>
       </label>
       {withDeck ? (
         <label className="field-label">
           {deckLabel}
-          <select className="field" value={deckId} onChange={(event) => onDeck(event.target.value)}>
-            {decks.map((deck) => (
-              <option key={deck.id} value={deck.id}>
-                {deck.name}
-              </option>
-            ))}
-          </select>
+          <span className="select-wrap">
+            <select className="field" value={deckId} onChange={(event) => onDeck(event.target.value)}>
+              {decks.map((deck) => (
+                <option key={deck.id} value={deck.id}>
+                  {deck.name}
+                </option>
+              ))}
+            </select>
+          </span>
         </label>
       ) : null}
     </div>

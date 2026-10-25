@@ -50,6 +50,11 @@ the learner one place to edit prompts, and fixes the two study leaks.
 
 ### 2.3 Listening text fallback
 
+**Superseded 2026-10-24 by `learner-interface` Q1.** The pre-answer
+"Show the text" control is removed. Listening cards now show only the play
+control and a neutral note; the line appears in the Answer block after judging.
+The rest of this section is kept as the historical decision.
+
 - A listening card keeps one "Play the line" control.
 - A "Show the text" control reveals the full line on request.
 - The text never reveals automatically.
@@ -94,13 +99,18 @@ the learner one place to edit prompts, and fixes the two study leaks.
 
 ## 3. Simulation contract
 
+NOTE 2026-10-24 (learner-interface): item 4 and the "Show the text" design
+below are superseded. A listening card now reveals its line only after judging.
+See `docs/features/learner-interface/PRD-TRD-learner-interface.md` Scenario 1.
+
 The post-implementation simulation must show:
 
 1. Creating an English/English pack previews English text and no Polish.
 2. Adding a deck or cards to the Polish starter pack shows the inherited
    `pl`/`en` pair and a read-only instruction.
 3. A type card says "Read the English line, then type the full Polish line."
-4. A listening card hides its line until "Show the text" is pressed.
+4. [SUPERSEDED 2026-10-24] A listening card hides its line until "Show the
+   text" is pressed. Current behavior: reveal only after judging.
 5. A hint pending on card A leaves no text, message or busy state on card B.
 6. Editing a pack changes its pair, instruction and prompts; resetting clears
    only the prompt overrides.
@@ -185,8 +195,9 @@ New `v1/src/lib/shared/language.ts`:
 
 - Finds the card's pack in the already-loaded pack list.
 - Renders the instruction under the mode label.
-- Adds `listenTextVisible` state, reset with the card.
-- Adds the "Show the text" control and the reading-check note.
+- [SUPERSEDED 2026-10-24] Adds `listenTextVisible` state, reset with the card.
+- [SUPERSEDED 2026-10-24] Adds the "Show the text" control and the
+  reading-check note. Current code has neither; the answer reveals the line.
 - Adds a hint request token ref; reset increments it; late responses are
   discarded; busy state is reset with the card.
 

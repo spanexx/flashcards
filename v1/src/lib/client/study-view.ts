@@ -8,8 +8,8 @@ import { isWrong } from "@/lib/core/outcome";
 import { packLanguagePair } from "@/lib/shared/language";
 import type { AnswerMode, Card, Outcome } from "@/lib/shared/types";
 
-/** A neutral listening line for an old pack that knows no language pair. */
-export const LISTEN_INSTRUCTION = "Listen, then type what you hear.";
+/** The note under the one play control; it never prints the spoken line. */
+export const LISTEN_INSTRUCTION = "Play it as often as you need. The line appears after you answer.";
 
 /** A pack's pair and its optional instruction, as the card needs them. */
 export interface StudyPackInstruction {

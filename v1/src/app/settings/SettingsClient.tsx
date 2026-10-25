@@ -296,28 +296,32 @@ export default function SettingsClient() {
           <div className="row">
             <label>
               Level:{" "}
-              <select
-                className="field"
-                value={settings.level}
-                onChange={(event) => void saveCategories({ level: event.target.value })}
-              >
-                <option value="beginner">Beginner</option>
-                <option value="intermediate">Intermediate</option>
-                <option value="advanced">Advanced</option>
-              </select>
+              <span className="select-wrap">
+                <select
+                  className="field"
+                  value={settings.level}
+                  onChange={(event) => void saveCategories({ level: event.target.value })}
+                >
+                  <option value="beginner">Beginner</option>
+                  <option value="intermediate">Intermediate</option>
+                  <option value="advanced">Advanced</option>
+                </select>
+              </span>
             </label>
             <label>
               Style:{" "}
-              <select
-                className="field"
-                value={settings.learningStyle}
-                onChange={(event) => void saveCategories({ learningStyle: event.target.value })}
-              >
-                <option value="examples-first">Examples first</option>
-                <option value="rules-first">Rules first</option>
-                <option value="conversation">Conversation</option>
-                <option value="gentle">Gentle</option>
-              </select>
+              <span className="select-wrap">
+                <select
+                  className="field"
+                  value={settings.learningStyle}
+                  onChange={(event) => void saveCategories({ learningStyle: event.target.value })}
+                >
+                  <option value="examples-first">Examples first</option>
+                  <option value="rules-first">Rules first</option>
+                  <option value="conversation">Conversation</option>
+                  <option value="gentle">Gentle</option>
+                </select>
+              </span>
             </label>
           </div>
           <p className="muted" style={{ marginBottom: 0 }}>

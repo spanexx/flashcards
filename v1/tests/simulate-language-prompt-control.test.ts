@@ -285,8 +285,7 @@ describe("language and prompt control rehearsal", () => {
     expect(existsSync(out), "run npm run build first").toBe(true);
     const built = await readTree(out);
     for (const words of [
-      "Show the text",
-      "reading check",
+      "The line appears after you answer.",
       "study-instruction",
       "Cards teach",
       "Questions in",
@@ -296,6 +295,13 @@ describe("language and prompt control rehearsal", () => {
       "the target language",
       "the question language",
       "This pack owns the language pair",
+      "Afrikaans",
+      "Zulu",
+      "Other language",
+      "Full screen",
+      "Exit full screen",
+      "This session",
+      "End this session",
     ]) {
       expect(built, `the built client is missing "${words}"`).toContain(words);
     }

@@ -1,0 +1,91 @@
+GRILL: Learner interface
+Status: Locked
+Date: 2026-10-24
+Pack: learner-interface
+Authority: delegated by the learner on 2026-10-24 for this interface pass. The learner named the three problems and approved the work. Visual sign-off remains a human gate.
+
+Source questions, quoted from the learner:
+- "When we change, when do we change to show text? And we can't listen to
+  voice. It gives the whole text. The whole idea of deusing voice is for us to
+  write it down. What they say."
+- "there is another issue of the creates new parck. You have. Drop down for the
+  Cards teach you don't have a lot of countries. And for the 'question in', you
+  write EN, English and French. Again, this. Is a limited option for the user."
+- "the styling of the dropdown are shit!! I think we need to restyle the whole
+  interface. It looks really, really bad. Most of these are all in the middle
+  of. Of the layout. So the sides are empty. And in the library, it's also in
+  the middle. And the site are empty and it just looks terrible. The funny.
+  Creates card, it's in the middle and the the the form, sorry the. The form
+  where you have to fill in the right generator. They all look really terrible,
+  so we should do something about this."
+
+Q1. What should a listening card show before the learner answers?
+A1. One "Play the line" control and a neutral instruction. No transcript, no
+    "Show the text" button, no summary and no translation. After the answer is
+    judged, the normal Answer block reveals the full line. The "Show the text"
+    control and its warning are removed. This restores the locked
+    `study-experience` Q2 decision and deliberately supersedes the
+    `language-prompt-control` Q4 pre-answer fallback. A learner who cannot hear
+    the line can submit once and read the full line in the Answer block.
+
+Q2. How wide should the language choice be?
+A2. Both "Cards teach" and "Questions in" use one visible picker with the same
+    sorted catalog of common languages, seventy-three entries, plus an "Other
+    language" fallback for a name or code the catalog does not list. The closed
+    field shows a language name, never a bare code. The stored value remains a
+    normalized code. The same control is used in Write, Generate, Chat and the
+    pack editor. There is still no global language setting.
+
+Q3. What is the layout target?
+A3. The desktop shell uses a 240px sidebar and a content area up to 1420px, so
+    Library, Create and the page headers use the available width. The library
+    gets a wide pack/card main column and a side rail with real library facts.
+    Create forms use a two-column field grid instead of one long column.
+    Study keeps a readable 820px card and adds a session rail with the offer,
+    progress, tutor state and an end control, so the screen uses the desktop
+    width without stretching the reading line. Phone stays one column with no
+    horizontal overflow.
+
+Q4. What does full-screen mode do?
+A4. The running study card has one "Full screen" control. Clicking it puts the
+    card and its controls into browser fullscreen, hiding the sidebar, page
+    heading and session rail. The card grows to a 1100px stage, and images or
+    videos are contained inside it at up to 62% of the screen height. The same
+    control becomes "Exit full screen"; Esc also leaves. If the browser refuses
+    the Fullscreen API, a fixed CSS overlay provides the same focused stage.
+    Full screen survives moving to the next card and exits when the session
+    ends or the learner stops. It is not a separate score or a second study
+    loop.
+
+Q5. What changes about the controls?
+A5. One visual language for inputs, selects, textareas and buttons: a consistent
+    height, radius, border, focus ring and disabled state. Selects get a visible
+    chevron and a comfortable hit area. Form sections have clear headings and
+    spacing, not inline style patches. Dropdown choices are readable in both
+    light and dark mode.
+
+Q6. What does not change?
+A6. The four outcome words, the judge, the one-return rule, the session offer,
+    the no-score ending, the card/backup/pack schema, the provider prompt
+    contract and every stored browser record. Old packs stay neutral until a
+    language pair is set. No new runtime dependency.
+
+Q7. What proves it?
+A7. Unit tests for the expanded catalog and listening labels; built-output
+    tests for the client words; a built-app browser lane at 1440x900 and 390x844
+    that checks no transcript and no "Show the text", judges the card and sees
+    the line, opens both language pickers and chooses a language outside the old
+    list, switches between packs whose language is known and unknown, checks
+    full-screen enters and leaves with the card state intact, and checks there
+    is no horizontal overflow. Screenshots of Study, Library, Create and
+    full-screen are reviewed with the learner. Full typecheck, lint, build and
+    test suite stay green.
+
+Locked decisions:
+- Remove the pre-answer "Show the text"; reveal the full line only after judging.
+- Use one broad, visible language catalog and one shared control.
+- Use the desktop width; stop stacking every form field in one narrow column.
+- Keep the study card readable, but make the surrounding shell deliberate.
+- Give the running card a one-click full-screen stage with a CSS fallback.
+- Full screen is for focus and future image/video cards, not a new study loop.
+- Do not change judging, data shape, provider contract or stored records.

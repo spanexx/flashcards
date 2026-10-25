@@ -12,7 +12,8 @@ import { apiSend } from "@/lib/client/api";
 import type { PackPrompts } from "@/lib/packs/types";
 import { defaultPackPrompts } from "@/lib/provider/prompt";
 import type { PackStatus } from "@/lib/shared/types";
-import { COMMON_LANGUAGES, languagePairLabel } from "@/lib/shared/language";
+import { languagePairLabel } from "@/lib/shared/language";
+import LanguageField from "./LanguageField";
 
 /** What the editor needs from the Packs panel. */
 interface PackEditorProps {
@@ -127,34 +128,20 @@ export default function PackEditor({
       </div>
 
       <div className="brief-grid" style={{ marginTop: 10 }}>
-        <label className="field-label">
-          Cards teach
-          <input
-            className="field"
-            list={`pack-language-options-${pack.name}`}
-            value={targetLanguage}
-            onChange={(event) => setTargetLanguage(event.target.value)}
-            placeholder="e.g. Polish"
-            required
-          />
-        </label>
+        <LanguageField
+          label="Cards teach"
+          value={targetLanguage}
+          onChange={setTargetLanguage}
+          required
+        />
 
-        <label className="field-label">
-          Questions in
-          <input
-            className="field"
-            list={`pack-language-options-${pack.name}`}
-            value={sourceLanguage}
-            onChange={(event) => setSourceLanguage(event.target.value)}
-            placeholder="e.g. English"
-          />
-        </label>
-
-        <datalist id={`pack-language-options-${pack.name}`}>
-          {COMMON_LANGUAGES.map((language) => (
-            <option key={language.code} value={language.name} />
-          ))}
-        </datalist>
+        <LanguageField
+          label="Questions in"
+          value={sourceLanguage}
+          onChange={setSourceLanguage}
+          allowUnset
+          unsetLabel="Not set"
+        />
 
         <label className="field-label brief-wide">
           Study instruction (optional)

@@ -53,6 +53,12 @@ A4. The card keeps one play control. A second control, "Show the text", reveals
     text.
     [agent decision; reversal recorded because the learner asked for it]
 
+NOTE 2026-10-24 (learner-interface): Q4/A4's pre-answer "Show the text"
+    fallback is superseded. A listening card now shows only the play control
+    and a neutral note; the full line appears in the Answer block after
+    judging. This restores study-experience Q2. See
+    docs/features/learner-interface/GRILL-learner-interface.txt Q1.
+
 Q5. How do hints stop leaking onto the next card?
 A5. Every hint request belongs to the card that started it. Moving to another
     card, starting a session or rebuilding the plan invalidates pending hint
@@ -108,11 +114,17 @@ A11. Unit tests for language normalisation, prompt pair text, study
      hint is pending. Typecheck, lint, build and the full suite stay green.
      [agent decision]
 
+NOTE 2026-10-24 (learner-interface): A11's "reveals listening text" step and
+    the locked bullet below are historical. The pre-answer reveal was removed;
+    the current proof lives in the learner-interface pack. See
+    docs/features/learner-interface/GRILL-learner-interface.txt Q1.
+
 Locked decisions:
 - `language` is the target; `sourceLanguage` is the question language.
 - New packs choose a target; source defaults to English.
 - Every card shows a pack instruction or a pair-aware automatic instruction.
-- Listening cards can reveal their text on request; no automatic reveal.
+- [SUPERSEDED 2026-10-24] Listening cards can reveal their text on request;
+  no automatic reveal. Now: reveal only after judging (learner-interface Q1).
 - Pending hints are cancelled when the card changes.
 - Pack prompts and language pair are editable in one pack editor.
 - Study instruction is a pack-level creation field.

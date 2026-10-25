@@ -1,5 +1,9 @@
 # Language and prompt control — post-implementation simulation
 
+> Historical result. The pre-answer "Show the text" step below was superseded
+> on 2026-10-24 by `learner-interface` Q1; listening now reveals only after
+> judging.
+
 - Status: passed
 - Pack: `language-prompt-control`
 - Date: 2026-10-24

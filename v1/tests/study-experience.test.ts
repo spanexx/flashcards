@@ -43,7 +43,9 @@ describe("study view decisions", () => {
   });
 
   it("speaks the prompt line and keeps the answer out of the instruction", () => {
-    expect(LISTEN_INSTRUCTION).toBe("Listen, then type what you hear.");
+    expect(LISTEN_INSTRUCTION).toBe(
+      "Play it as often as you need. The line appears after you answer.",
+    );
     expect(LISTEN_INSTRUCTION).not.toContain(listeningCard.summary);
     expect(listenPrompt(listeningCard)).toEqual({
       text: "Gdzie jest dworzec?",

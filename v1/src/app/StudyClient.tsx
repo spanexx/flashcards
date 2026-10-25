@@ -14,6 +14,7 @@ import Link from "next/link";
 import { apiGet, apiSend, ApiError } from "@/lib/client/api";
 import { isWrong, OUTCOME_LABELS, OUTCOME_MEANINGS, worstOutcome } from "@/lib/core/outcome";
 import {
+  LISTEN_INSTRUCTION,
   listenPrompt,
   shouldAutoHint,
   studyCardInstruction,
@@ -155,34 +156,38 @@ function ScopePicker({
     <div className="card study-scope">
       <label className="study-scope-field">
         <span>Study from</span>
-        <select
-          className="study-select"
-          value={packName}
-          onChange={(event) => onChange(event.target.value, "")}
-        >
-          <option value="">All cards</option>
-          {packs.map((pack) => (
-            <option key={pack.name} value={pack.name}>
-              {pack.name}
-            </option>
-          ))}
-        </select>
+        <span className="select-wrap">
+          <select
+            className="study-select"
+            value={packName}
+            onChange={(event) => onChange(event.target.value, "")}
+          >
+            <option value="">All cards</option>
+            {packs.map((pack) => (
+              <option key={pack.name} value={pack.name}>
+                {pack.name}
+              </option>
+            ))}
+          </select>
+        </span>
       </label>
       {selected && decks.length > 0 ? (
         <label className="study-scope-field">
           <span>Deck</span>
-          <select
-            className="study-select"
-            value={deckId}
-            onChange={(event) => onChange(packName, event.target.value)}
-          >
-            <option value="">All decks</option>
-            {decks.map((deck) => (
-              <option key={deck.id} value={deck.id}>
-                {deck.name}
-              </option>
-            ))}
-          </select>
+          <span className="select-wrap">
+            <select
+              className="study-select"
+              value={deckId}
+              onChange={(event) => onChange(packName, event.target.value)}
+            >
+              <option value="">All decks</option>
+              {decks.map((deck) => (
+                <option key={deck.id} value={deck.id}>
+                  {deck.name}
+                </option>
+              ))}
+            </select>
+          </span>
         </label>
       ) : null}
     </div>
@@ -209,8 +214,11 @@ export default function StudyClient() {
   const [scopePack, setScopePack] = useState("");
   const [scopeDeck, setScopeDeck] = useState("");
   const [hintSource, setHintSource] = useState<string | null>(null);
-  const [showListeningText, setShowListeningText] = useState(false);
+  const [answered, setAnswered] = useState(0);
+  const [hintsUsed, setHintsUsed] = useState(0);
+  const [fullStage, setFullStage] = useState(false);
 
+  const stageRef = useRef<HTMLDivElement | null>(null);
   const returnedRef = useRef<Set<string>>(new Set());
   const [returnedIds, setReturnedIds] = useState<string[]>([]);
   const startedRef = useRef<number>(0);
@@ -221,11 +229,33 @@ export default function StudyClient() {
   const card = queue[index] ?? null;
   const result = card ? results[card.id] : undefined;
 
+  /** Leave the focused stage and release the browser fullscreen when present. */
+  const exitFullScreen = useCallback(async () => {
+    setFullStage(false);
+    if (typeof document !== "undefined" && document.fullscreenElement) {
+      try {
+        await document.exitFullscreen();
+      } catch {
+        // The browser may already be leaving fullscreen.
+      }
+    }
+  }, []);
+
+  /** Enter the fixed stage first, then ask the browser when it can. */
+  const enterFullScreen = useCallback(() => {
+    setFullStage(true);
+    const stage = stageRef.current;
+    if (stage?.requestFullscreen) {
+      void stage.requestFullscreen().catch(() => {
+        // The CSS stage is the deliberate fallback.
+      });
+    }
+  }, []);
+
   /** Load a fresh plan; the offer and the chosen pack/deck may be adjusted. */
   const loadPlan = useCallback(async (offer?: number, packName = "", deckId = "") => {
     hintTokenRef.current += 1;
     setHintBusy(false);
-    setShowListeningText(false);
     setPhase("loading");
     setMessage(null);
     try {
@@ -252,6 +282,8 @@ export default function StudyClient() {
       autoHintedRef.current = new Set();
       setReturnedIds([]);
       attemptsRef.current = 0;
+      setAnswered(0);
+      setHintsUsed(0);
       setPhase("plan");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "The plan could not be built.");
@@ -281,6 +313,45 @@ export default function StudyClient() {
     };
   }, []);
 
+  // The stage hides the page behind it, so the page itself must stop scrolling.
+  useEffect(() => {
+    document.body.classList.toggle("full-stage", fullStage);
+    return () => document.body.classList.remove("full-stage");
+  }, [fullStage]);
+
+  // A route change while the stage is open must not leave the browser stuck.
+  useEffect(
+    () => () => {
+      if (typeof document !== "undefined" && document.fullscreenElement) {
+        void document.exitFullscreen().catch(() => {
+          // The page is already leaving.
+        });
+      }
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (!fullStage) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        void exitFullScreen();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [exitFullScreen, fullStage]);
+
+  // Escape through the browser's own fullscreen path still clears our state.
+  useEffect(() => {
+    const onChange = () => {
+      if (!document.fullscreenElement) setFullStage(false);
+    };
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+
   useEffect(() => {
     startedRef.current = Date.now();
   }, [index]);
@@ -296,10 +367,12 @@ export default function StudyClient() {
     setHintSource(null);
     setHintUsed(false);
     setWorking("");
-    setShowListeningText(false);
     hintTokenRef.current += 1;
     setHintBusy(false);
     autoHintedRef.current = new Set();
+    setAnswered(0);
+    setHintsUsed(0);
+    setFullStage(false);
     setPhase("running");
   }, [plan]);
 
@@ -314,12 +387,12 @@ export default function StudyClient() {
     setHintSource(null);
     setHintUsed(false);
     setWorking("");
-    setShowListeningText(false);
   }, []);
 
   const finish = useCallback(
     async (completed: boolean, stopped: boolean) => {
       if (!plan) return;
+      void exitFullScreen();
       setBusy(true);
       try {
         await apiSend("/api/session/end", "POST", {
@@ -341,7 +414,7 @@ export default function StudyClient() {
       }
       setPhase("done");
     },
-    [loadPlan, plan, scopeDeck, scopePack],
+    [exitFullScreen, loadPlan, plan, scopeDeck, scopePack],
   );
 
   const requestHint = useCallback(
@@ -369,6 +442,7 @@ export default function StudyClient() {
         if (!current()) return;
         if (data.text) {
           setHintTexts((previous) => [...previous, data.text as string]);
+          setHintsUsed((previous) => previous + 1);
           setHintSource(data.source);
           setHintUsed(true);
         }
@@ -405,6 +479,7 @@ export default function StudyClient() {
         hintUsed,
       });
       attemptsRef.current += 1;
+      setAnswered((previous) => previous + 1);
       setResults((previous) => ({ ...previous, [card.id]: response }));
       // Only genuinely wrong cards return (Again or No). Nearly is not wrong.
       if (isWrong(response.cardOutcome) && !returnedRef.current.has(card.id)) {
@@ -688,229 +763,285 @@ export default function StudyClient() {
     const listen = mode === "hear_type" ? listenPrompt(card) : null;
     const cardPack = packs.find((pack) => pack.name === card.packName) ?? null;
     const instruction = studyCardInstruction(card, cardPack);
+    const selectedDeck = cardPack?.decks?.find((deck) => deck.id === card.deckId) ?? null;
+    const scopeLabel = cardPack
+      ? `${cardPack.name}${selectedDeck ? ` / ${selectedDeck.name}` : ""}`
+      : "This session";
+    const left = Math.max(0, queue.length - index - (result ? 1 : 0));
     const progress = queue.length > 0 ? ((index + (result ? 1 : 0)) / queue.length) * 100 : 0;
 
     return (
-      <div className="focus study-focus">
-        <div className="study-head">
-          <span className="muted">
-            Card {index + 1} of {queue.length}
-          </span>
-          <div className="row">
-            {approved === "yes" ? <span className="chip study-tutor-chip">Tutor on</span> : null}
-            <button className="btn small" type="button" onClick={() => void finish(false, true)} disabled={busy}>
-              End here
-            </button>
-          </div>
-        </div>
-
+      <div className="study-layout">
         <div
-          className="study-progress"
-          role="progressbar"
-          aria-label="Card progress"
-          aria-valuemin={0}
-          aria-valuemax={queue.length}
-          aria-valuenow={index + 1}
+          ref={stageRef}
+          className={`study-stage study-focus${fullStage ? " stage-full" : ""}`}
         >
-          <span style={{ width: `${Math.max(6, progress)}%` }} />
-        </div>
-
-        {message ? <div className="notice error">{message}</div> : null}
-
-        <div className="card study-card">
-          <div className="study-card-top">
-            <span className="study-mode">{studyModeLabel(mode)}</span>
-            <button className="btn small" type="button" onClick={() => void askHint()} disabled={hintBusy}>
-              {hintBusy ? "Asking…" : hintTexts.length > 0 ? "Ask for another hint" : "Ask for a hint"}
-            </button>
-          </div>
-
-          <p className="muted study-instruction">{instruction}</p>
-
-          {returnedIds.includes(card.id) ? (
-            <p className="muted study-returned">
-              This one is marked to return once — it was missed in this session.
-            </p>
-          ) : null}
-
-          {mode === "hear_type" && listen ? (
-            <div className="study-listen">
-              <button
-                className="btn study-play"
-                type="button"
-                onClick={() => speak(listen.text, listen.lang)}
-              >
-                Play the line
-              </button>
-              {showListeningText ? (
-                <p className="study-listen-text">{listen.text}</p>
-              ) : (
+          <div className="study-stage-inner">
+            <div className="study-head">
+              <span className="muted">
+                Card {index + 1} of {queue.length}
+              </span>
+              <div className="row">
+                {approved === "yes" ? <span className="chip study-tutor-chip">Tutor on</span> : null}
                 <button
                   className="btn small"
                   type="button"
-                  onClick={() => setShowListeningText(true)}
+                  onClick={() => (fullStage ? void exitFullScreen() : enterFullScreen())}
+                  aria-pressed={fullStage}
                 >
-                  Show the text
+                  {fullStage ? "Exit full screen" : "Full screen"}
                 </button>
-              )}
-              <p className="muted">Showing the text turns this listening check into a reading check.</p>
+                <button className="btn small" type="button" onClick={() => void finish(false, true)} disabled={busy}>
+                  End here
+                </button>
+              </div>
             </div>
-          ) : (
-            <Side
-              parts={card.prompt}
-              answers={answers}
-              setAnswer={(id, value) => setAnswers((previous) => ({ ...previous, [id]: value }))}
-              interactive
-            />
-          )}
 
-          {hintTexts.length > 0 ? (
-            <div className="notice study-hint">
-              <p className="study-hint-label">
-                {hintSource === "tutor" ? "Tutor hint" : hintSource === "pack" ? "Pack hint" : "Hint"}
-              </p>
-              {hintTexts.map((text, position) => (
-                <p key={position} className="study-hint-text">
-                  {text}
+            <div
+              className="study-progress"
+              role="progressbar"
+              aria-label="Card progress"
+              aria-valuemin={0}
+              aria-valuemax={queue.length}
+              aria-valuenow={index + 1}
+            >
+              <span style={{ width: `${Math.max(6, progress)}%` }} />
+            </div>
+
+            {message ? <div className="notice error">{message}</div> : null}
+
+            <div className="card study-card">
+              <div className="study-card-top">
+                <span className="study-mode">{studyModeLabel(mode)}</span>
+                <button className="btn small" type="button" onClick={() => void askHint()} disabled={hintBusy}>
+                  {hintBusy ? "Asking…" : hintTexts.length > 0 ? "Ask for another hint" : "Ask for a hint"}
+                </button>
+              </div>
+
+              <p className="muted study-instruction">{instruction}</p>
+
+              {returnedIds.includes(card.id) ? (
+                <p className="muted study-returned">
+                  This one is marked to return once — it was missed in this session.
                 </p>
-              ))}
-              {hintMessage ? <p className="muted study-hint-message">{hintMessage}</p> : null}
-            </div>
-          ) : hintMessage ? (
-            <div className="notice">{hintMessage}</div>
-          ) : null}
+              ) : null}
 
-          {!result ? (
-            <div className="stack" style={{ marginTop: 14 }}>
-              {mode === "picks" ? (
-                <div className="options">
-                  {(card.answerDef.options ?? []).map((option) => (
-                    <button
-                      key={option}
-                      type="button"
-                      className="option"
-                      aria-pressed={answers.choice === option}
-                      onClick={() => setAnswers({ choice: option })}
-                    >
-                      {option}
-                    </button>
-                  ))}
+              {mode === "hear_type" && listen ? (
+                <div className="study-listen">
+                  <button
+                    className="btn study-play"
+                    type="button"
+                    onClick={() => speak(listen.text, listen.lang)}
+                  >
+                    Play the line
+                  </button>
+                  <p className="muted">{LISTEN_INSTRUCTION}</p>
                 </div>
-              ) : mode === "cloze" ? null : (
-                <input
-                  className="answer-input"
-                  placeholder={mode === "hear_type" ? "Type what you hear" : "Your answer"}
-                  value={answers.answer ?? ""}
-                  onChange={(event) => setAnswers({ answer: event.target.value })}
+              ) : (
+                <Side
+                  parts={card.prompt}
+                  answers={answers}
+                  setAnswer={(id, value) => setAnswers((previous) => ({ ...previous, [id]: value }))}
+                  interactive
                 />
               )}
-              {card.answerDef.working ? (
-                <textarea
-                  className="answer-input"
-                  placeholder={`${card.answerDef.working.label} (shown on screen, then discarded — nothing is sent)`}
-                  value={working}
-                  onChange={(event) => setWorking(event.target.value)}
-                />
-              ) : null}
-              <div>
-                <button className="btn primary" type="button" onClick={() => void submitAnswer()} disabled={busy || !canSubmit}>
-                  {busy ? "Checking…" : "Answer"}
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="study-result">
-              <div className="study-result-head">
-                <span className={`outcome outcome-${result.cardOutcome} study-outcome`}>
-                  {OUTCOME_LABELS[result.cardOutcome]}
-                </span>
-                {card.summary ? <span className="study-summary">{card.summary}</span> : null}
-              </div>
 
-              <div className="study-answer">
-                <p className="study-label">Answer</p>
-                <Side parts={card.answer} />
-              </div>
-
-              {result.capped ? (
-                <p className="muted study-capped">A hint capped this at Nearly.</p>
-              ) : null}
-
-              {card.answerDef.working ? (
-                <div className="notice study-working">
-                  <div className="study-working-grid">
-                    <div>
-                      <p className="muted">Your working</p>
-                      <p>{working.trim().length > 0 ? working : "(nothing written)"}</p>
-                    </div>
-                    <div>
-                      <p className="muted">{card.answerDef.working.label}</p>
-                      <p>{card.answerDef.working.expected}</p>
-                    </div>
-                  </div>
-                  <p className="muted study-working-note">
-                    Side by side for a moment. Nothing here was saved or sent.
+              {hintTexts.length > 0 ? (
+                <div className="notice study-hint">
+                  <p className="study-hint-label">
+                    {hintSource === "tutor" ? "Tutor hint" : hintSource === "pack" ? "Pack hint" : "Hint"}
                   </p>
+                  {hintTexts.map((text, position) => (
+                    <p key={position} className="study-hint-text">
+                      {text}
+                    </p>
+                  ))}
+                  {hintMessage ? <p className="muted study-hint-message">{hintMessage}</p> : null}
                 </div>
+              ) : hintMessage ? (
+                <div className="notice">{hintMessage}</div>
               ) : null}
 
-              <details className="study-adjust">
-                <summary>Was this fair?</summary>
-                <div className="study-adjust-list">
-                  {result.results.map((region, position) => (
-                    <div className="region-row study-region" key={`${region.region ?? "whole"}-${position}`}>
-                      <div>
-                        <span className="muted">{regionLabel(region.region)}</span>{" "}
-                        <span className={`outcome outcome-${region.outcome}`}>
-                          {OUTCOME_LABELS[region.outcome]}
-                        </span>
-                        <div className="muted study-region-detail">
-                          You wrote “{region.given || "(nothing)"}”; expected “
-                          {region.expected.join(" / ")}”.
+              {!result ? (
+                <div className="stack" style={{ marginTop: 14 }}>
+                  {mode === "picks" ? (
+                    <div className="options">
+                      {(card.answerDef.options ?? []).map((option) => (
+                        <button
+                          key={option}
+                          type="button"
+                          className="option"
+                          aria-pressed={answers.choice === option}
+                          onClick={() => setAnswers({ choice: option })}
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+                  ) : mode === "cloze" ? null : (
+                    <input
+                      className="answer-input"
+                      placeholder={mode === "hear_type" ? "Type what you hear" : "Your answer"}
+                      value={answers.answer ?? ""}
+                      onChange={(event) => setAnswers({ answer: event.target.value })}
+                    />
+                  )}
+                  {card.answerDef.working ? (
+                    <textarea
+                      className="answer-input"
+                      placeholder={`${card.answerDef.working.label} (shown on screen, then discarded — nothing is sent)`}
+                      value={working}
+                      onChange={(event) => setWorking(event.target.value)}
+                    />
+                  ) : null}
+                  <div>
+                    <button className="btn primary" type="button" onClick={() => void submitAnswer()} disabled={busy || !canSubmit}>
+                      {busy ? "Checking…" : "Answer"}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="study-result">
+                  <div className="study-result-head">
+                    <span className={`outcome outcome-${result.cardOutcome} study-outcome`}>
+                      {OUTCOME_LABELS[result.cardOutcome]}
+                    </span>
+                    {card.summary ? <span className="study-summary">{card.summary}</span> : null}
+                  </div>
+
+                  <div className="study-answer">
+                    <p className="study-label">Answer</p>
+                    <Side parts={card.answer} />
+                  </div>
+
+                  {result.capped ? (
+                    <p className="muted study-capped">A hint capped this at Nearly.</p>
+                  ) : null}
+
+                  {card.answerDef.working ? (
+                    <div className="notice study-working">
+                      <div className="study-working-grid">
+                        <div>
+                          <p className="muted">Your working</p>
+                          <p>{working.trim().length > 0 ? working : "(nothing written)"}</p>
+                        </div>
+                        <div>
+                          <p className="muted">{card.answerDef.working.label}</p>
+                          <p>{card.answerDef.working.expected}</p>
                         </div>
                       </div>
-                      <div className="row study-corrections">
-                        <button className="btn small" type="button" title={OUTCOME_MEANINGS.got_it} onClick={() => void correct(region.region, "got_it")}>
-                          I got it
-                        </button>
-                        <button className="btn small" type="button" title={OUTCOME_MEANINGS.nearly} onClick={() => void correct(region.region, "nearly")}>
-                          Nearly
-                        </button>
-                        <button className="btn small" type="button" title={OUTCOME_MEANINGS.again} onClick={() => void correct(region.region, "again")}>
-                          I missed it
-                        </button>
-                        <button className="btn small" type="button" title={OUTCOME_MEANINGS.no} onClick={() => void correct(region.region, "no")}>
-                          No
-                        </button>
-                      </div>
+                      <p className="muted study-working-note">
+                        Side by side for a moment. Nothing here was saved or sent.
+                      </p>
                     </div>
-                  ))}
-                </div>
-              </details>
+                  ) : null}
 
-              <div className="study-actions">
-                <button className="btn primary" type="button" onClick={nextCard} disabled={busy}>
-                  {index + 1 < queue.length ? "Next card" : "Finish"}
-                </button>
-                <Link
-                  className="btn"
-                  href={`/library?card=${encodeURIComponent(card.id)}`}
-                  prefetch={false}
-                >
-                  Look at this card&apos;s record
-                </Link>
-              </div>
+                  <details className="study-adjust">
+                    <summary>Was this fair?</summary>
+                    <div className="study-adjust-list">
+                      {result.results.map((region, position) => (
+                        <div className="region-row study-region" key={`${region.region ?? "whole"}-${position}`}>
+                          <div>
+                            <span className="muted">{regionLabel(region.region)}</span>{" "}
+                            <span className={`outcome outcome-${region.outcome}`}>
+                              {OUTCOME_LABELS[region.outcome]}
+                            </span>
+                            <div className="muted study-region-detail">
+                              You wrote “{region.given || "(nothing)"}”; expected “
+                              {region.expected.join(" / ")}”.
+                            </div>
+                          </div>
+                          <div className="row study-corrections">
+                            <button className="btn small" type="button" title={OUTCOME_MEANINGS.got_it} onClick={() => void correct(region.region, "got_it")}>
+                              I got it
+                            </button>
+                            <button className="btn small" type="button" title={OUTCOME_MEANINGS.nearly} onClick={() => void correct(region.region, "nearly")}>
+                              Nearly
+                            </button>
+                            <button className="btn small" type="button" title={OUTCOME_MEANINGS.again} onClick={() => void correct(region.region, "again")}>
+                              I missed it
+                            </button>
+                            <button className="btn small" type="button" title={OUTCOME_MEANINGS.no} onClick={() => void correct(region.region, "no")}>
+                              No
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+
+                  <div className="study-actions">
+                    <button className="btn primary" type="button" onClick={nextCard} disabled={busy}>
+                      {index + 1 < queue.length ? "Next card" : "Finish"}
+                    </button>
+                    <Link
+                      className="btn"
+                      href={`/library?card=${encodeURIComponent(card.id)}`}
+                      prefetch={false}
+                    >
+                      Look at this card&apos;s record
+                    </Link>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
+
+            {issueLines(message).length > 0 ? (
+              <ul className="plain">
+                {issueLines(message).map((line, position) => (
+                  <li key={position}>{line}</li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
         </div>
 
-        {issueLines(message).length > 0 ? (
-          <ul className="plain">
-            {issueLines(message).map((line, position) => (
-              <li key={position}>{line}</li>
-            ))}
-          </ul>
-        ) : null}
+        <aside className="rail study-rail">
+          <section className="card tight">
+            <div className="study-rail-head">
+              <div>
+                <h3>This session</h3>
+                <p className="muted small">{scopeLabel}</p>
+              </div>
+              <span className="badge">{approved === "yes" ? "Tutor on" : "Tutor off"}</span>
+            </div>
+            <div className="stat-grid" style={{ marginTop: 12 }}>
+              <div className="stat">
+                <strong>{queue.length}</strong>
+                <span>cards offered</span>
+              </div>
+              <div className="stat">
+                <strong>{answered}</strong>
+                <span>answered</span>
+              </div>
+              <div className="stat">
+                <strong>{left}</strong>
+                <span>left</span>
+              </div>
+              <div className="stat">
+                <strong>{hintsUsed}</strong>
+                <span>hints used</span>
+              </div>
+            </div>
+            <button
+              className="btn"
+              type="button"
+              style={{ width: "100%", marginTop: 12 }}
+              onClick={() => void finish(false, true)}
+              disabled={busy}
+            >
+              End this session
+            </button>
+          </section>
+
+          <section className="card tight">
+            <h3>Full screen</h3>
+            <p className="muted small" style={{ marginTop: 6 }}>
+              Full screen hides the sidebar and this rail. Esc or the same control brings them back.
+              Your card and answer stay put.
+            </p>
+          </section>
+        </aside>
       </div>
     );
   }

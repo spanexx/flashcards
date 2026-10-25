@@ -11,9 +11,11 @@
 // focuses the affected pack/deck without a reload. [pack: background-jobs]
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { apiGet, apiSend } from "@/lib/client/api";
 import { onJobFinished } from "@/lib/browser/jobs";
 import { LIBRARY_FOCUS_EVENT, type LibraryFocus } from "@/lib/client/library-focus";
+import { normalizeLanguage } from "@/lib/shared/language";
 import type { Card, PackStatus, ProviderStatus } from "@/lib/shared/types";
 import CardsPanel from "./CardsPanel";
 import CreatePanel from "./CreatePanel";
@@ -226,6 +228,14 @@ export default function LibraryClient() {
     if (evidence?.card.id === cardId) setEvidence(null);
   };
 
+  // The rail reports the loaded library, not a second cached summary.
+  const deckCount = packs.reduce((total, pack) => total + packDecks(pack).length, 0);
+  const languageCount = new Set(
+    packs
+      .flatMap((pack) => [normalizeLanguage(pack.language), normalizeLanguage(pack.sourceLanguage)])
+      .filter((code) => code.length > 0),
+  ).size;
+
   return (
     <div>
       <h1>Library</h1>
@@ -246,36 +256,6 @@ export default function LibraryClient() {
         </button>
       </div>
 
-      {tab === "packs" ? (
-        <PacksPanel
-          key={`packs-${packsFocus?.token ?? "initial"}`}
-          packs={packs}
-          cards={cards}
-          orphans={orphans}
-          initialOpen={packsFocus?.packName ?? null}
-          onCreatePack={createPack}
-          onAddCards={addCardsTo}
-          onDelete={askDelete}
-          onRefresh={rescan}
-          onError={setMessage}
-          onNotice={setNotice}
-        />
-      ) : null}
-
-      {tab === "cards" ? (
-        <CardsPanel
-          key={`cards-${cardFocus?.token ?? "initial"}`}
-          cards={cards}
-          packs={packs}
-          focus={cardFocus}
-          onOpenRecord={(cardId) => void openEvidence(cardId)}
-          onCardRemoved={cardRemoved}
-          onChanged={refresh}
-          onError={setMessage}
-          onNotice={setNotice}
-        />
-      ) : null}
-
       {tab === "create" ? (
         <CreatePanel
           key={`create-${createSeed?.token ?? "initial"}`}
@@ -286,7 +266,90 @@ export default function LibraryClient() {
           onError={setMessage}
           onNotice={setNotice}
         />
-      ) : null}
+      ) : (
+        <div className="library-layout">
+          <div className="library-main">
+            {tab === "packs" ? (
+              <PacksPanel
+                key={`packs-${packsFocus?.token ?? "initial"}`}
+                packs={packs}
+                cards={cards}
+                orphans={orphans}
+                initialOpen={packsFocus?.packName ?? null}
+                onCreatePack={createPack}
+                onAddCards={addCardsTo}
+                onDelete={askDelete}
+                onRefresh={rescan}
+                onError={setMessage}
+                onNotice={setNotice}
+              />
+            ) : null}
+
+            {tab === "cards" ? (
+              <CardsPanel
+                key={`cards-${cardFocus?.token ?? "initial"}`}
+                cards={cards}
+                packs={packs}
+                focus={cardFocus}
+                onOpenRecord={(cardId) => void openEvidence(cardId)}
+                onCardRemoved={cardRemoved}
+                onChanged={refresh}
+                onError={setMessage}
+                onNotice={setNotice}
+              />
+            ) : null}
+          </div>
+
+          <aside className="rail">
+            <section className="card tight">
+              <h3>Library at a glance</h3>
+              <div className="stat-grid" style={{ marginTop: 12 }}>
+                <div className="stat">
+                  <strong>{cards.length}</strong>
+                  <span>cards</span>
+                </div>
+                <div className="stat">
+                  <strong>{packs.length}</strong>
+                  <span>packs</span>
+                </div>
+                <div className="stat">
+                  <strong>{languageCount}</strong>
+                  <span>languages</span>
+                </div>
+                <div className="stat">
+                  <strong>{deckCount}</strong>
+                  <span>decks</span>
+                </div>
+              </div>
+              <p className="muted" style={{ marginTop: 12 }}>
+                The shelf uses the desktop width; the reading column stays readable.
+              </p>
+            </section>
+
+            <section className="card tight">
+              <h3>Make something next</h3>
+              <p className="muted" style={{ margin: "6px 0 12px" }}>
+                Write a pack, generate one, or paste a chat answer.
+              </p>
+              <div className="stack">
+                <button
+                  className="btn primary"
+                  type="button"
+                  onClick={() => {
+                    setCreateSeed(null);
+                    setTab("create");
+                  }}
+                >
+                  Start in Create
+                </button>
+                <Link className="btn" href="/" prefetch={false}>
+                  Study a pack
+                </Link>
+              </div>
+            </section>
+          </aside>
+        </div>
+      )}
 
       {deleteTarget ? (
         <DeleteDialog

@@ -96,4 +96,15 @@ describe("languagePairLabel", () => {
     expect(names).toEqual([...names].sort((left, right) => left.localeCompare(right)));
     expect(COMMON_LANGUAGES.find((entry) => entry.code === "pl")?.name).toBe("Polish");
   });
+
+  it("covers the widened catalog and turns every name into its code", () => {
+    expect(COMMON_LANGUAGES).toHaveLength(73);
+    expect(COMMON_LANGUAGES[0]).toEqual({ code: "af", name: "Afrikaans" });
+    expect(COMMON_LANGUAGES.at(-1)).toEqual({ code: "zu", name: "Zulu" });
+    expect(languageName("fil")).toBe("Filipino");
+    expect(normalizeLanguage("Tagalog")).toBe("fil");
+    for (const language of COMMON_LANGUAGES) {
+      expect(normalizeLanguage(language.name), language.name).toBe(language.code);
+    }
+  });
 });

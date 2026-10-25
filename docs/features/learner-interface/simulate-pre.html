@@ -1,0 +1,963 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Flashcards — learner interface pre-simulation</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f3f1eb;
+        --panel: #ffffff;
+        --ink: #202522;
+        --quiet: #6d716c;
+        --line: #dfe1da;
+        --soft: #eef1eb;
+        --accent: #2f5d50;
+        --accent-ink: #ffffff;
+        --good: #2f6d3f;
+        --near: #8a6d1f;
+        --miss: #8a3b2f;
+        --shadow: 0 16px 40px rgba(34, 45, 39, 0.08);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #171b18;
+          --panel: #212722;
+          --ink: #edf1ea;
+          --quiet: #a5ada3;
+          --line: #374139;
+          --soft: #29312b;
+          --accent: #86b8a7;
+          --accent-ink: #101512;
+          --good: #92c99f;
+          --near: #ddc073;
+          --miss: #e4a095;
+          --shadow: 0 16px 40px rgba(0, 0, 0, 0.24);
+        }
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        background:
+          radial-gradient(1200px 600px at 80% -10%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 60%),
+          var(--bg);
+        color: var(--ink);
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        line-height: 1.5;
+      }
+
+      button, input, select, textarea { font: inherit; }
+      button { cursor: pointer; }
+
+      .shell {
+        display: grid;
+        grid-template-columns: 240px minmax(0, 1fr);
+        min-height: 100vh;
+      }
+
+      .sidebar {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+        padding: 24px 18px;
+        border-right: 1px solid var(--line);
+        background: color-mix(in srgb, var(--panel) 72%, var(--bg));
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 8px;
+        font-weight: 750;
+        letter-spacing: -0.01em;
+        font-size: 1.05rem;
+      }
+
+      .brand-mark {
+        display: grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 9px;
+        background: var(--accent);
+        color: var(--accent-ink);
+        font-size: 0.8rem;
+        font-weight: 800;
+      }
+
+      .side-nav { display: grid; gap: 3px; }
+
+      .side-nav button {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding: 9px 11px;
+        border: 0;
+        border-radius: 10px;
+        background: transparent;
+        color: var(--quiet);
+        text-align: left;
+      }
+
+      .side-nav button:hover { background: var(--soft); color: var(--ink); }
+      .side-nav button[aria-current="page"] {
+        background: color-mix(in srgb, var(--accent) 14%, transparent);
+        color: var(--ink);
+        font-weight: 650;
+      }
+
+      .side-foot {
+        margin-top: auto;
+        padding: 0 10px;
+        color: var(--quiet);
+        font-size: 0.78rem;
+      }
+
+      .content {
+        width: 100%;
+        max-width: 1420px;
+        margin: 0 auto;
+        padding: 34px 40px 80px;
+      }
+
+      .page-head {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px 24px;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 22px;
+      }
+
+      h1 { margin: 0 0 4px; font-size: clamp(1.65rem, 2vw, 2.1rem); letter-spacing: -0.02em; }
+      h2 { margin: 0; font-size: 1.06rem; letter-spacing: -0.01em; }
+      h3 { margin: 0; font-size: 0.95rem; }
+      p { margin: 0; }
+      .lead { color: var(--quiet); max-width: 72ch; }
+
+      .eyebrow {
+        color: var(--accent);
+        font-size: 0.72rem;
+        font-weight: 750;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+      }
+
+      .sim-badge {
+        align-self: center;
+        border: 1px dashed color-mix(in srgb, var(--accent) 40%, var(--line));
+        border-radius: 999px;
+        padding: 7px 12px;
+        color: var(--accent);
+        background: color-mix(in srgb, var(--accent) 7%, transparent);
+        font-size: 0.78rem;
+        font-weight: 650;
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: var(--shadow);
+      }
+
+      .card.flat { box-shadow: none; }
+      .stack { display: grid; gap: 14px; }
+      .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+      .grow { flex: 1; min-width: 0; }
+      .muted { color: var(--quiet); font-size: 0.9rem; }
+      .small { font-size: 0.78rem; }
+
+      .btn {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--panel);
+        color: var(--ink);
+        min-height: 40px;
+        padding: 8px 14px;
+      }
+      .btn:hover:not(:disabled) { border-color: var(--quiet); }
+      .btn.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: var(--accent-ink);
+        font-weight: 700;
+      }
+      .btn.small { min-height: 32px; padding: 5px 10px; font-size: 0.82rem; }
+      .btn.ghost { background: transparent; border-color: transparent; }
+      .btn.danger { color: var(--miss); border-color: color-mix(in srgb, var(--miss) 40%, var(--line)); }
+      .btn:disabled { opacity: 0.45; cursor: default; }
+      .btn:focus-visible, .field:focus-visible {
+        outline: 3px solid color-mix(in srgb, var(--accent) 30%, transparent);
+        outline-offset: 2px;
+      }
+
+      .pill, .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 3px 10px;
+        color: var(--quiet);
+        font-size: 0.78rem;
+        white-space: nowrap;
+      }
+      .badge.accent { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); }
+
+      .field {
+        width: 100%;
+        min-height: 42px;
+        padding: 9px 12px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--panel);
+        color: var(--ink);
+      }
+      textarea.field { min-height: 76px; resize: vertical; }
+
+      .field-label {
+        display: grid;
+        gap: 6px;
+        color: var(--quiet);
+        font-size: 0.84rem;
+        font-weight: 600;
+      }
+      .field-label .field { color: var(--ink); font-weight: 400; }
+
+      .select-wrap { position: relative; }
+      .select-wrap::after {
+        content: "";
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        width: 8px;
+        height: 8px;
+        border-right: 2px solid var(--quiet);
+        border-bottom: 2px solid var(--quiet);
+        transform: translateY(-65%) rotate(45deg);
+        pointer-events: none;
+      }
+      select.field {
+        appearance: none;
+        padding-right: 38px;
+        cursor: pointer;
+      }
+
+      .method-tabs {
+        display: inline-flex;
+        gap: 3px;
+        padding: 3px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: color-mix(in srgb, var(--panel) 70%, var(--bg));
+      }
+      .method-tabs button {
+        border: 0;
+        border-radius: 9px;
+        background: transparent;
+        color: var(--quiet);
+        padding: 7px 12px;
+      }
+      .method-tabs button[aria-selected="true"] {
+        background: var(--panel);
+        color: var(--ink);
+        box-shadow: 0 1px 5px rgba(0, 0, 0, 0.12);
+        font-weight: 650;
+      }
+
+      .library-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.65fr) minmax(280px, 0.65fr);
+        gap: 18px;
+        align-items: start;
+      }
+
+      .rail { display: grid; gap: 14px; position: sticky; top: 24px; }
+
+      .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+      .stat {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 11px 12px;
+        background: color-mix(in srgb, var(--soft) 70%, transparent);
+      }
+      .stat strong { display: block; font-size: 1.35rem; letter-spacing: -0.03em; }
+      .stat span { color: var(--quiet); font-size: 0.76rem; }
+
+      .pack-list { display: grid; gap: 10px; }
+      .pack-row {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        gap: 12px;
+        align-items: start;
+        border: 1px solid var(--line);
+        border-radius: 13px;
+        padding: 13px;
+        background: color-mix(in srgb, var(--panel) 85%, var(--bg));
+      }
+      .pack-icon {
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        background: color-mix(in srgb, var(--accent) 13%, transparent);
+        color: var(--accent);
+        font-weight: 800;
+        font-size: 0.82rem;
+      }
+      .pack-title { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+      .pack-meta { color: var(--quiet); font-size: 0.82rem; margin-top: 2px; }
+      .deck-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        justify-content: space-between;
+        margin: 8px 0 0 46px;
+        padding: 8px 10px;
+        border-left: 2px solid var(--line);
+        color: var(--quiet);
+        font-size: 0.84rem;
+      }
+
+      .create-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.9fr) minmax(270px, 0.7fr);
+        gap: 18px;
+        align-items: start;
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+      .field-wide { grid-column: 1 / -1; }
+
+      .section-head {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 14px;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 16px;
+      }
+
+      .study-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 820px) minmax(250px, 310px);
+        gap: 20px;
+        align-items: start;
+        justify-content: center;
+      }
+
+      .study-focus { min-width: 0; }
+      .study-rail { position: sticky; top: 24px; }
+
+      .study-stage { min-width: 0; }
+
+      .study-stage.stage-full {
+        position: fixed;
+        inset: 0;
+        z-index: 80;
+        overflow: auto;
+        padding: clamp(16px, 3vw, 40px);
+        background:
+          radial-gradient(900px 500px at 50% -20%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 65%),
+          var(--bg);
+      }
+
+      .study-stage.stage-full .study-stage-inner {
+        width: 100%;
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+
+      .study-stage.stage-full .study-card {
+        padding: clamp(22px, 3.2vw, 42px);
+      }
+
+      .study-stage.stage-full .instruction { font-size: 1.28rem; }
+      .study-stage.stage-full .answer-line { font-size: 1.65rem; }
+      .study-stage.stage-full .answer-input { min-height: 56px; font-size: 1.04rem; }
+      .study-stage.stage-full .study-card img,
+      .study-stage.stage-full .study-card video {
+        display: block;
+        width: auto;
+        max-width: 100%;
+        max-height: 62vh;
+        margin: 0 auto;
+        object-fit: contain;
+        border-radius: 12px;
+      }
+
+      body.full-stage { overflow: hidden; }
+
+      .progress {
+        height: 7px;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--line) 55%, transparent);
+        overflow: hidden;
+        margin: 12px 0 18px;
+      }
+      .progress span { display: block; height: 100%; width: 34%; background: var(--accent); border-radius: inherit; }
+
+      .study-card {
+        padding: 26px;
+        background:
+          linear-gradient(180deg, color-mix(in srgb, var(--panel) 94%, var(--accent) 6%), var(--panel));
+      }
+      .study-top { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+      .mode {
+        border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line));
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--accent) 8%, transparent);
+        color: var(--accent);
+        padding: 3px 11px;
+        font-size: 0.74rem;
+        font-weight: 750;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .instruction { font-size: 1.08rem; margin-bottom: 20px; }
+
+      .listen-box {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        padding: 16px;
+        border: 1px dashed color-mix(in srgb, var(--accent) 35%, var(--line));
+        border-radius: 13px;
+        background: color-mix(in srgb, var(--accent) 5%, transparent);
+      }
+      .play {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        min-height: 46px;
+        padding: 10px 18px;
+        border: 1px solid var(--accent);
+        border-radius: 12px;
+        background: var(--accent);
+        color: var(--accent-ink);
+        font-weight: 700;
+      }
+      .play-dot {
+        width: 0;
+        height: 0;
+        border-top: 6px solid transparent;
+        border-bottom: 6px solid transparent;
+        border-left: 9px solid currentColor;
+      }
+
+      .answer-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; margin-top: 16px; }
+      .answer-input {
+        min-height: 48px;
+        padding: 10px 14px;
+        border: 1px solid var(--line);
+        border-radius: 11px;
+        background: var(--panel);
+        color: var(--ink);
+      }
+
+      .result { border-top: 1px solid var(--line); padding-top: 18px; margin-top: 20px; }
+      .result-head { display: flex; flex-wrap: wrap; gap: 9px; align-items: center; margin-bottom: 12px; }
+      .outcome {
+        border: 1px solid currentColor;
+        border-radius: 999px;
+        padding: 3px 12px;
+        font-weight: 650;
+      }
+      .outcome.good { color: var(--good); }
+      .answer-block {
+        border-left: 3px solid var(--accent);
+        border-radius: 0 12px 12px 0;
+        background: color-mix(in srgb, var(--accent) 7%, transparent);
+        padding: 12px 16px;
+      }
+      .label {
+        color: var(--quiet);
+        font-size: 0.72rem;
+        font-weight: 750;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+      }
+      .answer-line { font-size: 1.3rem; line-height: 1.55; }
+
+      .hidden { display: none !important; }
+
+      @media (max-width: 1040px) {
+        .library-grid, .create-grid, .study-layout { grid-template-columns: 1fr; }
+        .rail, .study-rail { position: static; grid-row: auto; }
+      }
+
+      @media (max-width: 900px) {
+        .shell { grid-template-columns: 1fr; }
+        .sidebar {
+          position: static;
+          height: auto;
+          flex-direction: row;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: 8px 14px;
+          padding: 12px 16px;
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+        .side-nav { display: flex; flex-wrap: wrap; }
+        .side-nav button { width: auto; }
+        .side-foot { display: none; }
+        .content { padding: 24px 20px 64px; }
+      }
+
+      @media (max-width: 620px) {
+        .content { padding: 18px 14px 56px; }
+        .page-head { margin-bottom: 16px; }
+        .card { padding: 15px; border-radius: 13px; }
+        .form-grid { grid-template-columns: 1fr; }
+        .field-wide { grid-column: auto; }
+        .pack-row { grid-template-columns: auto minmax(0, 1fr); }
+        .pack-row .pack-actions { grid-column: 1 / -1; justify-content: flex-start; }
+        .deck-row { margin-left: 0; }
+        .answer-row { grid-template-columns: 1fr; }
+        .play { width: 100%; justify-content: center; }
+        .study-card { padding: 17px; }
+        .stat-grid { grid-template-columns: 1fr 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="brand"><span class="brand-mark">FC</span> Flashcards</div>
+        <nav class="side-nav" aria-label="Main">
+          <button type="button" data-view-button="study">Study</button>
+          <button type="button" data-view-button="library">Library</button>
+          <button type="button" data-view-button="create">Create</button>
+          <button type="button">Progress</button>
+          <button type="button">Settings</button>
+        </nav>
+        <p class="side-foot">This is the pre-implementation simulation.<br />No real data is changed.</p>
+      </aside>
+
+      <main class="content">
+        <div class="page-head">
+          <div>
+            <p class="eyebrow">Learner interface</p>
+            <h1 id="page-title">Study</h1>
+            <p class="lead" id="page-lead">Listen once, type what you hear, then see the line.</p>
+          </div>
+          <span class="sim-badge">Pre-simulation · review before code</span>
+        </div>
+
+        <section id="view-study" class="study-layout">
+          <div id="study-stage" class="study-stage study-focus">
+          <div class="study-stage-inner">
+          <div class="row" style="justify-content: space-between; margin-bottom: 4px">
+            <span class="muted">Card 3 of 10</span>
+            <div class="row">
+              <span class="badge">Polish → English</span>
+              <button class="btn small" type="button" id="fullscreen-button" aria-pressed="false">Full screen</button>
+            </div>
+          </div>
+          <div class="progress" role="progressbar" aria-label="Card progress" aria-valuemin="0" aria-valuemax="10" aria-valuenow="3"><span></span></div>
+
+          <article class="card study-card">
+            <div class="study-top">
+              <span class="mode">Listen and type</span>
+              <button class="btn small" type="button">Ask for a hint</button>
+            </div>
+            <p class="instruction">Listen, then type the full Polish line.</p>
+
+            <div class="listen-box">
+              <button class="play" type="button" id="play-line"><span class="play-dot"></span> Play the line</button>
+              <span class="muted small">Use headphones if you can. The line is spoken in Polish.</span>
+            </div>
+
+            <div class="answer-row" id="answer-row">
+              <input class="answer-input" id="answer-input" aria-label="Type what you hear" placeholder="Type what you hear" autocomplete="off" />
+              <button class="btn primary" type="button" id="answer-button">Answer</button>
+            </div>
+
+            <div class="result hidden" id="study-result">
+              <div class="result-head">
+                <span class="outcome good" id="outcome-label">Got it</span>
+                <span class="muted">Full line shown after judging.</span>
+              </div>
+              <div class="answer-block">
+                <p class="label">Answer</p>
+                <p class="answer-line">Gdzie jest dworzec?</p>
+              </div>
+              <div class="row" style="margin-top: 18px">
+                <button class="btn primary" type="button" id="reset-study">Try it again</button>
+                <button class="btn" type="button">Look at this card's record</button>
+              </div>
+            </div>
+          </article>
+
+          <p class="muted" style="margin-top: 12px">No “Show the text” control. The transcript appears only in the answer block.</p>
+          </div>
+          </div>
+
+          <aside class="rail study-rail">
+            <section class="card flat">
+              <div class="section-head" style="margin-bottom: 10px">
+                <div>
+                  <h3>This session</h3>
+                  <p class="muted small">Polish starter · Basics</p>
+                </div>
+                <span class="badge">Tutor off</span>
+              </div>
+              <div class="stat-grid">
+                <div class="stat"><strong>10</strong><span>cards offered</span></div>
+                <div class="stat"><strong>3</strong><span>answered</span></div>
+                <div class="stat"><strong>7</strong><span>left</span></div>
+                <div class="stat"><strong>0</strong><span>hints used</span></div>
+              </div>
+              <button class="btn" type="button" style="width: 100%; margin-top: 12px">End this session</button>
+            </section>
+
+            <section class="card flat">
+              <h3>How listening works</h3>
+              <div class="stack muted small" style="margin-top: 9px">
+                <p>The line is spoken in Polish. There is no transcript before you answer.</p>
+                <p>After judging, the full line appears in the Answer block.</p>
+                <p>Play it as many times as you need. The check is the typing, not the listening.</p>
+              </div>
+            </section>
+          </aside>
+        </section>
+
+        <section id="view-library" class="hidden">
+          <div class="library-grid">
+            <div class="stack">
+              <section class="card">
+                <div class="section-head">
+                  <div>
+                    <h2>Packs</h2>
+                    <p class="muted">Browse what is here. New content lives in Create.</p>
+                  </div>
+                  <span class="pill">3 packs</span>
+                </div>
+                <div class="row" style="margin-bottom: 14px">
+                  <input class="field grow" type="search" placeholder="Search packs and decks" style="max-width: 360px" />
+                  <button class="btn primary" type="button" data-view-button="create">Create a pack</button>
+                  <button class="btn" type="button">Refresh</button>
+                </div>
+
+                <div class="pack-list">
+                  <div class="pack-row">
+                    <span class="pack-icon">P</span>
+                    <div>
+                      <div class="pack-title"><strong>Polish starter</strong><span class="badge accent">Polish → English</span></div>
+                      <p class="pack-meta">v1.0.0 · 2 decks · 18 cards</p>
+                      <p class="muted small">Everyday phrases and the first travel lines.</p>
+                    </div>
+                    <div class="row pack-actions">
+                      <button class="btn small" type="button">Edit</button>
+                      <button class="btn small" type="button">Export</button>
+                      <button class="btn small danger" type="button">Delete</button>
+                    </div>
+                  </div>
+
+                  <div class="pack-row">
+                    <span class="pack-icon">T</span>
+                    <div>
+                      <div class="pack-title"><strong>Travel listening</strong><span class="badge accent">Polish → English</span></div>
+                      <p class="pack-meta">v1.2.0 · 1 deck · 12 cards</p>
+                      <p class="muted small">Stations, directions and asking for the bill.</p>
+                    </div>
+                    <div class="row pack-actions">
+                      <button class="btn small" type="button">Edit</button>
+                      <button class="btn small" type="button">Export</button>
+                      <button class="btn small danger" type="button">Delete</button>
+                    </div>
+                  </div>
+
+                  <div class="pack-row">
+                    <span class="pack-icon">K</span>
+                    <div>
+                      <div class="pack-title"><strong>Kitchen verbs</strong><span class="badge accent">Japanese → English</span></div>
+                      <p class="pack-meta">v0.9.0 · 3 decks · 24 cards</p>
+                      <p class="muted small">Cut, boil, mix: short lines for the kitchen.</p>
+                    </div>
+                    <div class="row pack-actions">
+                      <button class="btn small" type="button">Edit</button>
+                      <button class="btn small" type="button">Export</button>
+                      <button class="btn small danger" type="button">Delete</button>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section class="card flat">
+                <div class="section-head">
+                  <div>
+                    <h2>Recent cards</h2>
+                    <p class="muted">Hand-made and generated cards stay mixed with their pack.</p>
+                  </div>
+                  <span class="pill">54 cards</span>
+                </div>
+                <div class="stack">
+                  <div class="row"><strong style="min-width: 170px">Gdzie jest dworzec?</strong><span class="muted grow">Where is the station?</span><span class="badge">Listening</span></div>
+                  <div class="row"><strong style="min-width: 170px">Poproszę rachunek.</strong><span class="muted grow">The bill, please.</span><span class="badge">Type</span></div>
+                  <div class="row"><strong style="min-width: 170px">I am learning.</strong><span class="muted grow">Uczę się.</span><span class="badge">Fill the blank</span></div>
+                </div>
+              </section>
+            </div>
+
+            <aside class="rail">
+              <section class="card">
+                <h3>Library at a glance</h3>
+                <div class="stat-grid" style="margin-top: 12px">
+                  <div class="stat"><strong>54</strong><span>cards</span></div>
+                  <div class="stat"><strong>3</strong><span>packs</span></div>
+                  <div class="stat"><strong>2</strong><span>languages</span></div>
+                  <div class="stat"><strong>12</strong><span>decks</span></div>
+                </div>
+                <p class="muted small" style="margin-top: 12px">The whole shelf uses the desktop width instead of a narrow middle column.</p>
+              </section>
+
+              <section class="card">
+                <h3>Make something next</h3>
+                <p class="muted small" style="margin: 6px 0 12px">Write a pack, generate one, or paste a chat answer.</p>
+                <div class="stack">
+                  <button class="btn primary" type="button" data-view-button="create">Start in Create</button>
+                  <button class="btn" type="button">Study a pack</button>
+                </div>
+              </section>
+            </aside>
+          </div>
+        </section>
+
+        <section id="view-create" class="hidden">
+          <div class="create-grid">
+            <div class="stack">
+              <section class="card">
+                <div class="section-head">
+                  <div>
+                    <h2>1. What are you making?</h2>
+                    <p class="muted">Choose the object first. The method comes second.</p>
+                  </div>
+                  <span class="pill">pack</span>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px" id="target-choices">
+                  <button class="btn primary" type="button">Pack<br /><span class="small" style="font-weight: 400">A whole new shelf</span></button>
+                  <button class="btn" type="button">Deck<br /><span class="small" style="font-weight: 400">A group inside a pack</span></button>
+                  <button class="btn" type="button">Cards<br /><span class="small" style="font-weight: 400">Add to an existing deck</span></button>
+                </div>
+              </section>
+
+              <section class="card">
+                <div class="section-head">
+                  <div>
+                    <h2>2. How?</h2>
+                    <p class="muted">Every method ends in the same validator.</p>
+                  </div>
+                  <div class="method-tabs" role="tablist" aria-label="Creation method">
+                    <button type="button" role="tab" aria-selected="true">Write</button>
+                    <button type="button" role="tab" aria-selected="false">Generate</button>
+                    <button type="button" role="tab" aria-selected="false">Chat</button>
+                    <button type="button" role="tab" aria-selected="false">Import</button>
+                  </div>
+                </div>
+
+                <div class="form-grid">
+                  <label class="field-label">Pack name<input class="field" value="Travel listening" /></label>
+                  <label class="field-label">Version<input class="field" value="1.0.0" /></label>
+                  <label class="field-label">First deck name<input class="field" value="Basics" /></label>
+                  <label class="field-label">Cards teach
+                    <span class="select-wrap"><select class="field language-select" data-language="target"></select></span>
+                  </label>
+                  <label class="field-label">Questions in
+                    <span class="select-wrap"><select class="field language-select" data-language="source"></select></span>
+                  </label>
+                  <label class="field-label field-wide">Study instruction (optional)
+                    <textarea class="field" rows="2">Listen once. Type the full Polish line, then read the reveal.</textarea>
+                  </label>
+                </div>
+                <p class="muted small" style="margin-top: 12px">The catalog is visible, sorted by name, and the stored value stays a code. “Other language” is still available.</p>
+                <div class="row" style="margin-top: 16px">
+                  <button class="btn primary" type="button">Create empty pack</button>
+                  <button class="btn" type="button">Cancel</button>
+                </div>
+              </section>
+            </div>
+
+            <aside class="rail">
+              <section class="card">
+                <h3>What happens</h3>
+                <div class="stack muted small" style="margin-top: 10px">
+                  <p><strong>No preview.</strong> Generated content saves only after the whole result passes validation.</p>
+                  <p><strong>Delete is the undo.</strong> Packs and decks can be removed from Packs after typing their name.</p>
+                  <p><strong>Your brief:</strong> the subject, focus and card style are the request. The AI cannot quietly replace the learning goal.</p>
+                </div>
+              </section>
+              <section class="card">
+                <h3>Language coverage</h3>
+                <p class="muted small" style="margin-top: 6px">The old list had 29 languages and mixed codes with names. The new picker has 70+ names and one fallback.</p>
+                <p class="badge accent" style="margin-top: 10px">70+ languages</p>
+              </section>
+            </aside>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      const languages = [
+        ["af","Afrikaans"],["sq","Albanian"],["am","Amharic"],["ar","Arabic"],["hy","Armenian"],
+        ["az","Azerbaijani"],["eu","Basque"],["be","Belarusian"],["bn","Bengali"],["bs","Bosnian"],
+        ["bg","Bulgarian"],["ca","Catalan"],["zh","Chinese"],["hr","Croatian"],["cs","Czech"],
+        ["da","Danish"],["nl","Dutch"],["en","English"],["et","Estonian"],["fil","Filipino"],
+        ["fi","Finnish"],["fr","French"],["gl","Galician"],["ka","Georgian"],["de","German"],
+        ["el","Greek"],["gu","Gujarati"],["he","Hebrew"],["hi","Hindi"],["hu","Hungarian"],
+        ["is","Icelandic"],["id","Indonesian"],["ga","Irish"],["it","Italian"],["ja","Japanese"],
+        ["kn","Kannada"],["kk","Kazakh"],["km","Khmer"],["ko","Korean"],["lo","Lao"],
+        ["lv","Latvian"],["lt","Lithuanian"],["mk","Macedonian"],["ms","Malay"],["ml","Malayalam"],
+        ["mr","Marathi"],["mn","Mongolian"],["ne","Nepali"],["no","Norwegian"],["fa","Persian"],
+        ["pl","Polish"],["pt","Portuguese"],["pa","Punjabi"],["ro","Romanian"],["ru","Russian"],
+        ["sr","Serbian"],["si","Sinhala"],["sk","Slovak"],["sl","Slovenian"],["es","Spanish"],
+        ["sw","Swahili"],["sv","Swedish"],["ta","Tamil"],["te","Telugu"],["th","Thai"],
+        ["tr","Turkish"],["uk","Ukrainian"],["ur","Urdu"],["uz","Uzbek"],["vi","Vietnamese"],
+        ["cy","Welsh"],["yi","Yiddish"],["zu","Zulu"]
+      ];
+
+      const copy = {
+        study: ["Study", "Listen once, type what you hear, then see the line."],
+        library: ["Library", "Everything you made, with the shelf facts beside it."],
+        create: ["Create", "A wider form with real language choices."]
+      };
+
+      const views = {
+        study: document.getElementById("view-study"),
+        library: document.getElementById("view-library"),
+        create: document.getElementById("view-create")
+      };
+
+      function show(name) {
+        if (!views[name]) name = "study";
+        for (const [key, section] of Object.entries(views)) {
+          section.classList.toggle("hidden", key !== name);
+        }
+        for (const button of document.querySelectorAll("[data-view-button]")) {
+          button.setAttribute("aria-current", button.dataset.viewButton === name ? "page" : "false");
+        }
+        document.getElementById("page-title").textContent = copy[name][0];
+        document.getElementById("page-lead").textContent = copy[name][1];
+        history.replaceState(null, "", "?view=" + name);
+        window.scrollTo({ top: 0, behavior: "instant" });
+      }
+
+      for (const button of document.querySelectorAll("[data-view-button]")) {
+        button.addEventListener("click", () => show(button.dataset.viewButton));
+      }
+
+      for (const select of document.querySelectorAll(".language-select")) {
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.textContent = "Choose a language";
+        select.append(placeholder);
+        for (const [code, name] of languages) {
+          const option = document.createElement("option");
+          option.value = code;
+          option.textContent = name;
+          select.append(option);
+        }
+        const other = document.createElement("option");
+        other.value = "__other";
+        other.textContent = "Other language…";
+        select.append(other);
+        select.value = select.dataset.language === "target" ? "pl" : "en";
+      }
+
+      const answerRow = document.getElementById("answer-row");
+      const result = document.getElementById("study-result");
+      const input = document.getElementById("answer-input");
+      const outcome = document.getElementById("outcome-label");
+
+      document.getElementById("answer-button").addEventListener("click", () => {
+        const text = input.value.trim();
+        outcome.textContent = text.length > 0 ? "Got it" : "Nearly";
+        outcome.className = "outcome " + (text.length > 0 ? "good" : "near");
+        answerRow.classList.add("hidden");
+        result.classList.remove("hidden");
+      });
+
+      document.getElementById("reset-study").addEventListener("click", () => {
+        input.value = "";
+        answerRow.classList.remove("hidden");
+        result.classList.add("hidden");
+        input.focus();
+      });
+
+      document.getElementById("play-line").addEventListener("click", () => {
+        if (!("speechSynthesis" in window)) return;
+        const utterance = new SpeechSynthesisUtterance("Gdzie jest dworzec?");
+        utterance.lang = "pl";
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+      });
+
+      const stage = document.getElementById("study-stage");
+      const fullscreenButton = document.getElementById("fullscreen-button");
+
+      function setFull(on) {
+        stage.classList.toggle("stage-full", on);
+        document.body.classList.toggle("full-stage", on);
+        fullscreenButton.textContent = on ? "Exit full screen" : "Full screen";
+        fullscreenButton.setAttribute("aria-pressed", String(on));
+      }
+
+      async function enterFullscreen() {
+        setFull(true);
+        try {
+          if (stage.requestFullscreen) await stage.requestFullscreen();
+        } catch {
+          // The CSS overlay is the fallback when the browser refuses fullscreen.
+        }
+      }
+
+      async function exitFullscreen() {
+        try {
+          if (document.fullscreenElement) await document.exitFullscreen();
+        } catch {
+          // The overlay still closes.
+        }
+        setFull(false);
+      }
+
+      fullscreenButton.addEventListener("click", () => {
+        if (stage.classList.contains("stage-full")) void exitFullscreen();
+        else void enterFullscreen();
+      });
+
+      document.addEventListener("fullscreenchange", () => {
+        setFull(Boolean(document.fullscreenElement));
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && stage.classList.contains("stage-full")) void exitFullscreen();
+      });
+
+      const startFull = new URLSearchParams(location.search).get("full") === "1";
+      show(new URLSearchParams(location.search).get("view") || "study");
+      if (startFull) setFull(true);
+    </script>
+  </body>
+</html>

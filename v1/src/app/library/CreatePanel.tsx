@@ -17,10 +17,11 @@ import {
   withBriefOnPackText,
   type CreationBrief,
 } from "@/lib/shared/creation";
-import { COMMON_LANGUAGES, languagePairLabel } from "@/lib/shared/language";
+import { languagePairLabel } from "@/lib/shared/language";
 import { withBasePath } from "@/lib/shared/paths";
 import ChatPromptEditor from "./ChatPromptEditor";
 import CreationBriefFields from "./CreationBriefFields";
+import LanguageField from "./LanguageField";
 import PlacementPicker from "./PlacementPicker";
 import {
   briefForTarget,
@@ -600,88 +601,73 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
 
           {method === "write" && target === "pack" ? (
             <div className="stack" style={{ marginTop: 12 }}>
-              <label className="field-label">
-                Pack name
-                <input
-                  className="field"
-                  value={writePack.name}
-                  onChange={(event) => setWritePack((previous) => ({ ...previous, name: event.target.value }))}
-                  placeholder="My pack"
-                />
-              </label>
-              <label className="field-label">
-                Version
-                <input
-                  className="field"
-                  value={writePack.version}
-                  onChange={(event) => setWritePack((previous) => ({ ...previous, version: event.target.value }))}
-                  placeholder="1.0.0"
-                />
-              </label>
-              <label className="field-label">
-                First deck name
-                <input
-                  className="field"
-                  value={writePack.deckName}
-                  onChange={(event) => setWritePack((previous) => ({ ...previous, deckName: event.target.value }))}
-                  placeholder="Basics"
-                />
-              </label>
-              <label className="field-label">
-                Cards teach
-                <input
-                  className="field"
-                  list="write-language-options"
+              <div className="form-grid">
+                <label className="field-label">
+                  Pack name
+                  <input
+                    className="field"
+                    value={writePack.name}
+                    onChange={(event) => setWritePack((previous) => ({ ...previous, name: event.target.value }))}
+                    placeholder="My pack"
+                  />
+                </label>
+                <label className="field-label">
+                  Version
+                  <input
+                    className="field"
+                    value={writePack.version}
+                    onChange={(event) => setWritePack((previous) => ({ ...previous, version: event.target.value }))}
+                    placeholder="1.0.0"
+                  />
+                </label>
+                <label className="field-label">
+                  First deck name
+                  <input
+                    className="field"
+                    value={writePack.deckName}
+                    onChange={(event) => setWritePack((previous) => ({ ...previous, deckName: event.target.value }))}
+                    placeholder="Basics"
+                  />
+                </label>
+                <LanguageField
+                  label="Cards teach"
                   value={writePack.targetLanguage}
-                  onChange={(event) =>
-                    setWritePack((previous) => ({ ...previous, targetLanguage: event.target.value }))
-                  }
-                  placeholder="e.g. Polish"
+                  onChange={(value) => setWritePack((previous) => ({ ...previous, targetLanguage: value }))}
                   required
                 />
-              </label>
-              <label className="field-label">
-                Questions in
-                <input
-                  className="field"
-                  list="write-language-options"
+                <LanguageField
+                  label="Questions in"
                   value={writePack.sourceLanguage}
-                  onChange={(event) =>
-                    setWritePack((previous) => ({ ...previous, sourceLanguage: event.target.value }))
-                  }
-                  placeholder="e.g. English"
+                  onChange={(value) => setWritePack((previous) => ({ ...previous, sourceLanguage: value }))}
+                  allowUnset
+                  unsetLabel="Not set"
                 />
-              </label>
-              <datalist id="write-language-options">
-                {COMMON_LANGUAGES.map((language) => (
-                  <option key={language.code} value={language.name} />
-                ))}
-              </datalist>
-              <label className="field-label">
-                Study instruction (optional)
-                <textarea
-                  className="field"
-                  rows={2}
-                  value={writePack.studyInstruction}
-                  onChange={(event) =>
-                    setWritePack((previous) => ({ ...previous, studyInstruction: event.target.value }))
-                  }
-                  placeholder="e.g. Read the English line, then type the full Polish line."
-                />
-              </label>
-              <p className="muted" style={{ margin: 0 }}>
-                The deck can start empty. Cards come later through Create → Cards. A name that is already here is
-                refused; learner-written names do not auto-number.
-              </p>
-              <div className="row">
-                <button
-                  className="btn primary"
-                  type="button"
-                  onClick={() => void writePackNow()}
-                  disabled={busy || !writePack.name.trim() || !writePack.targetLanguage.trim()}
-                >
-                  Create empty pack
-                </button>
+                <label className="field-label field-wide">
+                  Study instruction (optional)
+                  <textarea
+                    className="field"
+                    rows={2}
+                    value={writePack.studyInstruction}
+                    onChange={(event) =>
+                      setWritePack((previous) => ({ ...previous, studyInstruction: event.target.value }))
+                    }
+                    placeholder="e.g. Read the English line, then type the full Polish line."
+                  />
+                </label>
+                <p className="muted field-wide" style={{ margin: 0 }}>
+                  The deck can start empty. Cards come later through Create → Cards. A name that is already here is
+                  refused; learner-written names do not auto-number.
+                </p>
+                <div className="row field-wide">
+                  <button
+                    className="btn primary"
+                    type="button"
+                    onClick={() => void writePackNow()}
+                    disabled={busy || !writePack.name.trim() || !writePack.targetLanguage.trim()}
+                  >
+                    Create empty pack
+                  </button>
+                </div>
               </div>
             </div>
           ) : null}
@@ -758,16 +744,18 @@ export default function CreatePanel({ packs, provider, seed, onCreated, onError,
               <div className="row">
                 <label className="field-label">
                   Answer style
-                  <select
-                    className="field"
-                    value={cardDraft.mode}
-                    onChange={(event) => setCardDraft((previous) => ({ ...previous, mode: event.target.value }))}
-                  >
-                    <option value="auto">Guess the mode</option>
-                    <option value="cloze">Hide a word</option>
-                    <option value="picks">Pick from options</option>
-                    <option value="type">Type the answer</option>
-                  </select>
+                  <span className="select-wrap">
+                    <select
+                      className="field"
+                      value={cardDraft.mode}
+                      onChange={(event) => setCardDraft((previous) => ({ ...previous, mode: event.target.value }))}
+                    >
+                      <option value="auto">Guess the mode</option>
+                      <option value="cloze">Hide a word</option>
+                      <option value="picks">Pick from options</option>
+                      <option value="type">Type the answer</option>
+                    </select>
+                  </span>
                 </label>
                 {cardDraft.mode === "picks" ? (
                   <label className="field-label" style={{ flex: "1 1 12rem" }}>
