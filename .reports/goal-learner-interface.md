@@ -127,3 +127,20 @@ than a pull request.
 
 **Next:** Commit the feature on `feature/learner-interface`, fast-forward local
 `main`, and stop the static server. Do not push or open a PR.
+
+### 6 — 2026-10-24
+
+**Action:** Committed the pack as `7e5398d` and fast-forwarded local `main` from
+`5421059` to `7e5398d`. The merge also brought in the stacked
+language-prompt-control pack `5d15497`. Stopped the static server.
+
+**Verification:** `main` is clean and two commits ahead of `origin/main`. Port
+4190 is closed. The tree at `main` is the tested tree.
+
+**Verdict:** pass; the pack landed locally.
+
+**Failure class:** none.
+
+**Pivot:** none.
+
+**Next:** Push only when the learner asks. No pull request was opened.
