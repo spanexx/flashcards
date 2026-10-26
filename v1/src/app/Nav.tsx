@@ -9,9 +9,11 @@
 // 404 on a plain file host. [pack: browser-app]
 // 2026-10-25 opencode: the brand now carries the same Lucide mark as the
 // favicon and PWA icons. [pack: learner-interface]
+// 2026-10-25 opencode: the sidebar carries the one-click theme flip. [pack: learner-delight]
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import ThemeButton from "./ThemeButton";
 
 const LINKS = [
   { href: "/", label: "Study" },
@@ -38,10 +40,13 @@ export default function Nav() {
 
   return (
     <>
-      <Link className="brand" href="/" prefetch={false}>
-        <BrandMark />
-        <span className="brand-name">Flashcards</span>
-      </Link>
+      <div className="sidebar-top">
+        <Link className="brand" href="/" prefetch={false}>
+          <BrandMark />
+          <span className="brand-name">Flashcards</span>
+        </Link>
+        <ThemeButton />
+      </div>
       <nav className="side-nav" aria-label="Main">
         {LINKS.map((link) => {
           const current = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);

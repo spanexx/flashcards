@@ -5,6 +5,8 @@
 // PACK: study-tab-redesign
 // 2026-10-25 opencode: moved the question and reveal out of StudyClient and
 // applied the approved card-as-hero design [pack: study-tab-redesign]
+// 2026-10-25 opencode: the card names its judged outcome so the stylesheet can
+// tint the reveal without changing any rule. [pack: learner-delight]
 
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -102,6 +104,7 @@ export default function StudyCard({
   return (
     <div
       className="study-card"
+      data-outcome={result?.cardOutcome}
       onKeyDown={(event) => {
         // WHY: The simulation promises Enter to check. Only a text input
         // triggers it, so Enter still adds a line inside the working box.

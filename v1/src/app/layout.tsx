@@ -9,6 +9,8 @@
 // every screen. [pack: background-jobs]
 // 2026-10-23 opencode: install button, manifest and service-worker boot. [pack: pwa-deploy]
 // 2026-10-25 opencode: link the Lucide SVG mark and the real favicon route. [pack: pwa-deploy]
+// 2026-10-25 opencode: paint the saved palette before the first frame and keep
+// it live with the system. [pack: learner-delight]
 
 import type { Metadata, Viewport } from "next";
 import Nav from "./Nav";
@@ -17,6 +19,8 @@ import InstallButton from "./InstallButton";
 import JobsBoot from "./JobsBoot";
 import JobsDock from "./JobsDock";
 import PwaBoot from "./PwaBoot";
+import ThemeBoot from "./ThemeBoot";
+import { THEME_BOOT } from "@/lib/client/theme";
 import { withBasePath } from "@/lib/shared/paths";
 import "./globals.css";
 
@@ -50,7 +54,11 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
+      </head>
       <body>
+        <ThemeBoot />
         <AutoSaveBoot />
         <JobsBoot />
         <PwaBoot />

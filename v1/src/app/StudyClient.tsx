@@ -13,12 +13,15 @@
 // all rules and saved shapes are unchanged. [pack: study-tab-redesign]
 // 2026-10-25 opencode: merged the teaching-layers queue and return rule into
 // the redesigned stage. [pack: teaching-layers]
+// 2026-10-25 opencode: optional cues on a judged answer and a finished
+// session. [pack: learner-delight]
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { apiGet, apiSend, ApiError } from "@/lib/client/api";
 import { isWrong, OUTCOME_LABELS, worstOutcome } from "@/lib/core/outcome";
 import { shouldAutoHint, studyCardInstruction } from "@/lib/client/study-view";
+import { cueForOutcome, playCue } from "@/lib/client/sound";
 import {
   deckLevelFor,
   layerBarText,
@@ -331,6 +334,7 @@ export default function StudyClient() {
         await loadPlan(undefined, scopePack, scopeDeck);
         return;
       }
+      playCue("finish");
       setPhase("done");
     },
     [exitFullScreen, loadPlan, plan, scopeDeck, scopePack],
@@ -404,6 +408,8 @@ export default function StudyClient() {
       });
       attemptsRef.current += 1;
       setResults((previous) => ({ ...previous, [submitted.entryId]: response }));
+      const cue = cueForOutcome(response.cardOutcome);
+      if (cue) playCue(cue);
       const reason = returnReason({
         level,
         peeked: peekedRef.current.has(submitted.entryId),
@@ -551,6 +557,13 @@ export default function StudyClient() {
             <p className="study-eyebrow">Study</p>
             <h1 className="study-display">This session is finished.</h1>
             <p className="study-lede">No score is kept. Nothing here was graded as a whole.</p>
+            <span className="finish-sparkle" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+              <span />
+              <span />
+            </span>
           </div>
         </header>
         <div className="study-start-row">
@@ -635,6 +648,7 @@ export default function StudyClient() {
       >
         {message ? <div className="notice error">{message}</div> : null}
         <StudyCard
+          key={entry.entryId}
           card={card}
           answers={answers}
           onAnswerChange={updateAnswers}

@@ -1,0 +1,58 @@
+GRILL: Learner delight
+Status: Locked
+Date: 2026-10-25
+Pack: learner-delight
+Authority: the learner's dictation this session, quoted verbatim below.
+
+Source question, quoted from the learner:
+"There's just something missing with the flashcards. It's not like—it's not
+catching my attention, it's not animated, it's not colorful, it's not
+addictive. You know, users need to love seeing it. And also, I think we don't
+have a light mode; we only have that darkmode? there are no optional sound
+efects"
+
+Q1. What is actually missing today?
+A1. Both palettes already exist, but the app has no in-app theme control: it
+    follows the operating system, so a dark desktop can never show the light
+    palette. There is no sound code at all. Only one 180ms reveal animation
+    exists. The card is readable, but it sits still.
+
+Q2. What does "addictive" mean here, when the app bans score, streak, timer,
+rank and comparison?
+A2. Delight, not pressure. Motion, colour and sound make the card feel alive,
+    but nothing adds a score, streak, timer, rank, notification or guilt.
+    "Stopping is not an ending." stays true.
+
+Q3. How far does the look go?
+A3. Warm and lively, the learner's chosen option: keep the paper-and-ink
+    identity and the one calm column. Add outcome colour washes, a soft accent
+    aura, lively pips, a card entrance and a small finish celebration. No
+    gradient card face, no confetti storm, no deck textures, no new art assets.
+
+Q4. Which themes exist, and where is the choice?
+A4. Light, Dark and System. System is the default. A three-way control sits in
+    Settings > Profile under "Appearance", and a one-click sun/moon button sits
+    in the sidebar. The choice is device-local (localStorage), because it
+    describes this screen, not the learner's data; it is never in a backup.
+
+Q5. When does sound play?
+A5. Off by default, the learner's chosen option. One toggle in Settings >
+    Profile. Short synthesized cues (Web Audio, no audio files) for a correct
+    answer, a nearly answer, a miss, and a completed session. No music, no
+    voice, and nothing plays on load.
+
+Q6. What must not move?
+A6. The one calm column; no score, streak, timer, rank or comparison; the
+    teaching layer's level rules, cold repeat and one-return rule; the judge,
+    outcomes, evidence rows, queue, hints, offer algorithm and session ending;
+    offline use; and reduced-motion users get no animation.
+
+Q7. What about quiet spaces and motion sensitivity?
+A7. Sound stays off until the learner turns it on, and the cues are short and
+    quiet. Every new animation is removed under prefers-reduced-motion, and the
+    theme control never changes layout.
+
+Q8. Does the theme follow the system when System is chosen?
+A8. Yes. The boot script resolves System to the OS preference before first
+    paint, and a live listener re-resolves when the OS changes. Choosing Light
+    or Dark pins that palette until the learner changes it.
