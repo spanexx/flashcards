@@ -3,6 +3,7 @@
 // valid JSON is never rewritten and hopeless text still errors.
 // PACK: study-resilience
 // 2026-10-26 opencode: created for the study resilience pack [pack: study-resilience]
+// 2026-10-26 qoder: pins the words a refusal quotes around the failure [D-26]
 
 import { describe, expect, it } from "vitest";
 import { parseJsonLoose, repairClause, repairJson } from "@/lib/core/json-repair";
@@ -179,6 +180,37 @@ describe("valid JSON and hopeless JSON", () => {
     }
     expect(message).toContain("not valid JSON");
     expect(message).toContain("syntax repair was tried first");
+  });
+
+  /** The refusal for a text, or an empty string when it parsed. */
+  function refusal(text: string): string {
+    try {
+      parseJsonLoose(text);
+    } catch (error) {
+      return error instanceof Error ? error.message : "";
+    }
+    return "";
+  }
+
+  it("quotes the broken words, so a long single line can be found by eye", () => {
+    const line = `{"cards":[${'{"ok":1},'.repeat(60)}{"type":"text bomb":"","text":"Bread"}]}`;
+    const message = refusal(line);
+    expect(message).toContain('"type":"text bomb":""');
+    expect(message).toContain("The broken part is: …");
+  });
+
+  it("quotes the tail when the text simply stops", () => {
+    expect(refusal('{"cards": [')).toContain('The broken part is: {"cards": [');
+  });
+
+  it("keeps the quote on one line, whatever the file looks like", () => {
+    const message = refusal('{\n  "cards": [\n    {"a": 1}\n    {"b": 2}\n  ]\n}');
+    expect(message).toContain("The broken part is:");
+    expect(message).not.toContain("\n");
+  });
+
+  it("still ends with the repair note, whatever it quoted", () => {
+    expect(refusal("{cards: [1, 2,]")).toMatch(/\(syntax repair was tried first\)$/);
   });
 
   it("parses a bare array: shape rules belong to the caller", () => {

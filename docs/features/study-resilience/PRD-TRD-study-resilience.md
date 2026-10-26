@@ -107,8 +107,8 @@ write, and the job line names the kinds repaired.
 object or a missing field)
 **When** the learner imports it
 **Then** nothing is written and the refusal names the item and field as today;
-when a repair was attempted first, the same sentence ends with
-"(syntax repair was tried first)".
+it quotes the words around the failure; when a repair was attempted first,
+the same sentence ends with "(syntax repair was tried first)".
 
 ### Scenario 13: repair never changes a valid document
 
@@ -201,10 +201,11 @@ trailing-comma | unquoted-key | single-quoted-string`.
 - `v1/src/lib/browser/session-save.ts`: `queueSessionSave(session)` — serialised
   last-write-wins, plus `flushSessionSave()` for page hide.
 - `v1/src/lib/core/json-repair.ts`: `parseJsonLoose(text): { value, repairs }`,
-  throwing a plain `Error` with the existing wording ("the text is not valid
-  JSON: ...", plus " (syntax repair was tried first)" when a kind applied) when
-  repair is not enough. `v1/src/lib/browser/bundle.ts` threads `repairs` into
-  `ImportSuccess`; `v1/src/lib/browser/jobs.ts` stores them in `JobResult`.
+  throwing a plain `Error` when repair is not enough: "the text is not valid
+  JSON: <reason>", then ". The broken part is: <the words either side of the
+  failure>", then " (syntax repair was tried first)" when a kind applied.
+  `v1/src/lib/browser/bundle.ts` threads `repairs` into `ImportSuccess`;
+  `v1/src/lib/browser/jobs.ts` stores them in `JobResult`.
 
 ### Dependencies
 
