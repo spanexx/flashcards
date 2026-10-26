@@ -1,11 +1,10 @@
 # Drift Log
-**Last updated:** 2026-10-26  **Open:** 0  **Awaiting:** 0  **Resolved:** 25  **Critical/High:** 0
+**Last updated:** 2026-10-26  **Open:** 0  **Awaiting:** 0  **Resolved:** 26  **Critical/High:** 0
 
 ## Open
 
-_None. Every gap the interface-polish review found is closed and verified below;
-the study-resilience review's one behaviour gap and five doc gaps are closed as
-D-20…D-25._
+_None. D-26 closed the one gap the learner's own failed import exposed; the
+interface-polish and study-resilience reviews are closed below as D-12…D-25._
 
 ## Awaiting decision
 
@@ -19,6 +18,15 @@ the IMPL reconcile section, is in progress._
 ---
 
 ## Resolved
+
+- **D-26** (Medium, 2026-10-26, reporter: the learner, after a live import failed) — A syntax refusal named no field and quoted no words, so the owner of a pasted pack could not find the break.
+  - Doc claim: "the refusal names the item and field as today" (`docs/features/study-resilience/PRD-TRD-study-resilience.md:109`, before fix)
+  - Code reality: `parseJsonLoose` passed the engine's sentence through unchanged, so the learner saw only "at position 2555 (line 1 column 2556)", and the pack path added just the collection label `(bundle)` (`v1/src/lib/core/json-repair.ts:292` before fix; `v1/src/lib/browser/bundle.ts:185`)
+  - Why matters: the pack that failed on 2026-10-26 is 15 KB on one line, where an offset names a character nobody can count to; finding the break took a hand scan and an outside parser.
+  - Owner: study-resilience
+  - To fix: fix code — the refusal quotes the words either side of the failure, and Scenario 12 now promises it.
+  - Verified by: the learner's own pack, unfixed, now reports "The broken part is: …{"type":"text bomb":""…" through `parseBundle` (`v1/src/lib/core/json-repair.ts:289-317`), pinned by "quotes the broken words, so a long single line can be found by eye" and three more (`v1/tests/json-repair.test.ts:195-214`); full suite and both drift gates pass.
+  - Related: D-25.
 
 - **D-20** (High, 2026-10-26, reporter: fresh-eyes drift review of study-resilience) — An edited card did not drop out of a running session, because the prune treated a retired card row as still live.
   - Doc claim: "a stored session whose current card was edited (new identity) or deleted … the vanished entry is skipped" (`docs/features/study-resilience/PRD-TRD-study-resilience.md:82-88`); "a card edit mints a new identity by design, so the old entry cannot be submitted against the new card" (`docs/features/study-resilience/GRILL-study-resilience.txt:120-122`)
@@ -49,7 +57,7 @@ the IMPL reconcile section, is in progress._
 
 - **D-23** (Low, 2026-10-26, reporter: fresh-eyes drift review) — Several study-resilience citations were stale or named a symbol that does not exist.
   - Doc claim: `readJson` "failed `JSON.parse`" at `v1/src/lib/browser/bundle.ts:165-180` and `parseJsonLoose` throws `ImportTextError` (`docs/features/study-resilience/PRD-TRD-study-resilience.md:215-217` and `:198-201`, before fix); "written from one place in `StudyClient`" (`:211-214`); Q1/Q2/Q3/Q7/Q10/Q12 sources (`docs/features/study-resilience/GRILL-study-resilience.txt:39,47,57,101-102,133,157`, before fix)
-  - Code reality: `readJson` is `v1/src/lib/browser/bundle.ts:173-190` and calls `parseJsonLoose` directly; no `ImportTextError` exists anywhere — `parseJsonLoose` throws a plain `Error` (`v1/src/lib/core/json-repair.ts:292`); `startSession` also writes and flushes eagerly (`v1/src/app/StudyClient.tsx:438-459`) beside the debounced effect; the real source lines are `v1/src/app/study/TeachingLayer.tsx:136-140`, `v1/src/app/StudyClient.tsx:118-124,783-797,474-512`, `v1/src/app/settings/SettingsClient.tsx:354-362`, `v1/src/lib/browser/store.ts:12-26,109`, `v1/src/lib/browser/repository.ts:226-249`.
+  - Code reality: `readJson` is `v1/src/lib/browser/bundle.ts:173-190` and calls `parseJsonLoose` directly; no `ImportTextError` exists anywhere — `parseJsonLoose` throws a plain `Error` (`v1/src/lib/core/json-repair.ts:317`, moved by D-26); `startSession` also writes and flushes eagerly (`v1/src/app/StudyClient.tsx:438-459`) beside the debounced effect; the real source lines are `v1/src/app/study/TeachingLayer.tsx:136-140`, `v1/src/app/StudyClient.tsx:118-124,783-797,474-512`, `v1/src/app/settings/SettingsClient.tsx:354-362`, `v1/src/lib/browser/store.ts:12-26,109`, `v1/src/lib/browser/repository.ts:226-249`.
   - Why matters: a reader following these pointers lands on the wrong code, and one promised type cannot be imported.
   - Owner: study-resilience
   - To fix: fix docs — PRD and GRILL now cite the real lines, say plain `Error` with the exact wording, and describe one save path plus the eager start flush.
@@ -67,7 +75,7 @@ the IMPL reconcile section, is in progress._
 
 - **D-25** (Low, 2026-10-26, reporter: fresh-eyes drift review) — Scenario 12 promised the old refusal wording, but a failed import now appends a repair note.
   - Doc claim: "nothing is written and the refusal names the item and field as today." (`docs/features/study-resilience/PRD-TRD-study-resilience.md:107-109`, before fix)
-  - Code reality: `parseJsonLoose` appends " (syntax repair was tried first)" whenever a repair kind applied (`v1/src/lib/core/json-repair.ts:291`), pinned by `v1/tests/json-repair.test.ts:173-182`.
+  - Code reality: `parseJsonLoose` appends " (syntax repair was tried first)" whenever a repair kind applied (`v1/src/lib/core/json-repair.ts:311`, moved by D-26), pinned by `v1/tests/json-repair.test.ts:173-182`.
   - Why matters: the sentence the learner sees was slightly longer than the spec, which is harmless only if the spec says so.
   - Owner: study-resilience
   - To fix: fix docs — Scenario 12 names the added clause.

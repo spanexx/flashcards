@@ -5,6 +5,8 @@
 // returned untouched, so nothing is rewritten behind the learner's back.
 // PACK: study-resilience
 // 2026-10-26 opencode: created for the study resilience pack [pack: study-resilience]
+// 2026-10-26 qoder: a refusal now quotes the words around the failure, because
+//   an offset in a fifteen-thousand-character line tells the learner nothing. [D-26]
 
 /** The syntax mistakes the scanner is allowed to fix. */
 export type RepairKind =
@@ -278,6 +280,24 @@ export function repairJson(text: string): RepairResult {
   return { text: body, repairs };
 }
 
+/** How much text either side of the failure the refusal quotes. */
+const SNIPPET_ARMS = 40;
+
+/**
+ * WHY: A parser reports an offset, and a pasted pack is one line of fifteen
+ * thousand characters, so the offset alone gives the learner nothing to look
+ * at. The words around the failure are what can be searched for by eye.
+ * PACK: D-26
+ */
+function failureSnippet(text: string, offset: number): string | null {
+  const point = Math.max(0, Math.min(offset, text.length));
+  const start = Math.max(0, point - SNIPPET_ARMS);
+  const end = Math.min(text.length, point + SNIPPET_ARMS);
+  const body = text.slice(start, end).replace(/\s+/g, " ").trim();
+  if (body === "") return null;
+  return `${start > 0 ? "…" : ""}${body}${end < text.length ? "…" : ""}`;
+}
+
 /**
  * Parse text that may carry hand-typed syntax mistakes. A text that is still
  * broken after every repair throws instead of guessing a value.
@@ -289,7 +309,12 @@ export function parseJsonLoose(text: string): LooseJson {
   } catch (error) {
     const reason = error instanceof Error ? error.message : "unknown parse error";
     const tried = repaired.repairs.length > 0 ? " (syntax repair was tried first)" : "";
-    throw new Error(`the text is not valid JSON: ${reason}${tried}`);
+    // WHY: V8 states the offset, other engines may not, and a text that simply
+    // stops fails at its end — which is then the only useful place to quote.
+    const stated = /position (\d+)/.exec(reason);
+    const snippet = failureSnippet(repaired.text, stated ? Number(stated[1]) : repaired.text.length);
+    const near = snippet ? `. The broken part is: ${snippet}` : "";
+    throw new Error(`the text is not valid JSON: ${reason}${near}${tried}`);
   }
 }
 

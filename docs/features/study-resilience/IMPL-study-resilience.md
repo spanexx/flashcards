@@ -229,3 +229,24 @@ and the offline reload — are stated with their cause, not papered over.
   the prune counted a retired row as live. Fixed in `session-save.ts` and pinned
   by two tests. Doc corrections D-21…D-25 are logged in `docs/drift.md`.
 
+### Follow-up, 2026-10-26 — D-26
+
+The learner's first real import after the push was refused with
+`(bundle): the text is not valid JSON: ... at position 2555 (line 1 column
+2556)` and nothing else. The file is one line of 15 KB, so the offset named a
+character nobody could count to; the break was one glued key,
+`{"type":"text bomb":""`, and finding it took a hand scan.
+
+`parseJsonLoose` now quotes the words either side of the failure, capped at
+forty characters each way, flattened to one line and marked with `…` where it
+was clipped (`v1/src/lib/core/json-repair.ts:289-317`). The repair rules are
+unchanged: it still refuses a glued key rather than guess which half was meant.
+The learner's own file, unfixed, now reads:
+
+```
+The broken part is: …ext","text":"Bread"},{"type":"text bomb":"","text":"Bread"}],"answerDef":{"mode"…
+```
+
+Pinned by four tests (`v1/tests/json-repair.test.ts:184-214`) and promised in
+Scenario 12 of the PRD.
+
