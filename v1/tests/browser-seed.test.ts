@@ -22,10 +22,15 @@ import {
   readTombstones,
   writeCard,
 } from "@/lib/browser/repository";
+import { withBasePath } from "@/lib/shared/paths";
 import type { Card } from "@/lib/shared/types";
 
 const now = "2026-10-25T10:00:00.000Z";
+// The manifest lists the logical path; the browser fetch sees it behind the
+// deploy base path, so the stub must answer the same address the seed requests.
 const starterFile = "/packs/starter.json";
+const starterUrl = withBasePath(starterFile);
+const indexUrl = withBasePath("/packs/index.json");
 
 let store: Store;
 
@@ -96,7 +101,7 @@ function learnerCard(): Card {
 
 describe("ensureSeeded", () => {
   it("installs a listed pack on a library that does not have it", async () => {
-    stubSeed({ status: 200, body: JSON.stringify(manifest()) }, { [starterFile]: seedBundle() });
+    stubSeed({ status: 200, body: JSON.stringify(manifest()) }, { [starterUrl]: seedBundle() });
 
     await ensureSeeded();
 
@@ -123,7 +128,7 @@ describe("ensureSeeded", () => {
       kind: "answer",
     });
     stubSeed({ status: 200, body: JSON.stringify(manifest("1.1.0")) }, {
-      [starterFile]: seedBundle("1.1.0", "A corrected teaching line."),
+      [starterUrl]: seedBundle("1.1.0", "A corrected teaching line."),
     });
 
     await ensureSeeded();
@@ -139,10 +144,10 @@ describe("ensureSeeded", () => {
     await importBundle(seedBundle("1.1.0"), { kind: "pack" });
     for (const version of ["1.1.0", "0.9.0"]) {
       const { calls } = stubSeed({ status: 200, body: JSON.stringify(manifest(version)) }, {
-        [starterFile]: seedBundle(version, "Must not arrive."),
+        [starterUrl]: seedBundle(version, "Must not arrive."),
       });
       await ensureSeeded();
-      expect(calls).toEqual(["/packs/index.json"]);
+      expect(calls).toEqual([indexUrl]);
     }
     const [card] = await readCards(store);
     expect(card.teaching).toEqual([{ type: "text", text: "A short teaching line." }]);
@@ -151,13 +156,13 @@ describe("ensureSeeded", () => {
   it("leaves a dismissed pack out", async () => {
     await dismissPack("starter");
     const { calls } = stubSeed({ status: 200, body: JSON.stringify(manifest()) }, {
-      [starterFile]: seedBundle(),
+      [starterUrl]: seedBundle(),
     });
 
     await ensureSeeded();
 
     expect(await readPack("starter", store)).toBeNull();
-    expect(calls).toEqual(["/packs/index.json"]);
+    expect(calls).toEqual([indexUrl]);
     expect((await readTombstones(store)).map((row) => row.id)).toContain("starter");
   });
 
@@ -167,7 +172,7 @@ describe("ensureSeeded", () => {
     await deleteCard(card.id, store);
     await deleteBuiltInCard(card);
     stubSeed({ status: 200, body: JSON.stringify(manifest("1.1.0")) }, {
-      [starterFile]: seedBundle("1.1.0", "A corrected teaching line."),
+      [starterUrl]: seedBundle("1.1.0", "A corrected teaching line."),
     });
 
     await ensureSeeded();
@@ -182,7 +187,7 @@ describe("ensureSeeded", () => {
     await deleteCard(card.id, store);
     await deleteBuiltInCard(card);
     stubSeed({ status: 200, body: JSON.stringify(manifest("1.1.0")) }, {
-      [starterFile]: seedBundle("1.1.0", "A short teaching line.", "Piję mleko"),
+      [starterUrl]: seedBundle("1.1.0", "A short teaching line.", "Piję mleko"),
     });
 
     await ensureSeeded();
@@ -198,7 +203,7 @@ describe("ensureSeeded", () => {
     await ensureSeeded();
     expect(await readPack("starter", store)).toBeNull();
 
-    stubSeed({ status: 200, body: JSON.stringify(manifest()) }, { [starterFile]: seedBundle() });
+    stubSeed({ status: 200, body: JSON.stringify(manifest()) }, { [starterUrl]: seedBundle() });
     await ensureSeeded();
     expect((await readPack("starter", store))?.version).toBe("1.0.0");
   });
@@ -206,7 +211,7 @@ describe("ensureSeeded", () => {
   it("ignores a manifest with the wrong shape", async () => {
     const { calls } = stubSeed({ status: 200, body: JSON.stringify({ schema: "other", packs: [] }) });
     await ensureSeeded();
-    expect(calls).toEqual(["/packs/index.json"]);
+    expect(calls).toEqual([indexUrl]);
     expect(await readPack("starter", store)).toBeNull();
   });
 
