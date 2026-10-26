@@ -28,6 +28,14 @@ from the first card, and an advanced learner can still try first and read after.
 **Then** the layer modal opens over the study card before the answer controls,
 the question and answer sides are unchanged, and collapsing the modal leaves a
 bar that reopens it. The learner can answer while the layer is open or folded.
+
+> **Note (2026-10-26, study-resilience):** automatic opening is a learner choice
+> now. The layer header offers "Don't show again" and Settings → Appearance has
+> "Open the teaching layer automatically"; either writes the device-local
+> `flashcards.teaching` preference. Turning it off never removes the folded bar
+> or its manual open, so scenario 1 still holds. See
+> `docs/features/study-resilience/PRD-TRD-study-resilience.md` scenarios 1–4.
+
 ### Scenario 2: Intermediate starts folded
 **Given** a deck at intermediate
 **When** a card appears

@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Study resilience — reconciled simulation</title>
+<style>
+  :root { color-scheme: light; --ink:#13251b; --muted:#5b6b60; --line:#d7e0d8; --paper:#f6f8f4; --card:#fff; --accent:#1f6b45; --warn:#8a4b00; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:15px/1.5 Georgia, "Times New Roman", serif; color:var(--ink); background:var(--paper); }
+  main { max-width: 900px; margin: 0 auto; padding: 40px 20px 80px; }
+  h1 { font-size: 30px; margin: 0 0 6px; }
+  h2 { font-size: 20px; margin: 32px 0 8px; }
+  p.lead { color: var(--muted); margin: 0 0 24px; }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin: 18px 0; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  button { font: inherit; padding: 8px 14px; border-radius: 9px; border: 1px solid var(--accent); background: var(--accent); color:#fff; cursor:pointer; }
+  button.secondary { background: #fff; color: var(--accent); }
+  .layer { border:1px dashed var(--accent); border-radius: 12px; padding: 14px; margin-top:12px; background:#f1f7f2; }
+  .layer h3 { margin:0 0 6px; font-size:16px; }
+  .bar { border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin-top:12px; background:#fbfcfa; color:var(--muted); }
+  .question { font-size:17px; margin:8px 0 0; }
+  .state { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size:12.5px; color:var(--muted); }
+  textarea { width:100%; min-height:110px; font-family: ui-monospace, Menlo, monospace; font-size:13px; padding:10px; border:1px solid var(--line); border-radius:10px; }
+  .ok { color: var(--accent); font-weight:bold; }
+  .bad { color: #a11; font-weight:bold; }
+  .note { color: var(--warn); font-size: 13px; }
+  nav button { margin-right:8px; }
+  .hidden { display:none; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Study resilience — reconciled simulation</h1>
+  <p class="lead">The canonical script for this pack. It is hardcoded, but every branch now matches what shipped, including the wording the real screens use. The earlier design file is kept at <code>archive/simulate-pre.html</code>; the live pass and its evidence are in <code>simulate-post.md</code>.</p>
+
+  <section aria-labelledby="a">
+    <h2 id="a">A. Teaching layer: stop showing it on request</h2>
+    <p class="state" id="a-pref">preference: autoOpen = true (default)</p>
+    <div class="row">
+      <button id="a-next">Next beginner card</button>
+      <button class="secondary" id="a-reset">Reset device</button>
+    </div>
+    <p class="question" id="a-q">Press “Next beginner card”.</p>
+    <div id="a-layer" class="layer hidden">
+      <h3>Teaching layer · beginner</h3>
+      <p>“Piję kawę” is a present-tense sentence: the verb agrees with the speaker.</p>
+      <div class="row">
+        <button class="secondary" id="a-collapse">Collapse to the question</button>
+        <button class="secondary" id="a-dont">Don't show again</button>
+      </div>
+    </div>
+    <div id="a-bar" class="bar hidden">
+      <strong>Teaching layer</strong> — collapsed. <button class="secondary" id="a-open">Show the teaching layer</button>
+    </div>
+    <p class="note" id="a-msg"></p>
+  </section>
+
+  <section aria-labelledby="b">
+    <h2 id="b">B. A running session survives leaving and reloading</h2>
+    <p class="state" id="b-state">plan screen — no stored session</p>
+    <nav class="row">
+      <button class="secondary" data-b-tab="study">Study</button>
+      <button class="secondary" data-b-tab="library">Library</button>
+      <button class="secondary" data-b-tab="progress">Progress</button>
+      <button class="secondary" data-b-tab="reload">Reload the page</button>
+    </nav>
+    <p class="question" id="b-view">Study is showing the plan screen.</p>
+    <div class="row">
+      <button id="b-start">Start session</button>
+      <button class="secondary" id="b-hint" class="hidden">Ask for a hint</button>
+    </div>
+    <textarea id="b-draft" class="hidden" placeholder="Your answer"></textarea>
+    <div class="row">
+      <button id="b-answer" class="hidden">Answer</button>
+      <button id="b-finish" class="hidden">End the session</button>
+    </div>
+    <p class="note" id="b-note"></p>
+  </section>
+
+  <section aria-labelledby="c">
+    <h2 id="c">C. A hand-typed JSON import repairs itself</h2>
+    <p class="state">Repair rewrites syntax only; the whole batch is refused if a card still fails validation.</p>
+    <textarea id="c-text">```json
+// a hand-typed cards fragment
+{
+  schema: 'flashcards.pack/v1',
+  cards: [
+    {
+      summary: 'Two plus two', // one card
+      topics: ['Arithmetic'],
+      prompt: [{ type: 'text', text: 'What is two plus two?' }],
+      answer: [{ type: 'text', text: “four” }],
+      answerDef: { mode: 'type', expected: ['four'], judge: 'loose' },
+    },
+  ],
+}
+```</textarea>
+    <label class="state"><input type="checkbox" id="c-backup" /> treat this as a backup (strict, never repaired)</label>
+    <div class="row">
+      <button id="c-run">Check and import</button>
+    </div>
+    <p id="c-out" class="note"></p>
+  </section>
+
+  <section>
+    <h2>What this sim is checking</h2>
+    <ul>
+      <li>A: the layer opens by default; “Don't show again” folds it and writes the device preference; the folded bar stays and still opens it by hand; the button is absent while the preference is off.</li>
+      <li>B: the card, queue position, draft and hint come back after a tab trip and after a reload; finishing clears the snapshot and returns to the plan.</li>
+      <li>C: typographic damage is named and repaired before validation; a backup is never repaired.</li>
+    </ul>
+  </section>
+</main>
+<script>
+  // A — the shipped decision is autoOpen ? open : folded, with a per-entry
+  // override after Collapse or "Don't show again".
+  const A = { autoOpen: true, folded: true, answered: false };
+  const $ = (id) => document.getElementById(id);
+  function aRender() {
+    $("a-pref").textContent = "preference: autoOpen = " + A.autoOpen;
+    const showLayer = A.answered && !A.folded;
+    $("a-layer").classList.toggle("hidden", !showLayer);
+    $("a-bar").classList.toggle("hidden", !A.answered || showLayer);
+    $("a-open").classList.toggle("hidden", !A.answered);
+    $("a-dont").classList.toggle("hidden", !A.autoOpen);
+  }
+  $("a-next").onclick = () => {
+    A.answered = true;
+    A.folded = !A.autoOpen;
+    $("a-q").textContent = "Piję kawę. Type the English.";
+    aRender();
+  };
+  $("a-collapse").onclick = () => { A.folded = true; aRender(); };
+  $("a-dont").onclick = () => { A.autoOpen = false; A.folded = true; $("a-msg").textContent = "Preference saved on this device. The bar still offers the layer."; aRender(); };
+  $("a-open").onclick = () => { A.folded = false; aRender(); };
+  $("a-reset").onclick = () => { A.autoOpen = true; A.folded = true; A.answered = false; $("a-msg").textContent = "Device reset."; $("a-q").textContent = "Press “Next beginner card”."; aRender(); };
+  aRender();
+
+  // B — one snapshot row; a trip and a reload read the same stored state.
+  const B = { tab: "study", card: 1, draft: "", hint: false, stored: false };
+  function bRender() {
+    $("b-state").textContent = B.stored ? "stored session: card " + B.card + ", draft kept" : "plan screen — no stored session";
+    const studying = B.tab === "study";
+    $("b-draft").classList.toggle("hidden", !studying || !B.stored);
+    $("b-answer").classList.toggle("hidden", !studying || !B.stored);
+    $("b-finish").classList.toggle("hidden", !studying || !B.stored);
+    $("b-hint").classList.toggle("hidden", !studying || !B.stored);
+    $("b-start").classList.toggle("hidden", B.stored || !studying);
+    if (!studying) $("b-view").textContent = "You are on the " + B.tab + " tab. The running session waits in storage.";
+    else if (B.stored) $("b-view").textContent = "Picked up where you left off. Card " + B.card + " of 12. Hint " + (B.hint ? "used" : "not used") + ".";
+    else $("b-view").textContent = "Study is showing the plan screen.";
+  }
+  document.querySelectorAll("[data-b-tab]").forEach((btn) => btn.onclick = () => {
+    const next = btn.dataset.bTab;
+    if (next === "reload") { $("b-note").textContent = "The page reloaded; the snapshot was read before a new plan."; bRender(); return; }
+    if (B.stored) B.draft = $("b-draft").value;
+    B.tab = next;
+    if (next === "study" && B.stored) $("b-draft").value = B.draft;
+    bRender();
+  });
+  $("b-start").onclick = () => {
+    B.stored = true; B.card = 1; B.draft = ""; B.hint = false; $("b-draft").value = "";
+    $("b-note").textContent = "Session started; the resume row holds this position.";
+    bRender();
+  };
+  $("b-answer").onclick = () => {
+    B.draft = ""; B.card += 1; B.hint = false; $("b-draft").value = "";
+    $("b-note").textContent = "Answer saved as evidence; the snapshot follows the new position.";
+    bRender();
+  };
+  $("b-finish").onclick = () => {
+    B.stored = false; B.draft = ""; B.hint = false; $("b-draft").value = "";
+    $("b-note").textContent = "Session ended; the resume row was cleared and the plan returned.";
+    bRender();
+  };
+  $("b-hint").onclick = () => { B.hint = true; $("b-note").textContent = "Hint used for this card; its text is part of the snapshot."; bRender(); };
+  $("b-draft").oninput = bRender;
+  bRender();
+
+  // C — the same syntax-only order as v1/src/lib/core/json-repair.ts:
+  // a byte-order mark and one fence, then comments and quote typography,
+  // then bare keys, then trailing commas. Strings keep their punctuation.
+  function loose(text) {
+    const kinds = [];
+    let out = text;
+    if (/^\uFEFF/.test(out)) { out = out.replace(/^\uFEFF/, ""); kinds.push("a byte-order mark"); }
+    const fence = out.match(/^```[a-zA-Z]*\s*([\s\S]*?)\s*```$/);
+    if (fence) { out = fence[1]; kinds.push("a markdown fence"); }
+    if (/\/\/|\/\*/.test(out)) { out = out.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, ""); kinds.push("comments"); }
+    if (/[“”]/.test(out)) { out = out.replace(/[“”]/g, '"'); kinds.push("smart quotes"); }
+    if (/'[^'\n]*'/.test(out)) { out = out.replace(/'([^'\n]*)'/g, '"$1"'); kinds.push("single quotes"); }
+    if (/[{,]\s*[A-Za-z_$][\w$]*\s*:/.test(out)) { out = out.replace(/([{,]\s*)([A-Za-z_$][\w$]*)(\s*:)/g, '$1"$2"$3'); kinds.push("an unquoted key"); }
+    if (/,\s*[}\]]/.test(out)) { out = out.replace(/,\s*([}\]])/g, "$1"); kinds.push("a trailing comma"); }
+    return { out, kinds };
+  }
+  $("c-run").onclick = () => {
+    const backup = $("c-backup").checked;
+    if (backup) {
+      $("c-out").innerHTML = '<span class="bad">Nothing was restored.</span> A backup is read with strict JSON, so it is refused as it stands.';
+      return;
+    }
+    const { out, kinds } = loose($("c-text").value);
+    let parsed = null;
+    try { parsed = JSON.parse(out); } catch (err) { $("c-out").innerHTML = '<span class="bad">A job failed.</span> Nothing was imported, because the file needs fixing. ' + (err.message || "not valid JSON"); return; }
+    const count = Array.isArray(parsed.cards) ? parsed.cards.length : 0;
+    const clause = kinds.length ? "Repaired " + kinds.join(", ") + ", then imported " : "Imported ";
+    $("c-out").innerHTML = '<span class="ok">Import finished.</span> ' + clause + count + " card" + (count === 1 ? "" : "s") + " into “browser-dev”.";
+  };
+</script>
+</body>
+</html>
