@@ -153,3 +153,15 @@ IndexedDB is a platform API; tests use the project's own memory adapter.
 - IndexedDB writes are asynchronous; the repository must serialize writes for
   cards/evidence so a fast answer loop cannot interleave a read-modify-write.
 - File System Access API is Chromium-only; the phone path must stay manual.
+
+## Delivery note 2026-10-26: CORS refusal named
+
+A live provider call from the deployed site was stopped by the browser's CORS
+preflight, and `callProvider` flattened it into "could not be reached", which
+read like a dead network. The unreachable sentence now says the provider is
+probably refusing calls from this site (CORS) and tells the learner to ask the
+provider to allow the site or use one that does. The timeout, HTTP and empty
+sentences are unchanged, and the call still is not retried.
+
+Verification: `tests/provider-client.test.ts` pins the CORS sentence; full suite,
+typecheck, lint and both drift gates pass.
