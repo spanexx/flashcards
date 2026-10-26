@@ -77,3 +77,11 @@ Failure class: doc-vs-code drift; one real behaviour gap.
 Pivot: none — the fix sat inside the locked decision for Q9.
 Next: stage, run the staged gate, commit, merge into main locally, push.
 
+### 9 — 2026-10-26
+Action: staged the code and tests (21 files) behind a passing staged drift gate and committed `3e26555`; staged the pack docs, drift log and this ledger (10 files) behind the same gate and committed `0627f1b`; merged `--no-ff` into `main` as `92dc86e` with no conflicts; pushed `43dafd0..92dc86e`.
+Verification: `check:drift`, `check:drift:release` and both staged gates green (0 open, 25 resolved); Pages run 40254714121 completed `success` in build and deploy; the preview server was stopped (port 4183 closed) and the worktree's `out/`, `.next`, `tsconfig.tsbuildinfo` and `node_modules` symlink were removed.
+Verdict: pass — the outcome is achieved and external evidence confirms it.
+Failure class: none.
+Pivot: none.
+Next: none.
+
