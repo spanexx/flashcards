@@ -52,6 +52,15 @@ export function describeHttpFailure(status: number, url: string): string {
   return `The provider answered ${status} at ${url}.`;
 }
 
+/**
+ * Plain sentence for a network-level failure. A browser blocks a cross-origin
+ * call when the provider refuses it with CORS, and that is the common cause;
+ * the sentence names it as likely and says what the learner can do.
+ */
+export function describeUnreachable(url: string): string {
+  return `The provider could not be reached at ${url}. If the address is right, the provider is probably refusing calls from this site (CORS). Ask the provider to allow this site, or use a provider that does.`;
+}
+
 /** Read the reply text out of a common chat-completions reply. */
 export function readReplyText(payload: unknown): string | null {
   if (payload === null || typeof payload !== "object") return null;
@@ -120,7 +129,7 @@ export async function callProvider(
       const aborted = error instanceof Error && error.name === "AbortError";
       lastMessage = aborted
         ? "The provider took too long to answer."
-        : `The provider could not be reached at ${url}.`;
+        : describeUnreachable(url);
       console.warn(`[provider] ${lastMessage} (after ${Date.now() - startedAt}ms)`);
       if (index + 1 < endpoints.length && !aborted) continue;
       return { ok: false, message: lastMessage, reason: aborted ? "timeout" : "unreachable" };

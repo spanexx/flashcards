@@ -16,8 +16,9 @@
 ## Provider Key
 - The key is stored in IndexedDB and sent straight to the provider from the
   page. There is no relay and no server holding it.
-- Some providers refuse browser calls (CORS). The app says so plainly; it does
-  not hide behind a proxy.
+- Some providers refuse browser calls (CORS). The app says so plainly: a
+  refused call names CORS as the likely cause and says to ask the provider to
+  allow this site, or to use one that does. It does not hide behind a proxy.
 - No provider key still means a fully usable app: packs, cards, judging, and
   the learner's own record all work.
 - Provider calls are the only network calls: no telemetry, no updates, no

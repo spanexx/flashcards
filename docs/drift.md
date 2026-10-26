@@ -1,10 +1,9 @@
 # Drift Log
-**Last updated:** 2026-10-26  **Open:** 0  **Awaiting:** 0  **Resolved:** 26  **Critical/High:** 0
+**Last updated:** 2026-10-26  **Open:** 0  **Awaiting:** 0  **Resolved:** 27  **Critical/High:** 0
 
 ## Open
 
-_None. D-26 closed the one gap the learner's own failed import exposed; the
-interface-polish and study-resilience reviews are closed below as D-12…D-25._
+_None. D-27 closed the provider message gap the learner's own refused call exposed; D-26 closed the import one._
 
 ## Awaiting decision
 
@@ -18,6 +17,15 @@ the IMPL reconcile section, is in progress._
 ---
 
 ## Resolved
+
+- **D-27** (Medium, 2026-10-26, reporter: the learner, after a live provider call was refused) — A browser CORS refusal was flattened into "could not be reached", so the message named neither the likely cause nor a way forward.
+  - Doc claim: "The app says so plainly; it does not hide behind a proxy." (`docs/ethics/dev-lane/data.md:19-20`, before fix)
+  - Code reality: the catch wrote `The provider could not be reached at ${url}.` for every non-abort rejection and never mentioned CORS (`v1/src/lib/provider/client.ts:121-123` before fix)
+  - Why matters: the learner's own provider, `larprouter.com`, answered the preflight without `Access-Control-Allow-Origin`, so the browser stopped the POST; the app's sentence read like a dead network and gave nothing to act on.
+  - Owner: browser-app
+  - To fix: fix code — the unreachable sentence names CORS as the likely cause and what to do, and Scenario 7 promises it. The timeout and HTTP sentences stay as they are.
+  - Verified by: the new "names CORS as the likely cause when the browser refuses the call" case (`v1/tests/provider-client.test.ts:143-158`); targeted run 14 passing; full suite 60 files / 671 tests against a fresh `npm run build`; typecheck and lint clean; both drift gates green.
+  - Related: none.
 
 - **D-26** (Medium, 2026-10-26, reporter: the learner, after a live import failed) — A syntax refusal named no field and quoted no words, so the owner of a pasted pack could not find the break.
   - Doc claim: "the refusal names the item and field as today" (`docs/features/study-resilience/PRD-TRD-study-resilience.md:109`, before fix)

@@ -72,6 +72,9 @@ provider is needed.
 **When** the learner tests the provider or generates cards
 **Then** the browser calls the provider directly, the prompt is shown first, the
 prompt log records it locally, and the host is not involved.
+**When** the provider refuses the browser call (CORS)
+**Then** the message names CORS as the likely cause and says to ask the provider
+to allow this site, or to use one that does.
 
 ### Scenario 8: Backup and restore
 

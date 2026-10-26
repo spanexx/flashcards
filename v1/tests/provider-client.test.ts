@@ -140,6 +140,23 @@ describe("callProvider", () => {
     }
   });
 
+  it("names CORS as the likely cause when the browser refuses the call", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        throw new TypeError("Failed to fetch");
+      }),
+    );
+    const result = await callProvider(config, [{ role: "user", content: "hi" }]);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.message).toContain("could not be reached");
+      expect(result.message).toContain("CORS");
+      expect(result.message).toContain("this site");
+      expect(result.reason).toBe("unreachable");
+    }
+  });
+
   it("says a provider took too long when the call aborts", async () => {
     vi.stubGlobal(
       "fetch",
