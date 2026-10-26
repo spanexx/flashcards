@@ -129,7 +129,7 @@ build gate that refuses an export that would break on Pages.
 
 - Workflow `.github/workflows/pages.yml` runs on pushes to `main` and by hand.
 - Build job: Node 22, `npm ci`, typecheck, lint, build, test, export check.
-- The build sets `NEXT_PUBLIC_BASE_PATH=/flashcards`.
+- The build job sets `NEXT_PUBLIC_BASE_PATH=/flashcards` for every step.
 - The artifact is `v1/out`; the deploy job uses `actions/deploy-pages@v4`.
 - After deploy, the workflow curls the page URL, then the manifest and `sw.js`.
   It retries six times, ten seconds apart, and fails if the page is not 200.

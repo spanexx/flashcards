@@ -1,5 +1,5 @@
 # Drift Log
-**Last updated:** 2026-10-25  **Open:** 0  **Awaiting:** 0  **Resolved:** 18  **Critical/High:** 0
+**Last updated:** 2026-10-26  **Open:** 0  **Awaiting:** 0  **Resolved:** 19  **Critical/High:** 0
 
 ## Open
 
@@ -81,6 +81,15 @@ the IMPL reconcile section, is in progress._
   - To fix: decision — the learner kept the markup and Scenario 4 now names the Settings labels.
   - Verified by: learner-interface Scenario 4 updated 2026-10-25; full suite and build pass.
   - Related: D-16.
+
+- **D-19** (Medium, 2026-10-26, reporter: Pages workflow on push, run 40247929759) — The seed test stubbed and asserted root URLs, so under the deploy job's base path the pack download missed and eight of its ten checks failed, turning the Pages build red.
+  - Doc claim: "The build job sets `NEXT_PUBLIC_BASE_PATH=/flashcards`" (`docs/features/pwa-deploy/PRD-TRD-pwa-deploy.md:132`)
+  - Code reality: the workflow sets the variable for the whole build job, so the test step inherits it too (`.github/workflows/pages.yml:26-27`); `ensureSeeded` correctly fetches behind that prefix (`v1/src/lib/browser/seed.ts:64`), while the test answered only `/packs/index.json` and `/packs/starter.json` (`v1/tests/browser-seed.test.ts:28` before fix).
+  - Why matters: the release gate failed on every push while the app itself was correct, so a real regression would have been buried in a known red build.
+  - Owner: teaching-layers with pwa-deploy
+  - To fix: fix code — the test derives its stub keys and call expectations from `withBasePath`, and the doc now names the build job rather than the build step.
+  - Verified by: reproduced 8 failed / 2 passed with `NEXT_PUBLIC_BASE_PATH=/flashcards`; after the fix 10/10 at root and 10/10 under the subpath; full suite 604 passing against a `/flashcards` build; Pages run 40248801523 succeeded in build and deploy.
+  - Related: none.
 
 - **D-1** (High, 2026-10-19, reporter: drift review `.reports/2026-10-19-drift-v1-prototype.md`) — R16: the learner's working was collected in a textarea but never shown beside the pack's working after the answer; the region was invisible.
   - Doc claim: `working?: { label: string; expected: string }` and "Working shown, then discarded" (`docs/features/v1-prototype/PRD-TRD-v1-prototype.md:129`; `docs/features/v1-prototype/GRILL-v1-prototype.txt:198`)
