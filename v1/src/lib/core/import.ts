@@ -16,6 +16,7 @@ import {
   simpleCardToSource,
 } from "@/lib/core/card";
 import { cardSourceSchema, issuesFromZod, type ValidationIssue } from "@/lib/core/schema";
+import { parseJsonLoose } from "@/lib/core/json-repair";
 
 /** The import result: either the cards to add or every problem found. */
 export type ImportResult =
@@ -29,16 +30,16 @@ const IMPORT_NOTE = "Imported by the learner.";
 function readItems(text: string): { items: unknown[] } | { issues: ValidationIssue[] } {
   let parsed: unknown;
   try {
-    parsed = JSON.parse(text) as unknown;
+    // WHY: A hand-typed batch gets the same syntax repair as a bundle; the old
+    // flat lane must not refuse text the browser import now understands.
+    parsed = parseJsonLoose(text).value;
   } catch (error) {
     return {
       issues: [
         {
           index: 0,
           field: "(batch)",
-          message: `the pasted text is not valid JSON: ${
-            error instanceof Error ? error.message : "unknown parse error"
-          }`,
+          message: error instanceof Error ? error.message : "the pasted text is not valid JSON",
         },
       ],
     };

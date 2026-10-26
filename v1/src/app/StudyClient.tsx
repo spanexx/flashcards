@@ -15,6 +15,9 @@
 // the redesigned stage. [pack: teaching-layers]
 // 2026-10-25 opencode: optional cues on a judged answer and a finished
 // session. [pack: learner-delight]
+// 2026-10-26 qoder: the layer's automatic opening answers to a device
+// preference, and a running session is snapshotted so a reload picks it back
+// up. [pack: study-resilience]
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
@@ -23,13 +26,23 @@ import { isWrong, OUTCOME_LABELS, worstOutcome } from "@/lib/core/outcome";
 import { shouldAutoHint, studyCardInstruction } from "@/lib/client/study-view";
 import { cueForOutcome, playCue } from "@/lib/client/sound";
 import {
+  autoOpenPolicy,
   deckLevelFor,
   layerBarText,
   layerPolicy,
   returnReason,
 } from "@/lib/client/layer";
+import { readTeachingPrefs, writeTeachingAutoOpen } from "@/lib/client/teaching";
+import { clearStoredSession } from "@/lib/browser/repository";
+import {
+  cancelSessionSave,
+  flushSessionSave,
+  loadResumableSession,
+  queueSessionSave,
+} from "@/lib/browser/session-save";
+import { toStoredSession, type QueueEntry, type StoredSession, type StoredSessionInput } from "@/lib/core/session-resume";
 import { newId } from "@/lib/core/id";
-import type { AnswerResult, Card, Outcome, PackStatus, Plan } from "@/lib/shared/types";
+import type { AnswerResult, Outcome, PackStatus, Plan } from "@/lib/shared/types";
 import ScopePicker from "./study/ScopePicker";
 import StudyCard from "./study/StudyCard";
 import StudyPlan from "./study/StudyPlan";
@@ -37,16 +50,6 @@ import StudySession from "./study/StudySession";
 import TeachingLayer from "./study/TeachingLayer";
 
 type Phase = "loading" | "empty" | "plan" | "running" | "done" | "error";
-
-/** One trip through the card. A return is a new entry, never the same one. */
-interface QueueEntry {
-  entryId: string;
-  card: Card;
-  coldCheck: boolean;
-  suppressTeaching: boolean;
-  /** Why this entry exists; the first showing has no reason. */
-  returnKind: "cold" | "wrong" | null;
-}
 
 /** Read a number out of an error detail list, for plain display. */
 function issueLines(error: unknown): string[] {
@@ -86,6 +89,9 @@ export default function StudyClient() {
   const [hintSource, setHintSource] = useState<string | null>(null);
   const [fullStage, setFullStage] = useState(false);
   const [layerUi, setLayerUi] = useState<{ entryId: string; open: boolean } | null>(null);
+  // The device preference is read once; "Don't show again" and Settings share it.
+  const [autoOpen, setAutoOpen] = useState(() => readTeachingPrefs().autoOpen);
+  const [resumed, setResumed] = useState(false);
 
   const stageRef = useRef<HTMLDivElement | null>(null);
   const returnedRef = useRef<Set<string>>(new Set());
@@ -95,6 +101,10 @@ export default function StudyClient() {
   const attemptsRef = useRef(0);
   const autoHintedRef = useRef<Set<string>>(new Set());
   const hintTokenRef = useRef(0);
+  /** The restored index, so the timer re-arm below does not overwrite it. */
+  const restoredIndexRef = useRef<number | null>(null);
+  /** Set while a session is being ended, so a late edit cannot resurrect it. */
+  const saveSuppressedRef = useRef(false);
 
   const entry = queue[index] ?? null;
   const card = entry?.card ?? null;
@@ -107,7 +117,9 @@ export default function StudyClient() {
   const policy = layerPolicy(level, Boolean(card?.teaching?.length) && !entry?.suppressTeaching);
   const layerOpen =
     policy.hasLayer &&
-    (layerUi?.entryId === entry?.entryId ? layerUi.open : policy.before === "open");
+    (layerUi?.entryId === entry?.entryId
+      ? layerUi.open
+      : autoOpenPolicy(policy, autoOpen) === "open");
   const layerBarAvailable =
     policy.hasLayer && (Boolean(result) || policy.before !== "hidden");
 
@@ -161,6 +173,13 @@ export default function StudyClient() {
     setLayerUi({ entryId: entry.entryId, open: false });
   }, [entry]);
 
+  /** "Don't show again": fold this entry and stop automatic opening for good. */
+  const dismissAutoOpen = useCallback(() => {
+    writeTeachingAutoOpen(false);
+    setAutoOpen(false);
+    if (entry) setLayerUi({ entryId: entry.entryId, open: false });
+  }, [entry]);
+
   /** Load a fresh plan; the offer and the chosen pack/deck may be adjusted. */
   const loadPlan = useCallback(async (offer?: number, packName = "", deckId = "") => {
     hintTokenRef.current += 1;
@@ -200,12 +219,123 @@ export default function StudyClient() {
     }
   }, []);
 
+  /** Put a pruned snapshot back exactly as it was; no plan request is made. */
+  const restoreSnapshot = useCallback((snapshot: StoredSession) => {
+    setPlan(snapshot.plan);
+    setOfferChoice(snapshot.offerChoice);
+    setScopePack(snapshot.scopePack);
+    setScopeDeck(snapshot.scopeDeck);
+    setQueue(snapshot.queue);
+    setIndex(snapshot.index);
+    setResults(snapshot.results);
+    setAnswersByEntry(snapshot.answersByEntry);
+    setWorking(snapshot.working);
+    setHintTexts(snapshot.hintTexts);
+    setHintUsed(snapshot.hintUsed);
+    setHintSource(snapshot.hintSource);
+    setApproved(snapshot.approved);
+    setLayerUi(snapshot.layerUi);
+    returnedRef.current = new Set(snapshot.returned);
+    peekedRef.current = new Set(snapshot.peeked);
+    autoHintedRef.current = new Set(snapshot.autoHinted);
+    attemptsRef.current = snapshot.attempts;
+    startedRef.current = snapshot.startedAt;
+    entryIdRef.current = snapshot.queue[snapshot.index]?.entryId ?? "";
+    // The timer effect below must keep the stored start for this first card.
+    restoredIndexRef.current = snapshot.index;
+    saveSuppressedRef.current = false;
+    setResumed(true);
+    setPhase("running");
+  }, []);
+
+  // WHY: The snapshot is tried before the plan. A running session must not ask
+  // the plan endpoint again, or the record would gain a second "started" event
+  // for the same session (GRILL Q8).
   useEffect(() => {
-    const pending = Promise.resolve().then(() => loadPlan());
-    return () => {
-      void pending;
+    let cancelled = false;
+    const boot = async () => {
+      const snapshot = await loadResumableSession();
+      if (cancelled) return;
+      if (snapshot) restoreSnapshot(snapshot);
+      else await loadPlan();
     };
-  }, [loadPlan]);
+    void boot();
+    return () => {
+      cancelled = true;
+    };
+  }, [loadPlan, restoreSnapshot]);
+
+  /** The running screen as a snapshot input, with optional fresh values. */
+  const snapshotInput = useCallback(
+    (overrides: Partial<StoredSessionInput> = {}): StoredSessionInput | null => {
+      if (!plan) return null;
+      return {
+        sessionId: plan.sessionId,
+        scopePack,
+        scopeDeck,
+        offerChoice,
+        plan,
+        queue,
+        index,
+        results,
+        answersByEntry,
+        working,
+        hintTexts,
+        hintUsed,
+        hintSource,
+        approved,
+        returned: [...returnedRef.current],
+        peeked: [...peekedRef.current],
+        autoHinted: [...autoHintedRef.current],
+        attempts: attemptsRef.current,
+        startedAt: startedRef.current,
+        layerUi,
+        ...overrides,
+      };
+    },
+    [
+      answersByEntry,
+      approved,
+      hintSource,
+      hintTexts,
+      hintUsed,
+      index,
+      layerUi,
+      offerChoice,
+      plan,
+      queue,
+      results,
+      scopeDeck,
+      scopePack,
+      working,
+    ],
+  );
+
+  // Every meaningful change queues one snapshot; the save module debounces.
+  useEffect(() => {
+    if (phase !== "running" || saveSuppressedRef.current) return;
+    const input = snapshotInput();
+    if (!input || input.queue.length === 0) return;
+    queueSessionSave(toStoredSession(input));
+  }, [phase, snapshotInput]);
+
+  // A hidden tab or a page hide can be the last moment we get.
+  useEffect(() => {
+    const flush = () => {
+      void flushSessionSave();
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") flush();
+    };
+    window.addEventListener("pagehide", flush);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("pagehide", flush);
+      document.removeEventListener("visibilitychange", onVisibility);
+      // Leaving the Study route flushes what the last commit queued.
+      flush();
+    };
+  }, []);
 
   // The scope choices come from the same pack list the Library uses.
   useEffect(() => {
@@ -266,23 +396,30 @@ export default function StudyClient() {
     return () => document.removeEventListener("fullscreenchange", onChange);
   }, []);
 
+  // Each card starts its own clock, except the card a snapshot just restored.
   useEffect(() => {
+    if (restoredIndexRef.current === index) {
+      restoredIndexRef.current = null;
+      return;
+    }
     startedRef.current = Date.now();
   }, [index]);
 
   const startSession = useCallback(() => {
     if (!plan) return;
-    startedRef.current = Date.now();
-    setQueue(
-      plan.cards.map((card) => ({
-        entryId: newId(),
-        card,
-        coldCheck: false,
-        suppressTeaching: false,
-        returnKind: null,
-      })),
-    );
+    const startedAt = Date.now();
+    const entries: QueueEntry[] = plan.cards.map((card) => ({
+      entryId: newId(),
+      card,
+      coldCheck: false,
+      suppressTeaching: false,
+      returnKind: null,
+    }));
+    startedRef.current = startedAt;
+    saveSuppressedRef.current = false;
+    setQueue(entries);
     setIndex(0);
+    setResults({});
     setAnswersByEntry({});
     setHintTexts([]);
     setHintMessage(null);
@@ -296,8 +433,31 @@ export default function StudyClient() {
     peekedRef.current = new Set();
     setLayerUi(null);
     setFullStage(false);
+    setResumed(false);
     setPhase("running");
-  }, [plan]);
+    // WHY: Starting is the one moment a lost write would cost the whole queue,
+    // so the first snapshot is written now rather than after the debounce.
+    const input = snapshotInput({
+      queue: entries,
+      index: 0,
+      results: {},
+      answersByEntry: {},
+      working: "",
+      hintTexts: [],
+      hintUsed: false,
+      hintSource: null,
+      layerUi: null,
+      attempts: 0,
+      startedAt,
+      returned: [],
+      peeked: [],
+      autoHinted: [],
+    });
+    if (input) {
+      queueSessionSave(toStoredSession(input));
+      void flushSessionSave();
+    }
+  }, [plan, snapshotInput]);
 
   const resetCardState = useCallback(() => {
     // WHY: A hint answer belongs to the card that asked. Bumping the token
@@ -314,6 +474,17 @@ export default function StudyClient() {
   const finish = useCallback(
     async (completed: boolean, stopped: boolean) => {
       if (!plan) return;
+      // WHY: Finishing and stopping both end the session, so the snapshot goes
+      // before the network wait and a late edit cannot bring it back (GRILL Q10).
+      saveSuppressedRef.current = true;
+      // Wait out any write already in flight before deleting the row.
+      await cancelSessionSave();
+      setResumed(false);
+      try {
+        await clearStoredSession();
+      } catch {
+        // A storage hiccup must not trap the learner; a new start overwrites it.
+      }
       void exitFullScreen();
       setBusy(true);
       try {
@@ -449,6 +620,7 @@ export default function StudyClient() {
   }, [answers, approved, busy, entry, hintUsed, layerOpen, level, requestHint]);
 
   const nextCard = useCallback(() => {
+    setResumed(false);
     if (index + 1 < queue.length) {
       setIndex(index + 1);
       resetCardState();
@@ -631,7 +803,9 @@ export default function StudyClient() {
           lang={packLanguage}
           level={level}
           answered={Boolean(result)}
+          autoOpen={autoOpen}
           onCollapse={closeTeaching}
+          onDismissAutoOpen={dismissAutoOpen}
         />
       ) : null;
 
@@ -647,6 +821,11 @@ export default function StudyClient() {
         aboveCard={layer}
       >
         {message ? <div className="notice error">{message}</div> : null}
+        {resumed ? (
+          <div className="notice" role="status">
+            Picked up where you left off.
+          </div>
+        ) : null}
         <StudyCard
           key={entry.entryId}
           card={card}

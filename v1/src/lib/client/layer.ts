@@ -3,6 +3,8 @@
 // one plain message without guessing what the browser already knows.
 // PACK: teaching-layers
 // 2026-10-25 opencode: created for the teaching-layers pack [pack: teaching-layers]
+// 2026-10-26 qoder: the beginner auto-open default now answers to the learner's
+// device preference; the policy itself is unchanged. [pack: study-resilience]
 
 import type { Card, Deck, StudyLevel, TeachingPart } from "@/lib/shared/types";
 
@@ -61,6 +63,16 @@ export function layerPolicy(level: StudyLevel, hasLayer: boolean): LayerPolicy {
     return { hasLayer: true, before: "hidden", after: "folded", peekAddsReturn: false };
   }
   return { hasLayer: true, before: "folded", after: "folded", peekAddsReturn: true };
+}
+
+/**
+ * What waits before the answer, once the learner's automatic-opening choice is
+ * known. Only the beginner "open" placement changes: folding it keeps the bar,
+ * and every other level behaves exactly as `layerPolicy` says (GRILL Q2).
+ */
+export function autoOpenPolicy(policy: LayerPolicy, autoOpen: boolean): LayerPlacement {
+  if (!autoOpen && policy.before === "open") return "folded";
+  return policy.before;
 }
 
 /** Why a card comes back, or null when it does not. One return per card. */

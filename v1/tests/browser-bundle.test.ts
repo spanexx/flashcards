@@ -615,6 +615,24 @@ describe("export and backup", () => {
     expect(await readProviderKey(store)).toBe("secret");
   });
 
+  it("refuses a hand-edited backup with a trailing comma, where a content bundle is repaired", async () => {
+    await importBundle(bundle(), { kind: "pack" });
+    await writeProviderKey("secret", store);
+    // The same typographic damage is repaired for a cards bundle; a backup
+    // carries evidence and stays strict, so this must be refused untouched.
+    const sloppy = (await exportBackup()).replace(/\}\s*$/, ",}");
+    expect(() => JSON.parse(sloppy)).toThrow();
+
+    const result = await restoreBackup(sloppy);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.issues[0].field).toBe("(backup)");
+      expect(result.issues[0].message).toContain("not valid JSON");
+    }
+    expect(await readCards(store)).toHaveLength(1);
+    expect(await readProviderKey(store)).toBe("secret");
+  });
+
   it("refuses a backup whose evidence rows have the wrong shape and changes nothing", async () => {
     await importBundle(bundle(), { kind: "pack" });
     const text = await exportBackup();
