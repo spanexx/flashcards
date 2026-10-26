@@ -19,6 +19,7 @@ import {
   type JobView,
 } from "@/lib/browser/jobs";
 import { focusLibrary } from "@/lib/client/library-focus";
+import { repairClause } from "@/lib/core/json-repair";
 
 function active(job: JobView): boolean {
   return job.status === "queued" || job.status === "running" || job.status === "waiting";
@@ -49,6 +50,12 @@ function resultLine(job: JobView): string {
   const noun = cardWord(result.count);
   if (job.kind === "import") {
     const duplicates = result.duplicates > 0 ? ` ${result.duplicates} duplicate(s) were already here.` : "";
+    // WHY: A repaired file was changed before it was read, so the sentence says
+    // so; a clean import keeps the plain line it always had.
+    const repairs = repairClause(result.repairs);
+    if (repairs) {
+      return `${repairs}, then imported ${result.count} ${noun} into “${result.packName}”.${duplicates}`;
+    }
     return `Imported ${result.count} ${noun} into “${result.packName}”.${duplicates}`;
   }
   return `Saved ${result.count} generated ${noun} in “${result.packName}”.`;

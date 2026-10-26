@@ -15,10 +15,13 @@
 // cleanly on a phone. [pack: learner-interface]
 // 2026-10-25 opencode: Appearance card holds the theme and sound choices.
 // [pack: learner-delight]
+// 2026-10-26 qoder: Appearance also holds the teaching layer's automatic
+// opening. [pack: study-resilience]
 
 import { useCallback, useEffect, useState } from "react";
 import { apiGet, apiSend } from "@/lib/client/api";
 import SoundSwitch from "./SoundSwitch";
+import TeachingSwitch from "./TeachingSwitch";
 import ThemeSwitch from "./ThemeSwitch";
 import {
   autosaveNow,
@@ -347,6 +350,15 @@ export default function SettingsClient() {
                 </p>
               </div>
               <SoundSwitch />
+            </div>
+            <div className="row" style={{ justifyContent: "space-between" }}>
+              <div>
+                <p style={{ margin: 0 }}>Open the teaching layer automatically</p>
+                <p className="muted" style={{ margin: 0 }}>
+                  For beginner cards. You can still open any layer from the bar.
+                </p>
+              </div>
+              <TeachingSwitch />
             </div>
           </div>
           <div className="card">

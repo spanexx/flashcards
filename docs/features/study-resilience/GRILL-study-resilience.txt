@@ -1,0 +1,217 @@
+GRILL — study-resilience
+Status: Locked
+Date: 2026-10-26
+Decisions by: agent (delegated by the learner, 2026-10-26)
+
+Source of the request, verbatim from the learner on 2026-10-26:
+
+  "So next thing I need us to do is stop showing the teaching layer. So when
+  there is a pop-up for the teaching layer, when it's like a beginner, you can
+  just click on 'Don't show again,' so the user can manually view it if they
+  want to. Just right now, it pops up for beginners, which is what I wanted.
+  But the learner can just click on 'Oh, don't show again,' so that it's not
+  going to pop up again until..learner unchecks"
+
+  "And then, secondly, I notice that there are no states for the session. This
+  means that if a learner is learning something and routes to another tab, they
+  lose the lesson that they are already learning. This should be a very deep
+  implementation because I need what they are learning to be in the study area.
+  It cannot be lost, because right now it just loses it."
+
+  "Another thing is that when we manually paste JSON and there is an error in
+  the JSON, the job fails. The system doesn't even try to auto-fix the JSON. So
+  I think we should auto-fix the JSON if the user pastes a bad JSON object."
+
+This pack holds three behaviours that share one promise: the study flow never
+throws away the learner's work and never nags. Each decision below is locked.
+
+--------------------------------------------------------------------------------
+PART A — the teaching layer stops opening by itself on request
+--------------------------------------------------------------------------------
+
+Q1. Where does "Don't show again" live?
+A. In the teaching layer's own header, beside "Collapse to the question", as a
+   second button with exactly that wording. Pressing it closes the layer now
+   and stops automatic opening for every later card on this device.
+   Why: the learner asked to click it exactly where the pop-up is; a settings-only
+   switch would not be discoverable at the moment of annoyance.
+   Rules out: a blocking modal, a per-card "mute" that would ask again tomorrow.
+   Source: learner message above; `v1/src/app/study/TeachingLayer.tsx:136-140`.
+
+Q2. What exactly does "Don't show again" turn off?
+A. Only automatic opening. The folded "Teaching layer / Show the teaching layer"
+   bar stays on every card that has a layer, and manual opening always works.
+   Intermediate and advanced cards never auto-opened and are unchanged.
+   Why: the learner said "the user can manually view it if they want to".
+   Rules out: hiding the layer, deleting teaching content, disabling the bar.
+   Source: learner message above; `v1/src/app/StudyClient.tsx:118-124,783-797`.
+
+Q3. Where does the learner turn it back on?
+A. Settings → Appearance, a switch labelled "Open the teaching layer
+   automatically", on by default, with the hint "For beginner cards. You can
+   still open any layer from the bar." Turning it on restores auto-open on the
+   next card; turning it off is the same state as "Don't show again".
+   Why: "until the learner unchecks" names a checkbox; Appearance already holds
+   the device-local theme and sound switches.
+   Rules out: a hidden long-press, a per-pack switch, a backup-carried setting.
+   Source: learner message above; `v1/src/app/settings/SettingsClient.tsx:354-362`.
+
+Q4. Where is the preference stored, and does it travel?
+A. In the browser only, under the localStorage key `flashcards.teaching`, as
+   `{ "autoOpen": true | false }`. It never enters a backup, and every device
+   keeps its own choice.
+   Why: the theme and sound already work this way; a backup is lesson content,
+   not a device preference.
+   Rules out: an IndexedDB settings row, a server value, a per-learner profile.
+   Source: `v1/src/lib/client/sound.ts:10,71-90`, `v1/src/lib/client/theme.ts:11`.
+
+Q5. What happens when storage is unavailable?
+A. The layer behaves as if the preference were on (the current behaviour), and
+   a failed write is ignored in silence. No error banner.
+   Why: a blocked localStorage must never break studying.
+   Source: `v1/src/lib/client/sound.ts:71-90`; `v1/tests/theme.test.ts:76-80`.
+
+--------------------------------------------------------------------------------
+PART B — a running session is never lost
+--------------------------------------------------------------------------------
+
+Q6. What counts as "the session" that must survive?
+A. Everything the running card shows and everything already answered in this
+   session: the plan, the ordered queue (with cold-check and return marks), the
+   position, per-card results, the learner's typed answers, scratch working, the
+   visible hints, hint usage, peek marks, returned marks, auto-hint marks, the
+   attempt counter, the tutor-consent answer, the chosen offer, and the layer
+   open/closed override. Transient things — spinner, error banner, full-screen
+   mode, speech playback — are not session content and are not restored.
+   Why: "I need what they are learning to be in the study area. It cannot be
+   lost." A half-typed answer is part of what they are learning.
+   Rules out: resuming only the card position while dropping drafts and hints.
+   Source: learner message above; `v1/src/app/StudyClient.tsx:68-97`.
+
+Q7. When is it saved, and where?
+A. To a dedicated IndexedDB store `resume`, one row with id `active`, in the
+   same database (version 4 → 5). A save is queued after every change that
+   matters (answer, hint, layer toggle, typed text, position), on the page being
+   hidden, and on leaving the Study route. Writes are serialised so the newest
+   snapshot wins. The row is deleted when the session finishes or is stopped.
+   Why: the database already survives reloads and offline use; localStorage is
+   too small for a queue of cards, and `sessions` holds finished-session facts.
+   Rules out: sessionStorage (dies with the tab), a URL-carried state, autosave
+   file rows, a new database.
+   Source: `v1/src/lib/browser/store.ts:12-26,109`;
+   `v1/src/lib/browser/repository.ts:226-249`; learner message above.
+
+Q8. What happens on return?
+A. The Study screen reads the snapshot first. A valid one restores the exact
+   card, queue, answers and layer state and shows "Picked up where you left
+   off." It does not ask the plan endpoint again, so no second "started" event
+   is recorded. An absent, unreadable, finished or empty snapshot falls back to
+   the normal plan screen.
+   Why: silent restoration is the point; a duplicate started event would skew
+   the offer history.
+   Rules out: a resume prompt that asks permission every time, rebuilding the
+   queue from evidence rows.
+   Source: `v1/src/lib/browser/router.ts:307-312`; learner message above.
+
+Q9. What if cards changed while the session was away?
+A. Queue entries whose card id no longer exists are dropped; the position moves
+   to the first surviving card at or after the old position. If none survive,
+   the snapshot is cleared and the plan screen appears. A restored card keeps
+   the content it had when the session started, for that session only.
+   Why: a card edit mints a new identity by design, so the old entry cannot be
+   submitted against the new card.
+   Rules out: rewriting restored cards from the library, merging evidence by
+   summary text.
+   Source: `v1/src/lib/core/card.ts:59-70,87-89`;
+   `v1/src/lib/browser/bundle.ts:323-370`.
+   Implementation note (2026-10-26): an edit keeps the old row in the store
+   marked `retired`, so "no longer exists" means "no longer active"; the live
+   set excludes retired ids (`v1/src/lib/browser/session-save.ts`,
+   `loadResumableSession`).
+
+Q10. Does the session come back after a finish or a stop?
+A. No. Finishing and stopping both clear the snapshot; the next visit shows the
+    plan screen. A session left mid-card does come back, however long the gap.
+   Why: a finished lesson is not in progress; "cannot be lost" means the running
+   one.
+   Source: `v1/src/app/StudyClient.tsx:474-512`.
+
+Q11. Is the snapshot part of a backup?
+A. No. It is device-local live state, like the theme. Restoring a backup leaves
+    any running session alone; replacing the library clears the snapshot because
+    its cards are gone.
+   Why: a backup is content, and a half-finished session on another device would
+   be confusing.
+   Source: `v1/src/lib/browser/bundle.ts:752,783-811`;
+   `v1/src/lib/browser/repository.ts:389-396`.
+   Implementation note (2026-10-26): a restore replaces the library through
+   `clearLibrary`, so it clears the snapshot; the second clause governs
+   (`v1/src/lib/browser/bundle.ts:862-874`,
+   `v1/src/lib/browser/repository.ts:418-434`).
+
+--------------------------------------------------------------------------------
+PART C — pasted JSON is repaired before it is refused
+--------------------------------------------------------------------------------
+
+Q12. What does "auto-fix" cover?
+A. Syntax only: a byte-order mark, a single surrounding markdown code fence,
+   curly quotation marks used as quotes, `//` and `/* */` comments, trailing
+   commas, unquoted object keys, and single-quoted strings. It never adds,
+   removes or renames a card, deck or field.
+   Why: those are the mistakes a person makes by hand; guessing intent about
+   missing content would import something the learner never wrote.
+   Rules out: repairing a missing `schema`, a wrong card shape, or a truncated
+   array — those stay refusals.
+   Source: learner message above; `v1/src/lib/browser/bundle.ts:173-190`.
+
+Q13. Which imports get the repair?
+A. The three content bundles a learner pastes or picks — pack, deck and cards —
+   including the "Paste the chat answer" box. Backup restores stay strict,
+   because a backup is machine-written and a repaired backup is a different
+   promise.
+   Why: the complaint is about hand-typed lesson content; a backup carries
+   evidence and settings.
+   Rules out: repairing zip contents, discovering the bundle kind from a broken
+   text, repairing backup files.
+   Source: `v1/src/app/library/CreatePanel.tsx:994-1051,969-989`;
+   `v1/src/lib/browser/bundle.ts:183-213`.
+
+Q14. Is the learner told?
+A. Yes. A successful import that needed repair says so in plain words and names
+   the kinds, for example "Repaired smart quotes and a trailing comma, then
+   imported 12 cards." A clean import says nothing new. A file that is still
+   broken after repair keeps the existing refusal and writes nothing.
+   Why: silent rewriting of the learner's text would be a trust problem.
+   Rules out: a silent repair log only in the console, a modal to confirm every
+   fix.
+   Source: learner message above; `v1/src/app/JobsDock.tsx:46-55,135-139`.
+
+Q15. Does repair weaken atomicity or identity?
+A. No. Repair happens before validation, validation still refuses the whole
+   batch, and nothing is written until every card passes. Identity is still the
+   canonical content hash, so repaired text that differs only in quotation
+   typography produces the same cards as the straight-quote text only when the
+   repaired text is the same; otherwise it is a new card, as any edited text is.
+   Why: "all-or-nothing" is a locked promise and stays true.
+   Rules out: partial imports, writing repairs back into the job payload,
+   matching duplicates by summary.
+   Source: `docs/features/v1-prototype/GRILL-v1-prototype.txt:34,129-136`;
+   `v1/src/lib/core/card.ts:59-70`; `v1/src/lib/browser/bundle.ts:437-497`.
+
+Q16. What if the text is not even an object?
+A. The repair returns the text unchanged when no rule applies and the existing
+   "not valid JSON" refusal follows. A bare array stays refused for the bundle
+   targets, exactly as today.
+   Why: tolerance is for syntax, not for guessing a shape the target refuses.
+   Source: `v1/src/lib/browser/bundle.ts:99-104,204-213`.
+
+--------------------------------------------------------------------------------
+Non-goals locked with the pack
+--------------------------------------------------------------------------------
+- No new teaching content, no change to which cards carry a layer.
+- No session sync across devices, no session inside a backup.
+- No change to the plan, offer or scoring algorithm.
+- No semantic repair of imports (missing fields, wrong enums, wrong kind).
+- No new dependency; the repair is a small scanner we own.
+
+No remaining open questions.

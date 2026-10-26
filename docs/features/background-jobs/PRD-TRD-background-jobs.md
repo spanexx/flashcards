@@ -238,6 +238,13 @@ Returns `{ job: JobView }`.
   is refused.
 - Import parses the target with the same helper as `/api/packs/import`. It
   validates the name policy before storing. An empty text is refused.
+- **Content imports repair hand-typed syntax first (2026-10-26, study-resilience).**
+  Before refusing, the text is retried through a syntax-only repair (byte-order
+  mark, one markdown fence, curly quotes, comments, trailing commas, bare keys,
+  single-quoted strings) and the result says what was fixed. Text that is still
+  broken fails exactly as before and writes nothing. Backups are excluded and
+  stay strict. See `docs/features/study-resilience/PRD-TRD-study-resilience.md`
+  scenarios 10–14.
 - The route only enqueues. It does not run the job.
 
 ### `GET /api/jobs`

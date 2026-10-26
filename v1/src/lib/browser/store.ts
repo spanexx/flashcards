@@ -6,6 +6,8 @@
 // 2026-10-23 opencode: the jobs store is an additive version 3 upgrade. [pack: background-jobs]
 // 2026-10-25 opencode: local media and removal tombstones are an additive
 // version 4 upgrade; no existing store changes shape. [pack: teaching-layers]
+// 2026-10-26 qoder: the running-session snapshot is an additive version 5
+// store, so a reload can pick the lesson back up. [pack: study-resilience]
 
 /** The object stores that hold the library, the record and the settings. */
 export const STORE_NAMES = [
@@ -20,6 +22,7 @@ export const STORE_NAMES = [
   "jobs",
   "media",
   "tombstones",
+  "resume",
 ] as const;
 
 export type StoreName = (typeof STORE_NAMES)[number];
@@ -103,7 +106,7 @@ let database: Promise<IDBDatabase> | null = null;
 function openDatabase(): Promise<IDBDatabase> {
   if (!database) {
     database = new Promise((resolve, reject) => {
-      const request = indexedDB.open("flashcards", 4);
+      const request = indexedDB.open("flashcards", 5);
       request.onupgradeneeded = () => {
         const db = request.result;
         for (const name of STORE_NAMES) {

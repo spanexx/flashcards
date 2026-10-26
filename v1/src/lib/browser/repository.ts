@@ -3,6 +3,8 @@
 // seam: packs, cards, the append-only record, settings and the local prompt log.
 // PACK: browser-app
 // 2026-10-20 opencode: created for the browser-owned build.
+// 2026-10-26 qoder: one live snapshot keeps a running session alive across a
+// reload; replacing the library clears it. [pack: study-resilience]
 
 import type {
   Card,
@@ -15,6 +17,7 @@ import type {
   Tombstone,
 } from "@/lib/shared/types";
 import type { PackPrompts } from "@/lib/packs/types";
+import type { StoredSession } from "@/lib/core/session-resume";
 import { defaultSettings, mergeSettings, normalizeSettings } from "@/lib/core/settings-shape";
 import { browserStore, type StoredValue, type Store } from "@/lib/browser/store";
 import { markChanged } from "@/lib/browser/changes";
@@ -220,6 +223,31 @@ export function appendSession(event: SessionEvent, store: Store = browserStore()
   });
 }
 
+/** The one resume row: the whole snapshot under a stable id. */
+interface ResumeRow extends StoredValue {
+  id: "active";
+  session: StoredSession;
+}
+
+/** The live snapshot, unvalidated; `parseStoredSession` is the gate. */
+export async function readStoredSession(store: Store = browserStore()): Promise<StoredSession | null> {
+  const row = await store.get<ResumeRow>("resume", "active");
+  return row?.session ?? null;
+}
+
+/**
+ * Replace the live snapshot. It is device-local live state, not library
+ * content, so it does not announce a change or travel in a backup (GRILL Q11).
+ */
+export function writeStoredSession(session: StoredSession, store: Store = browserStore()): Promise<void> {
+  return serial(() => store.put<ResumeRow>("resume", { id: "active", session }));
+}
+
+/** Forget the snapshot; a finished or stopped session is not in progress. */
+export function clearStoredSession(store: Store = browserStore()): Promise<void> {
+  return serial(() => store.delete("resume", "active"));
+}
+
 /** Stored prompts carry the row id the shared type does not need. */
 type StoredPrompt = PromptLogEntry & { id: string };
 
@@ -384,11 +412,21 @@ export function orphanedPackNames(cards: Card[], packs: BrowserPack[]): string[]
 /**
  * Remove the library. Used by restore, never by normal use. Local media stays
  * because the incoming backup may point at it; removal tombstones stay because
- * a restore must not undo what the learner deliberately took out.
+ * a restore must not undo what the learner deliberately took out. The running
+ * session goes because its cards are gone (GRILL Q11).
  */
 export function clearLibrary(store: Store = browserStore()): Promise<void> {
   return serial(async () => {
-    for (const name of ["packs", "cards", "evidence", "sessions", "prompts", "settings", "meta"] as const) {
+    for (const name of [
+      "packs",
+      "cards",
+      "evidence",
+      "sessions",
+      "prompts",
+      "settings",
+      "meta",
+      "resume",
+    ] as const) {
       await store.clear(name);
     }
     markChanged();

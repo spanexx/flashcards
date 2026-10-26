@@ -5,6 +5,7 @@
 // 2026-10-23 opencode: created for the background job pack [pack: background-jobs]
 
 import { newId } from "@/lib/core/id";
+import type { RepairKind } from "@/lib/core/json-repair";
 import { importBundle, type ImportTarget } from "@/lib/browser/bundle";
 import { generateFromPrepared, type GenerationResult } from "@/lib/browser/provider";
 import { ProviderTimeoutError } from "@/lib/provider/client";
@@ -23,6 +24,8 @@ export interface JobResult {
   count: number;
   decksAdded: number;
   duplicates: number;
+  /** Syntax repairs the imported file needed; absent when it was already valid. */
+  repairs?: RepairKind[];
 }
 
 /** The job shape the screen and the routes may see. The payload stays private. */
@@ -439,6 +442,7 @@ async function runImportJob(job: BrowserJob): Promise<JobResult> {
     count: imported.cardsAdded,
     decksAdded: imported.decksAdded,
     duplicates: imported.duplicates,
+    ...(imported.repairs ? { repairs: imported.repairs } : {}),
   };
 }
 

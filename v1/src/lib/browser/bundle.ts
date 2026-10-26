@@ -8,6 +8,7 @@ import semver from "semver";
 import { z } from "zod";
 import type { Card, CardOrigin, CardSource, Deck, MediaRecord, Tombstone } from "@/lib/shared/types";
 import { buildCard, deckCardId, hardRuleIssues } from "@/lib/core/card";
+import { parseJsonLoose, type RepairKind } from "@/lib/core/json-repair";
 import { referencedMediaIds } from "@/lib/core/media";
 import {
   cardSourceSchema,
@@ -137,6 +138,8 @@ export interface ImportSuccess {
   cardsUpdated?: number;
   /** Pack cards a whole-pack update took out of study, with evidence kept. */
   cardsRetired?: number;
+  /** Syntax repairs this hand-typed file needed; absent when it was already valid. */
+  repairs?: RepairKind[];
 }
 
 /** An import either happened or named every problem. */
@@ -162,17 +165,24 @@ function schemaIssues(error: z.ZodError): ValidationIssue[] {
   });
 }
 
-/** Read JSON once, so every target refuses malformed text the same way. */
-function readJson(text: string): { ok: true; raw: unknown } | { ok: false; issues: ValidationIssue[] } {
+/**
+ * Read JSON once, so every target refuses malformed text the same way. A
+ * hand-typed file is retried through the syntax repair first; the repairs it
+ * needed travel with the result so the learner can be told.
+ */
+function readJson(
+  text: string,
+): { ok: true; raw: unknown; repairs: RepairKind[] } | { ok: false; issues: ValidationIssue[] } {
   try {
-    return { ok: true, raw: JSON.parse(text) as unknown };
+    const read = parseJsonLoose(text);
+    return { ok: true, raw: read.value, repairs: read.repairs };
   } catch (error) {
     return {
       ok: false,
       issues: [
         issue(
           "(bundle)",
-          `the text is not valid JSON: ${error instanceof Error ? error.message : "unknown parse error"}`,
+          error instanceof Error ? error.message : "the text is not valid JSON: unknown parse error",
         ),
       ],
     };
@@ -180,16 +190,20 @@ function readJson(text: string): { ok: true; raw: unknown } | { ok: false; issue
 }
 
 /** Read the pasted or loaded text into a whole pack bundle. */
-export function parseBundle(text: string): { ok: true; bundle: PackBundle } | { ok: false; issues: ValidationIssue[] } {
+export function parseBundle(
+  text: string,
+): { ok: true; bundle: PackBundle; repairs: RepairKind[] } | { ok: false; issues: ValidationIssue[] } {
   const read = readJson(text);
   if (!read.ok) return read;
   const parsed = packBundleSchema.safeParse(read.raw);
   if (!parsed.success) return { ok: false, issues: schemaIssues(parsed.error) };
-  return { ok: true, bundle: parsed.data };
+  return { ok: true, bundle: parsed.data, repairs: read.repairs };
 }
 
 /** Read a deck fragment: new decks for a pack that is already here. */
-export function parseDeckBundle(text: string): { ok: true; bundle: DeckBundle } | { ok: false; issues: ValidationIssue[] } {
+export function parseDeckBundle(
+  text: string,
+): { ok: true; bundle: DeckBundle; repairs: RepairKind[] } | { ok: false; issues: ValidationIssue[] } {
   const read = readJson(text);
   if (!read.ok) return read;
   if (read.raw && typeof read.raw === "object" && "pack" in read.raw) {
@@ -197,11 +211,13 @@ export function parseDeckBundle(text: string): { ok: true; bundle: DeckBundle } 
   }
   const parsed = deckBundleSchema.safeParse(read.raw);
   if (!parsed.success) return { ok: false, issues: schemaIssues(parsed.error) };
-  return { ok: true, bundle: parsed.data };
+  return { ok: true, bundle: parsed.data, repairs: read.repairs };
 }
 
 /** Read a cards fragment: cards for one deck that is already here. */
-export function parseCardsBundle(text: string): { ok: true; bundle: CardsBundle } | { ok: false; issues: ValidationIssue[] } {
+export function parseCardsBundle(
+  text: string,
+): { ok: true; bundle: CardsBundle; repairs: RepairKind[] } | { ok: false; issues: ValidationIssue[] } {
   const read = readJson(text);
   if (!read.ok) return read;
   if (read.raw && typeof read.raw === "object" && ("pack" in read.raw || "decks" in read.raw)) {
@@ -209,7 +225,7 @@ export function parseCardsBundle(text: string): { ok: true; bundle: CardsBundle 
   }
   const parsed = cardsBundleSchema.safeParse(read.raw);
   if (!parsed.success) return { ok: false, issues: schemaIssues(parsed.error) };
-  return { ok: true, bundle: parsed.data };
+  return { ok: true, bundle: parsed.data, repairs: read.repairs };
 }
 
 /** Compare two author-written versions. Null means they cannot be compared. */
@@ -494,6 +510,7 @@ async function importPack(text: string, options: ImportOptions): Promise<ImportR
     cardsUpdated: reconciled.updated.length,
     cardsRetired: reconciled.retired.length,
     deckIds: [...decks.keys()].filter((id) => !decksBefore.has(id)),
+    ...(read.repairs.length > 0 ? { repairs: read.repairs } : {}),
   };
 }
 
@@ -576,6 +593,7 @@ async function importDeck(text: string, packName: string, options: ImportOptions
     cardsAdded: fresh.length,
     duplicates,
     deckIds: added.map((deck) => deck.id),
+    ...(read.repairs.length > 0 ? { repairs: read.repairs } : {}),
   };
 }
 
@@ -632,6 +650,7 @@ async function importCards(
     cardsAdded: fresh.length,
     duplicates,
     deckIds: [deck.id],
+    ...(read.repairs.length > 0 ? { repairs: read.repairs } : {}),
   };
 }
 

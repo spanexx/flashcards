@@ -1,9 +1,11 @@
 # Drift Log
-**Last updated:** 2026-10-26  **Open:** 0  **Awaiting:** 0  **Resolved:** 19  **Critical/High:** 0
+**Last updated:** 2026-10-26  **Open:** 0  **Awaiting:** 0  **Resolved:** 25  **Critical/High:** 0
 
 ## Open
 
-_None. Every gap the interface-polish review found is closed and verified below._
+_None. Every gap the interface-polish review found is closed and verified below;
+the study-resilience review's one behaviour gap and five doc gaps are closed as
+D-20…D-25._
 
 ## Awaiting decision
 
@@ -17,6 +19,60 @@ the IMPL reconcile section, is in progress._
 ---
 
 ## Resolved
+
+- **D-20** (High, 2026-10-26, reporter: fresh-eyes drift review of study-resilience) — An edited card did not drop out of a running session, because the prune treated a retired card row as still live.
+  - Doc claim: "a stored session whose current card was edited (new identity) or deleted … the vanished entry is skipped" (`docs/features/study-resilience/PRD-TRD-study-resilience.md:82-88`); "a card edit mints a new identity by design, so the old entry cannot be submitted against the new card" (`docs/features/study-resilience/GRILL-study-resilience.txt:120-122`)
+  - Code reality: an edit retires the old row and writes the new one (`v1/src/lib/browser/router.ts:571`), and `readCards()` returns retired rows by design (`v1/src/lib/browser/repository.ts:96`); `loadResumableSession` built its live set from every row, retired ones included (`v1/src/lib/browser/session-save.ts:92-96` before fix).
+  - Why matters: the learner kept studying the pre-edit card, which the library already treats as gone; the locked decision and Scenario 9 promised a clean skip, and only the deleted-card branch was tested.
+  - Owner: study-resilience
+  - To fix: fix code — the live set holds active cards only (`!card.retired`).
+  - Verified by: two new tests, "drops an edited card, because an edit retires the old identity" (`v1/tests/session-resume.test.ts:250`) and "clears the row when every card in it was retired" (`v1/tests/session-resume.test.ts:260`); full suite green.
+  - Related: D-21.
+
+- **D-21** (Medium, 2026-10-26, reporter: fresh-eyes drift review) — The Phase 3 verify command named a test file that does not exist, and no test names the v5 upgrade.
+  - Doc claim: "`npx vitest run tests/session-resume.test.ts tests/browser-store.test.ts`" (`docs/features/study-resilience/IMPL-study-resilience.md:66`, before fix)
+  - Code reality: `v1/tests/browser-store.test.ts` is absent; the store assertions live in `session-resume.test.ts`, which checks the `resume` store name (`v1/tests/session-resume.test.ts:207-213`). The version literal stays inline at `v1/src/lib/browser/store.ts:109`; the memory adapter cannot exercise `indexedDB.open`.
+  - Why matters: the documented verify command fails on a fresh clone, so the phase's own gate was unusable.
+  - Owner: study-resilience
+  - To fix: fix docs — the command is repointed at the real file and names the retired-card and store-name cases.
+  - Verified by: `ls v1/tests`; targeted run of `tests/session-resume.test.ts` (22 passing).
+  - Related: D-20.
+
+- **D-22** (Medium, 2026-10-26, reporter: fresh-eyes drift review) — The Q11 answer contradicted the shipped restore path: one clause says a restore leaves a running session alone, the other says replacing the library clears the snapshot.
+  - Doc claim: "Restoring a backup leaves any running session alone; replacing the library clears the snapshot because its cards are gone." (`docs/features/study-resilience/GRILL-study-resilience.txt:136-138`)
+  - Code reality: `applyBackup` calls `clearLibrary` on every restore (`v1/src/lib/browser/bundle.ts:873`), which deletes the `resume` row (`v1/src/lib/browser/repository.ts:418-434`); the PRD did not state it anywhere.
+  - Why matters: a locked decision described the opposite of the behaviour for the common case, so nobody could tell which clause the code honoured.
+  - Owner: study-resilience
+  - To fix: fix docs — the PRD now states that anything replacing the library clears the row, including a restore, and Q11 carries a dated implementation note naming the second clause as governing.
+  - Verified by: read of `v1/src/lib/browser/bundle.ts:873` and `v1/src/lib/browser/repository.ts:418-434`; the repository test "is cleared when the library is replaced" (`v1/tests/session-resume.test.ts:220-226`).
+  - Related: D-20.
+
+- **D-23** (Low, 2026-10-26, reporter: fresh-eyes drift review) — Several study-resilience citations were stale or named a symbol that does not exist.
+  - Doc claim: `readJson` "failed `JSON.parse`" at `v1/src/lib/browser/bundle.ts:165-180` and `parseJsonLoose` throws `ImportTextError` (`docs/features/study-resilience/PRD-TRD-study-resilience.md:215-217` and `:198-201`, before fix); "written from one place in `StudyClient`" (`:211-214`); Q1/Q2/Q3/Q7/Q10/Q12 sources (`docs/features/study-resilience/GRILL-study-resilience.txt:39,47,57,101-102,133,157`, before fix)
+  - Code reality: `readJson` is `v1/src/lib/browser/bundle.ts:173-190` and calls `parseJsonLoose` directly; no `ImportTextError` exists anywhere — `parseJsonLoose` throws a plain `Error` (`v1/src/lib/core/json-repair.ts:292`); `startSession` also writes and flushes eagerly (`v1/src/app/StudyClient.tsx:438-459`) beside the debounced effect; the real source lines are `v1/src/app/study/TeachingLayer.tsx:136-140`, `v1/src/app/StudyClient.tsx:118-124,783-797,474-512`, `v1/src/app/settings/SettingsClient.tsx:354-362`, `v1/src/lib/browser/store.ts:12-26,109`, `v1/src/lib/browser/repository.ts:226-249`.
+  - Why matters: a reader following these pointers lands on the wrong code, and one promised type cannot be imported.
+  - Owner: study-resilience
+  - To fix: fix docs — PRD and GRILL now cite the real lines, say plain `Error` with the exact wording, and describe one save path plus the eager start flush.
+  - Verified by: read of each cited line after the edit.
+  - Related: D-21.
+
+- **D-24** (Low, 2026-10-26, reporter: fresh-eyes drift review) — The teaching-layers note pointed at the wrong scenario when it said the folded bar survives.
+  - Doc claim: "Turning it off never removes the folded bar or its manual open, so scenario 3 still holds." (`docs/features/teaching-layers/PRD-TRD-teaching-layers.md:35-36`, before fix)
+  - Code reality: scenario 3 there is "Advanced tries first", where no bar shows before an answer; the folded-bar promise is Scenario 1 (`:25-28`). The behaviour itself matches code.
+  - Why matters: a cross-pack reader checking the wrong scenario would conclude the note contradicts the pack.
+  - Owner: study-resilience with teaching-layers
+  - To fix: fix docs — the note names scenario 1.
+  - Verified by: read of the scenario list and `v1/src/app/StudyClient.tsx:123-124,783-797`.
+  - Related: none.
+
+- **D-25** (Low, 2026-10-26, reporter: fresh-eyes drift review) — Scenario 12 promised the old refusal wording, but a failed import now appends a repair note.
+  - Doc claim: "nothing is written and the refusal names the item and field as today." (`docs/features/study-resilience/PRD-TRD-study-resilience.md:107-109`, before fix)
+  - Code reality: `parseJsonLoose` appends " (syntax repair was tried first)" whenever a repair kind applied (`v1/src/lib/core/json-repair.ts:291`), pinned by `v1/tests/json-repair.test.ts:173-182`.
+  - Why matters: the sentence the learner sees was slightly longer than the spec, which is harmless only if the spec says so.
+  - Owner: study-resilience
+  - To fix: fix docs — Scenario 12 names the added clause.
+  - Verified by: `tests/json-repair.test.ts` and the live truncated-import refusal recorded in `simulate-post.md`.
+  - Related: D-23.
 
 - **D-12** (Medium, 2026-10-25, reporter: interface polish visual review) — No `favicon.ico` existed in the repository, so a fresh checkout had no tab icon until the icon script ran.
   - Doc claim: "The icons are committed and regenerated before every build." (`docs/features/pwa-deploy/PRD-TRD-pwa-deploy.md:86`)

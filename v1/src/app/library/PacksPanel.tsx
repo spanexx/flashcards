@@ -8,6 +8,7 @@
 
 import { useState } from "react";
 import { exportPackArchive, importPackFile } from "@/lib/browser/archive";
+import { repairClause } from "@/lib/core/json-repair";
 import { languagePairLabel } from "@/lib/shared/language";
 import type { Card, PackStatus } from "@/lib/shared/types";
 import PackEditor from "./PackEditor";
@@ -103,7 +104,11 @@ export default function PacksPanel({
         result.cardsUpdated ? `${result.cardsUpdated} updated in place` : "",
         result.cardsRetired ? `${result.cardsRetired} retired` : "",
       ].filter((line) => line.length > 0);
-      onNotice(`Imported ${result.packName}: ${counts.join(", ")}.`);
+      // A hand-typed file says what was fixed before it says what landed.
+      const repaired = repairClause(result.repairs);
+      onNotice(
+        `${repaired ? `${repaired}. ` : ""}Imported ${result.packName}: ${counts.join(", ")}.`,
+      );
     } catch (problem) {
       onError(problem instanceof Error ? problem.message : "That pack file could not be read.");
     } finally {

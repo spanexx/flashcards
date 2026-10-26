@@ -5,6 +5,8 @@
 // PACK: teaching-layers
 // 2026-10-25 opencode: moved out of the old StudyClient while merging the
 // study-tab redesign; behaviour is unchanged. [pack: teaching-layers]
+// 2026-10-26 qoder: a second, quieter button lets the learner stop the layer
+// opening by itself; Collapse keeps its place. [pack: study-resilience]
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import TeachingMedia from "../TeachingMedia";
@@ -38,7 +40,11 @@ interface TeachingLayerProps {
   lang?: string;
   level: StudyLevel;
   answered: boolean;
+  /** True while the layer still opens by itself on beginner cards. */
+  autoOpen: boolean;
   onCollapse: () => void;
+  /** Stop automatic opening for every later card on this device. */
+  onDismissAutoOpen: () => void;
 }
 
 /** The layer panel, above the card and never in front of the question. */
@@ -47,7 +53,9 @@ export default function TeachingLayer({
   lang,
   level,
   answered,
+  autoOpen,
   onCollapse,
+  onDismissAutoOpen,
 }: TeachingLayerProps) {
   const lines = useMemo(() => layerSpeech(parts, lang), [parts, lang]);
   const [support, setSupport] = useState<"checking" | "ready" | "unavailable">("checking");
@@ -121,9 +129,16 @@ export default function TeachingLayer({
           <h2>Teaching layer</h2>
           <p className="muted small">{layerExplanation(level, answered)}</p>
         </div>
-        <button className="btn small" type="button" onClick={onCollapse} autoFocus>
-          Collapse to the question
-        </button>
+        <div className="row">
+          <button className="btn small" type="button" onClick={onCollapse} autoFocus>
+            Collapse to the question
+          </button>
+          {autoOpen ? (
+            <button className="btn small" type="button" onClick={onDismissAutoOpen}>
+              Don&apos;t show again
+            </button>
+          ) : null}
+        </div>
       </div>
       <div className="layer-body">
         {parts.map((part, position) =>
