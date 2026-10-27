@@ -7,10 +7,13 @@
 // applied the approved card-as-hero design [pack: study-tab-redesign]
 // 2026-10-25 opencode: the card names its judged outcome so the stylesheet can
 // tint the reveal without changing any rule. [pack: learner-delight]
+// 2026-10-27 opencode: the answer can be heard in the pack language, and a code
+// answer is explained instead of read as symbols. [pack: answer-speech]
 
 import Link from "next/link";
-import type { ReactNode } from "react";
-import { speak } from "@/lib/client/speech";
+import { useEffect, useState, type ReactNode } from "react";
+import { answerSpeech } from "@/lib/client/answer-speech";
+import { speak, speechSupported } from "@/lib/client/speech";
 import { LISTEN_INSTRUCTION, listenPrompt, studyModeLabel } from "@/lib/client/study-view";
 import { OUTCOME_LABELS, OUTCOME_MEANINGS } from "@/lib/core/outcome";
 import type { AnswerResult, Card, CardPart, Outcome } from "@/lib/shared/types";
@@ -33,6 +36,8 @@ interface StudyCardProps {
   coldCheck?: boolean;
   /** The folded layer bar, owned by the session. */
   layerBar?: ReactNode;
+  /** The pack's learning language, used by the answer voice. */
+  answerLang?: string;
   instruction: string;
   isLast: boolean;
   onHint: () => void;
@@ -57,6 +62,7 @@ export default function StudyCard({
   returned,
   coldCheck,
   layerBar,
+  answerLang,
   instruction,
   isLast,
   onHint,
@@ -65,6 +71,18 @@ export default function StudyCard({
   onCorrect,
 }: StudyCardProps) {
   const mode = card.answerDef.mode;
+  const spoken = answerSpeech(card.answer, { lang: answerLang, teaching: card.teaching });
+  const [speechReady, setSpeechReady] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    Promise.resolve().then(() => {
+      if (active) setSpeechReady(speechSupported());
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
   const canSubmit = mode !== "picks" || (answers.choice ?? "").length > 0;
   const listen = mode === "hear_type" ? listenPrompt(card) : null;
   const blanks = card.prompt.filter(
@@ -232,6 +250,16 @@ export default function StudyCard({
           <div className="study-answer">
             <CardSide parts={card.answer} />
           </div>
+
+          {speechReady && spoken.text ? (
+            <button
+              className="btn small study-hear"
+              type="button"
+              onClick={() => speak(spoken.text, spoken.lang || undefined)}
+            >
+              Hear the answer
+            </button>
+          ) : null}
 
           {result.capped ? <p className="muted study-capped">A hint capped this at Nearly.</p> : null}
 

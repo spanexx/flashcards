@@ -1,0 +1,68 @@
+**Type:** grilling
+**Status:** resolved
+**Delivery:** feature-pipeline
+**Blocks:** -
+
+# Study sidebar and previous sessions
+
+## Question
+
+The learner said the Study plan screen is too thin. In their words: "the study is
+scanty. So keep the wide." They asked for the "why these cards" and "what to
+expect" panels to move out of the main column into a right-hand tabbed panel,
+and for the previous sessions to take the old place of those dropdowns in the
+main area, as a short list rather than a dropdown.
+
+## Resolution
+
+**The wide plan column stays.** Study keeps its single centered column for the
+headline, scope, offer, Rebuild, Start and the plan facts.
+
+**A right-hand panel holds the secondary material, on the plan screen only.**
+It is tabbed:
+
+- **Tutorial and hints** — the existing tutor disclosure, unchanged in content:
+  the tutor availability, the exact shape of what it would see, and the
+  turn-on/off control.
+- **What to expect** — the three lines now at `StudyPlan.tsx:116-123`.
+- **Why these cards** — the reason groups now at `StudyPlan.tsx:97-114`.
+
+The panel is hidden while a card is running, matching the locked rule that plan
+material disappears during review.
+
+**Previous sessions replaces the old dropdown row in the main column.** It is a
+plain list, not a disclosure, showing the **last five ended sessions**, newest
+first. Each row names the date and time, the scope it drew from, and
+"answered / offered", and says whether it finished or was stopped. If there is
+no history, one calm line says so.
+
+**Agent decisions, marked `[agent decision]`:**
+
+- The right panel is about 320px on desktop; below 860px it folds into one
+  disclosure under the plan, so the phone does not lose the plan width.
+- The hard cap is five sessions; there is no "show more" in this pass.
+- The list reads the existing `SessionEvent` rows through `readSessions()`
+  (`v1/src/lib/browser/repository.ts:214`, shape at
+  `v1/src/lib/shared/types.ts:156-164`); no new store.
+
+## Deliberately not done
+
+- No full session-history page, search or filter.
+- No per-card statistics on the plan.
+- No change to the Progress screen, the algorithm or the session loop.
+- No new persistence: the panel tab and the list are read-only views.
+
+## Why
+
+The plan is an offer: its reasons and expectations belong beside it, at the same
+glance, instead of under it in three stacked disclosures. Recent sessions give
+continuity without turning the plan into a long wall, which is the same reason
+the learner asked for five and no more.
+
+## Source
+
+Learner voice note, 2026-10-26. Typed confirmation from the learner,
+2026-10-27: "main area = previous sessions, right sidebar = the moved panels".
+Current code: `v1/src/app/study/StudyPlan.tsx:97-173` (the three disclosures),
+`v1/src/app/study/ScopePicker.tsx:16-19` (the single pack/deck choice),
+`v1/src/lib/browser/repository.ts:214` (`readSessions`).
