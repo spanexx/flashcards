@@ -9,10 +9,13 @@
 // host. [pack: library-create-flow]
 // 2026-10-22 opencode: a held request keeps the brief that prepared it, so the
 // answer can be checked against the requested style. [pack: creation-control]
+// 2026-10-27 qoder: a held generation keeps the level it was prepared at, and
+// the learner's edit replaces the text that was held. [D-29, D-30]
 
 import { newId } from "@/lib/core/id";
 import type { ChatMessage } from "@/lib/provider/client";
 import type { CreationBrief } from "@/lib/shared/creation";
+import type { StudyLevel } from "@/lib/shared/types";
 
 /** A prompt held for approval. It is one-time use and expires quickly. */
 export interface PreparedRequest {
@@ -29,7 +32,24 @@ export interface PreparedRequest {
   cardId: string | null;
   /** The learner's brief, kept so generation can enforce the requested style. */
   brief?: CreationBrief;
+  /** The level the prompt was prepared for, and the level a new deck is stored at. */
+  level?: StudyLevel;
   expiresAt: number;
+}
+
+/**
+ * WHY: The learner sees the exact prompt before it leaves, so their edited words
+ * are the request. An edit replaces the whole display text and becomes the one
+ * user message; no part of the original prompt travels unseen beside it. [D-30]
+ */
+export function applyPromptEdit(prepared: PreparedRequest, text: string): PreparedRequest {
+  const edited = text.trim();
+  if (edited.length === 0 || edited === prepared.display) return prepared;
+  return {
+    ...prepared,
+    display: edited,
+    messages: [{ role: "user", content: edited }],
+  };
 }
 
 /** Ten minutes is long enough to read a prompt and short enough to forget. */

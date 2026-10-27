@@ -19,6 +19,7 @@ import {
   tutorSlotNames,
 } from "@/lib/provider/prompt";
 import type { PackRecord } from "@/lib/packs/types";
+import type { ProfileSlots } from "@/lib/provider/prompt";
 import {
   defaultCreationBrief,
   libraryInventoryFromPacks,
@@ -39,7 +40,7 @@ function makePack(overrides: Partial<PackRecord> = {}): PackRecord {
   };
 }
 
-const slots = { weakTopics: ["cases", "aspect"], level: "beginner", learningStyle: "examples-first" };
+const slots: ProfileSlots = { weakTopics: ["cases", "aspect"], level: "beginner", learningStyle: "examples-first" };
 
 describe("renderTemplate", () => {
   it("fills known slots and empties unknown ones", () => {
@@ -57,7 +58,12 @@ describe("buildGenerationPrompt", () => {
     });
     const built = buildGenerationPrompt(pack, slots, { topic: "cases", count: 4 });
     expect(built.messages[0].content).toBe("SYSTEM-TEXT");
-    expect(built.messages[1].content).toBe("Write 4 lines about cases for a beginner learner.");
+    // The pack's own words come first; only the teaching rule is added around
+    // them, because this template leaves the layer out. [D-28]
+    expect(
+      built.messages[1].content.startsWith("Write 4 lines about cases for a beginner learner."),
+    ).toBe(true);
+    expect(built.messages[1].content).toContain('may add "teaching"');
     expect(built.display).toContain("SYSTEM-TEXT");
     expect(built.display).toContain("Write 4 lines");
   });
@@ -106,6 +112,18 @@ const inventory = libraryInventoryFromPacks([
 /** The learner's brief used by the prompt tests. */
 function learnerBrief(overrides: Partial<CreationBrief> = {}): CreationBrief {
   return defaultCreationBrief({ subject: "ordering coffee", ...overrides });
+}
+
+/** A pack with its own generation template, like the Polish starter. */
+function ownTemplatePack(): PackRecord {
+  return makePack({
+    prompts: {
+      generation: {
+        system: "SYSTEM-TEXT",
+        template: "Write {{count}} lines about {{topic}} for a {{level}} learner.",
+      },
+    },
+  });
 }
 
 /** Build all three generation prompts with one context. */
@@ -213,15 +231,42 @@ describe("structured generation prompts", () => {
     expect(packPrompt.messages[1].content).toContain("The red apple is sweet.");
   });
 
-  it("puts the same teaching rule in the pack and deck shapes", () => {
+  it("puts the same teaching rule in all three shapes", () => {
     const pack = buildPackGenerationPrompt(slots, 4);
     const deck = buildDeckGenerationPrompt(makePack(), slots, 3);
-    for (const built of [pack, deck]) {
+    const cards = buildGenerationPrompt(makePack(), slots, {
+      topic: "cases",
+      count: 3,
+      brief: learnerBrief(),
+      inventory,
+    });
+    for (const built of [pack, deck, cards]) {
       const text = built.messages[1].content;
       expect(text).toContain('may add "teaching"');
       expect(text).toContain("never contains the answer");
+      expect(text).toContain("not that it still plays");
       expect(text).toContain('"teaching":[{"type":"text"');
     }
+  });
+
+  it("asks for the teaching layer when a pack's own template leaves it out", () => {
+    const built = buildGenerationPrompt(ownTemplatePack(), slots, {
+      topic: "cases",
+      count: 3,
+      brief: learnerBrief(),
+      inventory,
+    });
+    expect(built.messages[1].content).toContain('may add "teaching"');
+  });
+
+  it("says the teaching rule once when the app's own template carries it", () => {
+    const built = buildGenerationPrompt(makePack(), slots, {
+      topic: "cases",
+      count: 3,
+      brief: learnerBrief(),
+      inventory,
+    });
+    expect(built.messages[1].content.split('may add "teaching"')).toHaveLength(2);
   });
 
   it("lets a mixed brief reuse an omitted style as cloze", () => {

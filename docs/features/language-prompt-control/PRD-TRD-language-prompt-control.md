@@ -214,7 +214,7 @@ New `v1/src/lib/shared/language.ts`:
 - No global language setting.
 - No automatic translation of existing cards.
 - No per-card instruction.
-- No separate prompt editor for decks or cards.
+- No separate prompt editor for decks or cards. *(Superseded 2026-10-27: the learner asked for every Generate prompt to be editable; see D-30 in `docs/drift.md`.)*
 - No new provider, storage or dependency.
 - No change to the judge, outcomes, session offer or no-score ending.
 - No merge, release or stable action in this pack.

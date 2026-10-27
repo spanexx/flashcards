@@ -11,9 +11,11 @@
 // [pack: creation-control]
 // 2026-10-25 opencode: a generated line may carry an optional teaching layer;
 // the same schema that guards stored cards checks it. [pack: teaching-layers]
+// 2026-10-27 qoder: a generated pack or deck carries the learner's level, not a
+// fixed intermediate; a missing level keeps the old bundle default. [D-29]
 
 import { z } from "zod";
-import type { Card, CardPart, CardSource } from "@/lib/shared/types";
+import type { Card, CardPart, CardSource, StudyLevel } from "@/lib/shared/types";
 import { buildCard, deckCardId, generatedCardId } from "@/lib/core/card";
 import { teachingPartSchema } from "@/lib/core/schema";
 import type { PackRecord } from "@/lib/packs/types";
@@ -72,6 +74,8 @@ export interface GeneratedCardOptions {
   /** The language of questions and translations. */
   sourceLanguage?: string;
   studyInstruction?: string;
+  /** The level a new deck is stored at. Absent keeps the old bundle default. */
+  level?: StudyLevel;
 }
 
 /** Read the line style the app must build, refusing anything the learner did not ask for. */
@@ -254,6 +258,11 @@ function bundleCardFromLine(
   };
 }
 
+/** The level a new deck is stored at; a caller with none keeps the old bundle default. */
+function generatedDeckLevel(options: GeneratedCardOptions): StudyLevel {
+  return options.level ?? "intermediate";
+}
+
 function providerRefusal(error: z.ZodError): { ok: false; message: string } {
   return { ok: false, message: `the provider's answer was not usable: ${error.issues[0].message}` };
 }
@@ -311,7 +320,7 @@ export function generatedPackBundle(
         ...(sourceLanguage ? { sourceLanguage } : {}),
         ...(studyInstruction ? { studyInstruction } : {}),
       },
-      decks: parsed.data.decks.map((deck) => ({ ...deck, level: "intermediate" as const })),
+      decks: parsed.data.decks.map((deck) => ({ ...deck, level: generatedDeckLevel(options) })),
       cards,
     },
   };
@@ -336,7 +345,7 @@ export function generatedDeckBundle(
   }
   return {
     ok: true,
-    bundle: { decks: [{ ...parsed.data.deck, level: "intermediate" as const }], cards },
+    bundle: { decks: [{ ...parsed.data.deck, level: generatedDeckLevel(options) }], cards },
   };
 }
 

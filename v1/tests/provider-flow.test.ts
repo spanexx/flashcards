@@ -5,9 +5,16 @@
 // 2026-10-19 opencode: created for the v1 prototype [pack: v1-prototype]
 // 2026-10-22 opencode: cloze, type and hear_type lines are checked here, and a
 // batch that ignores the requested style is refused whole. [pack: creation-control]
+// 2026-10-27 qoder: the learner's edit is pinned as the whole request, and a
+// generated deck is stored at the level the caller passed. [D-29, D-30]
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { clearPrepared, holdPrepared, takePrepared } from "@/lib/provider/prepare";
+import {
+  applyPromptEdit,
+  clearPrepared,
+  holdPrepared,
+  takePrepared,
+} from "@/lib/provider/prepare";
 import {
   deriveCard,
   generateCardsFromText,
@@ -83,6 +90,45 @@ describe("prepared requests", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it("takes the learner's edit as the whole request", () => {
+    const prepared = holdPrepared({
+      kind: "generation",
+      display: "the exact text",
+      messages: [
+        { role: "system", content: "SYSTEM-TEXT" },
+        { role: "user", content: "the exact text" },
+      ],
+      targetKind: "cards",
+      packName: "test-pack",
+      topic: "cases",
+      deckId: "cases",
+      count: 3,
+      cardId: null,
+    });
+    const edited = applyPromptEdit(prepared, "  Write one line about the weather.  ");
+    expect(edited.display).toBe("Write one line about the weather.");
+    expect(edited.messages).toEqual([
+      { role: "user", content: "Write one line about the weather." },
+    ]);
+    expect(edited.id).toBe(prepared.id);
+    expect(edited.topic).toBe("cases");
+  });
+
+  it("keeps the held prompt when the edit is blank or unchanged", () => {
+    const prepared = holdPrepared({
+      kind: "generation",
+      display: "the exact text",
+      messages: [{ role: "user", content: "the exact text" }],
+      packName: "test-pack",
+      topic: null,
+      deckId: null,
+      count: null,
+      cardId: null,
+    });
+    expect(applyPromptEdit(prepared, "   ")).toBe(prepared);
+    expect(applyPromptEdit(prepared, "the exact text")).toBe(prepared);
   });
 });
 
@@ -326,6 +372,32 @@ describe("structured generation bundles", () => {
       expect(cards.bundle.cards).toEqual([
         expect.objectContaining({ deckId: "cases", fullLine: "Piję kawę." }),
       ]);
+    }
+  });
+
+  it("stores a generated deck at the level the caller passed", () => {
+    const pack = generatedPackBundle(
+      JSON.stringify({
+        pack: { name: "slow-polish" },
+        decks: [{ id: "basics", name: "Basics" }],
+        lines: [{ deckId: "basics", fullLine: "Piję kawę.", target: "kawę" }],
+      }),
+      { level: "advanced" },
+    );
+    expect(pack.ok).toBe(true);
+    if (!pack.ok) return;
+    expect(pack.bundle.decks).toEqual([{ id: "basics", name: "Basics", level: "advanced" }]);
+
+    const deck = generatedDeckBundle(
+      JSON.stringify({
+        deck: { id: "extra", name: "Extra" },
+        lines: [{ fullLine: "Piję kawę.", target: "kawę" }],
+      }),
+      { level: "beginner" },
+    );
+    expect(deck.ok).toBe(true);
+    if (deck.ok) {
+      expect(deck.bundle.decks).toEqual([{ id: "extra", name: "Extra", level: "beginner" }]);
     }
   });
 

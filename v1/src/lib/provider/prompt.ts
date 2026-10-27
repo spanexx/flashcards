@@ -9,8 +9,10 @@
 // the requested style and the allowed library facts. [pack: creation-control]
 // 2026-10-25 opencode: generation may add a short teaching layer that never
 // gives the answer away. [pack: teaching-layers]
+// 2026-10-27 qoder: cards added inside a deck ask for the teaching layer too,
+// because a pack's own template can leave the rule out. [D-28]
 
-import type { Card } from "@/lib/shared/types";
+import type { Card, StudyLevel } from "@/lib/shared/types";
 import type { PackPrompts, PackRecord } from "@/lib/packs/types";
 import type { ChatMessage } from "@/lib/provider/client";
 import {
@@ -24,7 +26,7 @@ import { packLanguagePair, type PackLanguagePair } from "@/lib/shared/language";
 /** The learner categories the app owns. Packs may not add slots. */
 export interface ProfileSlots {
   weakTopics: string[];
-  level: string;
+  level: StudyLevel;
   learningStyle: string;
 }
 
@@ -92,8 +94,14 @@ export function buildGenerationPrompt(
   input: { topic: string; count: number } & GenerationPromptContext,
 ): BuiltPrompt {
   const system = pack.prompts?.generation.system ?? DEFAULT_GENERATION_SYSTEM;
-  const template = pack.prompts?.generation.template ?? DEFAULT_GENERATION_TEMPLATE;
+  const ownTemplate = pack.prompts?.generation.template;
+  const template = ownTemplate ?? DEFAULT_GENERATION_TEMPLATE;
   const pair = pairForPack(pack, input.brief);
+  // WHY: A pack that ships its own template can leave the teaching rule out, and
+  // cards added through Generate must ask for the same layer the pack and deck
+  // paths ask for. The app's default template already carries these words, so
+  // they are added only when a pack's own template is in use. [D-28]
+  const teaching = ownTemplate === undefined ? [] : teachingPromptLines();
   const values = {
     topic: input.topic,
     count: String(input.count),
@@ -111,10 +119,11 @@ export function buildGenerationPrompt(
     const extra = [
       ...describeCreationBrief(input.brief, input.inventory ?? []),
       ...cardStylePromptLines(input.brief.cardStyle, pair),
+      ...teaching,
     ];
     user = `${user}\n\n${extra.join("\n")}`;
   } else {
-    const pairLines = pairPromptLines(pair, pack.studyInstruction ?? "");
+    const pairLines = [...pairPromptLines(pair, pack.studyInstruction ?? ""), ...teaching];
     if (pairLines.length > 0) user = `${user}\n\n${pairLines.join("\n")}`;
   }
 

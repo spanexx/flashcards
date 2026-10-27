@@ -7,6 +7,8 @@
 // 2026-10-21 opencode: created for the target-first Create panel [pack: library-create-flow]
 // 2026-10-23 opencode: Generate, Import and Chat import enqueue page-level jobs
 // instead of holding the Create screen. [pack: background-jobs]
+// 2026-10-27 qoder: the prepared Generate prompt is editable, and the edited
+// words are what the job sends. [D-30]
 
 import { useCallback, useEffect, useState } from "react";
 import { apiGet, apiSend } from "@/lib/client/api";
@@ -21,6 +23,7 @@ import { languagePairLabel } from "@/lib/shared/language";
 import { withBasePath } from "@/lib/shared/paths";
 import ChatPromptEditor from "./ChatPromptEditor";
 import CreationBriefFields from "./CreationBriefFields";
+import GenerationPromptEditor from "./GenerationPromptEditor";
 import LanguageField from "./LanguageField";
 import PlacementPicker from "./PlacementPicker";
 import {
@@ -482,6 +485,22 @@ export default function CreatePanel({ packs, provider, level, seed, onCreated, o
     }
   };
 
+  // An edit belongs to the prepared prompt that is on screen. The page keeps the
+  // text, and send carries it, so the learner's words are the request. [D-30]
+  const editPreparedPrompt = (prompt: string) =>
+    setPrepared((previous) => (previous ? { ...previous, prompt } : previous));
+
+  // Copy and download use the edited text, the same text send uses.
+  const copyPreparedPrompt = async () => {
+    if (!prepared) return;
+    try {
+      await navigator.clipboard.writeText(prepared.prompt);
+      onNotice("The prompt was copied.");
+    } catch {
+      onError("The prompt could not be copied automatically. Select it and copy by hand.");
+    }
+  };
+
   // Send the one held prompt into the page-level queue. The runner keeps the
   // whole batch or none of it, and Create is free again after the enqueue.
   const sendNow = async () => {
@@ -493,6 +512,7 @@ export default function CreatePanel({ packs, provider, level, seed, onCreated, o
       await apiSend<{ job: JobView }>("/api/jobs", "POST", {
         kind: "generation",
         requestId: prepared.requestId,
+        prompt: prepared.prompt,
       });
       setPrepared(null);
       onNotice("Generation started. You can keep working.");
@@ -899,39 +919,17 @@ export default function CreatePanel({ packs, provider, level, seed, onCreated, o
               </div>
 
               {prepared ? (
-                <div className="stack">
-                  <p style={{ margin: 0 }}>
-                    {providerReady ? (
-                      <>
-                        This is exactly what will be sent to <strong>{liveProvider?.model}</strong>. Nothing leaves until
-                        you press send.
-                      </>
-                    ) : (
-                      <>This is exactly what would be sent. Nothing leaves this machine until a provider is ready.</>
-                    )}
-                  </p>
-                  <pre className="code-block">{prepared.prompt}</pre>
-                  <div className="row">
-                    <button className="btn primary" type="button" onClick={() => void sendNow()} disabled={busy}>
-                      Send it
-                    </button>
-                    <button
-                      className="btn"
-                      type="button"
-                      onClick={() => {
-                        void navigator.clipboard
-                          .writeText(prepared.prompt)
-                          .then(() => onNotice("The prompt was copied."))
-                          .catch(() => onError("The prompt could not be copied automatically. Select it and copy by hand."));
-                      }}
-                    >
-                      Copy the prompt
-                    </button>
-                    <button className="btn" type="button" onClick={() => setPrepared(null)}>
-                      Cancel
-                    </button>
-                  </div>
-                </div>
+                <GenerationPromptEditor
+                  prompt={prepared.prompt}
+                  model={liveProvider?.model ?? null}
+                  providerReady={providerReady}
+                  busy={busy}
+                  onChange={editPreparedPrompt}
+                  onRebuild={() => void prepareNow()}
+                  onCopy={() => void copyPreparedPrompt()}
+                  onCancel={() => setPrepared(null)}
+                  onSend={() => void sendNow()}
+                />
               ) : null}
             </div>
           ) : null}
