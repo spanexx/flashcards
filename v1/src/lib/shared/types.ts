@@ -152,7 +152,12 @@ export interface Tombstone {
   at: string;
 }
 
-/** A session fact: the offer, what the learner answered, and whether they stopped. */
+/**
+ * A session fact: the offer, what the learner answered, and whether they
+ * stopped. The started fact may also name the scope it drew from, so a finished
+ * session can be learned again. An absent pack means the row predates scopes;
+ * an empty pack means the whole library.
+ */
 export interface SessionEvent {
   type: "started" | "ended";
   id: string;
@@ -161,6 +166,8 @@ export interface SessionEvent {
   answered?: number;
   completed?: boolean;
   stopped?: boolean;
+  pack?: string;
+  deck?: string;
 }
 
 /** One named reason group on the plan screen. */

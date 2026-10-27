@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Flashcards - Study sidebar and previous sessions (pre-simulation)</title>
+    <style>
+      /* Pre-implementation simulation. No app code is changed by this file. */
+      :root {
+        color-scheme: light dark;
+        --bg: #f7f6f3;
+        --panel: #ffffff;
+        --ink: #23211d;
+        --quiet: #6d6a63;
+        --line: #dedbd3;
+        --soft: #f1efe9;
+        --accent: #2f5d50;
+        --accent-ink: #ffffff;
+        --good: #2f6d3f;
+        --near: #8a6d1f;
+        --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+        --shadow: 0 1px 2px rgba(35, 33, 29, 0.06);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #191816;
+          --panel: #232220;
+          --ink: #ece9e2;
+          --quiet: #a5a199;
+          --line: #3a3833;
+          --soft: #2b2a27;
+          --accent: #7fb3a2;
+          --accent-ink: #10120f;
+          --good: #8ec79b;
+          --near: #d9bc6a;
+          --shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+
+      .sim-bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 18px;
+        border-bottom: 1px solid var(--line);
+        background: var(--soft);
+        font-size: 0.82rem;
+        color: var(--quiet);
+      }
+
+      .sim-bar strong { color: var(--ink); }
+
+      .sim-bar button,
+      .sim-bar label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 34px;
+        padding: 0 12px;
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        background: var(--panel);
+        color: var(--ink);
+        font: inherit;
+        cursor: pointer;
+      }
+
+      .sim-bar button[aria-pressed="true"] {
+        border-color: var(--accent);
+        box-shadow: inset 0 0 0 1px var(--accent);
+      }
+
+      .frame {
+        width: 100%;
+        max-width: 1340px;
+        margin: 0 auto;
+        padding: 34px 40px 90px;
+      }
+
+      .frame.phone {
+        max-width: 560px;
+        padding: 22px 18px 70px;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 860px) 320px;
+        gap: 34px;
+        align-items: start;
+      }
+
+      .frame.phone .layout { grid-template-columns: 1fr; }
+
+      /* ---------- main plan column ---------- */
+
+      .plan-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 32px;
+        padding-bottom: 26px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .eyebrow {
+        margin: 0 0 10px;
+        color: var(--quiet);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        font-family: var(--serif);
+        font-size: clamp(2rem, 3.4vw, 2.75rem);
+        font-weight: 500;
+        line-height: 1.12;
+      }
+
+      .lede { margin: 12px 0 0; color: var(--quiet); max-width: 46ch; }
+
+      .facts { display: flex; gap: 14px; color: var(--quiet); font-size: 0.78rem; white-space: nowrap; }
+      .fact { display: inline-flex; align-items: center; gap: 7px; }
+      .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--quiet); opacity: 0.55; }
+
+      .scope-row { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 18px; padding: 22px 0 4px; }
+
+      .field { display: grid; gap: 6px; flex: 1 1 200px; max-width: 360px; color: var(--quiet); font-size: 0.78rem; }
+      .field.offer { flex: 0 0 92px; max-width: 92px; }
+
+      .select, .input {
+        width: 100%;
+        min-height: 44px;
+        padding: 9px 12px;
+        border: 1px solid var(--line);
+        border-radius: 11px;
+        background: color-mix(in srgb, var(--panel) 94%, var(--bg));
+        color: var(--ink);
+        font: inherit;
+        font-size: 1rem;
+      }
+
+      .ghost {
+        min-height: 40px;
+        padding: 0 10px;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--quiet);
+        font: inherit;
+        cursor: pointer;
+      }
+
+      .ghost:hover { background: var(--soft); color: var(--ink); }
+
+      .start-row { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; margin: 26px 0 0; }
+
+      .start {
+        min-height: 54px;
+        padding: 0 26px;
+        border: 0;
+        border-radius: 13px;
+        background: var(--accent);
+        color: var(--accent-ink);
+        font: inherit;
+        font-size: 1.02rem;
+        cursor: pointer;
+      }
+
+      .calm { margin: 0; color: var(--quiet); font-size: 0.9rem; }
+
+      /* ---------- previous sessions ---------- */
+
+      .past { margin: 34px 0 0; }
+      .past h2 { margin: 0 0 12px; font-size: 0.95rem; letter-spacing: 0.02em; }
+      .past ul { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+
+      .past li {
+        display: grid;
+        grid-template-columns: minmax(150px, auto) minmax(0, 1fr) auto auto;
+        gap: 6px 18px;
+        align-items: baseline;
+        padding: 11px 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .again {
+        min-height: 32px;
+        padding: 0 10px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        color: var(--ink);
+        font: inherit;
+        font-size: 0.8rem;
+        white-space: nowrap;
+        cursor: pointer;
+      }
+
+      .again:hover { border-color: var(--accent); }
+
+      .past .when { font-variant-numeric: tabular-nums; }
+      .past .scope { color: var(--quiet); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .past .count { color: var(--quiet); font-variant-numeric: tabular-nums; white-space: nowrap; }
+      .past .state { font-size: 0.82rem; white-space: nowrap; }
+      .past .state.done { color: var(--good); }
+      .past .state.stopped { color: var(--near); }
+      .past .empty { padding: 14px 0; color: var(--quiet); border-bottom: 1px solid var(--line); }
+
+      .frame.phone .past li { grid-template-columns: 1fr auto; }
+      .frame.phone .past .scope { grid-column: 1 / -1; white-space: normal; }
+      .frame.phone .past .again { grid-column: 2; grid-row: 1; }
+
+      /* ---------- right panel ---------- */
+
+      .aside {
+        position: sticky;
+        top: 24px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--panel);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .tabs { display: flex; gap: 2px; padding: 6px; border-bottom: 1px solid var(--line); background: var(--soft); }
+
+      .tab {
+        flex: 1 1 auto;
+        min-height: 38px;
+        padding: 0 8px;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--quiet);
+        font: inherit;
+        font-size: 0.78rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .tab[aria-selected="true"] { background: var(--panel); color: var(--ink); box-shadow: var(--shadow); }
+
+      .tab-body { padding: 18px; font-size: 0.9rem; }
+      .tab-body h3 { margin: 14px 0 6px; font-size: 0.9rem; }
+      .tab-body h3:first-child { margin-top: 0; }
+      .tab-body p { margin: 0 0 10px; }
+      .tab-body ul { margin: 0 0 12px; padding-left: 18px; color: var(--quiet); }
+      .tab-body li { margin: 4px 0; }
+      .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+
+      .small {
+        min-height: 38px;
+        padding: 0 14px;
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        background: var(--panel);
+        color: var(--ink);
+        font: inherit;
+        font-size: 0.85rem;
+        cursor: pointer;
+      }
+
+      .small.primary { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
+
+      .muted { color: var(--quiet); }
+      .count { font-size: 0.8rem; color: var(--quiet); white-space: nowrap; }
+      .reason strong { font-weight: 600; }
+
+      /* phone fold */
+
+      .phone-fold { display: none; }
+      .frame.phone .aside { display: none; }
+      .frame.phone .phone-fold { display: block; margin-top: 34px; }
+
+      details.fold {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--panel);
+      }
+
+      details.fold summary {
+        padding: 14px 16px;
+        font-weight: 600;
+        cursor: pointer;
+        list-style: none;
+      }
+
+      details.fold summary::-webkit-details-marker { display: none; }
+      details.fold summary::before { content: "+"; display: inline-block; width: 1.1em; color: var(--quiet); }
+      details.fold[open] summary::before { content: "-"; }
+      .fold-body { padding: 0 16px 16px; }
+      .fold-body h3 { margin: 16px 0 6px; font-size: 0.9rem; }
+
+      .note {
+        max-width: 1340px;
+        margin: 0 auto 18px;
+        padding: 10px 14px;
+        border: 1px dashed var(--line);
+        border-radius: 10px;
+        color: var(--quiet);
+        font-size: 0.8rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="sim-bar">
+      <strong>Pre-simulation</strong>
+      <span>This is a drawing, not the app. No code is changed.</span>
+      <button id="desk" type="button" aria-pressed="true">Desktop</button>
+      <button id="phone" type="button" aria-pressed="false">Phone width</button>
+      <label><input id="empty" type="checkbox" /> No history</label>
+    </div>
+
+    <p class="note">
+      Try: switch tabs on the right, widen/narrow, toggle “No history”, and open
+      “Plan details” in phone width. The plan column keeps its width; the moved
+      panels never sit under it on desktop. “Learn again” rebuilds a fresh plan
+      on the same pack/deck; the last row predates scope saving, so it has no
+      scope and no action.
+    </p>
+
+    <div class="frame" id="frame">
+      <div class="layout">
+        <main>
+          <header class="plan-head">
+            <div>
+              <p class="eyebrow">Study</p>
+              <h1>20 cards for today.</h1>
+              <p class="lede">A short session from Polish / Food, with the two cards you missed last time.</p>
+            </div>
+            <div class="facts">
+              <span class="fact"><span class="dot"></span> Tutor off</span>
+              <span class="fact">No score kept</span>
+            </div>
+          </header>
+
+          <div class="scope-row">
+            <label class="field">
+              <span>Study from</span>
+              <select class="select">
+                <option>Polish</option>
+                <option>Spanish</option>
+                <option>All cards</option>
+              </select>
+            </label>
+            <label class="field" style="max-width: 220px">
+              <span>Deck</span>
+              <select class="select">
+                <option>Food</option>
+                <option>All decks</option>
+              </select>
+            </label>
+            <label class="field offer">
+              <span>Offer</span>
+              <input class="input" type="number" value="20" min="5" max="40" step="5" />
+            </label>
+            <button class="ghost" type="button">Rebuild the plan</button>
+          </div>
+
+          <div class="start-row">
+            <button class="start" type="button">Start session &rarr;</button>
+            <p class="calm">Stopping is not an ending.</p>
+          </div>
+
+          <section class="past" id="past">
+            <h2>Previous sessions</h2>
+            <ul>
+              <li>
+                <span class="when">27 Oct, 14:02</span>
+                <span class="scope">Polish / Food</span>
+                <span class="count">18 / 20 answered · <span class="state done">finished</span></span>
+                <button class="again" type="button">Learn again</button>
+              </li>
+              <li>
+                <span class="when">26 Oct, 20:41</span>
+                <span class="scope">Polish</span>
+                <span class="count">11 / 20 answered · <span class="state stopped">stopped</span></span>
+                <button class="again" type="button">Learn again</button>
+              </li>
+              <li>
+                <span class="when">25 Oct, 09:15</span>
+                <span class="scope">the whole library</span>
+                <span class="count">20 / 20 answered · <span class="state done">finished</span></span>
+                <button class="again" type="button">Learn again</button>
+              </li>
+              <li>
+                <span class="when">24 Oct, 18:33</span>
+                <span class="scope">Spanish / Travel</span>
+                <span class="count">7 / 15 answered · <span class="state stopped">stopped</span></span>
+                <button class="again" type="button">Learn again</button>
+              </li>
+              <li>
+                <span class="when">23 Oct, 07:58</span>
+                <span class="scope" title="This lesson was saved before scopes were recorded.">—</span>
+                <span class="count">20 / 20 answered · <span class="state done">finished</span></span>
+              </li>
+            </ul>
+          </section>
+
+          <div class="phone-fold">
+            <details class="fold">
+              <summary>Plan details</summary>
+              <div class="fold-body">
+                <h3>Why these cards</h3>
+                <ul>
+                  <li class="reason"><strong>Missed last time</strong> — 4 cards came back because they were missed. <span class="count">4 cards</span></li>
+                  <li class="reason"><strong>Due for another look</strong> — 9 cards are ready to return. <span class="count">9 cards</span></li>
+                  <li class="reason"><strong>Not seen yet</strong> — 7 cards are new. <span class="count">7 cards</span></li>
+                </ul>
+                <h3>What to expect</h3>
+                <ul>
+                  <li>Hints come from the pack or the tutor.</li>
+                  <li>A missed card returns once.</li>
+                  <li>The full line appears after you answer.</li>
+                </ul>
+                <h3>Hints</h3>
+                <p class="muted">No tutor is set up. Hints come from the pack itself, if it ships any.</p>
+              </div>
+            </details>
+          </div>
+        </main>
+
+        <aside class="aside" aria-label="Plan details">
+          <div class="tabs" role="tablist">
+            <button class="tab" role="tab" aria-selected="true" data-tab="tutor" type="button">Tutor and hints</button>
+            <button class="tab" role="tab" aria-selected="false" data-tab="expect" type="button">What to expect</button>
+            <button class="tab" role="tab" aria-selected="false" data-tab="why" type="button">Why these cards</button>
+          </div>
+
+          <section class="tab-body" data-panel="tutor">
+            <h3>The tutor</h3>
+            <p>A tutor could help with hints this session, using <strong>deepseek-v4.1-flash</strong> at <strong>larprouter.com</strong>.</p>
+            <ul>
+              <li>It sees the card prompt, the answer, the teaching layer and your last outcome.</li>
+              <li>It never sees what you type.</li>
+            </ul>
+            <p class="muted">Show the exact shape of what it would see (collapsed here).</p>
+            <div class="actions">
+              <button class="small primary" type="button">Turn the tutor on for this session</button>
+              <button class="small" type="button">Keep it off</button>
+            </div>
+          </section>
+
+          <section class="tab-body" data-panel="expect" hidden>
+            <h3>What to expect</h3>
+            <ul>
+              <li>Hints come from the pack or the tutor.</li>
+              <li>A missed card returns once.</li>
+              <li>The full line appears after you answer.</li>
+            </ul>
+          </section>
+
+          <section class="tab-body" data-panel="why" hidden>
+            <h3>Why these cards</h3>
+            <ul>
+              <li class="reason"><strong>Missed last time</strong> — 4 cards came back because they were missed. <span class="count">4 cards</span></li>
+              <li class="reason"><strong>Due for another look</strong> — 9 cards are ready to return. <span class="count">9 cards</span></li>
+              <li class="reason"><strong>Not seen yet</strong> — 7 cards are new. <span class="count">7 cards</span></li>
+            </ul>
+          </section>
+        </aside>
+      </div>
+    </div>
+
+    <script>
+      const frame = document.getElementById("frame");
+      const desk = document.getElementById("desk");
+      const phone = document.getElementById("phone");
+
+      function setMode(phoneMode) {
+        frame.classList.toggle("phone", phoneMode);
+        desk.setAttribute("aria-pressed", String(!phoneMode));
+        phone.setAttribute("aria-pressed", String(phoneMode));
+      }
+
+      desk.addEventListener("click", () => setMode(false));
+      phone.addEventListener("click", () => setMode(true));
+
+      const tabs = document.querySelectorAll(".tab");
+      const panels = document.querySelectorAll("[data-panel]");
+      tabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+          tabs.forEach((other) => other.setAttribute("aria-selected", String(other === tab)));
+          panels.forEach((panel) => {
+            panel.hidden = panel.dataset.panel !== tab.dataset.tab;
+          });
+        });
+      });
+
+      document.querySelectorAll(".again").forEach((button) => {
+        button.addEventListener("click", () => {
+          const scope = button.closest("li").querySelector(".scope").textContent.trim();
+          document.querySelector(".lede").textContent =
+            `A fresh plan from ${scope}. Press Start when you are ready.`;
+          document.querySelector(".calm").textContent =
+            "Same pack and deck, not the same cards.";
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+      });
+
+      const empty = document.getElementById("empty");
+      const list = document.querySelector("#past ul");
+      const saved = list.innerHTML;
+      empty.addEventListener("change", () => {
+        list.innerHTML = empty.checked
+          ? '<li class="empty">No finished sessions yet. The first one will wait here.</li>'
+          : saved;
+      });
+    </script>
+  </body>
+</html>

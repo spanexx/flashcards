@@ -41,6 +41,7 @@ import {
   queueSessionSave,
 } from "@/lib/browser/session-save";
 import { toStoredSession, type QueueEntry, type StoredSession, type StoredSessionInput } from "@/lib/core/session-resume";
+import type { PastSession } from "@/lib/core/past-sessions";
 import { newId } from "@/lib/core/id";
 import type { AnswerResult, Outcome, PackStatus, Plan } from "@/lib/shared/types";
 import ScopePicker from "./study/ScopePicker";
@@ -71,6 +72,7 @@ export default function StudyClient() {
   const [phase, setPhase] = useState<Phase>("loading");
   const [message, setMessage] = useState<string | null>(null);
   const [plan, setPlan] = useState<Plan | null>(null);
+  const [past, setPast] = useState<PastSession[]>([]);
   const [queue, setQueue] = useState<QueueEntry[]>([]);
   const [index, setIndex] = useState(0);
   const [results, setResults] = useState<Record<string, AnswerResult>>({});
@@ -192,9 +194,10 @@ export default function StudyClient() {
       if (packName) params.set("pack", packName);
       if (deckId) params.set("deck", deckId);
       const query = params.toString();
-      const data = await apiGet<{ plan: Plan | null; message: string | null }>(
+      const data = await apiGet<{ plan: Plan | null; message: string | null; past: PastSession[] }>(
         query ? `/api/plan?${query}` : "/api/plan",
       );
+      setPast(data.past ?? []);
       if (!data.plan) {
         setPlan(null);
         setMessage(data.message);
@@ -759,6 +762,7 @@ export default function StudyClient() {
       <StudyPlan
         plan={plan}
         packs={packs}
+        past={past}
         scopePack={scopePack}
         scopeDeck={scopeDeck}
         offerChoice={offerChoice}
@@ -771,6 +775,11 @@ export default function StudyClient() {
         onOfferChange={setOfferChoice}
         onRebuild={() => void loadPlan(offerChoice, scopePack, scopeDeck)}
         onApprove={setApproved}
+        onRelearn={(nextPack, nextDeck) => {
+          setScopePack(nextPack);
+          setScopeDeck(nextDeck);
+          void loadPlan(offerChoice, nextPack, nextDeck);
+        }}
         onStart={startSession}
       />
     );

@@ -1,0 +1,149 @@
+Study sidebar and previous sessions - Grill Notes
+
+Status: Locked
+Date: 2026-10-27
+Source: wayfinder/anything-learning-spec/tickets/study-sidebar-and-history.md
+(decision 18). The learner's voice note is 2026-10-26; the typed confirmation is
+2026-10-27.
+
+What this feature is about
+
+- The Study plan keeps its wide main column: headline, scope, offer, Rebuild,
+  Start and the two facts.
+- A right-hand tabbed panel holds the secondary material: the tutor and hints,
+  what to expect, and why these cards.
+- Previous sessions become a plain list in the main column, replacing the place
+  the three disclosures used to take: the last five ended sessions, newest
+  first.
+- It does NOT add a history page, search, filters, per-card statistics, or a new
+  store.
+
+Questions and answers locked so far
+
+1. "the study is scanty. So keep the wide."
+Answer:
+- The plan keeps a single wide main column. It is not squeezed into a narrow
+  rail beside a second column of content.
+- The secondary material moves out of that column, so the main column keeps its
+  width for the plan itself.
+
+Why:
+- The learner asked for width, not for more panels under the plan.
+- Source: ticket study-sidebar-and-history.md, Resolution; learner voice note
+  2026-10-26.
+
+2. Why move "why these cards" and "what to expect" to a right-hand tabbed panel?
+Answer:
+- On the plan screen only, a right-hand panel of about 320px holds three tabs:
+  "Tutorial and hints" (the existing tutor disclosure, unchanged in content),
+  "What to expect", and "Why these cards".
+- The panel is hidden while a card is running, matching the locked rule that
+  plan material disappears during review.
+- Added 2026-10-27 at the learner's request: the panel caps at the viewport
+  height and scrolls its own body, so a long "Why these cards" list never
+  stretches the plan page. The tab row stays in place.
+
+Why:
+- The reasons and expectations belong beside the offer, at the same glance,
+  instead of three stacked disclosures under it.
+- Source: ticket, Resolution; learner typed 2026-10-27: "main area = previous
+  sessions, right sidebar = the moved panels".
+
+3. "previous sessions to take the old place of those dropdowns in the main
+   area, as a short list rather than a dropdown."
+Answer:
+- A plain list, never a disclosure and never a dropdown, in the main column where
+  the three disclosures used to sit (under the Start row).
+- It shows the last five ended sessions, newest first: the local date and time,
+  the scope it drew from, "answered / offered", and whether it finished or was
+  stopped.
+- Each row whose scope is known has one "Learn again" action. It rebuilds a
+  fresh plan on that session's pack and deck; the learner still presses Start.
+  The exact cards are not replayed.
+- The hard cap is five. There is no "show more" in this pass.
+
+Why:
+- Five gives continuity without turning the plan into a long wall, the same
+  reason the learner asked for five and no more.
+- Source: ticket, Resolution and agent decisions.
+
+4. What if there is no history?
+Answer:
+- One calm line says no finished sessions yet. The list is not hidden and no
+  empty box is drawn.
+
+Why:
+- An empty area looks broken; one sentence explains the state.
+- Source: ticket, Resolution; [agent decision] wording.
+
+5. What happens on a phone?
+Answer:
+- Below 860px the right panel folds into one disclosure under the plan, titled
+  "Plan details". Opening it shows the three sections stacked; the plan column
+  loses no width.
+- The previous sessions list stays in the main column and simply narrows.
+
+Why:
+- The phone must not lose the plan width, and three tabs inside a tiny aside
+  would be cramped.
+- Source: ticket agent decisions; [agent decision] title and stacked sections.
+
+6. Where does the "scope it drew from" come from? The session record does not
+   carry it today.
+Answer:
+- Add optional `pack` and `deck` fields to the session's started fact, written
+  when the session starts. They are the same values the scope picker uses: the
+  pack name and the deck id. Both empty means the whole library.
+- Older sessions have no fields; their row leaves the scope out and has no
+  "Learn again" action.
+- No new store is made.
+
+Why:
+- The session fact already holds offered, answered, completed and stopped; the
+  scope is the one missing fact the learner asked to see.
+- A display string would not be enough to start a session again, so the fields
+  keep the values the plan endpoint needs.
+- Guessing the scope from today's library would be wrong after a rename or a
+  delete.
+- Source: `v1/src/lib/shared/types.ts:156-164`,
+  `v1/src/lib/browser/router.ts:307-312`; [agent decision].
+
+7. Which tab is open first?
+Answer:
+- "Tutorial and hints" (or "Hints" when no tutor is set up). It is the tab that
+  can ask the learner to make a choice, so it comes first, as in the ticket.
+- No tab choice is stored; the plan screen opens on the first tab each time.
+
+Why:
+- The tutor choice should not be buried behind a tab the learner may never open.
+- Source: ticket order; [agent decision].
+
+8. What must not change?
+Answer:
+- The Progress screen, the algorithm, the session loop, the Resume snapshot, the
+  scope picker and the offer control stay as they are.
+- The three moved disclosures keep their existing words and controls; only their
+  container changes.
+- No new store. The only new data is the two optional fields on a started
+  session (Q6), written to the existing session facts.
+
+Why:
+- This is a layout and a light history view, not a new session model.
+- Source: ticket "Deliberately not done"; [agent decision].
+
+9. "the previous lessons should have details and can be re learnt"
+Answer:
+- Details stay plain: the row itself is the detail (time, scope, answered /
+  offered, finished or stopped). No expander, no card list, no per-card answers.
+- "Learn again" rebuilds a fresh plan on the same pack and deck. It does not
+  replay the exact cards, and it does not skip the plan: the learner still
+  presses Start.
+
+Why:
+- A card-level replay would need the session's card list saved, which the
+  learner did not ask for now; it would turn a light list into history storage.
+- Keeping the plan as the offer preserves the tutor choice and the Start gate.
+- Source: learner message 2026-10-27, verbatim above; [agent decision] for the
+  fresh-plan wording.
+
+No remaining open questions

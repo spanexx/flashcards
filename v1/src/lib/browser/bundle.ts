@@ -766,6 +766,8 @@ export const backupSchema = z.object({
       answered: z.number().optional(),
       completed: z.boolean().optional(),
       stopped: z.boolean().optional(),
+      pack: z.string().optional(),
+      deck: z.string().optional(),
     }),
   ),
   settings: z.unknown(),

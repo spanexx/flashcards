@@ -38,6 +38,7 @@ import { cardSourceSchema, issuesFromZod, packPromptsSchema, teachingPartSchema 
 import { countSeenBefore, groupAttempts, makeAnswerRows, makeCorrectionRow } from "@/lib/core/evidence";
 import { judgeCard } from "@/lib/core/judge";
 import { buildPlan } from "@/lib/core/plan";
+import { recentSessions } from "@/lib/core/past-sessions";
 import { parseCardSources } from "@/lib/core/import";
 import { readProgress } from "@/lib/core/progress";
 import { describeTutorShape, describeTutorSlots, tutorSlotNames } from "@/lib/provider/prompt";
@@ -55,6 +56,7 @@ import {
   readCards,
   readEvidence,
   readPack,
+  readSession,
   readPacks,
   readPromptLog,
   readSessions,
@@ -230,26 +232,38 @@ async function packsAnswer(): Promise<{ packs: PackStatus[]; orphans: string[]; 
 /** Build the plan exactly as the old route did, but from browser data. */
 async function planAnswer(offerRaw: number | undefined, packName?: string, deckId?: string) {
   const state = await loadState();
+  // WHY: The list of finished sessions rides with every plan answer, including
+  // the empty ones, so the screen never needs a second request.
+  const events = await readSessions();
+  const past = recentSessions(events);
   const active = state.cards.filter((card) => !card.retired);
   if (active.length === 0) {
-    return { plan: null, message: "No cards yet. Create a pack, or import a bundle in the library." };
+    return {
+      plan: null,
+      message: "No cards yet. Create a pack, or import a bundle in the library.",
+      past,
+    };
   }
 
   let scoped = active;
   if (packName) {
     const pack = state.packs.find((entry) => entry.name === packName);
     if (!pack) {
-      return { plan: null, message: `There is no pack “${packName}” here.` };
+      return { plan: null, message: `There is no pack “${packName}” here.`, past };
     }
     scoped = scoped.filter((card) => card.packName === packName);
     if (deckId) {
       if (!pack.decks?.some((deck) => deck.id === deckId)) {
-        return { plan: null, message: `There is no deck “${deckId}” in “${packName}”.` };
+        return {
+          plan: null,
+          message: `There is no deck “${deckId}” in “${packName}”.`,
+          past,
+        };
       }
       scoped = scoped.filter((card) => card.deckId === deckId);
     }
   } else if (deckId) {
-    return { plan: null, message: "Choose a pack before choosing a deck." };
+    return { plan: null, message: "Choose a pack before choosing a deck.", past };
   }
 
   if (scoped.length === 0) {
@@ -258,10 +272,11 @@ async function planAnswer(offerRaw: number | undefined, packName?: string, deckI
       message: packName
         ? `No cards in “${packName}”${deckId ? ` / “${deckId}”` : ""} yet.`
         : "No cards are ready to study yet.",
+      past,
     };
   }
 
-  const [rows, events] = await Promise.all([readEvidence(), readSessions()]);
+  const rows = await readEvidence();
   let settings = await readSettings();
   const result = buildPlan(
     {
@@ -309,9 +324,13 @@ async function planAnswer(offerRaw: number | undefined, packName?: string, deckI
     id: result.plan.sessionId,
     at: now,
     offered: result.plan.offer,
+    // WHY: The finished row uses these to learn the same scope again. An empty
+    // pack means the whole library; an absent pack marks an older row.
+    pack: packName ?? "",
+    deck: deckId ?? "",
   });
 
-  return { plan: result.plan, message: null };
+  return { plan: result.plan, message: null, past };
 }
 
 async function answer(body: Record<string, unknown>): Promise<AnswerResult> {
@@ -853,6 +872,9 @@ export async function localSend<T>(
     if (!record) fail("The session end arrived in a shape the app does not understand.");
     const sessionId = asString(record.sessionId);
     if (!sessionId) fail("A finished session needs its id.");
+    // WHY: The store holds one fact per session, so the ended fact replaces the
+    // start. Carry the scope over so the finished row can be learned again.
+    const start = await readSession(sessionId);
     const event = {
       type: "ended" as const,
       id: sessionId,
@@ -861,6 +883,7 @@ export async function localSend<T>(
       answered: asNumber(record.answered, 0, 0, 1000),
       completed: record.completed === true,
       stopped: record.stopped === true,
+      ...(start?.pack !== undefined ? { pack: start.pack, deck: start.deck ?? "" } : {}),
     };
     await appendSession(event);
     return { ok: true, event } as T;

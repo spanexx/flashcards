@@ -66,3 +66,38 @@ Learner voice note, 2026-10-26. Typed confirmation from the learner,
 Current code: `v1/src/app/study/StudyPlan.tsx:97-173` (the three disclosures),
 `v1/src/app/study/ScopePicker.tsx:16-19` (the single pack/deck choice),
 `v1/src/lib/browser/repository.ts:214` (`readSessions`).
+
+## Amendment (2026-10-27): details and re-learning
+
+The learner added, verbatim: "the previous lessons should have details and can
+be re learnt". Asked what that meant, they chose:
+
+- **Details stay plain.** The row itself is the detail: local date and time,
+  the scope it drew from, "answered / offered", and finished or stopped. No
+  expander, no card list, no per-card answers.
+- **Re-learn starts a fresh session on the same pack/deck.** One "Learn again"
+  action on the row scopes the plan to that session's pack and deck and rebuilds
+  it. The learner still presses Start; the plan is still an offer. The exact
+  cards are not replayed.
+
+What this changes in the resolution above:
+
+- The list is no longer read-only. Each row may carry one "Learn again" action.
+- A session's started fact gains optional `pack` and `deck` fields, written when
+  the session starts. `pack: ""` means the whole library; an absent `pack` means
+  the row predates this change, so it shows no scope and no "Learn again".
+- Nothing else changes: no expander, no saved card list, no history page, no new
+  store.
+
+Recorded by: agent, 2026-10-27, at the learner's instruction. This supersedes
+the "read-only views" line and the "no new persistence" line in the
+"Deliberately not done" section for the two optional fields and the action
+only. The rest of that section still holds.
+
+## Amendment (2026-10-27): the panel has a ceiling
+
+The learner noticed a long "Why these cards" list stretched the whole plan page.
+The right panel now caps at the viewport height (`calc(100vh - 48px)`, matching
+its 24px sticky offset) and scrolls its own body; the tab row stays in place.
+The page itself no longer grows because of the panel. On a phone the fold stays
+in the page flow, because it is a disclosure, not a fixed panel.

@@ -210,9 +210,14 @@ export function deleteDeck(packName: string, deckId: string, store: Store = brow
   });
 }
 
-/** Every session fact. */
+/** Every session fact. One row per session: the ended fact replaces the start. */
 export async function readSessions(store: Store = browserStore()): Promise<SessionEvent[]> {
   return store.all<SessionEvent>("sessions");
+}
+
+/** One session fact by its id, or nothing when the session is unknown. */
+export function readSession(id: string, store: Store = browserStore()): Promise<SessionEvent | null> {
+  return store.get<SessionEvent>("sessions", id);
 }
 
 /** Add one session fact. */

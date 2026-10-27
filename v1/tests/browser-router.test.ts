@@ -373,6 +373,30 @@ describe("plan, answer and progress", () => {
     expect(ended.ok).toBe(true);
   });
 
+  it("returns a finished session with its scope in the next plan", async () => {
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
+    const plan = await localGet<{ plan: Plan | null }>("/api/plan");
+    if (!plan.plan) throw new Error("no plan built");
+
+    await localSend("/api/session/end", "POST", {
+      sessionId: plan.plan.sessionId,
+      offered: plan.plan.offer,
+      answered: 1,
+      completed: true,
+    });
+
+    const next = await localGet<{
+      past: Array<{ id: string; pack?: string; deck?: string; answered: number; completed: boolean }>;
+    }>("/api/plan");
+    expect(next.past[0]).toMatchObject({
+      id: plan.plan.sessionId,
+      pack: "",
+      deck: "",
+      answered: 1,
+      completed: true,
+    });
+  });
+
   it("writes help and cold flags and copies them onto a correction", async () => {
     await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
     const plan = await localGet<{ plan: Plan | null }>("/api/plan");
