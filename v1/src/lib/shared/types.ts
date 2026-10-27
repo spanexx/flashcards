@@ -44,7 +44,7 @@ export type TeachingPart =
 
 /** An ordered piece of a card side. The core lays these out, never interprets. */
 export type CardPart =
-  | { type: "text"; text: string; role?: "translation" | "note" }
+  | { type: "text"; text: string; role?: "translation" | "note"; lang?: string }
   | { type: "code"; text: string; language?: string }
   | { type: "speak"; text: string; lang?: string; label?: string }
   | { type: "media"; src: string; alt?: string; mime?: string }

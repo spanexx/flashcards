@@ -12,6 +12,7 @@ export const cardPartSchema = z.discriminatedUnion("type", [
     type: z.literal("text"),
     text: z.string().min(1, "a text part needs words"),
     role: z.enum(["translation", "note"]).optional(),
+    lang: z.string().optional(),
   }),
   z.object({
     type: z.literal("code"),

@@ -21,9 +21,10 @@ into the Windows checkout.
 
 **Verify:**
 - [x] `node node_modules/vitest/vitest.mjs run tests/answer-speech.test.ts`
-      — 12 tests: order, translation, language, code + teaching, code alone,
-      text before and after code, several code parts, media and blanks skipped,
-      punctuation spacing, empty answer.
+      — 16 tests: tagged lines, tag over pack pair, untagged fallback, joining,
+      numbers, code + teaching, code alone, text before and after code, several
+      code parts, a speak part's own language, media and blanks skipped,
+      punctuation spacing, empty answer, the no-voice guard.
 
 **Blocked by:** nothing.
 
@@ -43,10 +44,11 @@ into the Windows checkout.
 ### Phase 3: the control — ✅ Complete 2026-10-27
 
 **Build:**
-- `v1/src/app/study/StudyCard.tsx` — `answerLang` prop; compute the spoken line;
-  after mount show "Hear the answer" under the answer when supported and the
-  text is not empty; pressing calls `speak(text, lang)`.
-- `v1/src/app/StudyClient.tsx` — pass `answerLang={packLanguage}`.
+- `v1/src/app/study/StudyCard.tsx` — `answerLang` and `answerSourceLang` props;
+  compute the spoken lines; after mount show "Hear the answer" under the answer
+  when supported and there is a line; pressing calls `speakLines(lines)`.
+- `v1/src/app/StudyClient.tsx` — pass `answerLang={packLanguage}` and
+  `answerSourceLang={cardPack?.sourceLanguage}`.
 - `v1/src/app/globals.css` — `.study-hear` spacing only.
 
 **Verify:**
@@ -71,11 +73,11 @@ into the Windows checkout.
 
 **Build:**
 - `docs/features/answer-speech/simulate.mjs` — runs the real helper through the
-  project's TypeScript, checks the six PRD scenarios, the no-voice guard and the
-  existing controls.
+  project's TypeScript, checks the seven PRD scenarios, the no-voice guard and
+  the existing controls.
 
 **Verify:**
-- [x] `node docs/features/answer-speech/simulate.mjs` — all 6 scenarios pass.
+- [x] `node docs/features/answer-speech/simulate.mjs` — all 7 scenarios pass.
 - [x] The built chunk carries "Hear the answer" and "This answer is code"
       (`v1/out/_next/static/chunks/3dil4go4_yab2.js`).
 - [x] The built page serves from `out/`: `http://localhost:8137/` and
@@ -87,10 +89,37 @@ into the Windows checkout.
 
 **Blocked by:** Phase 4.
 
+### Phase 6: each part keeps its own language — ✅ Complete 2026-10-27
+
+**Build:**
+- `v1/src/lib/shared/types.ts` — a `text` part gains an optional `lang` tag.
+- `v1/src/lib/core/schema.ts` — the validator accepts `lang` on text parts.
+- `v1/src/lib/provider/generate.ts` — generated full lines are tagged with the
+  learning language, translations with the question language.
+- `v1/src/lib/browser/authoring.ts` — the creation rules and the example card
+  tag every text part, and say to split a line when its language switches.
+- `v1/src/lib/client/answer-speech.ts` — a part's tag wins; the pack pair is the
+  fallback for older cards. Output is now one `SpeechLine` per language.
+- `v1/src/lib/client/speech.ts` — `speakLines` queues lines in order, each in its
+  own language; `speak` delegates to it.
+- `StudyCard`, `StudyClient` — per-line playback and the question language prop.
+- Tests and sim — tagged Polish/English, tag over pack pair, untagged fallback.
+
+**Verify:**
+- [x] Targeted tests pass (16/16); typecheck clean; build passes.
+- [x] `node docs/features/answer-speech/simulate.mjs` — all 7 scenarios pass.
+
+**Why this phase exists:** the learner heard "I was at home." read with the
+Polish voice. The original rule used one voice for the whole answer. The
+learner corrected the design: the card must say which language each piece is.
+
+**Blocked by:** Phases 1–5.
+
 ## Phase Dependencies
 
-Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5. The UI depends on the pure
-helper and the device check; no phase can be reordered safely.
+Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5 → Phase 6. The UI depends on the
+pure helper and the device check; no phase can be reordered safely. Phase 6
+changed the helper's output shape, so it re-ran the earlier checks.
 
 ## Test Strategy
 

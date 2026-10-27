@@ -62,8 +62,9 @@ function commonRules(pair: PackLanguagePair): string {
   const speakLang = pair.target || "the target language code";
   return `Rules for every card:
 - summary: under six words.
-- prompt: an array of parts. Use {"type":"text","text":"..."} and, for a blank, {"type":"blank","id":"b1"}. For a listening card use {"type":"speak","text":"...","lang":"${speakLang}","label":"Listen"}.
-- answer: an array of parts. Start with the full answer as {"type":"text","text":"..."}; add a translation as {"type":"text","text":"...","role":"translation"}.
+- prompt: an array of parts. Use {"type":"text","text":"...","lang":"<language code>"} and, for a blank, {"type":"blank","id":"b1"}. For a listening card use {"type":"speak","text":"...","lang":"${speakLang}","label":"Listen"}.
+- answer: an array of parts. Start with the full answer as {"type":"text","text":"...","lang":"${speakLang}"}; add a translation as {"type":"text","text":"...","role":"translation","lang":"<question language code>"}.
+- Every text part carries the language code its words are in. When a line switches language, use separate text parts, so each can be read with the right voice.
 - answerDef: one of:
   {"mode":"cloze","blanks":[{"id":"b1","expected":["..."]}]}
   {"mode":"type","expected":["..."]}
@@ -91,11 +92,13 @@ function exampleCard(deckId: string, pair: PackLanguagePair): string {
   const teaching = pair.target
     ? `{"type":"text","text":${JSON.stringify(line.teaching)},"lang":${JSON.stringify(pair.target)}}`
     : `{"type":"text","text":${JSON.stringify(line.teaching)}}`;
+  const targetLang = pair.target ? `,"lang":${JSON.stringify(pair.target)}` : "";
+  const sourceLang = pair.source ? `,"lang":${JSON.stringify(pair.source)}` : "";
   return `{
       "deckId": ${JSON.stringify(deckId)},
       "summary": "A sweet fruit",
-      "prompt": [{"type":"text","text":${JSON.stringify(before)}},{"type":"blank","id":"b1"},{"type":"text","text":${JSON.stringify(after)}}],
-      "answer": [{"type":"text","text":${JSON.stringify(line.fullLine)}},{"type":"text","text":${JSON.stringify(line.translation)},"role":"translation"}],
+      "prompt": [{"type":"text","text":${JSON.stringify(before)}${targetLang}},{"type":"blank","id":"b1"},{"type":"text","text":${JSON.stringify(after)}${targetLang}}],
+      "answer": [{"type":"text","text":${JSON.stringify(line.fullLine)}${targetLang}},{"type":"text","text":${JSON.stringify(line.translation)},"role":"translation"${sourceLang}}],
       "answerDef": {"mode":"cloze","blanks":[{"id":"b1","expected":[${JSON.stringify(line.target)}]}]},
       "hints": ["Name the grammar rule, not the missing word."],
       "fullLine": ${JSON.stringify(line.fullLine)},

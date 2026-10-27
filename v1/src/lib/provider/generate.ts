@@ -128,12 +128,25 @@ function clozeCardParts(
 }
 
 /** A type card shows the translation and asks for the whole line. */
-function typeCardParts(line: GeneratedLine, translation: string): {
+function typeCardParts(
+  line: GeneratedLine,
+  translation: string,
+  options: GeneratedCardOptions,
+): {
   prompt: CardPart[];
   answerDef: CardSource["answerDef"];
 } {
+  const sourceLanguage = options.sourceLanguage?.trim() ?? "";
   return {
-    prompt: [{ type: "text", text: translation }],
+    // WHY: The created prompt is the question language, so it carries its own
+    // tag instead of leaning on the pack at speak time.
+    prompt: [
+      {
+        type: "text",
+        text: translation,
+        ...(sourceLanguage ? { lang: sourceLanguage } : {}),
+      },
+    ],
     answerDef: { mode: "type", expected: [line.fullLine] },
   };
 }
@@ -178,17 +191,26 @@ function sourceFromLine(
     }
     cardParts = clozeCardParts(line, found);
   } else if (style === "type") {
-    cardParts = typeCardParts(line, translation);
+    cardParts = typeCardParts(line, translation, options);
   } else {
     cardParts = hearTypeCardParts(line, options);
   }
 
   const topics = (line.topics ?? []).filter((topic) => !allowedTopics || allowedTopics.includes(topic));
   const chosenTopics = topics.length > 0 ? topics : [defaultTopic];
-  const answerParts: CardPart[] = [{ type: "text", text: line.fullLine }];
+  const answerLang = options.language?.trim() ?? "";
+  const translationLang = options.sourceLanguage?.trim() ?? "";
+  const answerParts: CardPart[] = [
+    { type: "text", text: line.fullLine, ...(answerLang ? { lang: answerLang } : {}) },
+  ];
   // A cloze or heard card may still show the translation on the answer side.
   if (style !== "type" && translation.length > 0) {
-    answerParts.push({ type: "text", text: translation, role: "translation" });
+    answerParts.push({
+      type: "text",
+      text: translation,
+      role: "translation",
+      ...(translationLang ? { lang: translationLang } : {}),
+    });
   }
 
   return {
@@ -303,7 +325,7 @@ export function generatedPackBundle(
       return { ok: false, message: `the provider named a deck "${line.deckId}" that it did not define` };
     }
     try {
-      cards.push(bundleCardFromLine(line, deck, { ...options, language }));
+      cards.push(bundleCardFromLine(line, deck, { ...options, language, sourceLanguage }));
     } catch (error) {
       return { ok: false, message: refusalMessage(error) };
     }
