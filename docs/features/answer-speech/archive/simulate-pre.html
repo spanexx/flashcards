@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flashcards - Answer speech design simulation</title>
+<!--
+WHY: Design-time simulation for the answer-speech pack. It mirrors the locked
+GRILL: the control sits in the answer section, speaks the pack language, keeps
+numbers in that language, and never reads raw code. Hardcoded data; saves
+nothing. The scenarios are the PRD contract.
+PACK: answer-speech
+2026-10-27 opencode: created before the implementation [pack: answer-speech]
+-->
+<style>
+  :root {
+    --bg: #f7f6f3; --card: #fff; --ink: #23211d; --quiet: #6d6a63;
+    --line: #dedbd3; --accent: #2f5d50; --accent-ink: #fff;
+    --shadow: 0 18px 44px rgba(35, 33, 29, .15);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #191816; --card: #232220; --ink: #ece9e2; --quiet: #a5a199;
+      --line: #3a3833; --accent: #7fb3a2; --accent-ink: #10120f;
+      --shadow: 0 18px 44px rgba(0, 0, 0, .36);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); }
+  body { font: 15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  button { font: inherit; cursor: pointer; }
+  .shell { width: min(820px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 80px; }
+  h1 { margin: 0; font-size: 28px; letter-spacing: -.02em; }
+  h2 { margin: 0 0 6px; font-size: 16px; }
+  .lead { color: var(--quiet); margin: 6px 0 20px; }
+  .nav { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 20px; }
+  .nav button { background: transparent; color: var(--quiet); border: 0; border-bottom: 2px solid transparent; padding: 10px 12px; font-weight: 650; }
+  .nav button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+  .scenario { display: none; }
+  .scenario.active { display: block; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; box-shadow: var(--shadow); }
+  .meta { color: var(--quiet); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px; }
+  .prompt { color: var(--quiet); font-size: 14px; margin-bottom: 14px; }
+  .answer { font-size: 20px; line-height: 1.5; margin-bottom: 12px; }
+  .answer em { color: var(--quiet); }
+  pre { background: color-mix(in srgb, var(--ink) 6%, transparent); border: 1px solid var(--line); border-radius: 10px; padding: 12px; overflow: auto; margin: 0 0 12px; }
+  .btn { background: transparent; border: 1px solid var(--accent); color: var(--accent); border-radius: 10px; padding: 8px 14px; font-weight: 650; }
+  .btn:hover { background: var(--accent); color: var(--accent-ink); }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); }
+  .say { margin-top: 16px; border-top: 1px dashed var(--line); padding-top: 12px; }
+  .say h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--quiet); }
+  .say p { margin: 4px 0; }
+  .tag { display: inline-block; border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; font-size: 12px; color: var(--quiet); }
+  .muted { color: var(--quiet); font-size: 13px; }
+  .toggle { margin: 18px 0 0; }
+  .missing { color: #8a3b2f; font-weight: 650; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <h1>Answer speech - design simulation</h1>
+  <p class="lead">The answer reveal gains one control. It speaks the answer in the pack's language, keeps numbers in that language, and never reads code symbols. Hardcoded cards; nothing is saved.</p>
+
+  <div class="nav" role="tablist" aria-label="Scenarios">
+    <button role="tab" aria-selected="true" data-tab="pl">Polish text</button>
+    <button role="tab" aria-selected="false" data-tab="en">English numbers</button>
+    <button role="tab" aria-selected="false" data-tab="code-teach">Code + teaching</button>
+    <button role="tab" aria-selected="false" data-tab="code-bare">Code, no teaching</button>
+    <button role="tab" aria-selected="false" data-tab="no-voice">No voice</button>
+  </div>
+
+  <section class="scenario active" id="pl">
+    <div class="card">
+      <div class="meta">Answer · Polish pack</div>
+      <div class="prompt">Prompt: Fill the blank in the Polish line.</div>
+      <div class="answer">My jedliśmy obiad. <em>We were eating dinner.</em></div>
+      <button class="btn" data-speak="My jedliśmy obiad. We were eating dinner." data-lang="pl">Hear the answer</button>
+      <div class="say">
+        <h2>What the learner hears</h2>
+        <p>Both text parts, in display order: the Polish line, then the English translation.</p>
+        <p class="muted">Language tag: <span class="tag">pl</span>. The device voice for Polish reads it, so any number would follow Polish.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="scenario" id="en">
+    <div class="card">
+      <div class="meta">Answer · English pack</div>
+      <div class="prompt">Prompt: Read the Polish line, then type the full English line.</div>
+      <div class="answer">There are 3 apples and 12 pears.</div>
+      <button class="btn" data-speak="There are 3 apples and 12 pears." data-lang="en">Hear the answer</button>
+      <div class="say">
+        <h2>What the learner hears</h2>
+        <p>"There are three apples and twelve pears."</p>
+        <p class="muted">Language tag: <span class="tag">en</span>. Numbers stay in the learning language.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="scenario" id="code-teach">
+    <div class="card">
+      <div class="meta">Answer · Python pack</div>
+      <div class="prompt">Prompt: What does this line print?</div>
+      <pre>print(2 ** 3)</pre>
+      <div class="answer">It prints 8: the double star means "to the power of".</div>
+      <button class="btn" data-speak="It prints 8: the double star means to the power of." data-lang="en">Hear the answer</button>
+      <div class="say">
+        <h2>What the learner hears</h2>
+        <p>The text part, then the card's teaching text as the explanation.</p>
+        <p class="muted">Raw code is skipped. Teaching text: "The double star is exponentiation."</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="scenario" id="code-bare">
+    <div class="card">
+      <div class="meta">Answer · Python pack, no teaching layer</div>
+      <div class="prompt">Prompt: What does this line print?</div>
+      <pre>print(2 ** 3)</pre>
+      <div class="answer"><pre>print(2 ** 3)</pre></div>
+      <button class="btn" data-speak="This answer is code. Read it on screen." data-lang="en">Hear the answer</button>
+      <div class="say">
+        <h2>What the learner hears</h2>
+        <p>"This answer is code. Read it on screen."</p>
+        <p class="muted">No teaching text, so one short line names the code instead of reading symbols.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="scenario" id="no-voice">
+    <div class="card">
+      <div class="meta">Answer · Polish pack, no device voice</div>
+      <div class="prompt">Prompt: Fill the blank in the Polish line.</div>
+      <div class="answer">My jedliśmy obiad.</div>
+      <p class="missing">No "Hear the answer" button is rendered.</p>
+      <div class="say">
+        <h2>What the learner sees</h2>
+        <p>The answer as usual, with no dead control and no error.</p>
+        <p class="muted">The support check runs after mount, like the teaching layer's voice check.</p>
+      </div>
+    </div>
+  </section>
+
+  <label class="toggle"><input type="checkbox" id="voice-off"> Pretend this device has no voice (hides every button)</label>
+</div>
+
+<script>
+const tabs = document.querySelectorAll("[data-tab]");
+const sections = document.querySelectorAll(".scenario");
+tabs.forEach((tab) => {
+  tab.addEventListener("click", () => {
+    tabs.forEach((other) => other.setAttribute("aria-selected", String(other === tab)));
+    sections.forEach((section) => section.classList.toggle("active", section.id === tab.dataset.tab));
+  });
+});
+
+const voiceOff = document.getElementById("voice-off");
+voiceOff.addEventListener("change", () => {
+  document.querySelectorAll("[data-speak]").forEach((button) => {
+    button.hidden = voiceOff.checked;
+  });
+});
+
+document.querySelectorAll("[data-speak]").forEach((button) => {
+  button.addEventListener("click", () => {
+    if (!("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(button.dataset.speak);
+    if (button.dataset.lang) utterance.lang = button.dataset.lang;
+    window.speechSynthesis.speak(utterance);
+  });
+});
+
+if (!("speechSynthesis" in window)) {
+  document.querySelectorAll("[data-speak]").forEach((button) => { button.hidden = true; });
+  document.querySelector(".toggle").hidden = true;
+}
+</script>
+</body>
+</html>

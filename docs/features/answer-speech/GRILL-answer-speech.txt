@@ -1,0 +1,74 @@
+GRILL — answer-speech
+Status: Locked
+Date: 2026-10-27
+Decisions by: learner (2026-10-26 voice note), recorded in
+wayfinder/anything-learning-spec/tickets/answer-speech.md (decision 19)
+
+Source of the request, verbatim from the learner on 2026-10-26:
+
+  "When the answer is shown, I want to be able to listen to it. It should be
+  in the language that I'm learning. So if it's Polish, it should read Polish.
+  Numbers should be read in the language. If it's a code answer, don't read the
+  code symbols, give some kind of explanation of it."
+
+  Clarified 2026-10-26: the control belongs in the answer section, and the
+  existing feedback chime is a separate thing that must stay as it is.
+
+This pack adds one control to the answer reveal. Every decision below is
+locked; agent-filled choices are marked [agent decision].
+
+--------------------------------------------------------------------------------
+Q1. What is spoken?
+A. The whole answer side, as one utterance: text parts in display order,
+   including a translation part (the learner hears the whole answer)
+   [agent decision]. Blank parts and media are skipped (there is nothing to
+   say). A speak part is read as part of the answer [agent decision].
+   Why: the learner said "listen to it" about the answer that is shown.
+   Rules out: speaking the prompt, the summary, the hint or the regions.
+   Source: ticket answer-speech.md Q1; `v1/src/app/study/StudyCard.tsx:231-234`.
+
+Q2. Which language and which voice?
+A. The pack's learning language (`PackStatus.language`) is the utterance
+   language, so numbers are read in that language too. When the pack has no
+   language, no `lang` is set and the device chooses its default
+   [agent decision]. The device voice is used; no new audio files, no
+   network call, no provider.
+   Why: the learner named Polish as the example and said numbers follow.
+   Rules out: always-English, per-part voice switching, recorded audio.
+   Source: ticket Q2; `v1/src/app/StudyClient.tsx:780-782`,
+   `v1/src/lib/client/speech.ts:8`.
+
+Q3. What happens with a code answer?
+A. Raw code is never read aloud. When the card has teaching text, that text is
+   spoken as the explanation [agent decision: all teaching text parts, in
+   order]. When it has none, one short line says this answer is code and to
+   read it on screen. Text parts beside the code are still spoken.
+   Why: the learner said "don't read the code symbols, give some kind of
+   explanation of it".
+   Rules out: reading braces and semicolons, staying silent with no cue.
+   Source: ticket Q3; `v1/src/lib/shared/types.ts:27-34`.
+
+Q4. Where is the control, and what does it look like?
+A. In the answer section, directly under the rendered answer, a normal small
+   button labelled "Hear the answer". It is a button, never autoplay, and it
+   cancels any speech already running before it speaks.
+   Why: the learner placed it in the answer section; surprising audio is worse
+   than no audio.
+   Rules out: a floating player, autoplay on reveal, a second card screen.
+   Source: ticket Q4; `v1/src/app/study/CardSide.tsx:66-73` (existing pattern).
+
+Q5. What if the device has no voice?
+A. The button is not rendered. The check runs after mount, like the teaching
+   layer, so the static build does not disagree with the browser
+   [agent decision].
+   Why: a control that does nothing is a bug the learner cannot diagnose.
+   Rules out: a dead button, an error dialog.
+   Source: `v1/src/app/study/TeachingLayer.tsx:16-36`.
+
+Q6. What must not change?
+A. The existing "Hear it" speak part, the listening card's "Play the line",
+   the teaching layer's "Listen to the layer", and the feedback cues stay as
+   they are. The answer control is additive.
+   Why: the learner explicitly separated the answer voice from the chime.
+   Rules out: replacing any current sound or speech control.
+   Source: learner clarification; `v1/src/lib/client/sound.ts:1-8`.

@@ -2217,6 +2217,10 @@ td {
   font-style: italic;
 }
 
+.study-hear {
+  margin-top: 10px;
+}
+
 .study-capped {
   margin: 10px 0 0;
   color: var(--quiet);

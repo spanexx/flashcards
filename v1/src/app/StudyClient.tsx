@@ -842,6 +842,7 @@ export default function StudyClient() {
           returned={entry.returnKind === "wrong"}
           coldCheck={entry.coldCheck}
           layerBar={layerBar}
+          answerLang={packLanguage}
           instruction={instruction}
           isLast={index + 1 >= queue.length}
           onHint={askHint}
