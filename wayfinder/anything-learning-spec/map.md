@@ -44,6 +44,7 @@ Skills every session should consult: `grill-with-docs` and `domain-modeling`. Us
 - [Fix a refused import with the provider](tickets/import-repair.md) - a refused import keeps Try again and gains "Fix with AI", which shows the exact text first, asks the provider for corrected JSON only, and revalidates before saving; job actions become round icon-only controls.
 - [Ask the tutor to summarise progress](tickets/progress-summary.md) - a Summary tab on Progress sends only counts and topic labels, shows the exact short shape first, stores nothing, and needs a fresh press each time.
 - [Build a plan from many packs and decks](tickets/plan-multi-select.md) - the plan scope is a multi-select of packs and decks (a union, with all decks included); individual cards stay the algorithm's job.
+- [Full screen stays inside the browser](tickets/full-screen-in-browser.md) - the card's Full screen fills the browser viewport only, shrinks with the window and never takes the monitor; system fullscreen is not requested.
 
 *Locked during charting, before any ticket was resolved:*
 

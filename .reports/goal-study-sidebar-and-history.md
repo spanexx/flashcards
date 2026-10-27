@@ -138,3 +138,17 @@ Verdict: pass; the panel no longer drags the page.
 Failure class: missing height cap in the first implementation.
 Pivot: none.
 Next: the learner's visual check, then the commit go.
+
+### 7 — 2026-10-27T21:20
+Action: committed the plan pack (`271dc1a`), then took the learner's follow-up as
+a surgical change: full screen must stay inside the browser. Locked the new
+decision ticket `full-screen-in-browser.md`, logged D-31, removed the Fullscreen
+API calls, the `fullscreenchange` listener and the stage ref, and marked D-31
+resolved.
+Verification: no Fullscreen API in `v1/src`; built chunks carry `stage-full` and
+no `requestFullscreen`; typecheck and lint clean; build passed; full suite 703;
+served page 200 on localhost and the WSL address.
+Verdict: pass; ready to merge both commits to `main`.
+Failure class: the system-fullscreen request went outside the browser.
+Pivot: the learner asked for a browser-bound stage; recorded as D-31.
+Next: merge the branch to local `main` and push, no pull request.

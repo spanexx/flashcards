@@ -1,9 +1,9 @@
 # Drift Log
-**Last updated:** 2026-10-27  **Open:** 0  **Awaiting:** 0  **Resolved:** 30  **Critical/High:** 0
+**Last updated:** 2026-10-27  **Open:** 0  **Awaiting:** 0  **Resolved:** 31  **Critical/High:** 0
 
 ## Open
 
-_None. The three gaps found on 2026-10-27 (D-28, D-29, D-30) were fixed and pinned by tests the same day; see Resolved._
+_None. The 2026-10-27 gap D-31 was fixed and verified the same day; see Resolved._
 
 ## Awaiting decision
 
@@ -43,6 +43,15 @@ the IMPL reconcile section, is in progress._
   - Owner: creation-control
   - To fix: decision and code — the learner's 2026-10-27 instruction supersedes the non-goal; the prepared prompt is editable, an edit replaces the held prompt before the job runs, and both docs say so (`v1/src/app/library/GenerationPromptEditor.tsx`, `v1/src/app/library/CreatePanel.tsx:488-491`, `v1/src/lib/browser/router.ts:753-756`, `v1/src/lib/provider/prepare.ts:36-49`, `docs/features/creation-control/PRD-TRD-creation-control.md:45-48`, `docs/features/language-prompt-control/PRD-TRD-language-prompt-control.md:217`).
   - Verified by: "takes the learner's edit as the whole request" (`v1/tests/provider-flow.test.ts:95-118`) and "keeps the held prompt when the edit is blank or unchanged" (`v1/tests/provider-flow.test.ts:119-135`); "sends the learner's edited prompt instead of the held one" (`v1/tests/browser-router.test.ts:1145-1202`); a live pass on the built export where the prepared prompt was replaced by a distinctive edit, the provider body carried that edit as the only user message and not the prepared text, and the job saved a card.
+  - Related: none.
+
+- **D-31** (Medium, 2026-10-27, reporter: the learner) — "Full screen" left the browser and took the whole monitor, so it could not shrink with the browser window.
+  - Doc claim: the new decision "Full screen stays inside the browser" (`wayfinder/anything-learning-spec/tickets/full-screen-in-browser.md`): the stage fills the browser viewport only and shrinks with the window.
+  - Code reality: `enterFullScreen` called `stage.requestFullscreen()`, asking the browser for system fullscreen on top of the CSS stage (`v1/src/app/StudyClient.tsx:145-154` before fix), and the exit path called `document.exitFullscreen()` (`:133-143`, `:365-374`, `:393-400` before fix).
+  - Why matters: the learner keeps the browser visible and resizes it; system fullscreen escapes the browser frame and ignores the window size.
+  - Owner: study-experience
+  - To fix: decision and code — the fixed CSS stage is the whole mechanism; the Fullscreen API calls, the `fullscreenchange` listener and the now-unused stage ref are gone (`v1/src/app/StudyClient.tsx`, `v1/src/app/study/StudySession.tsx`).
+  - Verified by: `grep -rn 'requestFullscreen|exitFullscreen|fullscreenElement|fullscreenchange' v1/src` finds nothing; the built chunks carry `stage-full` and no `requestFullscreen`; typecheck and changed-file lint clean; `npm run build` passed (`check-pwa: passed`); full suite 62 files / 703 tests; the served page returned 200 on localhost and `172.25.126.9`. The stage is a fixed viewport layer, so it shrinks with the browser by construction.
   - Related: none.
 
 - **D-27** (Medium, 2026-10-26, reporter: the learner, after a live provider call was refused) — A browser CORS refusal was flattened into "could not be reached", so the message named neither the likely cause nor a way forward.

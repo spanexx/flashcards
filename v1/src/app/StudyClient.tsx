@@ -13,6 +13,8 @@
 // all rules and saved shapes are unchanged. [pack: study-tab-redesign]
 // 2026-10-25 opencode: merged the teaching-layers queue and return rule into
 // the redesigned stage. [pack: teaching-layers]
+// 2026-10-27 opencode: full screen now fills the browser viewport only, with no
+// system-fullscreen request, so it shrinks with the window. [D-31]
 // 2026-10-25 opencode: optional cues on a judged answer and a finished
 // session. [pack: learner-delight]
 // 2026-10-26 qoder: the layer's automatic opening answers to a device
@@ -95,7 +97,6 @@ export default function StudyClient() {
   const [autoOpen, setAutoOpen] = useState(() => readTeachingPrefs().autoOpen);
   const [resumed, setResumed] = useState(false);
 
-  const stageRef = useRef<HTMLDivElement | null>(null);
   const returnedRef = useRef<Set<string>>(new Set());
   const peekedRef = useRef<Set<string>>(new Set());
   const entryIdRef = useRef<string>("");
@@ -130,27 +131,14 @@ export default function StudyClient() {
     entryIdRef.current = entry?.entryId ?? "";
   }, [entry]);
 
-  /** Leave the focused stage and release the browser fullscreen when present. */
-  const exitFullScreen = useCallback(async () => {
+  /** Leave the focused stage; the stage is viewport-bound, not system fullscreen. */
+  const exitFullScreen = useCallback(() => {
     setFullStage(false);
-    if (typeof document !== "undefined" && document.fullscreenElement) {
-      try {
-        await document.exitFullscreen();
-      } catch {
-        // The browser may already be leaving fullscreen.
-      }
-    }
   }, []);
 
-  /** Enter the fixed stage first, then ask the browser when it can. */
+  /** Fill the browser viewport only, so the stage shrinks with the window (D-31). */
   const enterFullScreen = useCallback(() => {
     setFullStage(true);
-    const stage = stageRef.current;
-    if (stage?.requestFullscreen) {
-      void stage.requestFullscreen().catch(() => {
-        // The CSS stage is the deliberate fallback.
-      });
-    }
   }, []);
 
   /** Replace the current entry's answers; a return starts with its own map. */
@@ -361,18 +349,6 @@ export default function StudyClient() {
     return () => document.body.classList.remove("full-stage");
   }, [fullStage]);
 
-  // A route change while the stage is open must not leave the browser stuck.
-  useEffect(
-    () => () => {
-      if (typeof document !== "undefined" && document.fullscreenElement) {
-        void document.exitFullscreen().catch(() => {
-          // The page is already leaving.
-        });
-      }
-    },
-    [],
-  );
-
   useEffect(() => {
     if (!fullStage && !layerOpen) return;
     const onKey = (event: KeyboardEvent) => {
@@ -389,15 +365,6 @@ export default function StudyClient() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [closeTeaching, exitFullScreen, fullStage, layerOpen]);
-
-  // Escape through the browser's own fullscreen path still clears our state.
-  useEffect(() => {
-    const onChange = () => {
-      if (!document.fullscreenElement) setFullStage(false);
-    };
-    document.addEventListener("fullscreenchange", onChange);
-    return () => document.removeEventListener("fullscreenchange", onChange);
-  }, []);
 
   // Each card starts its own clock, except the card a snapshot just restored.
   useEffect(() => {
@@ -824,7 +791,6 @@ export default function StudyClient() {
         total={queue.length}
         fullStage={fullStage}
         busy={busy}
-        stageRef={stageRef}
         onToggleFullScreen={() => (fullStage ? void exitFullScreen() : enterFullScreen())}
         onEnd={() => void finish(false, true)}
         aboveCard={layer}

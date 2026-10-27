@@ -5,8 +5,10 @@
 // PACK: study-tab-redesign
 // 2026-10-25 opencode: replaced the session rail with the approved pips head
 // [pack: study-tab-redesign]
+// 2026-10-27 opencode: the stage no longer needs a ref for system fullscreen;
+// the fixed viewport stage is the whole mechanism. [D-31]
 
-import type { ReactNode, RefObject } from "react";
+import type { ReactNode } from "react";
 import { pipStates } from "@/lib/client/study-layout";
 
 interface StudySessionProps {
@@ -14,7 +16,6 @@ interface StudySessionProps {
   total: number;
   fullStage: boolean;
   busy: boolean;
-  stageRef: RefObject<HTMLDivElement | null>;
   onToggleFullScreen: () => void;
   onEnd: () => void;
   aboveCard?: ReactNode;
@@ -27,7 +28,6 @@ export default function StudySession({
   total,
   fullStage,
   busy,
-  stageRef,
   onToggleFullScreen,
   onEnd,
   aboveCard,
@@ -35,7 +35,7 @@ export default function StudySession({
 }: StudySessionProps) {
   const pips = pipStates(index, total);
   return (
-    <div ref={stageRef} className={`study-stage study-session${fullStage ? " stage-full" : ""}`}>
+    <div className={`study-stage study-session${fullStage ? " stage-full" : ""}`}>
       <div className="study-stage-inner">
         <div className="study-session-head">
           <span className="study-count">
