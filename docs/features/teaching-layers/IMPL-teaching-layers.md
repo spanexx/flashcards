@@ -237,3 +237,13 @@ npm run lint
   the pack row counts pack-origin cards while the shelf total counts all cards;
   a pack re-imported after dismissal keeps its tombstone, so a later manifest
   bump skips it; a restored media record keeps bytes but not width/height.
+- 2026-10-27: D-28 and D-29 fixed after the learner noticed Generate still sent
+  the old prompt. The cards builder now appends the same teaching rule when a
+  pack ships its own template, and only once when the app's default template
+  already carries it. Generated packs and decks store the level the request was
+  prepared with, and cards are prompted at the deck's level while the global
+  level stays the fallback for a new container. Scenarios 20 and 21 name both
+  behaviours; `tests/provider-prompt.test.ts`, `tests/provider-flow.test.ts`,
+  `tests/browser-router.test.ts` and `tests/simulate-create-flow.test.ts` pin
+  them. Full suite 60 files / 678 tests, typecheck and `npx eslint src tests`
+  clean, both drift gates green.

@@ -42,6 +42,11 @@ prompt preview names the learner's subject, deck focus, requested styles, any
 requested name, and the library inventory when the provider is choosing. The
 existing all-or-nothing validation remains.
 
+The prepared prompt is editable. The words in the box are what gets sent: the
+learner can change them, copy them, rebuild them from the brief, or cancel. A
+blank or unchanged box sends the prepared text. The answer still goes through
+the strict importer, so an edit cannot bypass validation.
+
 ### Chat
 
 The Chat prompt includes the brief and a library inventory: pack names,
@@ -118,6 +123,8 @@ The post-implementation proof must demonstrate:
 4. A specific card style produces that style; a wrong style is refused.
 5. Writing an empty pack/deck and then generating or chatting into it does not
    require a second creation path.
+6. A prepared Generate prompt is edited before sending, and the provider
+   receives the edited words rather than the prepared text.
 
 ## Non-goals
 

@@ -8,6 +8,8 @@
 // [pack: creation-control]
 // 2026-10-23 opencode: a generation can run from a stored prepared request, and
 // a timeout is marked for the background job retry. [pack: background-jobs]
+// 2026-10-27 qoder: cards inside a deck are asked at that deck's level, and a
+// generated deck is stored at the level the request was prepared with. [D-29]
 
 import type { Card, ProviderStatus } from "@/lib/shared/types";
 import { callProvider, ProviderTimeoutError } from "@/lib/provider/client";
@@ -176,6 +178,7 @@ export async function prepareGeneration(body: {
       count,
       cardId: null,
       brief: body.brief,
+      level: slots.level,
     });
     return { requestId: prepared.id, prompt: prompt.display, expiresAt: prepared.expiresAt };
   }
@@ -200,6 +203,7 @@ export async function prepareGeneration(body: {
       count,
       cardId: null,
       brief: body.brief,
+      level: slots.level,
     });
     return { requestId: prepared.id, prompt: prompt.display, expiresAt: prepared.expiresAt };
   }
@@ -208,12 +212,18 @@ export async function prepareGeneration(body: {
   const deck = pack.decks.find((entry) => entry.id === wantedDeck);
   if (!deck) throw new Error(`That deck is not in ${pack.name}.`);
   const count = generationCount(body.count, 5);
-  const prompt = buildGenerationPrompt(packRecord(pack), slots, {
-    topic: deck.name,
-    count,
-    brief: body.brief,
-    inventory,
-  });
+  // WHY: A deck's level wins for generation inside that deck; the global learner
+  // level is only the fallback when no deck is chosen. [D-29]
+  const prompt = buildGenerationPrompt(
+    packRecord(pack),
+    { ...slots, level: deck.level },
+    {
+      topic: deck.name,
+      count,
+      brief: body.brief,
+      inventory,
+    },
+  );
   const prepared = holdPrepared({
     kind: "generation",
     display: prompt.display,
@@ -225,6 +235,7 @@ export async function prepareGeneration(body: {
     count,
     cardId: null,
     brief: body.brief,
+    level: deck.level,
   });
   return { requestId: prepared.id, prompt: prompt.display, expiresAt: prepared.expiresAt };
 }
@@ -280,6 +291,7 @@ export async function generateFromPrepared(prepared: PreparedRequest): Promise<G
       language: prepared.brief?.targetLanguage,
       sourceLanguage: prepared.brief?.sourceLanguage,
       studyInstruction: prepared.brief?.studyInstruction,
+      level: prepared.level,
     });
     if (!read.ok) throw new Error(`Nothing was saved, because ${read.message}.`);
     const imported = await importBundle(JSON.stringify(read.bundle), { kind: "pack" }, {
@@ -302,6 +314,7 @@ export async function generateFromPrepared(prepared: PreparedRequest): Promise<G
       cardStyle,
       language: parent?.language,
       sourceLanguage: parent?.sourceLanguage,
+      level: prepared.level,
     });
     if (!read.ok) throw new Error(`Nothing was saved, because ${read.message}.`);
     const imported = await importBundle(JSON.stringify(read.bundle), {

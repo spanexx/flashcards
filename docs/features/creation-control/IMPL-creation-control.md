@@ -140,3 +140,14 @@ Phase 0 -> Phase 1 -> Phase 2 -> Phase 3 -> Phase 4 -> Phase 5
 - Chat editing is a request edit, not a validation bypass.
 - The library inventory must never include card text, evidence, settings, or the key.
 - Do not add a runtime dependency.
+
+## Delivery notes
+
+- 2026-10-27: D-30. The learner asked for every Generate prompt to be editable.
+  `GenerationPromptEditor` replaces the read-only block, an edit replaces the
+  held prompt, and `POST /api/jobs` sends the edited text; a blank or unchanged
+  box still sends the prepared text and the strict importer still validates the
+  answer. This supersedes the language-prompt-control non-goal that refused a
+  separate editor for decks or cards. The built export was checked live: the
+  provider body carried the edited text as the only user message, not the
+  prepared prompt, and the job saved a card. Both drift gates green.

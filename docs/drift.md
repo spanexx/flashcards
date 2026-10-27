@@ -1,9 +1,9 @@
 # Drift Log
-**Last updated:** 2026-10-26  **Open:** 0  **Awaiting:** 0  **Resolved:** 27  **Critical/High:** 0
+**Last updated:** 2026-10-27  **Open:** 0  **Awaiting:** 0  **Resolved:** 30  **Critical/High:** 0
 
 ## Open
 
-_None. D-27 closed the provider message gap the learner's own refused call exposed; D-26 closed the import one._
+_None. The three gaps found on 2026-10-27 (D-28, D-29, D-30) were fixed and pinned by tests the same day; see Resolved._
 
 ## Awaiting decision
 
@@ -17,6 +17,33 @@ the IMPL reconcile section, is in progress._
 ---
 
 ## Resolved
+
+- **D-28** (High, 2026-10-27, reporter: the learner, who noticed Generate still used the old prompting) — Adding cards into an existing deck through Generate never asked for teaching layers whenever the pack shipped its own prompt template, so the learner's main writing path made layerless cards while pack and deck generation taught.
+  - Doc claim: "each card may carry a short teaching layer with optional media" (`docs/features/teaching-layers/PRD-TRD-teaching-layers.md:155-158`); "The prompt asks for a short explanation and an optional image or video only when it helps" (`docs/features/teaching-layers/GRILL-teaching-layers.txt:311-316`).
+  - Code reality: `buildGenerationPrompt` appended only the brief and pair lines and never called `teachingPromptLines()`, which only the pack and deck builders reached (`v1/src/lib/provider/prompt.ts:106-119` before fix); the Polish starter pack's own template names no teaching (`v1/public/packs/polish-starter.json:13`).
+  - Why matters: the Generate form always sends a brief, so the cards path always uses the pack's stored template; with the seed pack that meant every generated card arrived without the layer the teaching-layers pack promised.
+  - Owner: teaching-layers
+  - To fix: fix code — the cards builder appends the same teaching rule when the pack ships its own template, and the app's default template keeps its single copy (`v1/src/lib/provider/prompt.ts:100-127`; the shared rule at `v1/src/lib/provider/prompt.ts:214`).
+  - Verified by: "puts the same teaching rule in all three shapes" (`v1/tests/provider-prompt.test.ts:234-250`); "asks for the teaching layer when a pack's own template leaves it out" (`v1/tests/provider-prompt.test.ts:252-260`); the once-only guard "says the teaching rule once when the app's own template carries it" (`v1/tests/provider-prompt.test.ts:262-270`); Scenario 20 now names every target (`docs/features/teaching-layers/PRD-TRD-teaching-layers.md:159-161`); full suite 60 files / 678 tests, typecheck clean, `npx eslint src tests` clean, both drift gates green.
+  - Related: D-29.
+
+- **D-29** (High, 2026-10-27, reporter: the learner, who asked for generated packs and decks to take their level) — A generated pack's decks and a generated deck were always stored at `intermediate`, and cards added inside a deck were prompted at the global level instead of that deck's level.
+  - Doc claim: "A new deck starts at the learner's current global level." (`docs/features/teaching-layers/GRILL-teaching-layers.txt:503`); "A deck's level wins for generation inside that deck. The global learner level is the fallback when no deck is chosen." (`docs/features/teaching-layers/GRILL-teaching-layers.txt:329-330`).
+  - Code reality: both bundle readers stamped `level: "intermediate" as const` (`v1/src/lib/provider/generate.ts:314`, `v1/src/lib/provider/generate.ts:339` before fix), and the cards target built its prompt from the global learner level while the deck it wrote into had its own (`v1/src/lib/browser/provider.ts:100-108`, `v1/src/lib/browser/provider.ts:210-216` before fix).
+  - Why matters: a beginner who generated a new deck got intermediate presentation, and a deck set to advanced still received beginner-level prompt wording from the global setting; the locked rule names the deck as winner.
+  - Owner: teaching-layers
+  - To fix: fix code — the prepared request carries the level; generated pack and deck bundles store it, and a cards prompt uses the deck's level (`v1/src/lib/provider/generate.ts:261-264`, `v1/src/lib/browser/provider.ts:216-238`, `v1/src/lib/provider/prepare.ts:36-45`).
+  - Verified by: "stores a generated deck at the level the caller passed" (`v1/tests/provider-flow.test.ts:378-397`); "prompts cards at the deck's level while a new container takes the global one" (`v1/tests/browser-router.test.ts:736-762`); the simulated deck level (`v1/tests/simulate-create-flow.test.ts:183`); Scenario 21 names the rule (`docs/features/teaching-layers/PRD-TRD-teaching-layers.md:170-172`).
+  - Related: D-28.
+
+- **D-30** (Medium, 2026-10-27, reporter: the learner, who asked for every Generate prompt to be editable) — The prepared Generate prompt was read-only and was sent from the text held by the app, so a learner could see the exact words but not correct them, while Chat's prompt was already editable.
+  - Doc claim: the non-goal "No separate prompt editor for decks or cards." (`docs/features/language-prompt-control/PRD-TRD-language-prompt-control.md:217`), now marked superseded; Chat's promise "The prompt is editable." (`docs/features/creation-control/PRD-TRD-creation-control.md:56`).
+  - Code reality: Create rendered the prepared text in a read-only block and sent only the held request id (`v1/src/app/library/CreatePanel.tsx:901-935`, `v1/src/app/library/CreatePanel.tsx:487-505` before fix); the job route took the stored prompt as-is (`v1/src/lib/browser/router.ts:743-754` before fix), while the Chat editor wrote its edits through (`v1/src/app/library/ChatPromptEditor.tsx:53-63`).
+  - Why matters: the learner asked on 2026-10-27 for every prompt the Generate section sends to be editable and for the edited text to be the text that is sent; that request supersedes the older non-goal, which could only be honoured by leaving a real correction impossible.
+  - Owner: creation-control
+  - To fix: decision and code — the learner's 2026-10-27 instruction supersedes the non-goal; the prepared prompt is editable, an edit replaces the held prompt before the job runs, and both docs say so (`v1/src/app/library/GenerationPromptEditor.tsx`, `v1/src/app/library/CreatePanel.tsx:488-491`, `v1/src/lib/browser/router.ts:753-756`, `v1/src/lib/provider/prepare.ts:36-49`, `docs/features/creation-control/PRD-TRD-creation-control.md:45-48`, `docs/features/language-prompt-control/PRD-TRD-language-prompt-control.md:217`).
+  - Verified by: "takes the learner's edit as the whole request" (`v1/tests/provider-flow.test.ts:95-118`) and "keeps the held prompt when the edit is blank or unchanged" (`v1/tests/provider-flow.test.ts:119-135`); "sends the learner's edited prompt instead of the held one" (`v1/tests/browser-router.test.ts:1145-1202`); a live pass on the built export where the prepared prompt was replaced by a distinctive edit, the provider body carried that edit as the only user message and not the prepared text, and the job saved a card.
+  - Related: none.
 
 - **D-27** (Medium, 2026-10-26, reporter: the learner, after a live provider call was refused) — A browser CORS refusal was flattened into "could not be reached", so the message named neither the likely cause nor a way forward.
   - Doc claim: "The app says so plainly; it does not hide behind a proxy." (`docs/ethics/dev-lane/data.md:19-20`, before fix)

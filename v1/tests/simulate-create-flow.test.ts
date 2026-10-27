@@ -180,7 +180,7 @@ describe("create flow simulation", () => {
     }>("/api/provider/generate", "POST", { requestId: deckPrompt.requestId });
     expect(generatedDeck.kind).toBe("deck");
     expect(generatedDeck.deckId).toBe("first-2");
-    expect(generatedDeck.pack.decks).toContainEqual({ id: "first-2", name: "First 2", level: "intermediate" });
+    expect(generatedDeck.pack.decks).toContainEqual({ id: "first-2", name: "First 2", level: "beginner" });
 
     providerReply(JSON.stringify({ lines: [{ fullLine: "To jest dom.", target: "dom" }] }));
     const cardsPrompt = await localSend<{ requestId: string }>("/api/provider/prepare", "POST", {

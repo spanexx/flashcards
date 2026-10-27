@@ -5,12 +5,16 @@
 // 2026-10-20 opencode: created for the browser-owned build.
 // 2026-10-22 opencode: the creation brief and requested card style are checked
 // through this same seam. [pack: creation-control]
+// 2026-10-27 qoder: a deck's level drives its prompt, a generated deck is stored
+// at the learner's level, and the edited Generate prompt is what gets sent.
+// [D-29, D-30]
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryStore, setBrowserStore, type Store } from "@/lib/browser/store";
 import { localGet, localSend } from "@/lib/browser/router";
 import { writeMeta } from "@/lib/browser/repository";
 import { PACK_BUNDLE_SCHEMA } from "@/lib/browser/bundle";
+import { createJobRunner } from "@/lib/browser/jobs";
 import type { BrowserJob, JobView } from "@/lib/browser/jobs";
 import { ApiError } from "@/lib/client/errors";
 import type { AnswerResult, Card, Plan, ProviderStatus } from "@/lib/shared/types";
@@ -654,6 +658,8 @@ describe("provider calls", () => {
       provider: { url: "https://provider.test/v1", model: "test-model" },
     });
     await localSend("/api/provider/key", "POST", { key: "secret" });
+    // A generated pack is a new container, so the learner's level seeds it. [D-29]
+    await localSend("/api/settings", "PATCH", { level: "advanced" });
     const reply = JSON.stringify({
       pack: { name: "starter", version: "1.0.0", language: "pl" },
       decks: [{ id: "basics", name: "Basics" }],
@@ -684,7 +690,7 @@ describe("provider calls", () => {
     expect(generated.packName).toBe("starter-2");
     expect(generated.count).toBe(1);
     expect(generated.cards[0].origin.kind).toBe("generated");
-    expect(generated.pack.decks).toContainEqual({ id: "basics", name: "Basics", level: "intermediate" });
+    expect(generated.pack.decks).toContainEqual({ id: "basics", name: "Basics", level: "advanced" });
   });
 
   it("generates one deck with a paired id and label suffix", async () => {
@@ -693,6 +699,8 @@ describe("provider calls", () => {
       provider: { url: "https://provider.test/v1", model: "test-model" },
     });
     await localSend("/api/provider/key", "POST", { key: "secret" });
+    // A generated deck is a new container, so the learner's level seeds it. [D-29]
+    await localSend("/api/settings", "PATCH", { level: "advanced" });
     const reply = JSON.stringify({
       deck: { id: "basics", name: "Basics" },
       lines: [{ fullLine: "Piję kawę.", target: "kawę" }],
@@ -722,7 +730,36 @@ describe("provider calls", () => {
     expect(generated.packName).toBe("starter");
     expect(generated.deckId).toBe("basics-2");
     expect(generated.count).toBe(1);
-    expect(generated.pack.decks).toContainEqual({ id: "basics-2", name: "Basics 2", level: "intermediate" });
+    expect(generated.pack.decks).toContainEqual({ id: "basics-2", name: "Basics 2", level: "advanced" });
+  });
+
+  it("prompts cards at the deck's level while a new container takes the global one", async () => {
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
+    await localSend("/api/settings", "PATCH", {
+      level: "advanced",
+      provider: { url: "https://provider.test/v1", model: "test-model" },
+    });
+
+    const cards = await localSend<{ requestId: string; prompt: string }>("/api/provider/prepare", "POST", {
+      target: { kind: "cards", packName: "starter", deckId: "basics" },
+      count: 1,
+    });
+    // An imported deck with no level of its own means intermediate, and the
+    // global advanced level must not leak into a deck prompt. [D-29]
+    expect(cards.prompt).toContain("Learner level: intermediate");
+    expect(cards.prompt).not.toContain("Learner level: advanced");
+
+    const pack = await localSend<{ requestId: string; prompt: string }>("/api/provider/prepare", "POST", {
+      target: { kind: "pack" },
+      count: 1,
+    });
+    expect(pack.prompt).toContain("Learner level: advanced");
+
+    const deck = await localSend<{ requestId: string; prompt: string }>("/api/provider/prepare", "POST", {
+      target: { kind: "deck", packName: "starter" },
+      count: 1,
+    });
+    expect(deck.prompt).toContain("Learner level: advanced");
   });
 
   it("reports a test failure when no provider is set up", async () => {
@@ -1103,6 +1140,64 @@ describe("background job routes", () => {
       "expired",
     );
     expect((await localGet<{ jobs: JobView[] }>("/api/jobs")).jobs).toHaveLength(1);
+  });
+
+  it("sends the learner's edited prompt instead of the held one", async () => {
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
+    await localSend("/api/settings", "PATCH", {
+      provider: { url: "https://provider.test/v1", model: "test-model" },
+    });
+    await localSend("/api/provider/key", "POST", { key: "secret" });
+
+    const bodies: string[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (_url: string, init: { body?: string }) => {
+        bodies.push(init.body ?? "");
+        return new Response(
+          JSON.stringify({
+            choices: [
+              {
+                message: {
+                  content: JSON.stringify({
+                    lines: [{ fullLine: "Piję mleko.", target: "mleko" }],
+                  }),
+                },
+              },
+            ],
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      }),
+    );
+
+    const prepared = await localSend<{ requestId: string; prompt: string }>("/api/provider/prepare", "POST", {
+      target: { kind: "cards", packName: "starter", deckId: "basics" },
+      count: 1,
+    });
+    const edited = "EDITED PROMPT ONLY: write one line about milk.";
+    const created = await localSend<{ job: JobView }>("/api/jobs", "POST", {
+      kind: "generation",
+      requestId: prepared.requestId,
+      prompt: edited,
+    });
+
+    const runner = createJobRunner();
+    try {
+      await runner.wake();
+    } finally {
+      runner.stop();
+    }
+
+    expect(bodies).toHaveLength(1);
+    expect(bodies[0]).toContain(edited);
+    expect(bodies[0]).not.toContain(prepared.prompt);
+    const job = (await localGet<{ jobs: JobView[] }>("/api/jobs")).jobs.find(
+      (entry) => entry.id === created.job.id,
+    );
+    expect(job?.status).toBe("succeeded");
+    const cards = (await localGet<{ cards: Card[] }>("/api/cards")).cards;
+    expect(cards.some((card) => card.summary.includes("mleko"))).toBe(true);
   });
 
   it("enqueues an import without writing it yet", async () => {

@@ -91,7 +91,7 @@ import {
   readJobViews,
   retryJob,
 } from "@/lib/browser/jobs";
-import { takePrepared } from "@/lib/provider/prepare";
+import { applyPromptEdit, takePrepared } from "@/lib/provider/prepare";
 import { AUTHORING_SKILL_VERSION, buildAuthoringPrompt } from "@/lib/browser/authoring";
 import { slugFromName } from "@/lib/browser/creation";
 import {
@@ -750,7 +750,10 @@ export async function localSend<T>(
       if (!prepared || prepared.kind !== "generation") {
         fail("That prepared prompt has expired. Prepare it again.");
       }
-      return { job: await enqueueGenerationJob(prepared) } as T;
+      // WHY: What the learner leaves in the box is the request; the held prompt
+      // is only a starting point once the box was changed. [D-30]
+      const edited = applyPromptEdit(prepared, asString(record.prompt) ?? "");
+      return { job: await enqueueGenerationJob(edited) } as T;
     }
     if (kind === "import") {
       const text = asString(record.text);

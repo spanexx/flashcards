@@ -156,6 +156,9 @@ batch
 answer inside explanations (except the built-in word packs, where the layer is
 the teaching). A missing layer is valid. A malformed layer refuses the whole
 batch through the existing all-or-nothing rule. A model may suggest a YouTube id, time range and search text, but it is never treated as verified. A pack author's curated video is never replaced by the model; a learner replacement is stored on the card and wins.
+Every Generate target asks for the layer — a whole pack, a new deck, or cards
+added inside an existing deck — including when the pack file ships its own
+generation template, and the rule appears once in the prompt.
 ### Scenario 21: Levels belong to decks
 **Given** any pack file or bundle
 **When** decks are read
@@ -164,6 +167,9 @@ means intermediate. Old bundles without levels import unchanged. A new deck
 defaults to the learner's global level, and its creator may pick another level
 in the same form. Changing a level changes presentation only. The global setting
 remains the generation fallback when no deck is chosen. No stored setting is renamed or migrated.
+A pack or deck produced by Generate is a new container, so it is stored at the
+learner's global level. Cards generated inside an existing deck are prompted at
+that deck's level, and a deck without one behaves as intermediate.
 ### Scenario 22: Built-in packs install and update themselves
 **Given** the seed manifest at `/packs/index.json`
 **When** the app starts
