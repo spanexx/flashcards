@@ -13,11 +13,27 @@ export function speechSupported(): boolean {
   );
 }
 
-/** Speak text with the device voice, when the browser has one. */
-export function speak(text: string, lang?: string): void {
-  if (!speechSupported()) return;
-  const utterance = new SpeechSynthesisUtterance(text);
-  if (lang) utterance.lang = lang;
+/**
+ * Speak lines in order, each in its own language, when the browser has a voice.
+ * A line that cannot be spoken is skipped so one missing voice does not silence
+ * the rest.
+ */
+export function speakLines(lines: readonly { text: string; lang: string }[]): void {
+  if (!speechSupported() || lines.length === 0) return;
   window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(utterance);
+  const speakAt = (position: number) => {
+    if (position >= lines.length) return;
+    const line = lines[position];
+    const utterance = new SpeechSynthesisUtterance(line.text);
+    if (line.lang) utterance.lang = line.lang;
+    utterance.onend = () => speakAt(position + 1);
+    utterance.onerror = () => speakAt(position + 1);
+    window.speechSynthesis.speak(utterance);
+  };
+  speakAt(0);
+}
+
+/** Speak one text with the device voice, when the browser has one. */
+export function speak(text: string, lang?: string): void {
+  speakLines([{ text, lang: lang ?? "" }]);
 }

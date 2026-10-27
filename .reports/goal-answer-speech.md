@@ -56,3 +56,18 @@ The voice mouth is missing (`hermes` not on PATH), so only the text poke is
 queued; `pending-victor.md` stayed empty because the CLI crashes in the voice
 step. Raised in chat instead.
 Verdict: human gate reached. Waiting for review.
+
+### 5 — 2026-10-27T07:36
+Action: the learner reported the Polish card's English translation read with the
+Polish voice, then corrected the design: every piece of card text should carry
+its own language, written at creation, so speech never guesses from the pack.
+Amended GRILL Q1/Q2 and added Q7; added `lang` to text parts in the type and
+schema; tagged full lines and translations in both creation paths; made
+`answerSpeech` return one line per language; added `speakLines`; updated the
+card, the tests (16), the sim (7 scenarios) and the pack docs.
+Verification: targeted 16/16; typecheck clean; changed-file lint clean; build
+passed (74 files, 72 precache); full suite 61 files / 694 tests; sim 7/7;
+untagged older cards still fall back to the pack pair.
+Verdict: pass. Failure class: wrong-language voice, caught by the learner.
+Pivot: per-part tags instead of one pack voice.
+Next: commit and push to PR #3, then the human listen check.

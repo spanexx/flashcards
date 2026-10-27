@@ -19,7 +19,8 @@ locked; agent-filled choices are marked [agent decision].
 
 --------------------------------------------------------------------------------
 Q1. What is spoken?
-A. The whole answer side, as one utterance: text parts in display order,
+A. [Amended by Q7, 2026-10-27: the answer is read as per-language lines, not
+   one utterance.] The whole answer side: text parts in display order,
    including a translation part (the learner hears the whole answer)
    [agent decision]. Blank parts and media are skipped (there is nothing to
    say). A speak part is read as part of the answer [agent decision].
@@ -28,13 +29,15 @@ A. The whole answer side, as one utterance: text parts in display order,
    Source: ticket answer-speech.md Q1; `v1/src/app/study/StudyCard.tsx:231-234`.
 
 Q2. Which language and which voice?
-A. The pack's learning language (`PackStatus.language`) is the utterance
-   language, so numbers are read in that language too. When the pack has no
-   language, no `lang` is set and the device chooses its default
-   [agent decision]. The device voice is used; no new audio files, no
-   network call, no provider.
+A. [Amended by Q7, 2026-10-27: a part's own language tag decides its voice;
+   per-part voice switching is now required, because one answer can hold a
+   Polish line and an English translation.] The pack's learning language
+   (`PackStatus.language`) was the utterance language, so numbers are read in
+   that language too; when the pack has no language, no `lang` is set and the
+   device chooses its default [agent decision]. The device voice is used; no
+   new audio files, no network call, no provider.
    Why: the learner named Polish as the example and said numbers follow.
-   Rules out: always-English, per-part voice switching, recorded audio.
+   Rules out: always-English, recorded audio.
    Source: ticket Q2; `v1/src/app/StudyClient.tsx:780-782`,
    `v1/src/lib/client/speech.ts:8`.
 
@@ -72,3 +75,24 @@ A. The existing "Hear it" speak part, the listening card's "Play the line",
    Why: the learner explicitly separated the answer voice from the chime.
    Rules out: replacing any current sound or speech control.
    Source: learner clarification; `v1/src/lib/client/sound.ts:1-8`.
+
+Q7. How does the app know which language a word is? (added 2026-10-27)
+A. The card says it. Every text part carries a language tag written when the
+   card is created, from the pack's declared pair: a full line is tagged with
+   the learning language, a translation with the question language, and any
+   other text with the language it is written in. Speech reads each tagged
+   part with that language; neighbouring parts with the same language are
+   joined into one utterance. Cards written before tags existed fall back to
+   the pack pair (translation -> `sourceLanguage`, everything else ->
+   `language`), so older packs still play.
+   Why: the learner heard the English translation "I was at home." read with
+   the Polish voice, and said each language must keep its own voice (Polish
+   for Polish, Spanish for Spanish, Portuguese for Portuguese). The pack pair
+   alone cannot describe a mixed-language answer, and guessing per word is
+   not reliable.
+   Rules out: one voice for the whole answer; guessing the language at speak
+   time; hard-coding Polish/English; silently mispronouncing a translation.
+   Source: learner report and clarification 2026-10-27; card creation
+   `v1/src/lib/provider/generate.ts:130-203`,
+   `v1/src/lib/browser/authoring.ts:61-103`; schema
+   `v1/src/lib/core/schema.ts:10-16`.

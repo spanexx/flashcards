@@ -13,7 +13,7 @@
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import { answerSpeech } from "@/lib/client/answer-speech";
-import { speak, speechSupported } from "@/lib/client/speech";
+import { speak, speakLines, speechSupported } from "@/lib/client/speech";
 import { LISTEN_INSTRUCTION, listenPrompt, studyModeLabel } from "@/lib/client/study-view";
 import { OUTCOME_LABELS, OUTCOME_MEANINGS } from "@/lib/core/outcome";
 import type { AnswerResult, Card, CardPart, Outcome } from "@/lib/shared/types";
@@ -38,6 +38,8 @@ interface StudyCardProps {
   layerBar?: ReactNode;
   /** The pack's learning language, used by the answer voice. */
   answerLang?: string;
+  /** The pack's question language, used for a translation line. */
+  answerSourceLang?: string;
   instruction: string;
   isLast: boolean;
   onHint: () => void;
@@ -63,6 +65,7 @@ export default function StudyCard({
   coldCheck,
   layerBar,
   answerLang,
+  answerSourceLang,
   instruction,
   isLast,
   onHint,
@@ -71,7 +74,13 @@ export default function StudyCard({
   onCorrect,
 }: StudyCardProps) {
   const mode = card.answerDef.mode;
-  const spoken = answerSpeech(card.answer, { lang: answerLang, teaching: card.teaching });
+  // WHY: Each line keeps its own language, so a Polish answer and its English
+  // translation are not read with one voice.
+  const spoken = answerSpeech(card.answer, {
+    lang: answerLang,
+    sourceLang: answerSourceLang,
+    teaching: card.teaching,
+  });
   const [speechReady, setSpeechReady] = useState(false);
 
   useEffect(() => {
@@ -251,11 +260,11 @@ export default function StudyCard({
             <CardSide parts={card.answer} />
           </div>
 
-          {speechReady && spoken.text ? (
+          {speechReady && spoken.length > 0 ? (
             <button
               className="btn small study-hear"
               type="button"
-              onClick={() => speak(spoken.text, spoken.lang || undefined)}
+              onClick={() => speakLines(spoken)}
             >
               Hear the answer
             </button>

@@ -23,10 +23,10 @@ at the pronunciation the pack intended.
 ### Scenario 1: a language answer is spoken
 
 **Given** a Polish pack and an answer with a Polish line and an English
-translation
+translation, each text part carrying its own language tag
 **When** the learner presses "Hear the answer" under the reveal
-**Then** the device voice speaks both parts in display order with the Polish
-language tag; nothing is stored or sent.
+**Then** the Polish line is read with the Polish voice and the English
+translation with the English voice, in display order; nothing is stored or sent.
 
 ### Scenario 2: numbers follow the learning language
 
@@ -56,7 +56,15 @@ raw code is not spoken.
 **When** the answer is revealed
 **Then** no "Hear the answer" control appears and no error is shown.
 
-### Scenario 6: the existing speech and sound are untouched
+### Scenario 6: an older card has no language tags
+
+**Given** a card written before text parts carried language tags
+**When** the learner presses the control
+**Then** the pack pair is used: the translation is read in the question
+language and the learning line in the learning language, so the card still
+plays.
+
+### Scenario 7: the existing speech and sound are untouched
 
 **Given** an answer with a speak part, a listening card and the feedback cues
 **When** the learner uses any of them
@@ -71,14 +79,17 @@ in the shipped source. A CLI runner is the right shape here: the observable is
 text, not a visual state.
 
 ```
-scenario 1 → text "My jedliśmy obiad. We were eating dinner." lang "pl"
-scenario 2 → text "There are 3 apples and 12 pears." lang "en"
-scenario 3 → text before code "It prints 8. The double star is exponentiation.";
-             text after code "The double star is exponentiation. It prints 8.";
+scenario 1 → lines [{text:"Byłem w domu.", lang:"pl"},
+             {text:"I was at home.", lang:"en"}] from the card's own tags,
+             even when the pack pair says something else
+scenario 2 → line {text:"There are 3 apples and 12 pears.", lang:"en"}
+scenario 3 → before code "It prints 8. The double star is exponentiation.";
+             after code "The double star is exponentiation. It prints 8.";
              no "(", ")", "{", "}"
 scenario 4 → text "This answer is code. Read it on screen."; no code characters
 scenario 5 → speechSupported() is false outside a browser
-scenario 6 → "Hear it", "Play the line", "Listen to the layer" and the cue
+scenario 6 → an untagged older card falls back to pack pair pl/en
+scenario 7 → "Hear it", "Play the line", "Listen to the layer" and the cue
              function are still present
 ```
 
@@ -87,10 +98,15 @@ scenario 6 → "Hear it", "Play the line", "Listen to the layer" and the cue
 ### Data Models
 
 - `CardPart` (`v1/src/lib/shared/types.ts:46-51`) is the input: `text`, `code`,
-  `speak`, `media`, `blank`.
+  `speak`, `media`, `blank`. A `text` part gains an optional `lang` tag naming
+  the language its words are written in; `speak` parts already had one.
+- Card creation writes those tags from the pack's declared pair: a full line
+  gets the learning language, a translation the question language, and a
+  switching line is split into separate text parts.
 - `TeachingPart` (`:27-34`) supplies the code explanation when present.
-- Output is `SpeechLine` (`v1/src/lib/client/layer.ts:118-121`): `{ text, lang }`.
-  It is reused rather than inventing a second speech shape.
+- Output is `SpeechLine[]` (`v1/src/lib/client/layer.ts:118-121`): one
+  `{ text, lang }` per utterance. It is reused rather than inventing a second
+  speech shape.
 
 ### API Contracts
 
@@ -101,32 +117,40 @@ export const CODE_ANSWER_LINE = "This answer is code. Read it on screen.";
 
 export function answerSpeech(
   parts: readonly CardPart[],
-  options?: { lang?: string; teaching?: readonly TeachingPart[] },
-): SpeechLine;
+  options?: { lang?: string; sourceLang?: string; teaching?: readonly TeachingPart[] },
+): SpeechLine[];
 ```
 
 Rules, in order:
 
-1. `text` and `speak` parts contribute their text.
-2. The first `code` part contributes, at its own place in the order, the card's
+1. `text` and `speak` parts contribute their text, in display order.
+2. A part's own non-empty `lang` is the line's language. Without a tag, a
+   `translation` uses the trimmed `sourceLang`, and anything else uses the
+   trimmed `lang`; both fall back to `""`.
+3. Neighbouring parts with the same language join into one line, one space
+   between them; a space before `, . ; : ! ? …` is removed.
+4. The first `code` part contributes, at its own place in the order, the card's
    teaching text parts joined, when there are any; otherwise
    `CODE_ANSWER_LINE`. Later code parts add nothing, and the code text itself
    never contributes.
-3. `blank` and `media` parts contribute nothing.
-4. Segments join with one space; a space before `, . ; : ! ? …` is removed.
-5. `lang` is the trimmed pack language, or `""` when the pack has none.
+5. `blank` and `media` parts contribute nothing.
 
 `v1/src/lib/client/speech.ts` gains:
 
 ```ts
 export function speechSupported(): boolean;
+export function speakLines(lines: readonly { text: string; lang: string }[]): void;
 ```
 
-It is false during server rendering and when the browser lacks synthesis.
+`speakLines` cancels once, then queues each line in its own language; a line
+that errors is skipped so one missing voice does not silence the rest.
+`speechSupported()` is false during server rendering and when the browser lacks
+synthesis.
 
-`StudyCard` gains `answerLang?: string`. It renders the button under the answer
-only when `speechSupported()` is true after mount and the spoken text is not
-empty. `StudyClient` passes `packLanguage` (already computed at `:782`).
+`StudyCard` gains `answerLang?: string` and `answerSourceLang?: string`. It
+renders the button under the answer only when `speechSupported()` is true after
+mount and there is at least one spoken line. `StudyClient` passes
+`packLanguage` (already computed at `:782`) and the pack's `sourceLanguage`.
 
 ### Dependencies
 
@@ -145,7 +169,8 @@ component only decides whether to show the control; the pack lookup stays in
 
 - No autoplay on reveal; audio only after a press.
 - No speed, pitch or voice picker; the device default voice for the language.
-- No per-part voice switching; one utterance per press.
+- No guessing a word's language at speak time; the card's tag decides.
+- No automatic re-tagging of older cards; they use the pack pair fallback.
 - No recorded audio, cache or offline voice pack.
 - No change to the feedback cues, the speak part, the listening card or the
   teaching layer's Listen.

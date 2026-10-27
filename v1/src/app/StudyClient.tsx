@@ -843,6 +843,7 @@ export default function StudyClient() {
           coldCheck={entry.coldCheck}
           layerBar={layerBar}
           answerLang={packLanguage}
+          answerSourceLang={cardPack?.sourceLanguage}
           instruction={instruction}
           isLast={index + 1 >= queue.length}
           onHint={askHint}
