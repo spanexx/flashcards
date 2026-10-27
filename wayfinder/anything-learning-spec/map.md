@@ -39,6 +39,11 @@ Skills every session should consult: `grill-with-docs` and `domain-modeling`. Us
 - [What owns the data: browser-owned packs, decks and cards](tickets/browser-owned-packs.md) - IndexedDB is the only store; the host serves files and sees nothing. pack -> deck -> card, one deck per card, decks replace topics while tags stay free labels; a deck is a container, not a session boundary. One JSON bundle (pack/decks/cards/prompts) is create, import and export; a whole pack creates, a partial file goes into a chosen pack/deck, same name plus newer version updates additively and never deletes. Key in IndexedDB, browser -> provider direct, no relay, no third-party scripts; no key still works. A full backup includes evidence and never the key; restore replaces; desktop autosaves to a picked file, phones save manually, cloud sync later. The Polish pack's topics become decks.
 - [A deck you brought yourself](tickets/deck-import.md) - import is that same JSON pack bundle; a whole pack creates, decks-only joins a picked pack, cards-only joins a picked pack and deck; identity is pack + deck + content so a re-import updates in place and evidence survives; no gate, origin "Imported by the learner.", all-or-nothing with the offending item named; the tutor may teach, hint and generate in an imported deck but never edits a card in place; works with no provider.
 - [The authoring skill](tickets/authoring-skill.md) - a versioned, copyable Markdown prompt, filled with the target's real pack and deck ids, that makes a whole pack, decks or cards in a browser chat and returns JSON only; pasted or loaded through the same all-or-nothing validator; lives in a "Create with a chat" panel and needs no provider.
+- [Study sidebar and previous sessions](tickets/study-sidebar-and-history.md) - the plan keeps its wide column; a right-hand tabbed panel holds the tutor and hints, what to expect and why these cards; previous sessions replaces the old dropdown spot as a plain list of the last five ended sessions, and never more.
+- [Hear the answer](tickets/answer-speech.md) - the answer gets a "Hear the answer" button; the device voice speaks the pack's language, numbers follow that language, and a code answer is explained by its teaching text instead of read as raw symbols.
+- [Fix a refused import with the provider](tickets/import-repair.md) - a refused import keeps Try again and gains "Fix with AI", which shows the exact text first, asks the provider for corrected JSON only, and revalidates before saving; job actions become round icon-only controls.
+- [Ask the tutor to summarise progress](tickets/progress-summary.md) - a Summary tab on Progress sends only counts and topic labels, shows the exact short shape first, stores nothing, and needs a fresh press each time.
+- [Build a plan from many packs and decks](tickets/plan-multi-select.md) - the plan scope is a multi-select of packs and decks (a union, with all decks included); individual cards stay the algorithm's job.
 
 *Locked during charting, before any ticket was resolved:*
 
@@ -75,6 +80,11 @@ Ticket files live in `tickets/`.
 | 15 | What the alphabet requires | grilling | - | resolved |
 | 16 | What owns the data: browser-owned packs, decks and cards | grilling | T12 | resolved |
 | 17 | The authoring skill: a copyable prompt for packs, decks and cards | grilling | - | resolved |
+| 18 | Study sidebar and previous sessions | grilling | - | resolved |
+| 19 | Hear the answer | grilling | - | resolved |
+| 20 | Fix a refused import with the provider | grilling | - | resolved |
+| 21 | Ask the tutor to summarise progress | grilling | - | resolved |
+| 22 | Build a plan from many packs and decks | grilling | - | resolved |
 
 ## Not yet specified
 

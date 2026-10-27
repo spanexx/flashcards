@@ -1,115 +1,80 @@
-# Handoff 2026-10-25 13:05 — Teaching-layers GRILL locked + fix/interface-polish audit
+# Handoff 2026-10-26 — CORS + prompt parity landed; five decisions locked
 
-## What is locked
+## Where main stands
 
-`docs/features/teaching-layers/GRILL-teaching-layers.txt` is **Status: Locked**,
-27 entries, ends with `No remaining open questions`. Key decisions:
+`main` is at `9117c12`, equal to `origin/main`.
 
-- Teaching layer is an optional **ordered list** of parts on a card:
-  - text `{ type: "text", text, lang? }`
-  - image `{ type: "image", source: "builtin" | "web" | "local", src, alt }`
-  - video `{ type: "video", source: "youtube" | "web" | "local", src, start?, end?, search?, alt? }`
-- `teaching` is **excluded** from `canonicalContent` (`v1/src/lib/core/card.ts:58`).
-  Layer-only edits keep the card and its evidence; question/answer edits retire
-  the card and mint a new id.
-- Deck becomes `{ id, name, level }`; missing level reads as `intermediate`;
-  level is presentation only (`Settings.level` stays the generation fallback).
-  - beginner: layer open
-  - intermediate: folded, peeking adds a cold repeat
-  - advanced: question first, layer after answer
-- Word packs use a **lesson-first** flow: prompt "dog", answer "pies", layer
-  "pies — pronounced pyes, the Polish word for dog". The answer may appear in
-  the layer here (narrow exception), and `helpSeen: true` is set.
-- **Listen** button per text-bearing layer: reads text parts in order, Listen /
-  Stop, no autoplay, device SpeechSynthesis, per-part `lang`, skips missing
-  voices with a plain note, disabled when speech is unavailable, teaching text
-  only, carries a text label.
-- Backup is **one zip**: `backup.json` + `media/`; autosave rewrites that zip.
-  Pack export is zip (`pack.json` + `media/`) when it has local media, otherwise
-  plain JSON. Import accepts both. Built-in and web media are never copied.
-- Media caps: images ~1600px / 1MB, videos 20MB. Card never depends on media;
-  offline and failure rules in entry 18.
-- Built-in packs: **two only** — Browser Dev and Polish from Scratch.
-  - Browser Dev: one pack, 14 decks; beginner 1–6, intermediate 7–10,
-    advanced 11–14 (entry 24).
-  - Polish from Scratch: 12 decks, beginner, words only, no sentences, no
-    gender/case variants, text only (entries 22–24).
-  - Anatomy Basics was dropped.
-- Ticket `wayfinder/anything-learning-spec/tickets/browser-owned-packs.md`
-  revised for the zip rule (#4, #9, Resolutions 3 and 5) with a dated note.
+- **CORS message landed.** Fix `478fd29`, merge `4521230`. `D-27` is Resolved;
+  Scenario 7 of `docs/features/browser-app/PRD-TRD-browser-app.md` and
+  `docs/ethics/dev-lane/data.md:19-22` name CORS.
+- **Generate prompt parity landed after it** (PR #2, `5d93001` → merge
+  `9117c12`). It fixed three gaps and added `D-28`, `D-29`, `D-30`:
+  - cards added into an existing deck now ask for the teaching layer even when
+    the pack ships its own template;
+  - generated packs and decks now store the learner's level (deck level first,
+    global level as fallback) instead of a hard-coded `intermediate`;
+  - every prepared Generate prompt is now editable, and the edited text is what
+    the provider receives (`GenerationPromptEditor.tsx`); this superseded the
+    old language-prompt-control non-goal at that doc's line 217.
+  - Evidence in `.reports/goal-generate-prompt-parity.md`: 60 files / 678 tests,
+    typecheck clean, `npx eslint src tests` clean (plain `eslint .` hangs on the
+    Windows `v1/node_modules` symlink), both drift gates green, plus a live
+    built-export pass where the edited prompt alone reached the provider.
+- Earlier `main` already carried the learner-delight palette/sound/motion, the
+  teaching layers and the study-resilience pack.
+- Working tree holds only `sessions/` churn. No server, no `out/`, `.next` or
+  temp files.
+- **Provider fact, proven this session:** a direct `POST` to
+  `https://larprouter.com/v1/chat/completions` with `deepseek-v4.1-flash`
+  returned **200** and `OK`; the browser `OPTIONS` preflight with
+  `Origin: https://spanexx.github.io` returned **401 with no
+  `Access-Control-Allow-Origin`**. Curl and Zed work because they are native
+  clients; only browsers enforce CORS. The page cannot fix this. The real fix is
+  provider-side (answer `OPTIONS` unauthenticated, then send
+  `Access-Control-Allow-Origin: https://spanexx.github.io`,
+  `Access-Control-Allow-Methods: POST, OPTIONS`,
+  `Access-Control-Allow-Headers: authorization, content-type`), a relay, or a
+  provider that already allows browser calls.
 
-## Audit — isolated worktree `fix/interface-polish`
+## Next session: implement the five locked decisions
 
-Path: `/home/spanexx/.config/superpowers/worktrees/flashcards/fix-interface-polish`
-Branch: `fix/interface-polish` at `69805ef`, **3 commits behind `main`**, but
-`git diff --stat HEAD..main` is only `v1/README.md`. Nothing staged, no commits.
-14 modified files + 2 untracked (`.reports/goal-interface-polish.md`,
-`v1/public/favicon.ico`). `git diff --check` clean.
+The five requests are now locked decision records, written 2026-10-27. The map
+index is `wayfinder/anything-learning-spec/map.md`; the loop ledger is
+`.reports/goal-learner-requests.md`. **Do not re-grill** — each ticket is the
+locked answer. All five are new surface, so they enter through
+`feature-pipeline` (Phase 0.5), not `surgical-change`.
 
-What the work does:
+- **18 — Study sidebar and previous sessions**:
+  `tickets/study-sidebar-and-history.md`
+- **19 — Hear the answer** (answer TTS): `tickets/answer-speech.md`
+- **20 — Fix a refused import with the provider**: `tickets/import-repair.md`
+- **21 — Ask the tutor to summarise progress**: `tickets/progress-summary.md`
+- **22 — Build a plan from many packs and decks**: `tickets/plan-multi-select.md`
 
-- `v1/src/app/Nav.tsx`: Lucide Layers `BrandMark` + "Flashcards" wordmark.
-- `v1/src/app/icon.svg`: green `#2f5d50` tile with white Layers paths.
-- `v1/src/app/layout.tsx`: favicon/icon links go through `withBasePath`.
-- `v1/src/app/globals.css`: brand mark, sticky phone bar, 16px selects,
-  `study-plan-layout` main + rail (~1339 / ~1309).
-- `v1/src/app/StudyClient.tsx`: plan wrapped in `study-plan-layout`,
-  `study-plan-head`, `study-plan-main`, `aside.rail.study-plan-rail`;
-  "Start session" moved into the rail. Logic untouched.
-- `v1/src/app/settings/SettingsClient.tsx`: `form-grid` / `field-label`.
-- `v1/scripts/check-pwa.mjs`, `v1/scripts/make-pwa-icons.mjs`: real ICO
-  (16/32/48), SVG required, both precached.
-- `v1/tests/pwa-deploy.test.ts`, `v1/tests/simulate-study-experience.test.ts`:
-  new assertions for favicon, SVG, layout classes, 16px controls.
-- `/` already renders `StudyClient` (`v1/src/app/page.tsx`), so the root route
-  requirement was already met before this branch.
-- `NEXT_PUBLIC_BASE_PATH=/flashcards` → `basePath` in `v1/next.config.ts`.
+Carry forward:
 
-Verification already run and green: `npm run typecheck`, `npm run lint`,
-`npm test` (468/468), `npm run build` at base `/`, `npm run build` at
-`NEXT_PUBLIC_BASE_PATH=/flashcards`; `check-pwa` passed in both builds.
-
-### Gaps (why it has not landed)
-
-1. Nothing committed; `main` does not have any of it.
-2. `.reports/goal-interface-polish.md` stops at iteration 2 (worktree-creation
-   failure + WSL retry). No completion record.
-3. `docs/drift.md` D-12, D-13, D-14 are still **Open**, and their globals.css
-   line refs are stale (they say ~1323 / ~1295; the classes are near 1339 /
-   1309). Closing them needs the corrected refs.
-4. No screenshots at 390x844 or desktop, so no visual sign-off.
-5. Human gates untouched: visual sign-off, commit go, PR/merge, push.
+- The learner's typed confirmation: "main area = previous sessions, right
+  sidebar = the moved panels".
+- Ticket 20 records a **learner-approved exception** to the privacy boundary:
+  the refused import text may go to the learner's provider, but only after an
+  exact preview and only for the import the learner pressed on. Do not widen it.
+- Answer TTS uses the existing device voice (`v1/src/lib/client/speech.ts`), not
+  the feedback chime the learner-delight pack added.
 
 ## Remaining steps (in order)
 
-1. Visual check in the worktree at 390x844 and desktop: no horizontal overflow,
-   sticky header visible, both language dropdowns usable, Study/Library/Create
-   look finished. Proof: screenshots + learner sign-off.
-2. Commit on `fix/interface-polish` after reading `docs/ethics/commit.md`.
-   Proof: `git log --oneline -1` on that branch.
-3. Rebase or merge onto `main` (only `v1/README.md` conflicts). Proof:
-   `git diff --stat main..HEAD` is empty after merge.
-4. Re-run at the deployment base: `NEXT_PUBLIC_BASE_PATH=/flashcards npm run
-   build` then serve and `curl` `/` and `/favicon.ico` for 200. Proof: both 200.
-5. Close D-12–D-14 in `docs/drift.md` with corrected line refs. Proof: no
-   Open entries for D-12–D-14.
-6. Push only with explicit user go.
+1. Pick the pack order (suggest 18 → 22 → 19 → 20 → 21: UI breadth first, then
+   the provider paths). **Proves:** one pack is chosen before a worktree exists.
+2. For each pack: `feature-pipeline` at Phase 0.5, pre-impl sim → PRD-TRD → IMPL
+   → implement → post-impl sim → drift check → reconcile. **Proves:** the pack's
+   own tests and simulation.
+3. Commit, merge and push only after the learner says so. **Proves:** the
+   learner's words and a green Pages run.
 
-Then start teaching layers at `feature-pipeline` Phase 1 (PRD+TRD), using the
-locked GRILL as the appendix.
+## User-only follow-ups (the agent must not do these)
 
-## User-only follow-ups
-
-- Visual sign-off on the UI polish.
-- Commit / merge / push approval.
-- A Polish speaker must check the word list before it ships.
-- A person must fact-check the Browser Dev deck content.
-
-## Commands
-
-```bash
-cd /home/spanexx/.config/superpowers/worktrees/flashcards/fix-interface-polish/v1
-git status --short
-npm run typecheck && npm run lint && npm test
-NEXT_PUBLIC_BASE_PATH=/flashcards npm run build
-```
+- Watch Pages run `40281828330` (learner chose to).
+- Decide the CORS route for larprouter (provider-side headers, relay, or a
+  different provider). The app now says the truth; it cannot make the call.
+- Consider rotating the `lrsk-…` key, since it was pasted in plain chat.
+- `git config core.hooksPath .githooks` — once per clone, learner only.
