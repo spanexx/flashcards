@@ -20,9 +20,12 @@
 // 2026-10-26 qoder: the layer's automatic opening answers to a device
 // preference, and a running session is snapshotted so a reload picks it back
 // up. [pack: study-resilience]
+// 2026-10-27 opencode: Enter moves to the next card once the answer is shown,
+// so a short window never needs Tab to reach the footer. [pack: session-advance]
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { isAdvanceKey } from "@/lib/client/advance-key";
 import { apiGet, apiSend, ApiError } from "@/lib/client/api";
 import { isWrong, OUTCOME_LABELS, worstOutcome } from "@/lib/core/outcome";
 import { shouldAutoHint, studyCardInstruction } from "@/lib/client/study-view";
@@ -598,6 +601,26 @@ export default function StudyClient() {
       void finish(true, false);
     }
   }, [finish, index, queue.length, resetCardState]);
+
+  // WHY: Enter is the shortest way to the next card once the answer is shown.
+  // It stays out of the way of fields and controls, and of the open teaching
+  // layer, so their own Enter keeps its meaning. [pack: session-advance]
+  useEffect(() => {
+    if (phase !== "running" || !result || layerOpen || busy) return;
+    const onKey = (event: KeyboardEvent) => {
+      const target = event.target;
+      const onControl =
+        target instanceof HTMLElement &&
+        Boolean(
+          target.closest("input, textarea, select, button, a, summary, [contenteditable='true']"),
+        );
+      if (!isAdvanceKey(event, onControl)) return;
+      event.preventDefault();
+      nextCard();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [busy, layerOpen, nextCard, phase, result]);
 
   const correct = useCallback(
     async (region: string | null, outcome: Outcome) => {

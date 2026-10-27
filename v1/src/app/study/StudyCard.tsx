@@ -9,6 +9,9 @@
 // tint the reveal without changing any rule. [pack: learner-delight]
 // 2026-10-27 opencode: the answer can be heard in the pack language, and a code
 // answer is explained instead of read as symbols. [pack: answer-speech]
+// 2026-10-27 opencode: Next says Enter continues, and the footer pins itself
+// while the card scrolls; the session card reserves a minimum height.
+// [pack: session-advance]
 
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
@@ -353,9 +356,20 @@ export default function StudyCard({
             >
               Look at this card&apos;s record
             </Link>
-            <button className="btn primary" type="button" onClick={onNext} disabled={busy}>
-              {isLast ? "Finish" : "Next card"} <span aria-hidden="true">→</span>
-            </button>
+            <div className="study-next-group">
+              <span className="study-enter">
+                <kbd>Enter</kbd> to continue
+              </span>
+              <button
+                className="btn primary"
+                type="button"
+                onClick={onNext}
+                disabled={busy}
+                aria-keyshortcuts="Enter"
+              >
+                {isLast ? "Finish" : "Next card"} <span aria-hidden="true">→</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

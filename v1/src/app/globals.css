@@ -2071,10 +2071,18 @@ td {
   font-size: 0.82rem;
 }
 
+/* WHY: The card is a column so its footer can settle at the bottom, and the
+   minimum height keeps the question from collapsing far below the answer.
+   `clip` replaces `hidden` because a hidden overflow would become the sticky
+   footer's scroll container and stop it pinning to the page. [pack: session-advance] */
 .study-card {
+  --card-pad-x: 34px;
   position: relative;
-  overflow: hidden;
-  padding: 30px 34px 26px;
+  display: flex;
+  flex-direction: column;
+  min-height: 420px;
+  overflow: clip;
+  padding: 30px var(--card-pad-x) 26px;
   border: 1px solid var(--edge-accent);
   border-radius: 18px;
   background: var(--card);
@@ -2297,14 +2305,36 @@ td {
   margin: 6px 0 0;
 }
 
+/* WHY: The footer pins to the bottom of the visible area only when its natural
+   place would fall below the fold, so a short card looks unchanged. It is
+   full-bleed and opaque because content scrolls behind it. [pack: session-advance] */
 .study-card-actions {
+  position: sticky;
+  bottom: -1px;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 14px;
   margin-top: 30px;
-  padding-top: 20px;
+  margin-inline: calc(-1 * var(--card-pad-x));
+  padding: 16px var(--card-pad-x) 18px;
   border-top: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  border-radius: 0 0 16px 16px;
+  background: var(--card);
+  box-shadow: 0 -16px 24px -22px color-mix(in srgb, var(--ink) 45%, transparent);
+}
+
+/* WHY: Only the question footer is pushed to the bottom of the reserved height;
+   the answer footer already follows a long reveal. */
+.study-card > .study-card-actions {
+  margin-top: auto;
+}
+
+.study-next-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .study-enter {
@@ -2475,6 +2505,7 @@ td {
 }
 
 .study-stage.stage-full .study-card {
+  --card-pad-x: clamp(22px, 3.2vw, 42px);
   padding: clamp(22px, 3.2vw, 42px);
 }
 
@@ -2731,7 +2762,8 @@ body.full-stage {
   }
 
   .study-card {
-    padding: 22px 20px 20px;
+    --card-pad-x: 20px;
+    padding: 22px var(--card-pad-x) 20px;
     border-radius: 16px;
   }
 
@@ -2751,6 +2783,16 @@ body.full-stage {
 
   .study-card-actions .btn {
     width: 100%;
+  }
+
+  .study-next-group {
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+
+  .study-next-group .btn {
+    width: auto;
+    flex: 1 1 auto;
   }
 
   .study-enter {

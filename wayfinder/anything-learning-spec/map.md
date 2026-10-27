@@ -45,6 +45,7 @@ Skills every session should consult: `grill-with-docs` and `domain-modeling`. Us
 - [Ask the tutor to summarise progress](tickets/progress-summary.md) - a Summary tab on Progress sends only counts and topic labels, shows the exact short shape first, stores nothing, and needs a fresh press each time.
 - [Build a plan from many packs and decks](tickets/plan-multi-select.md) - the plan scope is a multi-select of packs and decks (a union, with all decks included); individual cards stay the algorithm's job.
 - [Full screen stays inside the browser](tickets/full-screen-in-browser.md) - the card's Full screen fills the browser viewport only, shrinks with the window and never takes the monitor; system fullscreen is not requested.
+- [Advance without reaching for Next](tickets/session-advance.md) - the learner chose all three simulated answers together: a pinned action row, Enter to continue after the answer, and a 420px minimum card height.
 
 *Locked during charting, before any ticket was resolved:*
 
