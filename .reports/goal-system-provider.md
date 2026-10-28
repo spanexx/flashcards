@@ -120,3 +120,22 @@ one file's 20-second import hook timed out; that file passes alone in 16 s
 (5/5), and the suite is being re-run alone for a clean record.
 Next: collect the full suite, fill the IMPL verification and delivery note,
 commit, push, open the PR and post the review event.
+
+### 6 — 2026-10-28 (close)
+Action: ran the full suite alone — 81 files / 856 tests passed, exit 0. Filled
+the IMPL verification and delivery note, including three deliberate deviations:
+no pre-impl simulation (lean shape; the locked contract and the build-level
+acceptance stood in), screenshots unavailable (DOM plus the fakes' state), and
+the suite re-run alone after the starved first attempt. Committed `8c302d9`
+(47 files), pushed `feature/system-provider`, and opened PR #4 with the evidence
+body: <https://github.com/spanexx/flashcards/pull/4>. Both drift gates pass
+(0 open, 0 awaiting; 47 staged files touch no open entry). Cleanup: stopped the
+stub, the service and both fakes; closed 8088, 8787, 8789, 8790 and 8090;
+deleted `/tmp/system-provider-accept`; removed the worktree's `node_modules`
+symlink, `out` and `.next`; `git status` is clean. The commit body was cut short
+by a heredoc quoting fault — the title and first three paragraphs are intact,
+and the complete rationale is in the PR body and the pack docs.
+
+The merge is the learner's decision: the branch, worktree and PR stay for
+review. Committing and pushing were delegated; merging was not.
+
