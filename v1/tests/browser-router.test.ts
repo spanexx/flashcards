@@ -652,6 +652,29 @@ describe("settings and export", () => {
     ).rejects.toBeInstanceOf(ApiError);
   });
 
+  it("remembers which provider lane answers and refuses an unknown one", async () => {
+    await localSend("/api/settings", "PATCH", {
+      provider: { url: "https://provider.test/v1", model: "test-model", mode: "system" },
+    });
+    const saved = await localGet<{
+      settings: { provider: { url: string; model: string; mode: string } };
+    }>("/api/settings");
+    expect(saved.settings.provider).toEqual({
+      url: "https://provider.test/v1",
+      model: "test-model",
+      mode: "system",
+    });
+
+    // A patch that says nothing about the lane keeps the chosen one.
+    await localSend("/api/settings", "PATCH", { level: "advanced" });
+    const kept = await localGet<{ settings: { provider: { mode: string } } }>("/api/settings");
+    expect(kept.settings.provider.mode).toBe("system");
+
+    await expect(
+      localSend("/api/settings", "PATCH", { provider: { mode: "magic" } }),
+    ).rejects.toThrow(/mode/);
+  });
+
   it("exports a pack and a full backup", async () => {
     await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
     const pack = await localGet<{ json: string }>("/api/packs/export?name=starter");
@@ -914,7 +937,8 @@ describe("provider calls", () => {
       providerMessage: string | null;
     }>("/api/provider/hint", "POST", { cardId: card.id, approved: true });
     expect(hint.source).toBe("pack");
-    expect(hint.providerMessage).toContain("problem");
+    // The service's own sentence is shown when it gave one.
+    expect(hint.providerMessage).toBe("nope");
   });
 
   it("names a missing key instead of hiding the provider setup", async () => {

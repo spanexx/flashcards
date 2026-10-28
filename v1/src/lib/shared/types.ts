@@ -294,6 +294,8 @@ export interface ProviderStatus {
   keyStore: "environment" | "os" | "file" | "browser" | "none";
   swappedForWsl: boolean;
   message: string;
+  /** Which lane answers. Older status objects omit this and mean custom. */
+  mode?: "custom" | "system";
 }
 
 /** Learner settings. Categories only; nothing here is learner-written text. */
@@ -301,7 +303,8 @@ export interface Settings {
   version: number;
   level: "beginner" | "intermediate" | "advanced";
   learningStyle: "examples-first" | "rules-first" | "conversation" | "gentle";
-  provider: { url: string; model: string };
+  /** `mode` is absent in old settings and means the learner's own provider. */
+  provider: { url: string; model: string; mode?: "custom" | "system" };
   algorithm: {
     lastAlgorithm: "default" | "fallback";
     fallbackCount: number;

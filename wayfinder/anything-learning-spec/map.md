@@ -4,7 +4,7 @@
 
 ## Destination
 
-A hand-off-able spec for an anything-learning system: subject content arrives as plug-in packs over one flat card shape, A, I, generated cards are reviewed by the learner before they count, progress is recorded as evidence and read as strengths and weaknesses, and an algorithm the learner owns decides what is shown next. The app is hosted, but learner data and the provider key stay in the learner's browser; no learner data on any server; the A, I, provider is the learner's own key.
+A hand-off-able spec for an anything-learning system: subject content arrives as plug-in packs over one flat card shape, A, I, generated cards are reviewed by the learner before they count, progress is recorded as evidence and read as strengths and weaknesses, and an algorithm the learner owns decides what is shown next. The app is hosted, but learner data stays in the learner's browser and no server holds it; the A, I, provider is the learner's own key, or optionally a paid system provider whose small service holds only the operator's secrets.
 
 Finished means every decision on the spine is locked: pack install, card flow, one full session end to end, and progress. Onboarding polish, notifications, streaks are named but not designed.
 
@@ -47,6 +47,7 @@ Skills every session should consult: `grill-with-docs` and `domain-modeling`. Us
 - [Full screen stays inside the browser](tickets/full-screen-in-browser.md) - the card's Full screen fills the browser viewport only, shrinks with the window and never takes the monitor; system fullscreen is not requested.
 - [Advance without reaching for Next](tickets/session-advance.md) - the learner chose all three simulated answers together: a pinned action row, Enter to continue after the answer, and a 420px minimum card height.
 - [A kinder typing card](tickets/study-card-guidance.md) - the Answer button waits for a real attempt; beginner typed cards complete the expected answer inline through Tab, the right arrow or a Complete control; a quiet "I don't know" reveals on purpose; a completion has its own soft cue, and help never caps the outcome.
+- [A paid system provider](tickets/system-provider-subscription.md) - the operator sells one provider they run; a small Node service holds every secret and the browser carries a signed pass, never a key; Stripe Checkout and the billing portal do the purchase, with no account and no recovery in v1; the same OpenAI-compatible caller answers, and the learner's own provider lane is untouched; no learner data or prompt is stored on the service.
 
 *Locked during charting, before any ticket was resolved:*
 
@@ -56,7 +57,7 @@ Skills every session should consult: `grill-with-docs` and `domain-modeling`. Us
 - Record evidence, conclude later - strength and weakness are not stored, they are derived.
 - Evidence per answer: how well, how long, how many times seen before.
 - Generation prompt carries weak topics, level, and learning style; packs may request extras.
-- Everything local (now: in the learner's browser); no learner data on a server; A, I, is bring-your-own-key.
+- Everything local (now: in the learner's browser); no learner data on a server; A, I, is bring-your-own-key. *(Amended 2026-10-28 by [A paid system provider](tickets/system-provider-subscription.md): a learner may instead buy the operator's system provider; the service holds the operator's key and no learner data, and the learner's own key lane remains.)*
 - The selection algorithm runs on the learner's machine and is the learner's to swap.
 - Spine-and-name-the-rest: pack install, card flow, one full session, progress are specified; the rest is known-later.
 
@@ -88,6 +89,7 @@ Ticket files live in `tickets/`.
 | 20 | Fix a refused import with the provider | grilling | - | resolved |
 | 21 | Ask the tutor to summarise progress | grilling | - | resolved |
 | 22 | Build a plan from many packs and decks | grilling | - | resolved |
+| 23 | A paid system provider | grilling | - | resolved |
 
 ## Not yet specified
 

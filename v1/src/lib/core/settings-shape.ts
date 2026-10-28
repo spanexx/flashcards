@@ -12,7 +12,7 @@ export function defaultSettings(): Settings {
     version: 1,
     level: "beginner",
     learningStyle: "examples-first",
-    provider: { url: "", model: "" },
+    provider: { url: "", model: "", mode: "custom" },
     algorithm: { lastAlgorithm: "default", fallbackCount: 0, lastFallbackAt: null },
   };
 }
@@ -36,6 +36,8 @@ export function normalizeSettings(raw: unknown): Settings {
     provider: {
       url: typeof provider.url === "string" ? provider.url : "",
       model: typeof provider.model === "string" ? provider.model : "",
+      // WHY: An older settings row has no mode. Custom is what it was using.
+      mode: provider.mode === "system" ? "system" : "custom",
     },
     algorithm: {
       lastAlgorithm: algorithm.lastAlgorithm === "fallback" ? "fallback" : "default",

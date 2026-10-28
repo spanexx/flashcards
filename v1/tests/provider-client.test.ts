@@ -28,11 +28,11 @@ function reply(payload: unknown): Response {
   } as unknown as Response;
 }
 
-function failure(status: number): Response {
+function failure(status: number, payload: unknown = {}): Response {
   return {
     ok: false,
     status,
-    json: async () => ({}),
+    json: async () => payload,
   } as unknown as Response;
 }
 
@@ -103,6 +103,19 @@ describe("callProvider", () => {
       expect(result.message).toContain("key");
       expect(result.reason).toBe("http");
     }
+  });
+
+  it("shows the service's own sentence when it explains a refusal", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => failure(402, { error: "This subscription is not active." })),
+    );
+    const result = await callProvider(config, [{ role: "user", content: "hi" }]);
+    expect(result).toEqual({
+      ok: false,
+      message: "This subscription is not active.",
+      reason: "http",
+    });
   });
 
   it("tries the second endpoint only after a 404", async () => {

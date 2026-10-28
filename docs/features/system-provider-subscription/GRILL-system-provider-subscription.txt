@@ -1,0 +1,157 @@
+GRILL — system-provider-subscription
+Status: Locked
+Date: 2026-10-28
+Decisions by: agent, delegated by the learner on 2026-10-28
+Source ticket: wayfinder/anything-learning-spec/tickets/system-provider-subscription.md
+
+Verbatim from the learner on 2026-10-28:
+
+  "implement a subscription for internal provider, this allow learner to pay
+  for system provider. use stripe and make the process as easy as possible,
+  allow me to configure one system provider. bcs this is public github, create
+  a better way to keep my api keys private as you know this is currently served
+  at git pages. make all decisions"
+
+Locked by the learner's words: Stripe, a subscription, one system provider, the
+learner pays, keys must stay private on a public GitHub Pages app, and the agent
+decides the rest.
+
+--------------------------------------------------------------------------------
+Q1. Can the static app hold the key or the Stripe secret?
+A. No. The Pages bundle is public. Every secret lives in a server the operator
+   controls: the model key, the Stripe secret, the webhook secret and the license
+   signing secret. The browser receives only the API address, the provider's
+   display name, and a signed license after payment.
+   Why: the learner named the public repository and Pages as the constraint.
+   Any key in the bundle, a PWA cache or a public build variable is public.
+   Rules out: a NEXT_PUBLIC_ key, a client-side Stripe secret, embedding a model
+   key in a pack or a service worker, relying on obscurity.
+   Source: learner message; AGENTS.md's public-repository rule.
+
+Q2. What is the server's shape and where does it live?
+A. A plain Node 20 HTTP service in `v1/server/`, with zero runtime dependencies
+   and no database. It runs beside the static site on any host the operator
+   chooses. It speaks REST and OpenAI-compatible JSON; it does not depend on
+   Pages, a cloud vendor or a framework.
+   Why: the repo has no hosting account, and "environment agnostic" is an
+   AGENTS.md rule. A zero-dependency service can be read, audited and deployed
+   anywhere.
+   Rules out: a cloud-function lock-in, a database requirement, a new
+   framework, a second build tool.
+   Source: AGENTS.md; `docs/ethics/implementation.md`.
+
+Q3. How does a learner buy without creating an account?
+A. Stripe Checkout in subscription mode, started from Settings. There is no
+   sign-up form, password or email code. Checkout creates the Stripe customer.
+   On return, the app exchanges the Checkout session id for a signed license.
+   Why: one redirect and no new identity system is the shortest honest purchase.
+   Rules out: a password store, a magic-link service, a second subscription
+   screen, collecting card data ourselves.
+   Source: learner asked to make it as easy as possible.
+
+Q4. What is the license and where is it kept?
+A. A compact HMAC-signed token: subscription id, customer id, issued-at and
+   expiry, signed with a server-only secret. It is stored in IndexedDB beside
+   settings, in its own row, and excluded from backup, restore, export and every
+   storage receipt. The browser never shows the token back.
+   Why: the pass must survive a reload but must not become another key we ship
+   or back up. Keeping it separate mirrors the provider key's treatment.
+   Rules out: putting the license in a URL (beyond the one-time Stripe session
+   id), in localStorage beside ordinary choices, or in the backup zip.
+   Source: `v1/src/lib/browser/repository.ts` provider-key precedent.
+
+Q5. How long does a license live, and how does renewal work?
+A. Thirty days, refreshed by the app when it is within seven days of expiry.
+   The refresh endpoint accepts a still-valid token, confirms with Stripe that
+   the subscription is active, and signs a fresh one. Expiry limits the damage
+   of a copied token; Stripe status is the authority.
+   Why: a token that never expires is a permanent leak; asking the learner to
+   repeat Checkout every month is not the subscription they bought.
+   Rules out: embedding the Stripe period end in the token (Stripe moves that
+   field between API versions), and refreshing without a live check.
+   Source: `v1/server/src/license.ts`, `v1/server/src/entitlement.ts`.
+
+Q6. What does the server check before a provider call?
+A. Signature, expiry, then subscription status from Stripe: active and trialing
+   pass; past_due, unpaid, canceled, incomplete, incomplete_expired and paused
+   do not. Status is cached for two minutes per subscription and the webhook
+   clears that cache, so cancellation is prompt without a Stripe call per
+   request.
+   Why: a signed token alone would keep working after cancellation.
+   Rules out: trusting the client's "active" label, a token with no status
+   check, a webhook-only design that would miss a dropped event.
+   Source: `v1/server/src/entitlement.ts`.
+
+Q7. How does the app talk to the system provider?
+A. As an OpenAI-compatible endpoint: the browser's existing caller points at
+   `${API_BASE}/v1`, sends the license as the bearer token, and the server owns
+   the real upstream address and key. Hints, generation, connection tests and
+   future features reuse the same path.
+   Why: one provider stack means the system provider cannot quietly miss a
+   feature; the caller already handles addresses, timeouts and plain errors.
+   Rules out: a second provider client, per-feature proxy routes, exposing the
+   upstream endpoint to the browser.
+   Source: `v1/src/lib/provider/client.ts`, `v1/src/lib/browser/provider.ts`.
+
+Q8. What does the operator configure?
+A. Server environment: provider name, price label, Stripe secret and price,
+   webhook secret, license secret, upstream base URL, model and key, app URL,
+   port, timeout and rate limit. The public build needs only the API base and a
+   fallback display name, supplied as GitHub Actions variables.
+   Why: one place to set the one provider, and no secret can leak through a
+   public build variable.
+   Rules out: editing server code to change the provider, an in-app operator
+   screen without authentication, secrets in repository files.
+   Source: `v1/server/.env.example`, DEPLOY-system-provider.md.
+
+Q9. What happens when the server is missing or unreachable?
+A. The system section is hidden when the build has no API base. With an API
+   base but no server, Settings shows "could not be reached" and keeps the
+   learner's own provider exactly as it was. No study, library or offline
+   feature depends on the server.
+   Why: a paid provider is an addition, not a new dependency for people who
+   already brought their own.
+   Rules out: blocking the app on a health check, replacing the custom provider,
+   a silent dead button.
+   Source: PRD-TRD Simulation Contract 7-8.
+
+Q10. What about pricing, refunds and multiple plans?
+A. Exactly one Stripe price, chosen by the operator. The UI shows its configured
+    label; the Stripe billing portal handles payment method, invoices and
+    cancellation. No tiers, credits, trials invented by the app, coupons or
+    metering.
+    Why: "one system provider" and "as easy as possible"; anything more is a
+    product we were not asked to invent.
+    Rules out: a plan picker, usage counting, app-managed refunds, trial abuse
+    logic.
+    Source: learner message.
+
+Q11. What is the privacy story?
+A. The browser still keeps packs, cards and the record locally. A system
+   provider call goes through the operator's server, which forwards it to the
+   model and stores neither prompt nor answer. The prompt log stays local, as
+   today. The server logs no prompt, token, key or learner text.
+   Why: the existing promise must stay true for local study, and a proxy is a
+   new recipient that must be named.
+   Rules out: server-side prompt history, analytics on messages, logging tokens.
+   Source: `docs/features/browser-app/PRD-TRD-browser-app.md` privacy rule;
+   learner's public-repo constraint.
+
+Q12. How is this proven without a live Stripe account?
+A. Unit tests with injected Stripe and upstream fakes, a signed-webhook test, a
+   local acceptance run of the real server against a stub Stripe API and a stub
+   model, and a built-page pass with the API base pointed at that local server.
+   A live Stripe test-mode run is the operator's setup step, not a merge gate.
+   Why: the repository must not need secrets to run its checks.
+   Rules out: committing test keys, mocking the app in a way that skips the
+   server, claiming a live charge was tested.
+   Source: IMPL phases; `.reports/goal-system-provider.md`.
+
+Q13. What is deliberately not built?
+A. Accounts, email recovery, multiple devices sharing a license, multiple
+   system providers, usage limits by tokens, an operator dashboard, invoices in
+   the app, refunds, and any change to the judge, plan, cards or offline rules.
+   Why: every one adds a surface the learner did not ask for and the operator
+   would have to maintain.
+   Rules out: scope creep at the payment boundary.
+   Source: PRD-TRD Non-goals.

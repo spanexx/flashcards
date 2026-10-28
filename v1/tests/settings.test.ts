@@ -52,7 +52,7 @@ describe("settings on disk", () => {
       await updateSettings({ level: "intermediate" });
       const merged = await updateSettings({ provider: { url: "u", model: "m" } });
       expect(merged.level).toBe("intermediate");
-      expect(merged.provider).toEqual({ url: "u", model: "m" });
+      expect(merged.provider).toEqual({ url: "u", model: "m", mode: "custom" });
     });
   });
 
