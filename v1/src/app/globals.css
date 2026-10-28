@@ -7,7 +7,11 @@
    2026-10-25 opencode: the Lucide brand, sticky phone bar, shared select
    family and the Study plan rail. [pack: learner-interface]
    2026-10-25 opencode: palettes keyed off data-theme, soft aura, theme and
-   sound controls, gentle motion. [pack: learner-delight] */
+   sound controls, gentle motion. [pack: learner-delight]
+   2026-10-28 opencode: scope dropdown green dots, capped deck lists, and no
+   menu shadow after learner review. [pack: plan-multi-select]
+   2026-10-28 opencode: the phone plan fold reuses the aside tabs and caps its
+   body after learner review. [pack: study-sidebar-and-history] */
 
 :root {
   color-scheme: light;
@@ -854,6 +858,44 @@ td {
   font-weight: 600;
 }
 
+.summary-panel {
+  max-width: 800px;
+  padding-top: 4px;
+}
+
+.summary-panel h2 {
+  margin-top: 0;
+}
+
+.summary-ask {
+  margin: 14px 0;
+}
+
+.summary-answer,
+.summary-preview {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+}
+
+.summary-answer h3,
+.summary-preview h3 {
+  margin: 0 0 8px;
+  font-size: 0.96rem;
+}
+
+.summary-text {
+  margin: 0 0 8px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.summary-preview .job-preview-text {
+  margin-top: 10px;
+}
+
 .scroll-area {
   max-height: 300px;
   overflow-x: auto;
@@ -1476,6 +1518,113 @@ td {
   margin-top: 8px;
 }
 
+/* WHY: The learner asked for round, label-free job controls like Telegram's.
+   The words stay in aria-label and title for everyone who cannot see the glyph. */
+.job-icon {
+  width: 30px;
+  height: 30px;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--card);
+  color: var(--quiet);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.job-icon:hover {
+  color: var(--ink);
+  background: var(--soft);
+}
+
+.job-icon:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.job-icon svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.job-provider-note {
+  margin: 7px 0 0;
+  color: var(--quiet);
+  font-size: 0.74rem;
+}
+
+.jobs-repair-error {
+  margin: 8px 9px 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--miss) 12%, transparent);
+  color: var(--miss);
+  font-size: 0.78rem;
+}
+
+.job-preview-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.job-preview {
+  width: min(680px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow: auto;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--card);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.3);
+}
+
+.job-preview-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.job-preview-head h2 {
+  flex: 1;
+  margin: 0;
+  font-size: 1.06rem;
+}
+
+.job-preview-text {
+  max-height: 46vh;
+  overflow: auto;
+  margin: 10px 0 0;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--soft);
+  color: var(--ink);
+  font-size: 0.72rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.job-preview-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
 .job-toast-stack {
   position: fixed;
   top: 18px;
@@ -1704,6 +1853,251 @@ td {
   align-items: flex-end;
 }
 
+.study-scope-dropdown {
+  position: relative;
+  flex: 1 1 280px;
+  max-width: 380px;
+}
+
+.study-scope-control {
+  position: relative;
+  min-width: 0;
+}
+
+.study-scope-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-right: 12px;
+  text-align: left;
+}
+
+.study-scope-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.study-scope-chevron {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  color: var(--quiet);
+  transition: transform 120ms ease;
+}
+
+.study-scope-chevron.open {
+  transform: rotate(180deg);
+}
+
+.study-scope-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 35;
+  width: 100%;
+  min-width: 260px;
+  max-height: min(420px, 62vh);
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+}
+
+.study-scope-search {
+  position: sticky;
+  top: -8px;
+  z-index: 2;
+  margin: -8px -8px 4px;
+  padding: 8px;
+  background: var(--card);
+}
+
+.study-scope-search input {
+  width: 100%;
+  min-height: 38px;
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.84rem;
+}
+
+.study-scope-search input:focus-visible {
+  border-color: var(--accent);
+  outline: 3px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  outline-offset: 1px;
+}
+
+.study-scope-options {
+  display: grid;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.study-scope-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  width: 100%;
+  min-width: 0;
+  padding: 3px 4px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  text-align: left;
+}
+
+.study-scope-choice:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.study-scope-choice:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  outline-offset: 1px;
+}
+
+.study-scope-dot {
+  width: 9px;
+  height: 9px;
+  flex: none;
+  margin-top: 4px;
+  border-radius: 50%;
+  background: var(--good);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 14%, transparent);
+}
+
+.study-scope-dot.off {
+  background: transparent;
+  box-shadow: none;
+}
+
+.study-scope-dot.partial {
+  background: linear-gradient(90deg, var(--good) 50%, transparent 50%);
+  box-shadow:
+    inset 0 0 0 1px var(--good),
+    0 0 0 3px color-mix(in srgb, var(--good) 10%, transparent);
+}
+
+.study-scope-choice span {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 2px 7px;
+  min-width: 0;
+}
+
+.study-scope-choice strong {
+  color: var(--quiet);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+  transition: color 120ms ease;
+}
+
+.study-scope-choice:hover strong,
+.study-scope-choice[aria-checked="true"] strong,
+.study-scope-choice[aria-checked="mixed"] strong {
+  color: var(--ink);
+}
+
+.study-scope-choice small {
+  color: var(--quiet);
+  font-size: 0.7rem;
+}
+
+.study-scope-all {
+  margin: 0 0 2px;
+}
+
+.study-scope-all:hover,
+.study-scope-pack-row:hover .study-scope-choice,
+.study-scope-decks .study-scope-choice:hover {
+  background: var(--soft);
+}
+
+.study-scope-pack {
+  min-width: 0;
+}
+
+.study-scope-pack-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.study-scope-pack-row .study-scope-choice {
+  flex: 1 1 auto;
+}
+
+.study-scope-expand {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  margin: 1px 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--quiet);
+  cursor: pointer;
+}
+
+.study-scope-expand:hover {
+  background: var(--soft);
+  color: var(--ink);
+}
+
+.study-scope-expand:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  outline-offset: 1px;
+}
+
+.study-scope-decks {
+  display: grid;
+  gap: 1px;
+  max-height: 160px;
+  margin: 1px 0 5px 18px;
+  padding: 0 4px 0 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+  scrollbar-width: thin;
+}
+
+.study-scope-decks .study-scope-choice {
+  padding: 2px 4px;
+  font-size: 0.78rem;
+  gap: 6px;
+}
+
+.study-scope-empty {
+  margin: 6px 4px 4px;
+  color: var(--quiet);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
 .study-scope-field {
   display: grid;
   flex: 1 1 200px;
@@ -1869,9 +2263,9 @@ td {
 
 .study-scope-row {
   display: flex;
-  align-items: flex-end;
+  align-items: stretch;
   flex-wrap: wrap;
-  gap: 18px;
+  gap: 12px 18px;
   padding: 22px 0 4px;
 }
 
@@ -2665,6 +3059,20 @@ body.full-stage {
 
   .study-fold {
     display: block;
+  }
+
+  /* WHY: The fold opens on the same tabs as the desktop panel, and its body
+     scrolls inside a capped height so a long "Why these cards" list cannot
+     take over the phone page. */
+  .study-fold .study-aside-tab {
+    padding: 8px 4px;
+    font-size: 0.68rem;
+    white-space: normal;
+  }
+
+  .study-fold .study-aside-body {
+    max-height: 52vh;
+    padding: 10px 0 0;
   }
 }
 

@@ -1,11 +1,13 @@
 // WHY: The plan shows the last few finished sessions as a plain list, and one
-// of them can start a fresh plan on the same pack and deck. The pairing and the
-// cap are rules, so they live in a pure module instead of the screen.
-// PACK: study-sidebar-and-history
+// of them can start a fresh plan on the same source. The pairing and the cap are
+// rules, so they live in a pure module instead of the screen.
+// PACK: study-sidebar-and-history, plan-multi-select
 // 2026-10-27 opencode: created for the study sidebar and history pack
 // [pack: study-sidebar-and-history]
+// 2026-10-27 opencode: a session may name many packs and decks, so the list
+// carries the whole scope instead of one pack and deck. [pack: plan-multi-select]
 
-import type { SessionEvent } from "@/lib/shared/types";
+import type { PlanScope, SessionEvent } from "@/lib/shared/types";
 
 /** One finished session, shaped for the plan's list. */
 export interface PastSession {
@@ -16,6 +18,11 @@ export interface PastSession {
   answered: number;
   completed: boolean;
   stopped: boolean;
+  /**
+   * The packs and decks it drew from. Empty means the whole library. Absent on
+   * rows from before scopes were recorded, which are not replayable.
+   */
+  scope?: PlanScope;
   /** The pack it drew from; `""` means the whole library. Absent on old rows. */
   pack?: string;
   /** The deck id it drew from; `""` means all decks. Absent on old rows. */
@@ -41,11 +48,12 @@ export function recentSessions(
       const source = started.get(event.id);
       // WHY: The ended fact replaces the start in the store, so it usually
       // carries the scope itself; older shapes may only have it on the start.
-      // Only a recorded pack can be learned again. An absent pack is an older
-      // row, not a whole-library session.
+      const scope = source?.scope !== undefined ? source.scope : event.scope;
       const pack = source?.pack !== undefined ? source.pack : event.pack;
       const deck = source?.pack !== undefined ? source.deck : event.deck;
-      const scope = pack !== undefined ? { pack, deck: deck ?? "" } : {};
+      // Only a recorded scope or pack can be learned again. An absent pack on a
+      // row without a scope is an older row, not a whole-library session.
+      const legacy = pack !== undefined ? { pack, deck: deck ?? "" } : {};
       return {
         id: event.id,
         at: event.at,
@@ -53,7 +61,8 @@ export function recentSessions(
         answered: event.answered ?? 0,
         completed: event.completed === true,
         stopped: event.stopped === true,
-        ...scope,
+        ...(scope !== undefined ? { scope } : {}),
+        ...legacy,
       };
     });
 }

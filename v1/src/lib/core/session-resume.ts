@@ -5,11 +5,14 @@
 // a browser.
 // PACK: study-resilience
 // 2026-10-26 qoder: created for the study-resilience pack [pack: study-resilience]
+// 2026-10-27 opencode: a snapshot now keeps the whole plan scope, and an older
+// one-pack row is recovered from its plan cards. [pack: plan-multi-select]
 
-import type { AnswerResult, Card, Plan } from "@/lib/shared/types";
+import type { AnswerResult, Card, Plan, PlanScope } from "@/lib/shared/types";
+import { isPlanScope } from "@/lib/core/plan-scope";
 
 /** The snapshot shape version. A row from a newer shape is not guessed at. */
-export const RESUME_VERSION = 1;
+export const RESUME_VERSION = 2;
 
 export type ResumeReturnKind = "cold" | "wrong" | null;
 
@@ -33,11 +36,11 @@ export interface ResumeLayerUi {
  * (GRILL Q6).
  */
 export interface StoredSession {
-  version: 1;
+  version: 2;
   savedAt: string;
   sessionId: string;
-  scopePack: string;
-  scopeDeck: string;
+  /** The packs and decks this session draws from; empty means the library. */
+  scope: PlanScope;
   offerChoice: number;
   plan: Plan;
   queue: QueueEntry[];
@@ -69,8 +72,7 @@ export function toStoredSession(input: StoredSessionInput): StoredSession {
     version: RESUME_VERSION,
     savedAt: input.savedAt ?? new Date().toISOString(),
     sessionId: input.sessionId,
-    scopePack: input.scopePack,
-    scopeDeck: input.scopeDeck,
+    scope: input.scope,
     offerChoice: input.offerChoice,
     plan: input.plan,
     queue: input.queue,
@@ -179,13 +181,44 @@ function isLayerUi(value: unknown): value is ResumeLayerUi | null {
  * shape version, a plan that matches its session, and a position inside the
  * queue. Anything else is unreadable and falls back to the plan screen.
  */
+/**
+ * Recover the scope from an older one-pack snapshot. When no deck was named,
+ * the plan cards tell which decks the pack actually drew from.
+ */
+function scopeFromVersionOne(raw: Record<string, unknown>, plan: Plan): PlanScope | null {
+  if (!isText(raw.scopePack) || !isText(raw.scopeDeck)) return null;
+  if (raw.scopePack === "") return [];
+  if (raw.scopeDeck) return [{ pack: raw.scopePack, decks: [raw.scopeDeck] }];
+  const decks = [
+    ...new Set(
+      plan.cards
+        .filter((card) => card.packName === raw.scopePack)
+        .map((card) => card.deckId)
+        .filter((deck): deck is string => typeof deck === "string"),
+    ),
+  ];
+  return decks.length > 0 ? [{ pack: raw.scopePack, decks }] : [];
+}
+
 export function parseStoredSession(raw: unknown): StoredSession | null {
-  if (!isRecord(raw) || raw.version !== RESUME_VERSION) return null;
+  if (!isRecord(raw)) return null;
+  if (raw.version !== 1 && raw.version !== RESUME_VERSION) return null;
   if (!isText(raw.savedAt)) return null;
   if (!isText(raw.sessionId) || raw.sessionId.length === 0) return null;
-  if (!isText(raw.scopePack) || !isText(raw.scopeDeck)) return null;
   if (!isNumber(raw.offerChoice)) return null;
-  if (!isPlan(raw.plan) || raw.plan.sessionId !== raw.sessionId) return null;
+  const plan = raw.plan;
+  if (!isPlan(plan) || plan.sessionId !== raw.sessionId) return null;
+
+  let scope: PlanScope;
+  if (raw.version === RESUME_VERSION) {
+    if (!isPlanScope(raw.scope)) return null;
+    scope = raw.scope;
+  } else {
+    const migrated = scopeFromVersionOne(raw, plan);
+    if (!migrated) return null;
+    scope = migrated;
+  }
+
   if (!Array.isArray(raw.queue) || raw.queue.length === 0) return null;
   if (!raw.queue.every(isQueueEntry)) return null;
   if (
@@ -206,7 +239,12 @@ export function parseStoredSession(raw: unknown): StoredSession | null {
   if (!Number.isInteger(raw.attempts) || (raw.attempts as number) < 0) return null;
   if (!isNumber(raw.startedAt)) return null;
   if (!isLayerUi(raw.layerUi)) return null;
-  return raw as unknown as StoredSession;
+  // WHY: Write one shape forward, without the old one-pack fields even when the
+  // row arrived as version 1.
+  const { scopePack: _pack, scopeDeck: _deck, ...rest } = raw;
+  void _pack;
+  void _deck;
+  return { ...rest, version: RESUME_VERSION, scope } as unknown as StoredSession;
 }
 
 /** Copy a keyed map, keeping only the entries that still have a place. */

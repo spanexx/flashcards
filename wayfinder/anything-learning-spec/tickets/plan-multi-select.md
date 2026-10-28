@@ -37,14 +37,31 @@ leaving Study and returning resets it to All cards. `[agent decision]`
 pack by name, "3 packs", "All decks in 2 packs", or "the whole library" — so the
 learner can see the breadth before starting.
 
-**Agent decision on the control:** a checkbox list inside the existing scope
-area, with a pack-level checkbox and its decks nested under it, rather than a
-multi-select listbox. It keeps every choice visible and lets a deck be narrowed
-without hiding its pack.
+**Agent decision on the control (revised 2026-10-28):** one compact dropdown,
+not a list spread across the page. The first pass used a visible checkbox panel;
+the learner called it "bulky" and "not minimal" and asked for the pack dropdown
+back, with the decks folded inside it and a comfortable search. The multi-select
+rules did not change.
+
+Inside the dropdown:
+
+- a search field filters packs and decks by name;
+- **All cards** resets the choice to the whole library;
+- a green dot marks a chosen source; an unchosen row has no dot;
+- each pack has a dot for all of its decks and a chevron that opens the nested
+  deck list;
+- a partly selected pack keeps a half-green dot;
+- each open deck list has a capped height and scrolls, so a pack with many
+  decks cannot take over the menu;
+- the menu has no shadow; a plain one-pixel edge separates it from the page;
+- picking or unpicking a source keeps the dropdown open while the plan
+  refreshes behind it;
+- the trigger names the current selection, so the breadth is still visible
+  before starting.
 
 ## Deliberately not done
 
-- No per-card checkboxes and no card-level search in the plan.
+- No per-card selection and no card-level search in the plan.
 - No saved or named plans.
 - No change to the selection algorithm, the offer, or the session loop.
 - No cross-pack deck merging: a deck keeps its pack identity.

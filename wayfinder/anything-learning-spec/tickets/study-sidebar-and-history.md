@@ -101,3 +101,11 @@ The right panel now caps at the viewport height (`calc(100vh - 48px)`, matching
 its 24px sticky offset) and scrolls its own body; the tab row stays in place.
 The page itself no longer grows because of the panel. On a phone the fold stays
 in the page flow, because it is a disclosure, not a fixed panel.
+
+## Amendment (2026-10-28): the phone fold uses the tabs
+
+The learner opened Plan details on a phone and found every section laid out at
+once, with the full "Why these cards" list running down the page. The fold now
+carries the same three tabs as the desktop panel, so one section shows at a
+time, and its body caps at 52vh and scrolls. The panel stays a disclosure in
+the page flow; only its contents change.

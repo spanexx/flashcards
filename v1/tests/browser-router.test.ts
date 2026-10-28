@@ -500,6 +500,57 @@ describe("plan, answer and progress", () => {
     expect(empty.plan).toBeNull();
     expect(empty.message).toContain("No cards in");
   });
+
+  it("studies a union of packs and decks and records the whole scope", async () => {
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
+    await localSend("/api/packs", "POST", {
+      name: "other",
+      language: "pl",
+      version: "1.0.0",
+      deckName: "Basics",
+      deckId: "basics",
+    });
+    await localSend("/api/cards", "POST", {
+      front: "Dzień dobry",
+      back: "Good morning",
+      packName: "other",
+      deckId: "basics",
+    });
+    await localSend("/api/cards", "POST", {
+      front: "Mam kota",
+      back: "I have a cat",
+      packName: "starter",
+      deckId: "cases",
+    });
+
+    const scope = JSON.stringify([
+      { pack: "starter", decks: ["basics", "cases"] },
+      { pack: "other", decks: ["basics"] },
+    ]);
+    const plan = await localGet<{ plan: Plan | null; message: string | null }>(
+      `/api/plan?scope=${encodeURIComponent(scope)}`,
+    );
+    expect(plan.message).toBeNull();
+    expect(plan.plan?.cards).toHaveLength(3);
+    expect(new Set(plan.plan?.cards.map((card) => card.packName))).toEqual(
+      new Set(["starter", "other"]),
+    );
+
+    if (!plan.plan) throw new Error("no plan built");
+    await localSend("/api/session/end", "POST", {
+      sessionId: plan.plan.sessionId,
+      offered: plan.plan.offer,
+      answered: 3,
+      completed: true,
+    });
+    const next = await localGet<{ past: Array<{ scope?: Array<{ pack: string; decks: string[] }> }> }>(
+      "/api/plan",
+    );
+    expect(next.past[0].scope).toEqual([
+      { pack: "starter", decks: ["basics", "cases"] },
+      { pack: "other", decks: ["basics"] },
+    ]);
+  });
 });
 
 describe("teaching layers through the router", () => {

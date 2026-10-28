@@ -74,8 +74,7 @@ function input(cardIds: string[] = ["a", "b", "c"], index = 1): StoredSessionInp
   return {
     sessionId: "session-1",
     savedAt: "2026-10-26T10:00:00.000Z",
-    scopePack: "",
-    scopeDeck: "",
+    scope: [],
     offerChoice: 20,
     plan: plan(cardIds),
     queue: cardIds.map(entry),
@@ -119,10 +118,19 @@ describe("the snapshot shape", () => {
 
   it("refuses a wrong version or garbage", () => {
     const stored = toStoredSession(input());
-    expect(parseStoredSession({ ...stored, version: 2 })).toBeNull();
+    expect(parseStoredSession({ ...stored, version: 3 })).toBeNull();
     for (const raw of [null, undefined, "session", 42, [], {}, { version: 1 }]) {
       expect(parseStoredSession(raw)).toBeNull();
     }
+  });
+
+  it("migrates a one-pack snapshot to the checked scope", () => {
+    const stored = toStoredSession(input());
+    const { scope: _scope, ...rest } = stored;
+    void _scope;
+    const old = { ...rest, version: 1, scopePack: "starter", scopeDeck: "" };
+    expect(parseStoredSession(old)?.scope).toEqual([{ pack: "starter", decks: ["basics"] }]);
+    expect(parseStoredSession({ ...old, scopeDeck: "" })?.version).toBe(2);
   });
 
   it("refuses a position outside the queue and a plan from another session", () => {

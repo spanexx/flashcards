@@ -6,7 +6,7 @@
 
 import { newId } from "@/lib/core/id";
 import type { RepairKind } from "@/lib/core/json-repair";
-import { importBundle, type ImportTarget } from "@/lib/browser/bundle";
+import { importBundle, type ImportSuccess, type ImportTarget } from "@/lib/browser/bundle";
 import { generateFromPrepared, type GenerationResult } from "@/lib/browser/provider";
 import { ProviderTimeoutError } from "@/lib/provider/client";
 import type { PreparedRequest } from "@/lib/provider/prepare";
@@ -26,6 +26,8 @@ export interface JobResult {
   duplicates: number;
   /** Syntax repairs the imported file needed; absent when it was already valid. */
   repairs?: RepairKind[];
+  /** True when the provider corrected a refused import before it was saved. */
+  repairedByAI?: boolean;
 }
 
 /** The job shape the screen and the routes may see. The payload stays private. */
@@ -429,12 +431,8 @@ async function runGenerationJob(job: BrowserJob): Promise<JobResult> {
   return resultFromGeneration(await generateFromPrepared(job.payload.prepared));
 }
 
-async function runImportJob(job: BrowserJob): Promise<JobResult> {
-  if (job.payload.kind !== "import") throw new Error("That job has no import text.");
-  const imported = await importBundle(job.payload.text, job.payload.target, {
-    namePolicy: job.payload.namePolicy,
-  });
-  if (!imported.ok) throw importFailure(imported.issues);
+/** Turn a validated import into the small result the notice shows. */
+export function importJobResult(imported: ImportSuccess): JobResult {
   return {
     kind: imported.kind,
     packName: imported.packName,
@@ -444,6 +442,92 @@ async function runImportJob(job: BrowserJob): Promise<JobResult> {
     duplicates: imported.duplicates,
     ...(imported.repairs ? { repairs: imported.repairs } : {}),
   };
+}
+
+async function runImportJob(job: BrowserJob): Promise<JobResult> {
+  if (job.payload.kind !== "import") throw new Error("That job has no import text.");
+  const imported = await importBundle(job.payload.text, job.payload.target, {
+    namePolicy: job.payload.namePolicy,
+  });
+  if (!imported.ok) throw importFailure(imported.issues);
+  return importJobResult(imported);
+}
+
+/** The one failed import an action may repair, without exposing its payload. */
+export interface ImportRepairInput {
+  text: string;
+  target: ImportTarget;
+  namePolicy: "strict" | "auto-suffix";
+  source: "file" | "chat";
+  details: string[];
+}
+
+/** Read a failed import for the repair action; anything else returns null. */
+export async function readImportRepairInput(id: string): Promise<ImportRepairInput | null> {
+  const job = await readJob(id);
+  if (!job || job.kind !== "import" || job.status !== "failed") return null;
+  if (job.payload.kind !== "import") return null;
+  return {
+    text: job.payload.text,
+    target: job.payload.target,
+    namePolicy: job.payload.namePolicy,
+    source: job.payload.source,
+    details: job.errorDetails,
+  };
+}
+
+/** Show the provider call in the existing job row while it runs. */
+export async function markImportRepairStarted(id: string): Promise<void> {
+  const job = await readJob(id);
+  if (!job || job.kind !== "import" || job.status !== "failed") {
+    throw new Error("That import is no longer waiting for a repair.");
+  }
+  await writeJob({
+    ...job,
+    status: "running",
+    result: null,
+    nextAttemptAt: null,
+    lastError: null,
+    errorDetails: [],
+    finishedAt: null,
+  });
+}
+
+/** Close a repaired import as a success, so the row links to what it made. */
+export async function finishImportRepair(id: string, result: JobResult): Promise<void> {
+  const job = await readJob(id);
+  if (!job) throw new Error("That import is no longer here.");
+  await writeJob(
+    {
+      ...job,
+      status: "succeeded",
+      result: { ...result, repairedByAI: true },
+      nextAttemptAt: null,
+      lastError: null,
+      errorDetails: [],
+      finishedAt: new Date().toISOString(),
+    },
+    { announce: true },
+  );
+}
+
+/** Keep the row failed, with the validator's latest words, so it can be fixed again. */
+export async function failImportRepair(
+  id: string,
+  message: string,
+  details: string[],
+): Promise<void> {
+  const job = await readJob(id);
+  if (!job) return;
+  await writeJob({
+    ...job,
+    status: "failed",
+    result: null,
+    nextAttemptAt: null,
+    lastError: message,
+    errorDetails: details,
+    finishedAt: new Date().toISOString(),
+  });
 }
 
 /** Run one queued or due job and return its terminal/waiting state. */

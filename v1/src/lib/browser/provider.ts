@@ -10,6 +10,8 @@
 // a timeout is marked for the background job retry. [pack: background-jobs]
 // 2026-10-27 qoder: cards inside a deck are asked at that deck's level, and a
 // generated deck is stored at the level the request was prepared with. [D-29]
+// 2026-10-27 opencode: the one no-key refusal is exported for the progress
+// summary and import repair paths. [pack: progress-summary, import-repair]
 
 import type { Card, ProviderStatus } from "@/lib/shared/types";
 import { callProvider, ProviderTimeoutError } from "@/lib/provider/client";
@@ -48,7 +50,7 @@ import {
 import { importBundle } from "@/lib/browser/bundle";
 
 /** No key, no call. This is the one refusal every provider feature shares. */
-async function providerConfig(): Promise<
+export async function providerConfig(): Promise<
   { ok: true; config: ProviderConfig } | { ok: false; message: string }
 > {
   const settings = await readSettings();

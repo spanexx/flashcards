@@ -18,6 +18,7 @@ import type {
   CardSource,
   Outcome,
   PackStatus,
+  PlanScope,
   Settings,
   StudyLevel,
   TutorBanner,
@@ -39,6 +40,7 @@ import { countSeenBefore, groupAttempts, makeAnswerRows, makeCorrectionRow } fro
 import { judgeCard } from "@/lib/core/judge";
 import { buildPlan } from "@/lib/core/plan";
 import { recentSessions } from "@/lib/core/past-sessions";
+import { cardIsInScope, normalizePlanScope, parsePlanScope } from "@/lib/core/plan-scope";
 import { parseCardSources } from "@/lib/core/import";
 import { readProgress } from "@/lib/core/progress";
 import { describeTutorShape, describeTutorSlots, tutorSlotNames } from "@/lib/provider/prompt";
@@ -93,6 +95,8 @@ import {
   readJobViews,
   retryJob,
 } from "@/lib/browser/jobs";
+import { prepareImportRepair, repairImportJob } from "@/lib/browser/import-repair";
+import { generateProgressSummary, prepareProgressSummary } from "@/lib/browser/summary";
 import { applyPromptEdit, takePrepared } from "@/lib/provider/prepare";
 import { AUTHORING_SKILL_VERSION, buildAuthoringPrompt } from "@/lib/browser/authoring";
 import { slugFromName } from "@/lib/browser/creation";
@@ -229,13 +233,81 @@ async function packsAnswer(): Promise<{ packs: PackStatus[]; orphans: string[]; 
   return { packs: state.statuses, orphans: state.orphans, folder: "This browser (IndexedDB)" };
 }
 
-/** Build the plan exactly as the old route did, but from browser data. */
-async function planAnswer(offerRaw: number | undefined, packName?: string, deckId?: string) {
+/**
+ * Turn the old one-pack query into a scope, so old links and tests keep
+ * working while the screen sends the checked multi-pack shape.
+ */
+function legacyPlanScope(
+  packName: string | undefined,
+  deckId: string | undefined,
+  packs: readonly { name: string; decks?: Array<{ id: string }> }[],
+): { ok: true; scope: PlanScope } | { ok: false; message: string } {
+  if (deckId && !packName) {
+    return { ok: false, message: "Choose a pack before choosing a deck." };
+  }
+  if (!packName) return { ok: true, scope: [] };
+  const pack = packs.find((entry) => entry.name === packName);
+  if (!pack) return { ok: false, message: `There is no pack “${packName}” here.` };
+  if (deckId) {
+    if (!pack.decks?.some((deck) => deck.id === deckId)) {
+      return { ok: false, message: `There is no deck “${deckId}” in “${packName}”.` };
+    }
+    return { ok: true, scope: [{ pack: packName, decks: [deckId] }] };
+  }
+  return { ok: true, scope: [{ pack: packName, decks: (pack.decks ?? []).map((deck) => deck.id) }] };
+}
+
+/**
+ * A scope that fits the older one-pack fact keeps both shapes, so older readers
+ * still see a pack. A narrowed multi-deck or multi-pack choice writes only the
+ * new scope.
+ */
+function legacySessionScope(
+  scope: PlanScope,
+  packs: readonly { name: string; decks?: Array<{ id: string }> }[],
+): { pack?: string; deck?: string } {
+  if (scope.length === 0) return { pack: "", deck: "" };
+  if (scope.length !== 1) return {};
+  const only = scope[0];
+  const pack = packs.find((entry) => entry.name === only.pack);
+  const allDecks = (pack?.decks ?? []).map((deck) => deck.id);
+  const everyDeck = allDecks.length > 0 && allDecks.every((deck) => only.decks.includes(deck));
+  if (only.decks.length === 1) return { pack: only.pack, deck: only.decks[0] };
+  if (everyDeck) return { pack: only.pack, deck: "" };
+  return {};
+}
+
+/** Build the plan from browser data, drawing from the checked source union. */
+async function planAnswer(
+  offerRaw: number | undefined,
+  rawScope: string | null,
+  legacyPack: string | undefined,
+  legacyDeck: string | undefined,
+) {
   const state = await loadState();
   // WHY: The list of finished sessions rides with every plan answer, including
   // the empty ones, so the screen never needs a second request.
   const events = await readSessions();
   const past = recentSessions(events);
+
+  let asked: PlanScope = [];
+  if (rawScope !== null) {
+    const parsed = parsePlanScope(rawScope);
+    if (parsed === null) {
+      return { plan: null, message: "That study selection is not understood.", past };
+    }
+    asked = parsed;
+  } else {
+    const legacy = legacyPlanScope(legacyPack, legacyDeck, state.statuses);
+    if (!legacy.ok) return { plan: null, message: legacy.message, past };
+    asked = legacy.scope;
+  }
+  const checked = normalizePlanScope(asked, state.statuses);
+  if (!checked.ok) {
+    return { plan: null, message: checked.problems[0] ?? "That study selection is not understood.", past };
+  }
+  const scope = checked.scope;
+
   const active = state.cards.filter((card) => !card.retired);
   if (active.length === 0) {
     return {
@@ -245,32 +317,14 @@ async function planAnswer(offerRaw: number | undefined, packName?: string, deckI
     };
   }
 
-  let scoped = active;
-  if (packName) {
-    const pack = state.packs.find((entry) => entry.name === packName);
-    if (!pack) {
-      return { plan: null, message: `There is no pack “${packName}” here.`, past };
-    }
-    scoped = scoped.filter((card) => card.packName === packName);
-    if (deckId) {
-      if (!pack.decks?.some((deck) => deck.id === deckId)) {
-        return {
-          plan: null,
-          message: `There is no deck “${deckId}” in “${packName}”.`,
-          past,
-        };
-      }
-      scoped = scoped.filter((card) => card.deckId === deckId);
-    }
-  } else if (deckId) {
-    return { plan: null, message: "Choose a pack before choosing a deck.", past };
-  }
-
+  const scoped = active.filter((card) => cardIsInScope(card, scope));
   if (scoped.length === 0) {
+    const onlyPack = scope.length === 1 ? scope[0] : null;
+    const deck = onlyPack?.decks.length === 1 ? onlyPack.decks[0] : null;
     return {
       plan: null,
-      message: packName
-        ? `No cards in “${packName}”${deckId ? ` / “${deckId}”` : ""} yet.`
+      message: onlyPack
+        ? `No cards in “${onlyPack.pack}”${deck ? ` / “${deck}”` : ""} yet.`
         : "No cards are ready to study yet.",
       past,
     };
@@ -324,10 +378,10 @@ async function planAnswer(offerRaw: number | undefined, packName?: string, deckI
     id: result.plan.sessionId,
     at: now,
     offered: result.plan.offer,
-    // WHY: The finished row uses these to learn the same scope again. An empty
-    // pack means the whole library; an absent pack marks an older row.
-    pack: packName ?? "",
-    deck: deckId ?? "",
+    // WHY: The finished row uses these to learn the same sources again. The
+    // whole scope is the truth; pack and deck are the older readable shorthand.
+    scope,
+    ...legacySessionScope(scope, state.packs),
   });
 
   return { plan: result.plan, message: null, past };
@@ -696,7 +750,7 @@ export async function localGet<T>(url: string): Promise<T> {
     const offer = Number.isFinite(raw) && raw >= 1 ? Math.min(200, Math.floor(raw)) : undefined;
     const packName = query.get("pack")?.trim() || undefined;
     const deckId = query.get("deck")?.trim() || undefined;
-    return (await planAnswer(offer, packName, deckId)) as T;
+    return (await planAnswer(offer, query.get("scope"), packName, deckId)) as T;
   }
   if (path === "/api/progress") {
     const state = await loadState();
@@ -787,6 +841,24 @@ export async function localSend<T>(
   const jobRetryPath = /^\/api\/jobs\/([^/]+)\/retry$/.exec(path);
   if (jobRetryPath && method === "POST") {
     return { job: await retryJob(decodeURIComponent(jobRetryPath[1])) } as T;
+  }
+  if (path === "/api/progress/summary" && method === "POST") {
+    return (await prepareProgressSummary()) as T;
+  }
+  if (path === "/api/progress/summary/send" && method === "POST") {
+    const requestId = record ? asString(record.requestId) : null;
+    if (!requestId) fail("A prepared summary id is needed.");
+    return { text: await generateProgressSummary(requestId) } as T;
+  }
+  if (path === "/api/import-repair" && method === "POST") {
+    const jobId = record ? asString(record.jobId) : null;
+    if (!jobId) fail("A repair needs to know which job it fixes.");
+    return (await prepareImportRepair(jobId)) as T;
+  }
+  if (path === "/api/import-repair/send" && method === "POST") {
+    const requestId = record ? asString(record.requestId) : null;
+    if (!requestId) fail("A prepared repair id is needed.");
+    return (await repairImportJob(requestId)) as T;
   }
   const jobPath = /^\/api\/jobs\/([^/]+)$/.exec(path);
   if (jobPath && method === "DELETE") {
@@ -883,6 +955,7 @@ export async function localSend<T>(
       answered: asNumber(record.answered, 0, 0, 1000),
       completed: record.completed === true,
       stopped: record.stopped === true,
+      ...(start?.scope !== undefined ? { scope: start.scope } : {}),
       ...(start?.pack !== undefined ? { pack: start.pack, deck: start.deck ?? "" } : {}),
     };
     await appendSession(event);

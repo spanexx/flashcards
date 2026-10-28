@@ -1,9 +1,11 @@
 // WHY: The plan's secondary material used to sit under it as three stacked
 // disclosures. Beside the plan it becomes a quiet tabbed panel; on a phone the
-// same sections stack inside one disclosure so the plan keeps its width.
+// same tabbed panel opens inside one disclosure so the plan keeps its width.
 // PACK: study-sidebar-and-history
 // 2026-10-27 opencode: created for the study sidebar and history pack
 // [pack: study-sidebar-and-history]
+// 2026-10-28 opencode: the phone fold reuses the tabs instead of stacking every
+// section, and its body scrolls inside a capped height. [pack: study-sidebar-and-history]
 
 "use client";
 
@@ -101,7 +103,65 @@ function WhySection({ groups }: Pick<PlanAsideProps, "groups">) {
   );
 }
 
-/** The plan's secondary material: tabs beside the plan, one fold on a phone. */
+interface DetailTabsProps {
+  idPrefix: string;
+  tabs: { id: Tab; label: string }[];
+  tab: Tab;
+  onTab: (next: Tab) => void;
+  sectionProps: PlanAsideProps;
+}
+
+/** One tab row and one visible section, shared by the desktop panel and phone fold. */
+function DetailTabs({ idPrefix, tabs, tab, onTab, sectionProps }: DetailTabsProps) {
+  return (
+    <>
+      <div className="study-aside-tabs" role="tablist" aria-label="Plan details">
+        {tabs.map((entry) => (
+          <button
+            key={entry.id}
+            className={`study-aside-tab${tab === entry.id ? " active" : ""}`}
+            type="button"
+            role="tab"
+            id={`${idPrefix}-tab-${entry.id}`}
+            aria-selected={tab === entry.id}
+            aria-controls={`${idPrefix}-panel-${entry.id}`}
+            onClick={() => onTab(entry.id)}
+          >
+            {entry.label}
+          </button>
+        ))}
+      </div>
+      <div className="study-aside-body">
+        <div
+          role="tabpanel"
+          id={`${idPrefix}-panel-tutor`}
+          aria-labelledby={`${idPrefix}-tab-tutor`}
+          hidden={tab !== "tutor"}
+        >
+          <TutorSection {...sectionProps} />
+        </div>
+        <div
+          role="tabpanel"
+          id={`${idPrefix}-panel-expect`}
+          aria-labelledby={`${idPrefix}-tab-expect`}
+          hidden={tab !== "expect"}
+        >
+          <ExpectSection />
+        </div>
+        <div
+          role="tabpanel"
+          id={`${idPrefix}-panel-why`}
+          aria-labelledby={`${idPrefix}-tab-why`}
+          hidden={tab !== "why"}
+        >
+          <WhySection groups={sectionProps.groups} />
+        </div>
+      </div>
+    </>
+  );
+}
+
+/** The plan's secondary material: one tabbed panel beside the plan or under it. */
 export default function PlanAside({ banner, groups, approved, onApprove }: PlanAsideProps) {
   const [tab, setTab] = useState<Tab>("tutor");
   const tutorLabel = banner?.available ? "Tutorial and hints" : "Hints";
@@ -115,60 +175,26 @@ export default function PlanAside({ banner, groups, approved, onApprove }: PlanA
   return (
     <>
       <aside className="study-aside" aria-label="Plan details">
-        <div className="study-aside-tabs" role="tablist" aria-label="Plan details">
-          {tabs.map((entry) => (
-            <button
-              key={entry.id}
-              className={`study-aside-tab${tab === entry.id ? " active" : ""}`}
-              type="button"
-              role="tab"
-              id={`plan-tab-${entry.id}`}
-              aria-selected={tab === entry.id}
-              aria-controls={`plan-panel-${entry.id}`}
-              onClick={() => setTab(entry.id)}
-            >
-              {entry.label}
-            </button>
-          ))}
-        </div>
-        <div className="study-aside-body">
-          <div
-            role="tabpanel"
-            id="plan-panel-tutor"
-            aria-labelledby="plan-tab-tutor"
-            hidden={tab !== "tutor"}
-          >
-            <TutorSection {...sectionProps} />
-          </div>
-          <div
-            role="tabpanel"
-            id="plan-panel-expect"
-            aria-labelledby="plan-tab-expect"
-            hidden={tab !== "expect"}
-          >
-            <ExpectSection />
-          </div>
-          <div
-            role="tabpanel"
-            id="plan-panel-why"
-            aria-labelledby="plan-tab-why"
-            hidden={tab !== "why"}
-          >
-            <WhySection groups={groups} />
-          </div>
-        </div>
+        <DetailTabs
+          idPrefix="plan-aside"
+          tabs={tabs}
+          tab={tab}
+          onTab={setTab}
+          sectionProps={sectionProps}
+        />
       </aside>
 
       <div className="study-fold">
         <details className="study-disclosure study-fold-box">
           <summary>Plan details</summary>
           <div className="study-fold-body">
-            <h3 className="study-aside-title">{tutorLabel}</h3>
-            <TutorSection {...sectionProps} />
-            <h3 className="study-aside-title">What to expect</h3>
-            <ExpectSection />
-            <h3 className="study-aside-title">Why these cards</h3>
-            <WhySection groups={groups} />
+            <DetailTabs
+              idPrefix="plan-fold"
+              tabs={tabs}
+              tab={tab}
+              onTab={setTab}
+              sectionProps={sectionProps}
+            />
           </div>
         </details>
       </div>

@@ -7,11 +7,14 @@
 // PACK: v1-prototype
 // 2026-10-19 opencode: created for the v1 prototype [pack: v1-prototype]
 // 2026-10-19 opencode: tabbed layout and side-panel record [pack: v1-prototype]
+// 2026-10-27 opencode: added the preview-first, never-stored summary tab.
+// [pack: progress-summary]
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { apiGet, apiSend } from "@/lib/client/api";
 import { OUTCOME_LABELS } from "@/lib/core/outcome";
-import type { Card, EvidenceRow, Outcome, ProgressView } from "@/lib/shared/types";
+import type { Card, EvidenceRow, Outcome, ProgressView, ProviderStatus } from "@/lib/shared/types";
 
 interface EvidenceAnswer {
   card: Card;
@@ -25,7 +28,20 @@ const CORRECTIONS: Array<{ outcome: Outcome; label: string }> = [
   { outcome: "no", label: "No" },
 ];
 
-type ProgressTab = "overview" | "cards";
+type ProgressTab = "overview" | "cards" | "summary";
+
+interface SummaryPreview {
+  requestId: string;
+  prompt: string;
+}
+
+type SummaryPreparation =
+  | { ok: true; requestId: string; prompt: string }
+  | { ok: false; message: string };
+
+function problemText(problem: unknown): string {
+  return problem instanceof Error ? problem.message : "That could not be done.";
+}
 
 export default function ProgressClient() {
   const [progress, setProgress] = useState<ProgressView | null>(null);
@@ -33,6 +49,11 @@ export default function ProgressClient() {
   const [message, setMessage] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [tab, setTab] = useState<ProgressTab>("overview");
+  const [providerReady, setProviderReady] = useState<boolean | null>(null);
+  const [summaryPreview, setSummaryPreview] = useState<SummaryPreview | null>(null);
+  const [summary, setSummary] = useState<string | null>(null);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
+  const [summaryBusy, setSummaryBusy] = useState(false);
 
   const loadProgress = useCallback(async () => {
     try {
@@ -43,12 +64,58 @@ export default function ProgressClient() {
     }
   }, []);
 
+  const loadProvider = useCallback(async () => {
+    try {
+      const data = await apiGet<{ provider: ProviderStatus }>("/api/settings");
+      setProviderReady(data.provider.configured);
+    } catch {
+      setProviderReady(false);
+    }
+  }, []);
+
   useEffect(() => {
-    const pending = Promise.resolve().then(() => loadProgress());
+    const pending = Promise.resolve().then(() => Promise.all([loadProgress(), loadProvider()]));
     return () => {
       void pending;
     };
-  }, [loadProgress]);
+  }, [loadProvider, loadProgress]);
+
+  const askForSummary = useCallback(async () => {
+    setSummaryError(null);
+    setSummaryBusy(true);
+    try {
+      const prepared = await apiSend<SummaryPreparation>("/api/progress/summary", "POST");
+      if (!prepared.ok) {
+        setSummaryError(prepared.message);
+        return;
+      }
+      setSummaryPreview({ requestId: prepared.requestId, prompt: prepared.prompt });
+    } catch (problem) {
+      setSummaryError(problemText(problem));
+    } finally {
+      setSummaryBusy(false);
+    }
+  }, []);
+
+  const sendSummary = useCallback(async () => {
+    if (!summaryPreview) return;
+    setSummaryError(null);
+    setSummaryBusy(true);
+    try {
+      const answer = await apiSend<{ text: string }>("/api/progress/summary/send", "POST", {
+        requestId: summaryPreview.requestId,
+      });
+      setSummary(answer.text);
+      setSummaryPreview(null);
+    } catch (problem) {
+      // WHY: A prepared request is used up on send, even when the provider
+      // fails. Clearing the preview makes the next press a fresh choice.
+      setSummaryPreview(null);
+      setSummaryError(problemText(problem));
+    } finally {
+      setSummaryBusy(false);
+    }
+  }, [summaryPreview]);
 
   const openEvidence = useCallback(async (cardId: string) => {
     setMessage(null);
@@ -94,6 +161,9 @@ export default function ProgressClient() {
         </button>
         <button className="tab" type="button" role="tab" aria-selected={tab === "cards"} onClick={() => setTab("cards")}>
           Every card
+        </button>
+        <button className="tab" type="button" role="tab" aria-selected={tab === "summary"} onClick={() => setTab("summary")}>
+          Summary
         </button>
       </div>
 
@@ -202,6 +272,72 @@ export default function ProgressClient() {
             </tbody>
           </table>
         </div>
+      ) : null}
+
+      {tab === "summary" ? (
+        <section className="summary-panel" aria-labelledby="summary-title">
+          <h2 id="summary-title">A summary from the tutor</h2>
+          <p className="muted">
+            This is optional. It uses counts, topic labels, recent outcomes, and your level and
+            style. It never sends card text, answers, typed work, or your own words. The answer is
+            shown here and not saved.
+          </p>
+          {providerReady === false ? (
+            <p className="notice">
+              Connect a provider in <Link href="/settings">Settings</Link> to ask for a summary.
+            </p>
+          ) : null}
+          {summaryError ? (
+            <div className="notice error" role="alert">
+              {summaryError}
+            </div>
+          ) : null}
+          <div className="summary-ask">
+            <button
+              className="btn primary"
+              type="button"
+              onClick={() => void askForSummary()}
+              disabled={providerReady !== true || summaryBusy || summaryPreview !== null}
+            >
+              {summaryBusy && !summaryPreview ? "Preparing..." : "Ask the tutor for a summary"}
+            </button>
+          </div>
+          {summary ? (
+            <article className="summary-answer" aria-live="polite">
+              <h3>The tutor&apos;s summary</h3>
+              <p className="summary-text">{summary}</p>
+              <p className="small muted">This summary is not stored. Leaving Progress clears it.</p>
+            </article>
+          ) : null}
+          {summaryPreview ? (
+            <div className="summary-preview">
+              <h3>Send this exact text?</h3>
+              <p className="small muted">
+                Nothing leaves this machine until you send it. The provider sees only what is
+                shown below.
+              </p>
+              <pre className="job-preview-text">{summaryPreview.prompt}</pre>
+              <div className="job-preview-actions">
+                <button
+                  className="btn"
+                  type="button"
+                  onClick={() => setSummaryPreview(null)}
+                  disabled={summaryBusy}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn primary"
+                  type="button"
+                  onClick={() => void sendSummary()}
+                  disabled={summaryBusy}
+                >
+                  {summaryBusy ? "Asking..." : "Send and ask"}
+                </button>
+              </div>
+            </div>
+          ) : null}
+        </section>
       ) : null}
 
       {evidence ? (

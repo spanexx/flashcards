@@ -153,10 +153,23 @@ export interface Tombstone {
 }
 
 /**
+ * One source in a plan: a pack and the decks it draws from. An empty scope is
+ * the whole library. The learner picks sources; the algorithm still picks cards.
+ */
+export interface PlanScopeItem {
+  pack: string;
+  decks: string[];
+}
+
+/** The plan's sources. Empty means the whole library. */
+export type PlanScope = PlanScopeItem[];
+
+/**
  * A session fact: the offer, what the learner answered, and whether they
  * stopped. The started fact may also name the scope it drew from, so a finished
  * session can be learned again. An absent pack means the row predates scopes;
- * an empty pack means the whole library.
+ * an empty pack means the whole library. A multi-pack session carries `scope`
+ * instead of one pack and deck.
  */
 export interface SessionEvent {
   type: "started" | "ended";
@@ -168,6 +181,7 @@ export interface SessionEvent {
   stopped?: boolean;
   pack?: string;
   deck?: string;
+  scope?: PlanScope;
 }
 
 /** One named reason group on the plan screen. */
@@ -298,7 +312,7 @@ export interface Settings {
 /** One line in the local prompt log. */
 export interface PromptLogEntry {
   at: string;
-  kind: "generation" | "hint";
+  kind: "generation" | "hint" | "summary" | "import-repair";
   requestId: string;
   endpoint: string | null;
   model: string | null;

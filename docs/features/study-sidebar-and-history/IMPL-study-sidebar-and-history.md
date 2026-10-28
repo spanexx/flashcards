@@ -131,3 +131,18 @@ extra optional fields harmlessly.
   row.
 - The date is formatted in the learner's locale on the client; there is no
   server-rendered history to mismatch.
+
+## Amendment (2026-10-28): the phone fold reuses the tabs
+
+The learner opened Plan details on a phone and found every section laid out at
+once, with the whole "Why these cards" list running down the page. The fold now
+renders the same tab row as the desktop panel, so one section shows at a time,
+and its body caps at 52vh and scrolls. The desktop panel is unchanged.
+
+- `v1/src/app/study/PlanAside.tsx` — `DetailTabs` is shared by the aside and
+  the fold; each instance carries its own id prefix, and both read one tab
+  state.
+- `v1/src/app/globals.css` — under 860px the fold's tabs tighten and its body
+  caps at 52vh.
+- Verified with a 390px static harness: the three tabs fit, and the reason list
+  scrolls inside the cap.

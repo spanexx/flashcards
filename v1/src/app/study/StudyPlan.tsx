@@ -7,10 +7,12 @@
 // 2026-10-27 opencode: moved the explanations to the right panel and added the
 // previous-sessions list for the study sidebar and history pack
 // [pack: study-sidebar-and-history]
+// 2026-10-27 opencode: the lede names the multi-pack scope. [pack: plan-multi-select]
 
 import { planHeadline, planLede } from "@/lib/client/study-layout";
+import { scopeSummary } from "@/lib/core/plan-scope";
 import type { PastSession } from "@/lib/core/past-sessions";
-import type { PackStatus, Plan } from "@/lib/shared/types";
+import type { PackStatus, Plan, PlanScope } from "@/lib/shared/types";
 import PlanAside from "./PlanAside";
 import PreviousSessions from "./PreviousSessions";
 import ScopePicker from "./ScopePicker";
@@ -19,15 +21,15 @@ interface StudyPlanProps {
   plan: Plan;
   packs: PackStatus[];
   past: PastSession[];
-  scopePack: string;
-  scopeDeck: string;
+  scope: PlanScope;
   offerChoice: number;
   approved: "none" | "yes" | "no";
-  onScopeChange: (packName: string, deckId: string) => void;
+  refreshing: boolean;
+  onScopeChange: (scope: PlanScope) => void;
   onOfferChange: (offer: number) => void;
   onRebuild: () => void;
   onApprove: (next: "yes" | "no") => void;
-  onRelearn: (pack: string, deck: string) => void;
+  onRelearn: (scope: PlanScope) => void;
   onStart: () => void;
 }
 
@@ -36,10 +38,10 @@ export default function StudyPlan({
   plan,
   packs,
   past,
-  scopePack,
-  scopeDeck,
+  scope,
   offerChoice,
   approved,
+  refreshing,
   onScopeChange,
   onOfferChange,
   onRebuild,
@@ -48,11 +50,7 @@ export default function StudyPlan({
   onStart,
 }: StudyPlanProps) {
   const banner = plan.banner;
-  const selectedPack = packs.find((pack) => pack.name === scopePack) ?? null;
-  const selectedDeck = selectedPack?.decks?.find((deck) => deck.id === scopeDeck) ?? null;
-  const scopeText = selectedPack
-    ? `${selectedPack.name}${selectedDeck ? ` / ${selectedDeck.name}` : ""}`
-    : "the whole library";
+  const scopeText = scopeSummary(scope, packs);
 
   return (
     <div className="study-plan-layout">
@@ -73,7 +71,7 @@ export default function StudyPlan({
         </header>
 
         <div className="study-scope-row">
-          <ScopePicker packs={packs} packName={scopePack} deckId={scopeDeck} onChange={onScopeChange} />
+          <ScopePicker packs={packs} scope={scope} onChange={onScopeChange} />
           <label className="study-scope-field study-offer-field">
             <span>Offer</span>
             <input
@@ -87,7 +85,12 @@ export default function StudyPlan({
               aria-label="Cards offered"
             />
           </label>
-          <button className="study-ghost study-rebuild" type="button" onClick={onRebuild}>
+          <button
+            className="study-ghost study-rebuild"
+            type="button"
+            onClick={onRebuild}
+            disabled={refreshing}
+          >
             Rebuild the plan
           </button>
         </div>
@@ -97,9 +100,15 @@ export default function StudyPlan({
             className="btn primary study-start"
             type="button"
             onClick={onStart}
-            disabled={plan.cards.length === 0}
+            disabled={plan.cards.length === 0 || refreshing}
           >
-            Start session <span className="study-arrow" aria-hidden="true">→</span>
+            {refreshing ? (
+              "Laying out the new choice…"
+            ) : (
+              <>
+                Start session <span className="study-arrow" aria-hidden="true">→</span>
+              </>
+            )}
           </button>
           <p className="study-calm">Stopping is not an ending.</p>
         </div>

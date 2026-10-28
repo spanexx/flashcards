@@ -47,8 +47,9 @@ import {
 } from "@/lib/browser/session-save";
 import { toStoredSession, type QueueEntry, type StoredSession, type StoredSessionInput } from "@/lib/core/session-resume";
 import type { PastSession } from "@/lib/core/past-sessions";
+import { encodePlanScope } from "@/lib/core/plan-scope";
 import { newId } from "@/lib/core/id";
-import type { AnswerResult, Outcome, PackStatus, Plan } from "@/lib/shared/types";
+import type { AnswerResult, Outcome, PackStatus, Plan, PlanScope } from "@/lib/shared/types";
 import ScopePicker from "./study/ScopePicker";
 import StudyCard from "./study/StudyCard";
 import StudyPlan from "./study/StudyPlan";
@@ -89,10 +90,10 @@ export default function StudyClient() {
   const [approved, setApproved] = useState<"none" | "yes" | "no">("none");
   const [offerChoice, setOfferChoice] = useState(20);
   const [busy, setBusy] = useState(false);
+  const [planRefreshing, setPlanRefreshing] = useState(false);
   const [working, setWorking] = useState("");
   const [packs, setPacks] = useState<PackStatus[]>([]);
-  const [scopePack, setScopePack] = useState("");
-  const [scopeDeck, setScopeDeck] = useState("");
+  const [scope, setScope] = useState<PlanScope>([]);
   const [hintSource, setHintSource] = useState<string | null>(null);
   const [fullStage, setFullStage] = useState(false);
   const [layerUi, setLayerUi] = useState<{ entryId: string; open: boolean } | null>(null);
@@ -107,6 +108,8 @@ export default function StudyClient() {
   const attemptsRef = useRef(0);
   const autoHintedRef = useRef<Set<string>>(new Set());
   const hintTokenRef = useRef(0);
+  /** The newest plan request wins, so quick scope changes cannot land out of order. */
+  const planTokenRef = useRef(0);
   /** The restored index, so the timer re-arm below does not overwrite it. */
   const restoredIndexRef = useRef<number | null>(null);
   /** Set while a session is being ended, so a late edit cannot resurrect it. */
@@ -173,52 +176,66 @@ export default function StudyClient() {
     if (entry) setLayerUi({ entryId: entry.entryId, open: false });
   }, [entry]);
 
-  /** Load a fresh plan; the offer and the chosen pack/deck may be adjusted. */
-  const loadPlan = useCallback(async (offer?: number, packName = "", deckId = "") => {
-    hintTokenRef.current += 1;
-    setHintBusy(false);
-    setPhase("loading");
-    setMessage(null);
-    try {
-      const params = new URLSearchParams();
-      if (offer !== undefined) params.set("offer", String(offer));
-      if (packName) params.set("pack", packName);
-      if (deckId) params.set("deck", deckId);
-      const query = params.toString();
-      const data = await apiGet<{ plan: Plan | null; message: string | null; past: PastSession[] }>(
-        query ? `/api/plan?${query}` : "/api/plan",
-      );
-      setPast(data.past ?? []);
-      if (!data.plan) {
-        setPlan(null);
-        setMessage(data.message);
-        setPhase("empty");
-        return;
+  /** Load a fresh plan; the offer and the chosen sources may be adjusted. */
+  const loadPlan = useCallback(
+    async (offer?: number, nextScope: PlanScope = [], options: { keepPlan?: boolean } = {}) => {
+      const token = ++planTokenRef.current;
+      hintTokenRef.current += 1;
+      setHintBusy(false);
+      if (options.keepPlan) {
+        setPlanRefreshing(true);
+      } else {
+        setPlanRefreshing(false);
+        setPhase("loading");
       }
-      setPlan(data.plan);
-      setOfferChoice(data.plan.offer);
-      setQueue([]);
-      setIndex(0);
-      setResults({});
-      setAnswersByEntry({});
-      returnedRef.current = new Set();
-      peekedRef.current = new Set();
-      autoHintedRef.current = new Set();
-      setLayerUi(null);
-      attemptsRef.current = 0;
-      setPhase("plan");
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "The plan could not be built.");
-      setPhase("error");
-    }
-  }, []);
+      setMessage(null);
+      try {
+        const params = new URLSearchParams();
+        if (offer !== undefined) params.set("offer", String(offer));
+        const encoded = encodePlanScope(nextScope);
+        if (encoded) params.set("scope", encoded);
+        const query = params.toString();
+        const data = await apiGet<{ plan: Plan | null; message: string | null; past: PastSession[] }>(
+          query ? `/api/plan?${query}` : "/api/plan",
+        );
+        // WHY: The learner can tick several sources in one open dropdown. Only
+        // the newest request may replace the plan, or an older reply can win.
+        if (token !== planTokenRef.current) return;
+        setPast(data.past ?? []);
+        if (!data.plan) {
+          setPlan(null);
+          setMessage(data.message);
+          setPhase("empty");
+          return;
+        }
+        setPlan(data.plan);
+        setOfferChoice(data.plan.offer);
+        setQueue([]);
+        setIndex(0);
+        setResults({});
+        setAnswersByEntry({});
+        returnedRef.current = new Set();
+        peekedRef.current = new Set();
+        autoHintedRef.current = new Set();
+        setLayerUi(null);
+        attemptsRef.current = 0;
+        setPhase("plan");
+      } catch (error) {
+        if (token !== planTokenRef.current) return;
+        setMessage(error instanceof Error ? error.message : "The plan could not be built.");
+        setPhase("error");
+      } finally {
+        if (token === planTokenRef.current) setPlanRefreshing(false);
+      }
+    },
+    [],
+  );
 
   /** Put a pruned snapshot back exactly as it was; no plan request is made. */
   const restoreSnapshot = useCallback((snapshot: StoredSession) => {
     setPlan(snapshot.plan);
     setOfferChoice(snapshot.offerChoice);
-    setScopePack(snapshot.scopePack);
-    setScopeDeck(snapshot.scopeDeck);
+    setScope(snapshot.scope);
     setQueue(snapshot.queue);
     setIndex(snapshot.index);
     setResults(snapshot.results);
@@ -265,8 +282,7 @@ export default function StudyClient() {
       if (!plan) return null;
       return {
         sessionId: plan.sessionId,
-        scopePack,
-        scopeDeck,
+        scope,
         offerChoice,
         plan,
         queue,
@@ -299,8 +315,7 @@ export default function StudyClient() {
       plan,
       queue,
       results,
-      scopeDeck,
-      scopePack,
+      scope,
       working,
     ],
   );
@@ -379,7 +394,7 @@ export default function StudyClient() {
   }, [index]);
 
   const startSession = useCallback(() => {
-    if (!plan) return;
+    if (!plan || planRefreshing) return;
     const startedAt = Date.now();
     const entries: QueueEntry[] = plan.cards.map((card) => ({
       entryId: newId(),
@@ -430,7 +445,7 @@ export default function StudyClient() {
       queueSessionSave(toStoredSession(input));
       void flushSessionSave();
     }
-  }, [plan, snapshotInput]);
+  }, [plan, planRefreshing, snapshotInput]);
 
   const resetCardState = useCallback(() => {
     // WHY: A hint answer belongs to the card that asked. Bumping the token
@@ -475,13 +490,13 @@ export default function StudyClient() {
       setBusy(false);
       if (stopped) {
         // Stopping is not an ending: no sign-off, just a calm return to the plan.
-        await loadPlan(undefined, scopePack, scopeDeck);
+        await loadPlan(undefined, scope);
         return;
       }
       playCue("finish");
       setPhase("done");
     },
-    [exitFullScreen, loadPlan, plan, scopeDeck, scopePack],
+    [exitFullScreen, loadPlan, plan, scope],
   );
 
   const requestHint = useCallback(
@@ -680,23 +695,20 @@ export default function StudyClient() {
         <div className="study-scope-row">
           <ScopePicker
             packs={packs}
-            packName={scopePack}
-            deckId={scopeDeck}
-            onChange={(nextPack, nextDeck) => {
-              setScopePack(nextPack);
-              setScopeDeck(nextDeck);
-              void loadPlan(undefined, nextPack, nextDeck);
+            scope={scope}
+            onChange={(nextScope) => {
+              setScope(nextScope);
+              void loadPlan(undefined, nextScope, { keepPlan: true });
             }}
           />
         </div>
         <div className="study-start-row">
-          {scopePack ? (
+          {scope.length > 0 ? (
             <button
               className="btn primary"
               type="button"
               onClick={() => {
-                setScopePack("");
-                setScopeDeck("");
+                setScope([]);
                 void loadPlan();
               }}
             >
@@ -735,7 +747,7 @@ export default function StudyClient() {
           <button
             className="btn primary"
             type="button"
-            onClick={() => void loadPlan(undefined, scopePack, scopeDeck)}
+            onClick={() => void loadPlan(undefined, scope)}
           >
             Study again
           </button>
@@ -753,22 +765,20 @@ export default function StudyClient() {
         plan={plan}
         packs={packs}
         past={past}
-        scopePack={scopePack}
-        scopeDeck={scopeDeck}
+        scope={scope}
         offerChoice={offerChoice}
         approved={approved}
-        onScopeChange={(nextPack, nextDeck) => {
-          setScopePack(nextPack);
-          setScopeDeck(nextDeck);
-          void loadPlan(offerChoice, nextPack, nextDeck);
+        refreshing={planRefreshing}
+        onScopeChange={(nextScope) => {
+          setScope(nextScope);
+          void loadPlan(offerChoice, nextScope, { keepPlan: true });
         }}
         onOfferChange={setOfferChoice}
-        onRebuild={() => void loadPlan(offerChoice, scopePack, scopeDeck)}
+        onRebuild={() => void loadPlan(offerChoice, scope)}
         onApprove={setApproved}
-        onRelearn={(nextPack, nextDeck) => {
-          setScopePack(nextPack);
-          setScopeDeck(nextDeck);
-          void loadPlan(offerChoice, nextPack, nextDeck);
+        onRelearn={(nextScope) => {
+          setScope(nextScope);
+          void loadPlan(offerChoice, nextScope, { keepPlan: true });
         }}
         onStart={startSession}
       />
