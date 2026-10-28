@@ -36,3 +36,9 @@ Action: ran the browser flows on Build B (root, relay base `http://localhost:878
 Verification: direct test -> "The provider answered directly. It is ready to use.", relay log unchanged; `llm-b.test` -> direct `ERR_NAME_NOT_RESOLVED` then `POST relay` -> "…through the relay…", record with `connectionTest:true` and `key:"learner-key"`; next call (tutor hint) had `POST relay` as its first provider line; 401 provider -> plain sentence, no relay line, log stayed at three records; remembered-host copy exact; system lane still 401 without/with a forged pass. Bundle scan of `out/`: relay base in one chunk, no secrets.
 Verdict: pass
 Next: cleanup, drift gates, commit, merge to local main, push.
+
+### 5 — 2026-10-28T08:45Z
+Action: stopped the four acceptance servers (8788–8791 closed), deleted `/tmp/relay-accept` and the acceptance logs, removed the `v1/node_modules` symlink, `out/`, `.next`, `tsconfig.tsbuildinfo` and `server/dist`; ran both drift gates; committed path by path; fast-forwarded local main; pushed.
+Verification: `check:drift` and `check:drift:staged` -> `0 open, 0 awaiting, 31 resolved`, `drift staged ok: 32 staged files`; commit `9d32ebc` (32 files); main fast-forward `82818fb..9d32ebc`; `git push origin main` -> `82818fb..9d32ebc main -> main`; `origin/main` at `9d32ebc`; the only untracked item left is the learner's own `sessions/features-plan-multi-select`.
+Verdict: pass — goal complete
+Next: none; a later pack can pick up the recovery flow (Brevo decision recorded above).
