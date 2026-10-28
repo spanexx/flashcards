@@ -12,6 +12,7 @@ import { parseConfig, type ServerConfig } from "../server/src/config";
 import { appReturnUrl, createSystemServer, RateLimiter } from "../server/src/http";
 import { issueLicense } from "../server/src/license";
 import type { ProxyOptions } from "../server/src/proxy";
+import type { PinnedTarget, RelayOptions } from "../server/src/relay";
 import type { StripeClient, StripeSessionView, StripeSubscriptionView } from "../server/src/stripe";
 import { StatusCache } from "../server/src/subscriptions";
 
@@ -96,8 +97,10 @@ interface StartOptions {
   extra?: Record<string, string>;
   stripe?: StripeClient | null;
   proxy?: ProxyOptions | null;
+  relay?: RelayOptions | null;
   subscriptions?: StatusCache;
   rateLimiter?: RateLimiter;
+  relayRateLimiter?: RateLimiter;
 }
 
 async function start(options: StartOptions = {}) {
@@ -110,7 +113,9 @@ async function start(options: StartOptions = {}) {
     stripe,
     subscriptions,
     proxy: options.proxy ?? null,
+    relay: options.relay ?? null,
     rateLimiter: options.rateLimiter,
+    relayRateLimiter: options.relayRateLimiter,
   });
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   open.push(server);
@@ -136,6 +141,7 @@ describe("public routes", () => {
       service: "flashcards-system-provider",
       checkout: true,
       proxy: true,
+      relay: false,
     });
 
     const config = await fetch(`${base}/api/config`, { headers: { origin: ORIGIN } });
@@ -339,6 +345,124 @@ describe("the paid model route", () => {
       body: JSON.stringify({ messages: [{ role: "user", content: "hi" }] }),
     });
     expect(disabled.status).toBe(503);
+  });
+});
+
+function fakeRelay(): { relay: RelayOptions; sends: PinnedTarget[] } {
+  const sends: PinnedTarget[] = [];
+  return {
+    sends,
+    relay: {
+      timeoutMs: 1_000,
+      lookup: async () => [{ address: "93.184.216.34", family: 4 }],
+      send: async (target) => {
+        sends.push(target);
+        return { status: 200, text: JSON.stringify({ choices: [{ message: { content: "OK" } }] }) };
+      },
+    },
+  };
+}
+
+const relayRequest = {
+  url: "https://llm.example/v1/chat/completions",
+  model: "learner-model",
+  messages: [{ role: "user", content: "Say OK." }],
+  temperature: 0.2,
+};
+
+describe("the relay route", () => {
+  it("refuses a missing key before any upstream call", async () => {
+    const fake = fakeRelay();
+    const { base } = await start({ relay: fake.relay });
+
+    const health = await fetch(`${base}/healthz`);
+    expect(await health.json()).toMatchObject({ relay: true });
+
+    const response = await fetch(`${base}/api/relay/chat`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(relayRequest),
+    });
+    expect(response.status).toBe(401);
+    expect(await response.json()).toEqual({ error: "The provider key is missing." });
+    expect(fake.sends).toHaveLength(0);
+  });
+
+  it("forwards the learner's own key and returns the provider's answer", async () => {
+    const fake = fakeRelay();
+    const { base } = await start({ relay: fake.relay });
+    const response = await fetch(`${base}/api/relay/chat`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: "Bearer sk-learner-own",
+        origin: ORIGIN,
+      },
+      body: JSON.stringify(relayRequest),
+    });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ choices: [{ message: { content: "OK" } }] });
+    expect(response.headers.get("access-control-allow-origin")).toBe(ORIGIN);
+    expect(fake.sends).toHaveLength(1);
+    expect(fake.sends[0]).toMatchObject({
+      address: "93.184.216.34",
+      hostHeader: "llm.example",
+      servername: "llm.example",
+      apiKey: "sk-learner-own",
+    });
+  });
+
+  it("limits per address, even when the key changes", async () => {
+    const fake = fakeRelay();
+    const { base } = await start({
+      relay: fake.relay,
+      extra: { RELAY_RATE_LIMIT_PER_HOUR: "1" },
+      relayRateLimiter: new RateLimiter(1, undefined, () => 1_000),
+    });
+    const call = (key: string) =>
+      fetch(`${base}/api/relay/chat`, {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
+        body: JSON.stringify(relayRequest),
+      });
+
+    expect((await call("sk-first")).status).toBe(200);
+    const second = await call("sk-second");
+    expect(second.status).toBe(429);
+    expect(Number(second.headers.get("retry-after"))).toBeGreaterThan(0);
+    expect(fake.sends).toHaveLength(1);
+  });
+
+  it("keeps the relay closed when it is not configured", async () => {
+    const { base } = await start({ relay: null });
+    const response = await fetch(`${base}/api/relay/chat`, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: "Bearer sk-x" },
+      body: JSON.stringify(relayRequest),
+    });
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual({ error: "The relay is not configured." });
+  });
+
+  it("refuses a target the guards will not call", async () => {
+    const sends: PinnedTarget[] = [];
+    const { base } = await start({
+      relay: {
+        timeoutMs: 1_000,
+        lookup: async () => [{ address: "10.0.0.5", family: 4 }],
+        send: async (target) => {
+          sends.push(target);
+          return { status: 200, text: "{}" };
+        },
+      },
+    });
+    const response = await fetch(`${base}/api/relay/chat`, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: "Bearer sk-x" },
+      body: JSON.stringify(relayRequest),
+    });
+    expect(response.status).toBe(400);
+    expect(sends).toHaveLength(0);
   });
 });
 

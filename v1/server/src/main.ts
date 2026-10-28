@@ -36,7 +36,15 @@ const proxy: ProxyOptions | null =
       }
     : null;
 
-const server = createSystemServer({ config, stripe, subscriptions, proxy });
+const server = createSystemServer({
+  config,
+  stripe,
+  subscriptions,
+  proxy,
+  // The relay holds no secret: each call carries the learner's own key, so it
+  // is always available on this service.
+  relay: { timeoutMs: config.upstreamTimeoutMs },
+});
 server.listen(config.port, "0.0.0.0", () => {
   console.info(
     `[system-provider] listening on 0.0.0.0:${config.port}; enabled: ${enabledGroups(config).join(", ")}`,

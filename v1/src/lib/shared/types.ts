@@ -296,6 +296,8 @@ export interface ProviderStatus {
   message: string;
   /** Which lane answers. Older status objects omit this and mean custom. */
   mode?: "custom" | "system";
+  /** True when the learner's own provider answers through the relay. */
+  relay?: boolean;
 }
 
 /** Learner settings. Categories only; nothing here is learner-written text. */
@@ -304,7 +306,7 @@ export interface Settings {
   level: "beginner" | "intermediate" | "advanced";
   learningStyle: "examples-first" | "rules-first" | "conversation" | "gentle";
   /** `mode` is absent in old settings and means the learner's own provider. */
-  provider: { url: string; model: string; mode?: "custom" | "system" };
+  provider: { url: string; model: string; mode?: "custom" | "system"; relayHosts?: string[] };
   algorithm: {
     lastAlgorithm: "default" | "fallback";
     fallbackCount: number;

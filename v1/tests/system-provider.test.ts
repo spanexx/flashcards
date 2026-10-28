@@ -44,6 +44,7 @@ describe("which lane answers", () => {
         model: "test-model",
         key: "own-key",
         swappedForWsl: false,
+        relayBase: "https://sub.example.com",
       },
     });
     expect(await provider.browserProviderStatus()).toMatchObject({
@@ -133,5 +134,32 @@ describe("which lane answers", () => {
 
     const result = await provider.providerConfig();
     expect(result.ok && result.config.key).toBe("own-key");
+  });
+
+  it("prefers the relay for a host it remembers", async () => {
+    await repository.patchSettings({
+      provider: { url: "https://provider.test/v1", model: "test-model", mode: "custom" },
+    });
+    await repository.writeProviderKey("own-key");
+    await repository.rememberRelayHost("PROVIDER.test.");
+
+    expect(await provider.providerConfig()).toMatchObject({
+      ok: true,
+      config: { relayBase: "https://sub.example.com", preferRelay: true },
+    });
+    const status = await provider.browserProviderStatus();
+    expect(status).toMatchObject({ relay: true });
+    expect(status.message).toContain("relay");
+    expect(status.message).toContain("not stored");
+  });
+
+  it("never gives the system lane a relay base", async () => {
+    await repository.patchSettings({ provider: { url: "", model: "", mode: "system" } });
+    await repository.writeSystemLicense("pass.signature", FUTURE);
+    const result = await provider.providerConfig();
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.config.relayBase).toBeUndefined();
+    expect(result.config.preferRelay).toBeUndefined();
   });
 });

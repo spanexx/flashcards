@@ -10,4 +10,8 @@ export interface ProviderConfig {
   model: string;
   key: string;
   swappedForWsl: boolean;
+  /** The service root that can carry a call the browser cannot make. */
+  relayBase?: string;
+  /** True when this host is known to refuse browser calls. */
+  preferRelay?: boolean;
 }

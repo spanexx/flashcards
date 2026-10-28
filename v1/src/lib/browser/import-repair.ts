@@ -9,7 +9,8 @@
 import { newId } from "@/lib/core/id";
 import { importBundle, type ImportTarget } from "@/lib/browser/bundle";
 import { providerConfig } from "@/lib/browser/provider";
-import { callProvider, type ChatMessage } from "@/lib/provider/client";
+import { callBrowserProvider } from "@/lib/browser/provider-call";
+import type { ChatMessage } from "@/lib/provider/client";
 import { buildImportRepairPrompt } from "@/lib/provider/repair";
 import { appendPrompt } from "@/lib/browser/repository";
 import {
@@ -108,7 +109,7 @@ export async function repairImportJob(requestId: string): Promise<RepairResult> 
     };
   }
 
-  const result = await callProvider(config.config, prepared.messages, {
+  const result = await callBrowserProvider(config.config, prepared.messages, {
     timeoutMs: 60000,
   });
   await appendPrompt({

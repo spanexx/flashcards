@@ -42,6 +42,7 @@ describe("parseConfig", () => {
       licenseTtlSeconds: 2_592_000,
       upstreamTimeoutMs: 60_000,
       rateLimitPerHour: 120,
+      relayRateLimitPerHour: 60,
       subscriptionCacheMs: 120_000,
       llmBaseUrl: null,
       llmModel: null,
@@ -71,6 +72,12 @@ describe("parseConfig", () => {
     expect(problems(minimal({ PORT: "0" }))).toEqual(["PORT"]);
     expect(problems(minimal({ PORT: "eighty" }))).toEqual(["PORT"]);
     expect(problems(minimal({ RATE_LIMIT_PER_HOUR: "-3" }))).toEqual(["RATE_LIMIT_PER_HOUR"]);
+    expect(problems(minimal({ RELAY_RATE_LIMIT_PER_HOUR: "0" }))).toEqual([
+      "RELAY_RATE_LIMIT_PER_HOUR",
+    ]);
+    expect(problems(minimal({ RELAY_RATE_LIMIT_PER_HOUR: "sixty" }))).toEqual([
+      "RELAY_RATE_LIMIT_PER_HOUR",
+    ]);
   });
 
   it("accepts a complete Stripe group and reports checkout and portal", () => {

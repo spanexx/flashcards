@@ -11,6 +11,7 @@ import {
   recordAlgorithmRun,
   updateSettings,
 } from "@/lib/core/settings";
+import { normalizeRelayHosts, providerHost } from "@/lib/core/settings-shape";
 import { writeJson } from "@/lib/storage/json";
 import { dataFile } from "@/lib/storage/paths";
 import { withDataDir } from "./helpers";
@@ -52,7 +53,12 @@ describe("settings on disk", () => {
       await updateSettings({ level: "intermediate" });
       const merged = await updateSettings({ provider: { url: "u", model: "m" } });
       expect(merged.level).toBe("intermediate");
-      expect(merged.provider).toEqual({ url: "u", model: "m", mode: "custom" });
+      expect(merged.provider).toEqual({
+        url: "u",
+        model: "m",
+        mode: "custom",
+        relayHosts: [],
+      });
     });
   });
 
@@ -75,5 +81,22 @@ describe("settings on disk", () => {
       const settings = await readSettings();
       expect(settings.level).toBe("beginner");
     });
+  });
+});
+
+describe("relay host memory", () => {
+  it("lowercases, trims and dedupes host names", () => {
+    expect(normalizeRelayHosts([" Provider.TEST. ", "provider.test"])).toEqual(["provider.test"]);
+  });
+
+  it("drops entries that could not be a host and caps the list at ten", () => {
+    expect(normalizeRelayHosts(["https://x.test", "a..b", "bad host", 7, null])).toEqual([]);
+    const eleven = Array.from({ length: 11 }, (_, index) => `h${index}.test`);
+    expect(normalizeRelayHosts(eleven)).toHaveLength(10);
+  });
+
+  it("reads the host out of a provider address", () => {
+    expect(providerHost("https://Provider.test:8443/v1")).toBe("provider.test");
+    expect(providerHost("not a url")).toBeNull();
   });
 });

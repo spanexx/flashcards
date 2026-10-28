@@ -12,9 +12,12 @@
 // generated deck is stored at the level the request was prepared with. [D-29]
 // 2026-10-27 opencode: the one no-key refusal is exported for the progress
 // summary and import repair paths. [pack: progress-summary, import-repair]
+// 2026-10-28 qoder: the own-provider config carries the relay address and a
+// remembered host, and the card names the road. [pack: provider-relay]
 
 import type { Card, ProviderStatus } from "@/lib/shared/types";
-import { callProvider, ProviderTimeoutError } from "@/lib/provider/client";
+import { ProviderTimeoutError } from "@/lib/provider/client";
+import { callBrowserProvider } from "@/lib/browser/provider-call";
 import {
   generatedCardsBundle,
   generatedDeckBundle,
@@ -30,6 +33,7 @@ import {
 } from "@/lib/provider/prompt";
 import type { ProviderConfig } from "@/lib/provider/types";
 import { deriveWeakTopics } from "@/lib/core/progress";
+import { providerHost } from "@/lib/core/settings-shape";
 import {
   libraryInventoryFromPacks,
   type CreationBrief,
@@ -83,7 +87,12 @@ export async function providerConfig(): Promise<
   if (!key) {
     return { ok: false, message: "A provider is set up but no key is stored. Add a key in settings." };
   }
-  return { ok: true, config: { url, model, key, swappedForWsl: false } };
+  const config: ProviderConfig = { url, model, key, swappedForWsl: false };
+  const relayBase = systemApiBase();
+  if (relayBase.length > 0) config.relayBase = relayBase;
+  const host = providerHost(url);
+  if (host && (settings.provider.relayHosts ?? []).includes(host)) config.preferRelay = true;
+  return { ok: true, config };
 }
 
 /** Provider state in plain words; the key itself is never returned. */
@@ -110,9 +119,18 @@ export async function browserProviderStatus(): Promise<ProviderStatus> {
 
   const key = await readProviderKey();
   const configured = settings.provider.url.trim().length > 0 && settings.provider.model.trim().length > 0;
-  let message = "The browser calls the provider directly. Some providers refuse browser calls (CORS).";
+  const host = providerHost(settings.provider.url.trim());
+  const relayAvailable = systemApiBase().length > 0;
+  const relay = relayAvailable && host !== null && (settings.provider.relayHosts ?? []).includes(host);
+  let message = relayAvailable
+    ? "The browser calls the provider directly. If your provider refuses browser calls, the relay is tried automatically."
+    : "The browser calls the provider directly. Some providers refuse browser calls (CORS).";
   if (!configured) message = "No provider is set up. The app works without one.";
   else if (!key) message = "A provider is set up but no key is stored. Add a key in settings.";
+  else if (relay) {
+    message =
+      "This provider refused calls from the browser, so calls go through the relay. The key is sent with each call and is not stored there.";
+  }
   return {
     configured,
     hasKey: key.length > 0,
@@ -121,6 +139,7 @@ export async function browserProviderStatus(): Promise<ProviderStatus> {
     keyStore: key.length > 0 ? "browser" : "none",
     swappedForWsl: false,
     mode: "custom",
+    relay,
     message,
   };
 }
@@ -152,20 +171,33 @@ async function profileSlots(cards: Card[]): Promise<ProfileSlots> {
 }
 
 /** One plain sentence after a test call. No learner content is sent. */
-export async function testProvider(): Promise<{ ok: boolean; message: string }> {
+export async function testProvider(): Promise<{
+  ok: boolean;
+  message: string;
+  via?: "direct" | "relay";
+}> {
   const config = await providerConfig();
   if (!config.ok) return { ok: false, message: config.message };
-  const result = await callProvider(
-    config.config,
+  // A test always tries the direct road first, even for a remembered host; the
+  // wrapper then clears or keeps the memory based on what actually answered.
+  const result = await callBrowserProvider(
+    { ...config.config, preferRelay: false },
     [
       { role: "system", content: "You are a connection test. Answer with the single word OK." },
       { role: "user", content: "Say OK." },
     ],
     { timeoutMs: 20000 },
   );
-  return result.ok
-    ? { ok: true, message: "The provider answered. It is ready to use." }
-    : { ok: false, message: result.message };
+  if (!result.ok) return { ok: false, message: result.message };
+  const via = result.via === "relay" ? "relay" : "direct";
+  return {
+    ok: true,
+    via,
+    message:
+      via === "relay"
+        ? "The provider answered through the relay. It is ready to use."
+        : "The provider answered directly. It is ready to use.",
+  };
 }
 
 /** The three places a provider batch may land. */
@@ -310,7 +342,7 @@ export async function generateFromPrepared(prepared: PreparedRequest): Promise<G
   const config = await providerConfig();
   if (!config.ok) throw new Error(config.message);
 
-  const result = await callProvider(config.config, prepared.messages, { timeoutMs: 60000 });
+  const result = await callBrowserProvider(config.config, prepared.messages, { timeoutMs: 60000 });
   await appendPrompt({
     at: new Date().toISOString(),
     kind: "generation",
@@ -436,6 +468,7 @@ export async function askHint(body: {
       slots,
       body.outcomeCategory ?? "not answered yet",
       config.config,
+      callBrowserProvider,
     );
     await appendPrompt({
       at: new Date().toISOString(),

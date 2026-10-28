@@ -1,0 +1,178 @@
+GRILL — provider-relay
+Status: Locked
+Date: 2026-10-28
+Decisions by: learner, with the agent restating each rule before it was locked
+Source ticket: wayfinder/anything-learning-spec/tickets/provider-relay.md
+
+Verbatim from the learner on 2026-10-28 (voice dictation; homophones left as spoken):
+
+  "Ok, I think I get what you're saying. It's a sort of relay, right? It's a
+  sort of relay. That's OK. Now we can actually move the provider—not the
+  system provider, the. User provider profile, we can just move. The thing is,
+  we can move it to the server because. Some LLM. Might not work. I tried it
+  with one LLM and it's. It's giving CORS error because. It's not allowing the
+  browser to knock on the door. It's asking for. Ah, the token. From the first
+  instance. It doesn't allow the browser to knock on the door first. So which
+  means that. If we use this relay, it might be better because it's not. It's
+  not coming from the browser, it's coming from the relay, right? This is what
+  I'm thinking. You can speak to me and tell me if you understand me."
+
+  "So you know that the user are. Provider, the provider profile. Is supposed
+  to save on their browser. So if it is possible for. My server to read. The.
+  To read their. Because it's just like a middleman, right? So it can just
+  read it from their browser. Pass, and then... Yes, I understand it can be an
+  open network, but then... We can use the user's CDN. Public IP to Git. I
+  guess. Because there is no other way we can... I think it's possible to just
+  use it to guard. Do you have any other option? I think... I think that's it."
+
+  "Yes, you can go, but you should know something so we can also save some
+  value. There is something that I realized, and that is that the. Some
+  providers. Whoa. On the browser. I was using Mercury. Mercury was working
+  perfectly in the browser, but another provider was not working. So, is there
+  a way we can just test? We can only go through the server if. Their own
+  provider is not working. You know, I don't even know if you understand what
+  I'm saying. You can repeat it to me, and maybe you get it."
+
+Learner's answer to "Who may use the relay with their own provider and key?":
+  "Anyone with their own key (Recommended)."
+
+The agent restated the rule in plain words and the learner answered "Yes, you
+can go" before implementation began.
+
+--------------------------------------------------------------------------------
+Q1. What breaks today?
+A. The hosted app calls the learner's provider straight from the browser. Some
+   providers refuse that: no CORS headers, or an OPTIONS preflight that never
+   succeeds, so the browser never delivers the call. Mercury works that way
+   today; another provider the learner tried does not.
+   Why: the learner observed both outcomes and named the failure as the browser
+   being refused at the door.
+   Rules out: treating every provider failure as the learner's fault, and
+   blaming the key when the call never arrived.
+   Source: learner message; `v1/src/lib/provider/client.ts` CORS sentence.
+
+Q2. What is the rule when a provider works from the browser?
+A. Nothing changes. Direct is the first road for every call, and a provider that
+   answers the browser keeps using it. Mercury is the standing example.
+   Why: the learner said Mercury worked perfectly in the browser and asked to
+   "only go through the server if their own provider is not working".
+   Rules out: sending every learner through the relay, making the relay the
+   default, or requiring a subscription to use one's own key.
+   Source: learner message.
+
+Q3. Which failure triggers the relay?
+A. Only a browser-level "could not reach it" failure — the CORS class. An HTTP
+   answer (401, 403, 404, 429, 5xx) means the provider was reached, so the relay
+   is not tried for it and the key does not travel. A timeout is also not a
+   trigger: the provider may simply be slow.
+   Why: relaying cannot fix a rejected key or a wrong path, and sending the key
+   to the server for an answer the browser already has is a privacy cost with no
+   benefit.
+   Rules out: retrying every failure through the relay, using the relay to hide
+   a provider's real error, and falling back on timeouts.
+   Source: learner's "only ... if their own provider is not working"; agent
+   restatement, confirmed.
+
+Q4. Automatic or a switch?
+A. Automatic, and visible. The call tries direct; when the direct attempt cannot
+   reach the provider and the build has a relay, the same call is sent through
+   the relay. The app remembers the host that needed it, so later calls skip the
+   doomed direct attempt. The provider card names the road in use, and Test
+   connection always tries direct first and reports which road answered.
+   Why: the learner asked to "only go through the server if ... not working",
+   and to be able to "just test".
+   Rules out: a hidden fallback with no record, a manual switch the learner must
+   discover, and a Test button that cannot tell which road it used.
+   Source: learner message; agent restatement, confirmed.
+
+Q5. What does the server receive, and what does it keep?
+A. Exactly what one call needs: the provider address, the model, the messages,
+   the temperature, and the learner's key as the bearer token. It forwards them
+   once and keeps nothing. No key, prompt, answer or address is logged or
+   stored. The browser keeps the profile and the key, as today.
+   Why: the learner described the server as "a middleman" that reads the profile
+   from the browser and passes it on. Nothing about that needs storage.
+   Rules out: a server-side key store, accounts, a prompt history on the relay,
+   and the relay ever falling back to the operator's own key.
+   Source: learner message; `docs/features/system-provider-subscription/GRILL`
+   Q11 privacy rule.
+
+Q6. Who may use it, and what does it cost?
+A. Anyone with their own provider key. It is not behind the subscription. The
+   learner's key pays the provider, so a relayed call costs the operator no model
+   money — only bandwidth. A per-address hourly cap protects the box; the paid
+   lane keeps its own per-licence cap.
+   Why: the learner chose "Anyone with their own key"; paying EUR 5 to use one's
+   own key was the rejected alternative.
+   Rules out: a subscription gate, a credit meter, and a shared quota between the
+   paid lane and the relay.
+   Source: AskUserQuestion answer, 2026-10-28.
+
+Q7. What guards must the relay carry?
+A. HTTPS only on port 443; no credentials in the address; the path must end in
+   `/chat/completions`, so the relay cannot be pointed at an arbitrary service;
+   private, loopback, link-local and unique-local addresses are refused after DNS
+   resolution, and the connection is pinned to the address that was checked; no
+   redirects are followed; the existing 1 MB request and 2 MB reply ceilings
+   apply; the existing timeout applies; CORS still names only the app origin.
+   Why: a relay that forwards to any address a caller names is an SSRF and open
+   proxy. Narrowing the target to secure chat endpoints keeps it a provider
+   relay, not a general-purpose proxy.
+   Rules out: http targets, arbitrary paths, DNS rebinding via a second lookup,
+   private-network probes, and redirect hops to an internal service.
+   Source: agent design, learner accepted the guard direction ("use it to
+   guard"; "Do you have any other option?").
+
+Q8. Where does the relay live, and what happens without it?
+A. It is the same small service the paid lane already uses, at the address the
+   build already knows. A build with no system address keeps today's behaviour:
+   direct calls and the CORS sentence. A build with the address gains the
+   fallback; nothing else about the learner's provider changes.
+   Why: one service, one deployment, one place to watch. No second backend.
+   Rules out: a new host, a second API base, and a feature that only exists in
+   builds the operator has not published.
+   Source: learner's "move it to the server"; `v1/src/lib/client/system.ts`.
+
+Q9. What does the learner see when the relay is in use?
+A. The provider card says the address refuses browser calls and that calls go
+   through the tutor relay; the privacy line says the key is sent to the relay
+   for each call and is not stored there. Test connection answers "Answered
+   directly" or "Answered through the relay". A relay refusal has its own plain
+   sentence (insecure address, private address, wrong path, not a chat
+   endpoint).
+   Why: the key leaving the browser must be stated where the key is managed.
+   Rules out: a silent route change, and a privacy line that still says the key
+   never leaves the browser when it does.
+   Source: agent restatement; existing Settings provider card.
+
+Q10. What is remembered, and when is it forgotten?
+A. The hostname that needed the relay, in settings beside the provider profile,
+   capped at ten hosts. Saving a provider profile clears the remembered list, so
+   a freshly typed address is tested from scratch. Test connection ignores the
+   memory for its first attempt.
+   Why: "save some value" — do not repeat a doomed direct call on every request.
+   Rules out: remembering forever after one bad network moment, and storing the
+   address or the key in a second place.
+   Source: learner message.
+
+Q11. What is deliberately not built?
+A. Server-side key storage, accounts, streaming replies, provider-specific auth
+   schemes (only OpenAI-compatible Bearer), http or non-443 targets, a choice of
+   relays, and any change to the system provider lane, the judge, the plan or
+   the cards.
+   Why: each is a new surface the learner did not ask for.
+   Rules out: scope creep at the relay boundary.
+   Source: learner message; PRD-TRD Non-goals.
+
+Q12. How is it proven without a provider that refuses the browser?
+A. Unit tests with an injected DNS lookup and transport cover every guard and
+   the fallback order. A real server run sends a request to a public
+   chat-completions address that answers 401 without a valid key, proving DNS,
+   TLS and forwarding without a secret. The browser fallback is proven with
+   injected callers, and the live page is checked with the learner's own
+   provider.
+   Why: the repository must not need secrets to run its checks, and the guard
+   must be tested without touching a real private network.
+   Rules out: committing a key, testing SSRF against a real internal address,
+   and claiming a live provider refusal was reproduced.
+   Source: IMPL phases.

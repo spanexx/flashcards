@@ -12,7 +12,7 @@ import {
   type ProgressSummaryPayload,
 } from "@/lib/core/progress-summary";
 import type { ChatMessage } from "@/lib/provider/client";
-import { callProvider } from "@/lib/provider/client";
+import { callBrowserProvider } from "@/lib/browser/provider-call";
 import { buildProgressSummaryPrompt } from "@/lib/provider/summary";
 import { providerConfig } from "@/lib/browser/provider";
 import {
@@ -98,7 +98,7 @@ export async function generateProgressSummary(requestId: string): Promise<string
   const config = await providerConfig();
   if (!config.ok) throw new Error(config.message);
 
-  const result = await callProvider(config.config, prepared.messages, {
+  const result = await callBrowserProvider(config.config, prepared.messages, {
     timeoutMs: 60000,
   });
   await appendPrompt({

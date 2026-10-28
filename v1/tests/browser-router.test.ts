@@ -12,7 +12,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryStore, setBrowserStore, type Store } from "@/lib/browser/store";
 import { localGet, localSend } from "@/lib/browser/router";
-import { writeMeta } from "@/lib/browser/repository";
+import { rememberRelayHost, writeMeta } from "@/lib/browser/repository";
 import { PACK_BUNDLE_SCHEMA } from "@/lib/browser/bundle";
 import { createJobRunner } from "@/lib/browser/jobs";
 import type { BrowserJob, JobView } from "@/lib/browser/jobs";
@@ -657,12 +657,13 @@ describe("settings and export", () => {
       provider: { url: "https://provider.test/v1", model: "test-model", mode: "system" },
     });
     const saved = await localGet<{
-      settings: { provider: { url: string; model: string; mode: string } };
+      settings: { provider: { url: string; model: string; mode: string; relayHosts: string[] } };
     }>("/api/settings");
     expect(saved.settings.provider).toEqual({
       url: "https://provider.test/v1",
       model: "test-model",
       mode: "system",
+      relayHosts: [],
     });
 
     // A patch that says nothing about the lane keeps the chosen one.
@@ -673,6 +674,23 @@ describe("settings and export", () => {
     await expect(
       localSend("/api/settings", "PATCH", { provider: { mode: "magic" } }),
     ).rejects.toThrow(/mode/);
+  });
+
+  it("keeps the relay memory for the same address and clears it for a new one", async () => {
+    await localSend("/api/settings", "PATCH", {
+      provider: { url: "https://provider.test/v1", model: "test-model" },
+    });
+    await rememberRelayHost("provider.test");
+
+    const same = await localSend<{ settings: { provider: { relayHosts: string[] } } }>("/api/settings", "PATCH", {
+      provider: { url: "https://provider.test/v1", model: "test-model" },
+    });
+    expect(same.settings.provider.relayHosts).toEqual(["provider.test"]);
+
+    const moved = await localSend<{ settings: { provider: { relayHosts: string[] } } }>("/api/settings", "PATCH", {
+      provider: { url: "https://other.test/v1", model: "test-model" },
+    });
+    expect(moved.settings.provider.relayHosts).toEqual([]);
   });
 
   it("exports a pack and a full backup", async () => {

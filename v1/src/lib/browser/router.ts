@@ -733,10 +733,13 @@ async function updateSettings(body: Record<string, unknown>) {
     if (mode !== undefined && mode !== "custom" && mode !== "system") {
       fail("That is not a provider mode the app knows.");
     }
+    const url = typeof provider.url === "string" ? provider.url.trim() : current.provider.url;
     patch.provider = {
-      url: typeof provider.url === "string" ? provider.url.trim() : current.provider.url,
+      url,
       model: typeof provider.model === "string" ? provider.model.trim() : current.provider.model,
       mode: mode === "custom" || mode === "system" ? mode : current.provider.mode,
+      // WHY: A new address is a different provider; its old road says nothing.
+      ...(url !== current.provider.url ? { relayHosts: [] } : {}),
     };
   }
   const settings = await patchSettings(patch);

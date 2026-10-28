@@ -22,6 +22,7 @@ export interface ServerConfig {
   llmApiKey: string | null;
   upstreamTimeoutMs: number;
   rateLimitPerHour: number;
+  relayRateLimitPerHour: number;
   subscriptionCacheMs: number;
 }
 
@@ -150,6 +151,7 @@ export function parseConfig(env: Record<string, string | undefined>): ConfigResu
   const licenseTtlSeconds = integer(env, "LICENSE_TTL_SECONDS", 30 * DAY, 60, 10 * 365 * DAY, problems);
   const upstreamTimeoutMs = integer(env, "UPSTREAM_TIMEOUT_MS", 60_000, 1_000, 10 * 60_000, problems);
   const rateLimitPerHour = integer(env, "RATE_LIMIT_PER_HOUR", 120, 1, 100_000, problems);
+  const relayRateLimitPerHour = integer(env, "RELAY_RATE_LIMIT_PER_HOUR", 60, 1, 100_000, problems);
   const subscriptionCacheMs = integer(env, "SUBSCRIPTION_CACHE_MS", 120_000, 0, 60 * 60_000, problems);
 
   if (problems.length > 0) return { ok: false, problems };
@@ -173,6 +175,7 @@ export function parseConfig(env: Record<string, string | undefined>): ConfigResu
       llmApiKey: llmApiKey || null,
       upstreamTimeoutMs,
       rateLimitPerHour,
+      relayRateLimitPerHour,
       subscriptionCacheMs,
     },
   };

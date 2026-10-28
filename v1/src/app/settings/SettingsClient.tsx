@@ -17,6 +17,8 @@
 // [pack: learner-delight]
 // 2026-10-26 qoder: Appearance also holds the teaching layer's automatic
 // opening. [pack: study-resilience]
+// 2026-10-28 qoder: the provider card names the relay road and its key transit.
+// [pack: provider-relay]
 
 import { useCallback, useEffect, useState } from "react";
 import { apiGet, apiSend } from "@/lib/client/api";
@@ -216,9 +218,13 @@ export default function SettingsClient() {
     setMessage(null);
     setNotice(null);
     try {
-      const data = await apiSend<{ ok: boolean; message: string }>("/api/provider/test", "POST");
+      const data = await apiSend<{ ok: boolean; message: string; via?: "direct" | "relay" }>(
+        "/api/provider/test",
+        "POST",
+      );
       setTestResult(data);
       setTested(data.ok);
+      await refresh();
     } catch (error) {
       setTestResult({
         ok: false,
@@ -228,7 +234,7 @@ export default function SettingsClient() {
     } finally {
       setTestBusy(false);
     }
-  }, []);
+  }, [refresh]);
 
   const exportBackup = useCallback(async () => {
     setMessage(null);
@@ -493,7 +499,9 @@ export default function SettingsClient() {
             <p className="muted" style={{ margin: 0 }}>
               {provider.mode === "system"
                 ? `Pass: ${provider.hasKey ? "stored in this browser" : "not stored"} · the operator's key never reaches this page, and backups never include the pass.`
-                : `Key: ${provider.hasKey ? "stored in this browser" : "not stored"} · the address and model are saved here too. Backups never include the key.`}
+                : systemEnabled()
+                  ? `Key: ${provider.hasKey ? "stored in this browser" : "not stored"} · it stays in this browser unless your provider refuses browser calls, in which case the relay sends it with each call and does not store it. Backups never include the key.`
+                  : `Key: ${provider.hasKey ? "stored in this browser" : "not stored"} · the address and model are saved here too. Backups never include the key.`}
             </p>
 
             {testResult ? (
@@ -526,7 +534,11 @@ export default function SettingsClient() {
               <div>
                 <h2 style={{ margin: 0 }}>Set up your own provider</h2>
                 <p className="muted" style={{ margin: 0 }}>
-                  Use an OpenAI-compatible address and model. The key stays in this browser and is never shown back.
+                  Use an OpenAI-compatible address and model. The key stays in this browser and is never
+                  shown back.{" "}
+                  {systemEnabled()
+                    ? "If the provider refuses browser calls, the relay carries each call with your key and does not store it."
+                    : ""}
                 </p>
                 {systemInUse ? (
                   <p className="muted" style={{ margin: 0 }}>

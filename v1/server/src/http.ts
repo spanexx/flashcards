@@ -16,6 +16,7 @@ import {
   type EntitlementFailure,
 } from "./entitlement";
 import { proxyChat, type ProxyOptions } from "./proxy";
+import { relayChat, type RelayOptions } from "./relay";
 import type { StripeClient } from "./stripe";
 import type { StatusCache } from "./subscriptions";
 import { verifyStripeSignature } from "./webhook";
@@ -67,8 +68,10 @@ export interface AppDeps {
   stripe: StripeClient | null;
   subscriptions: StatusCache;
   proxy: ProxyOptions | null;
+  relay: RelayOptions | null;
   now?: () => number;
   rateLimiter?: RateLimiter;
+  relayRateLimiter?: RateLimiter;
   log?: (line: string) => void;
 }
 
@@ -194,6 +197,21 @@ function licenseKey(token: string, address: string): string {
   return `${digest}:${address}`;
 }
 
+/**
+ * The caller's address. The edge appends the real client last, so that entry is
+ * the one used; a request without the header falls back to the socket.
+ */
+function clientAddress(req: IncomingMessage): string {
+  const forwarded = req.headers["x-forwarded-for"];
+  const raw = Array.isArray(forwarded) ? forwarded.join(",") : (forwarded ?? "");
+  const entries = raw
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0);
+  const candidate = entries.length > 0 ? entries[entries.length - 1] : (req.socket.remoteAddress ?? "");
+  return candidate.length > 0 && candidate.length <= 64 ? candidate : "unknown";
+}
+
 /** Build the entitlement dependencies for one app. */
 function entitlementDeps(deps: AppDeps): EntitlementDeps {
   return {
@@ -249,6 +267,8 @@ export async function handleRequest(
   const path = url.pathname;
   const method = req.method ?? "GET";
   const rateLimiter = deps.rateLimiter ?? new RateLimiter(config.rateLimitPerHour, undefined, deps.now);
+  const relayRateLimiter =
+    deps.relayRateLimiter ?? new RateLimiter(config.relayRateLimitPerHour, undefined, deps.now);
 
   if (method === "GET" && path === "/healthz") {
     const publicFacts = publicConfig(config);
@@ -257,6 +277,7 @@ export async function handleRequest(
       service: "flashcards-system-provider",
       checkout: publicFacts.checkout,
       proxy: publicFacts.proxy,
+      relay: Boolean(deps.relay),
     });
     return;
   }
@@ -382,6 +403,40 @@ export async function handleRequest(
     return;
   }
 
+  if (method === "POST" && path === "/api/relay/chat") {
+    if (!deps.relay) {
+      sendError(res, 503, "The relay is not configured.");
+      return;
+    }
+    // The learner's own key is the only credential here; it arrives as the
+    // bearer token and is named into the body, so the browser sends it once.
+    const apiKey = bearerToken(req);
+    if (!apiKey) {
+      sendError(res, 401, "The provider key is missing.");
+      return;
+    }
+    const limit = relayRateLimiter.take(`relay:${clientAddress(req)}`);
+    if (!limit.ok) {
+      sendJson(
+        res,
+        429,
+        { error: "Too many relayed calls. Try again in a little while." },
+        { "retry-after": String(limit.retryAfterSeconds) },
+      );
+      return;
+    }
+    const body = await readJsonBody(req, res, MAX_BODY_BYTES);
+    if (!body.ok) return;
+    const result = await relayChat(deps.relay, { ...body.value, apiKey });
+    if (!result.ok) {
+      const headers: Record<string, string> = result.status === 429 ? { "retry-after": "60" } : {};
+      sendJson(res, result.status, { error: result.message }, headers);
+      return;
+    }
+    sendJson(res, 200, result.payload);
+    return;
+  }
+
   if (method === "POST" && path === "/api/stripe/webhook") {
     if (!config.stripeWebhookSecret) {
       sendError(res, 404, "Not found.");
@@ -413,9 +468,14 @@ export async function handleRequest(
 export function createRequestHandler(deps: AppDeps): (req: IncomingMessage, res: ServerResponse) => void {
   // One limiter per server, not per request: a fresh map each time would count
   // every call as the first and never refuse anything.
-  const ready: AppDeps = deps.rateLimiter
-    ? deps
-    : { ...deps, rateLimiter: new RateLimiter(deps.config.rateLimitPerHour, undefined, deps.now) };
+  const ready: AppDeps = {
+    ...deps,
+    rateLimiter:
+      deps.rateLimiter ?? new RateLimiter(deps.config.rateLimitPerHour, undefined, deps.now),
+    relayRateLimiter:
+      deps.relayRateLimiter ??
+      new RateLimiter(deps.config.relayRateLimitPerHour, undefined, deps.now),
+  };
   return (req, res) => {
     void handleRequest(req, res, ready).catch(() => {
       if (res.headersSent) {

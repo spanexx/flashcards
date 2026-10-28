@@ -20,6 +20,10 @@ const config: ProviderConfig = {
   swappedForWsl: false,
 };
 
+const relayConfig: ProviderConfig = { ...config, relayBase: "https://relay.test" };
+const asked = [{ role: "user" as const, content: "hi" }];
+const relayUrl = "https://relay.test/api/relay/chat";
+
 function reply(payload: unknown): Response {
   return {
     ok: true,
@@ -91,7 +95,7 @@ describe("callProvider", () => {
     const fetchMock = vi.fn(async () => reply({ choices: [{ message: { content: "Piję kawę." } }] }));
     vi.stubGlobal("fetch", fetchMock);
     const result = await callProvider(config, [{ role: "user", content: "hi" }]);
-    expect(result).toEqual({ ok: true, text: "Piję kawę." });
+    expect(result).toEqual({ ok: true, text: "Piję kawę.", via: "direct" });
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
@@ -126,7 +130,7 @@ describe("callProvider", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
     const result = await callProvider(config, [{ role: "user", content: "hi" }]);
-    expect(result).toEqual({ ok: true, text: "second try" });
+    expect(result).toEqual({ ok: true, text: "second try", via: "direct" });
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
@@ -195,5 +199,112 @@ describe("callProvider", () => {
       expect(result.message).toContain("no words");
       expect(result.reason).toBe("empty");
     }
+  });
+});
+
+describe("callProvider with a relay", () => {
+  it("keeps a working provider on the direct road", async () => {
+    const fetchMock = vi.fn<(url: string | URL, init?: RequestInit) => Promise<Response>>(async () =>
+      reply({ choices: [{ message: { content: "direct" } }] }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const result = await callProvider(relayConfig, asked);
+    expect(result).toEqual({ ok: true, text: "direct", via: "direct" });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(String(fetchMock.mock.calls[0][0])).toBe("http://provider.test/chat/completions");
+  });
+
+  it("does not relay a rejected key, a timeout or an empty reply", async () => {
+    const rejected = vi.fn(async () => failure(401));
+    vi.stubGlobal("fetch", rejected);
+    await callProvider(relayConfig, asked);
+    expect(rejected).toHaveBeenCalledTimes(1);
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        const error = new Error("aborted");
+        error.name = "AbortError";
+        throw error;
+      }),
+    );
+    const timedOut = await callProvider(relayConfig, asked, { timeoutMs: 5 });
+    expect(timedOut).toMatchObject({ ok: false, reason: "timeout" });
+
+    const blank = vi.fn(async () => reply({ choices: [{ message: { content: "  " } }] }));
+    vi.stubGlobal("fetch", blank);
+    await callProvider(relayConfig, asked);
+    expect(blank).toHaveBeenCalledTimes(1);
+  });
+
+  it("relays the same call after the browser cannot reach the provider", async () => {
+    const fetchMock = vi.fn<(url: string | URL, init?: RequestInit) => Promise<Response>>(async (url) => {
+      if (String(url) === relayUrl) {
+        return reply({ choices: [{ message: { content: "relayed" } }] });
+      }
+      throw new TypeError("Failed to fetch");
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await callProvider(relayConfig, asked);
+    expect(result).toEqual({ ok: true, text: "relayed", via: "relay" });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(String(fetchMock.mock.calls[1][0])).toBe(relayUrl);
+
+    const init = fetchMock.mock.calls[1][1] as RequestInit;
+    expect(JSON.parse(String(init.body))).toEqual({
+      url: "http://provider.test/chat/completions",
+      model: "some-model",
+      messages: asked,
+      temperature: 0.2,
+    });
+    expect(init.headers).toMatchObject({ authorization: "Bearer secret" });
+  });
+
+  it("prefers the relay for a remembered host", async () => {
+    const fetchMock = vi.fn(async (url: string | URL) =>
+      String(url) === relayUrl
+        ? reply({ choices: [{ message: { content: "relayed" } }] })
+        : reply({ choices: [{ message: { content: "direct" } }] }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const result = await callProvider({ ...relayConfig, preferRelay: true }, asked);
+    expect(result).toEqual({ ok: true, text: "relayed", via: "relay" });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(String(fetchMock.mock.calls[0][0])).toBe(relayUrl);
+  });
+
+  it("falls back to direct when the preferred relay cannot be reached", async () => {
+    const fetchMock = vi.fn(async (url: string | URL) => {
+      if (String(url) === relayUrl) throw new TypeError("Failed to fetch");
+      return reply({ choices: [{ message: { content: "direct" } }] });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const result = await callProvider({ ...relayConfig, preferRelay: true }, asked);
+    expect(result).toEqual({ ok: true, text: "direct", via: "direct" });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("tries direct when the relay answers 502", async () => {
+    const fetchMock = vi.fn(async (url: string | URL) => {
+      if (String(url) === relayUrl) return failure(502, { error: "The provider could not be reached." });
+      return reply({ choices: [{ message: { content: "direct" } }] });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const result = await callProvider({ ...relayConfig, preferRelay: true }, asked);
+    expect(result).toEqual({ ok: true, text: "direct", via: "direct" });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("stops at an HTTP answer from the relay", async () => {
+    const fetchMock = vi.fn(async (url: string | URL) => {
+      if (String(url) === relayUrl) return failure(401);
+      throw new TypeError("Failed to fetch");
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const result = await callProvider(relayConfig, asked);
+    expect(result).toMatchObject({ ok: false, reason: "http" });
+    if (!result.ok) expect(result.message).toContain("key");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });

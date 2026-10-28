@@ -7,6 +7,9 @@
 // argument, so no server-only import remains. [pack: browser-app]
 // 2026-10-23 opencode: failures carry a reason so a job retries only a timeout.
 // [pack: background-jobs]
+// 2026-10-28 qoder: a direct failure that never reached the provider may be
+// retried through the relay, and an answer names the road it took.
+// [pack: provider-relay]
 
 import type { ProviderConfig } from "@/lib/provider/types";
 
@@ -21,7 +24,7 @@ export type ProviderFailureReason = "timeout" | "unreachable" | "http" | "empty"
 
 /** A provider call either returns text or a sentence a person can act on. */
 export type ProviderCallResult =
-  | { ok: true; text: string }
+  | { ok: true; text: string; via?: "direct" | "relay" }
   | { ok: false; message: string; reason: ProviderFailureReason };
 
 /** A timeout is the one provider failure a background job retries. */
@@ -86,9 +89,151 @@ export function readReplyText(payload: unknown): string | null {
   return null;
 }
 
+/** One road's answer, with the HTTP status kept for the road decision. */
+interface Attempt {
+  result: ProviderCallResult;
+  status: number | null;
+}
+
+/** One direct call from this browser to one candidate endpoint. */
+async function directAttempt(
+  config: ProviderConfig,
+  url: string,
+  messages: ChatMessage[],
+  timeoutMs: number,
+): Promise<Attempt> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const startedAt = Date.now();
+  // Plain server-side lines so a learner can watch the local log while
+  // testing a provider. The key and the headers never appear in a line.
+  console.info(`[provider] POST ${url} model=${config.model}`);
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${config.key}`,
+      },
+      body: JSON.stringify({
+        model: config.model,
+        messages,
+        temperature: 0.2,
+      }),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      let message = describeHttpFailure(response.status, url);
+      // The service's own sentence wins when it gave one: a refused
+      // subscription needs a different answer than a wrong key.
+      try {
+        message = readErrorSentence(await response.json()) ?? message;
+      } catch {
+        // No JSON body; the status sentence stands.
+      }
+      console.warn(`[provider] ${response.status} from ${url} in ${Date.now() - startedAt}ms — ${message}`);
+      return { result: { ok: false, message, reason: "http" }, status: response.status };
+    }
+
+    const payload = (await response.json()) as unknown;
+    const text = readReplyText(payload);
+    if (!text || text.trim().length === 0) {
+      console.warn(`[provider] empty reply from ${url} in ${Date.now() - startedAt}ms`);
+      return {
+        result: { ok: false, message: "The provider answered with no words.", reason: "empty" },
+        status: response.status,
+      };
+    }
+    console.info(`[provider] ok from ${url} in ${Date.now() - startedAt}ms, ${text.length} characters`);
+    return { result: { ok: true, text }, status: response.status };
+  } catch (error) {
+    const aborted = error instanceof Error && error.name === "AbortError";
+    const message = aborted ? "The provider took too long to answer." : describeUnreachable(url);
+    console.warn(`[provider] ${message} (after ${Date.now() - startedAt}ms)`);
+    return {
+      result: { ok: false, message, reason: aborted ? "timeout" : "unreachable" },
+      status: null,
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** One relayed call. The relay is handed the learner's key for this call only. */
+async function relayAttempt(
+  config: ProviderConfig,
+  url: string,
+  messages: ChatMessage[],
+  timeoutMs: number,
+): Promise<Attempt> {
+  const base = (config.relayBase ?? "").trim().replace(/\/+$/, "");
+  if (base.length === 0) {
+    return {
+      result: { ok: false, message: "The relay is not available in this build.", reason: "unreachable" },
+      status: null,
+    };
+  }
+  const relayUrl = `${base}/api/relay/chat`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const startedAt = Date.now();
+  console.info(`[provider] POST relay model=${config.model}`);
+  try {
+    const response = await fetch(relayUrl, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${config.key}`,
+      },
+      body: JSON.stringify({
+        url,
+        model: config.model,
+        messages,
+        temperature: 0.2,
+      }),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      let message = describeHttpFailure(response.status, url);
+      try {
+        message = readErrorSentence(await response.json()) ?? message;
+      } catch {
+        // The relay's status is enough.
+      }
+      console.warn(`[provider] relay ${response.status} in ${Date.now() - startedAt}ms — ${message}`);
+      return { result: { ok: false, message, reason: "http" }, status: response.status };
+    }
+
+    const payload = (await response.json()) as unknown;
+    const text = readReplyText(payload);
+    if (!text || text.trim().length === 0) {
+      return {
+        result: { ok: false, message: "The provider answered with no words.", reason: "empty" },
+        status: response.status,
+      };
+    }
+    console.info(`[provider] ok via relay in ${Date.now() - startedAt}ms, ${text.length} characters`);
+    return { result: { ok: true, text }, status: response.status };
+  } catch (error) {
+    const aborted = error instanceof Error && error.name === "AbortError";
+    return {
+      result: aborted
+        ? { ok: false, message: "The provider took too long to answer.", reason: "timeout" }
+        : { ok: false, message: "The relay could not be reached.", reason: "unreachable" },
+      status: null,
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 /**
- * Send one message pair and return the text. One attempt per candidate
- * endpoint; a failure is reported, never retried forever.
+ * Send one message pair and return the text. The browser is tried first for a
+ * provider that answers it; the relay carries the same call only when the
+ * browser cannot reach the provider at all. An HTTP answer, a timeout or an
+ * empty reply means the provider was reached, so the chain stops there.
  */
 export async function callProvider(
   config: ProviderConfig,
@@ -97,72 +242,48 @@ export async function callProvider(
 ): Promise<ProviderCallResult> {
   const timeoutMs = options.timeoutMs ?? 60000;
   const endpoints = chatEndpoints(config.url);
-  let lastMessage = "The provider could not be reached.";
+  const relayAvailable = (config.relayBase ?? "").trim().length > 0;
+  const roadOrder: Array<"direct" | "relay"> =
+    relayAvailable && config.preferRelay === true ? ["relay", "direct"] : ["direct", "relay"];
+  let last: ProviderCallResult = {
+    ok: false,
+    message: "The provider could not be reached.",
+    reason: "unreachable",
+  };
 
-  for (let index = 0; index < endpoints.length; index += 1) {
-    const url = endpoints[index];
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-    const startedAt = Date.now();
-    // Plain server-side lines so a learner can watch the local log while
-    // testing a provider. The key and the headers never appear in a line.
-    console.info(`[provider] POST ${url} model=${config.model}`);
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          authorization: `Bearer ${config.key}`,
-        },
-        body: JSON.stringify({
-          model: config.model,
-          messages,
-          temperature: 0.2,
-        }),
-        signal: controller.signal,
-      });
+  for (const endpoint of endpoints) {
+    let nextEndpoint = false;
+    for (const road of roadOrder) {
+      if (road === "relay" && !relayAvailable) continue;
+      const attempt =
+        road === "direct"
+          ? await directAttempt(config, endpoint, messages, timeoutMs)
+          : await relayAttempt(config, endpoint, messages, timeoutMs);
 
-      if (!response.ok) {
-        const willRetry = response.status === 404 && index + 1 < endpoints.length;
-        lastMessage = describeHttpFailure(response.status, url);
-        // The service's own sentence wins when it gave one: a refused
-        // subscription needs a different answer than a wrong key.
-        if (!willRetry) {
-          try {
-            lastMessage = readErrorSentence(await response.json()) ?? lastMessage;
-          } catch {
-            // No JSON body; the status sentence stands.
-          }
+      if (attempt.result.ok) return { ...attempt.result, via: road };
+      last = attempt.result;
+
+      if (attempt.result.reason === "timeout" || attempt.result.reason === "empty") {
+        return attempt.result;
+      }
+      if (attempt.result.reason === "http") {
+        // A 404 may mean the other candidate shape is the right one; any other
+        // status is a real answer from the provider.
+        if (attempt.status === 404) {
+          nextEndpoint = true;
+          break;
         }
-        console.warn(`[provider] ${response.status} from ${url} in ${Date.now() - startedAt}ms — ${lastMessage}`);
-        // A 404 may mean the other candidate shape is the right one; anything
-        // else is a real answer and should not be retried against a second URL.
-        if (willRetry) continue;
-        return { ok: false, message: lastMessage, reason: "http" };
+        // A relayed 502/504 is the relay's own road failing, not an answer from
+        // the provider; the browser may still reach it directly.
+        if (road === "relay" && (attempt.status === 502 || attempt.status === 504)) continue;
+        return attempt.result;
       }
-
-      const payload = (await response.json()) as unknown;
-      const text = readReplyText(payload);
-      if (!text || text.trim().length === 0) {
-        console.warn(`[provider] empty reply from ${url} in ${Date.now() - startedAt}ms`);
-        return { ok: false, message: "The provider answered with no words.", reason: "empty" };
-      }
-      console.info(`[provider] ok from ${url} in ${Date.now() - startedAt}ms, ${text.length} characters`);
-      return { ok: true, text };
-    } catch (error) {
-      const aborted = error instanceof Error && error.name === "AbortError";
-      lastMessage = aborted
-        ? "The provider took too long to answer."
-        : describeUnreachable(url);
-      console.warn(`[provider] ${lastMessage} (after ${Date.now() - startedAt}ms)`);
-      if (index + 1 < endpoints.length && !aborted) continue;
-      return { ok: false, message: lastMessage, reason: aborted ? "timeout" : "unreachable" };
-    } finally {
-      clearTimeout(timer);
+      // Unreachable: the other road gets one try with the same endpoint.
     }
+    if (nextEndpoint) continue;
   }
 
-  return { ok: false, message: lastMessage, reason: "unreachable" };
+  return last;
 }
 
 /**

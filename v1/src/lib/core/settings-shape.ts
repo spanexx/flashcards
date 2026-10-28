@@ -12,13 +12,46 @@ export function defaultSettings(): Settings {
     version: 1,
     level: "beginner",
     learningStyle: "examples-first",
-    provider: { url: "", model: "", mode: "custom" },
+    provider: { url: "", model: "", mode: "custom", relayHosts: [] },
     algorithm: { lastAlgorithm: "default", fallbackCount: 0, lastFallbackAt: null },
   };
 }
 
 const LEVELS = new Set(["beginner", "intermediate", "advanced"]);
 const STYLES = new Set(["examples-first", "rules-first", "conversation", "gentle"]);
+const MAX_RELAY_HOSTS = 10;
+
+/**
+ * Keep the remembered hosts readable: lowercase, no trailing dot, no repeats,
+ * ten at most with the newest first. Junk entries are dropped, never repaired
+ * into something that might point somewhere else.
+ */
+export function normalizeRelayHosts(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  const seen = new Set<string>();
+  const kept: string[] = [];
+  for (const entry of raw) {
+    if (typeof entry !== "string") continue;
+    const name = entry.trim().toLowerCase().replace(/\.$/, "");
+    if (name.length === 0 || name.length > 253) continue;
+    if (!/^[a-z0-9.-]+$/.test(name) || name.includes("..")) continue;
+    if (seen.has(name)) continue;
+    seen.add(name);
+    kept.push(name);
+    if (kept.length >= MAX_RELAY_HOSTS) break;
+  }
+  return kept;
+}
+
+/** The hostname a relay memory is keyed by, or null when the address is unusable. */
+export function providerHost(url: string): string | null {
+  try {
+    const parsed = new URL(url.trim());
+    return normalizeRelayHosts([parsed.hostname])[0] ?? null;
+  } catch {
+    return null;
+  }
+}
 
 /** Keep stored settings readable even after a hand edit or an old version. */
 export function normalizeSettings(raw: unknown): Settings {
@@ -38,6 +71,7 @@ export function normalizeSettings(raw: unknown): Settings {
       model: typeof provider.model === "string" ? provider.model : "",
       // WHY: An older settings row has no mode. Custom is what it was using.
       mode: provider.mode === "system" ? "system" : "custom",
+      relayHosts: normalizeRelayHosts(provider.relayHosts),
     },
     algorithm: {
       lastAlgorithm: algorithm.lastAlgorithm === "fallback" ? "fallback" : "default",

@@ -18,7 +18,7 @@ import type {
 } from "@/lib/shared/types";
 import type { PackPrompts } from "@/lib/packs/types";
 import type { StoredSession } from "@/lib/core/session-resume";
-import { defaultSettings, mergeSettings, normalizeSettings } from "@/lib/core/settings-shape";
+import { defaultSettings, mergeSettings, normalizeRelayHosts, normalizeSettings } from "@/lib/core/settings-shape";
 import { browserStore, type StoredValue, type Store } from "@/lib/browser/store";
 import { markChanged } from "@/lib/browser/changes";
 
@@ -311,8 +311,44 @@ export function recordAlgorithmRun(
   });
 }
 
-/** The provider key, or an empty string when the learner has not set one. */
-export async function readProviderKey(store: Store = browserStore()): Promise<string> {
+/** Remember that one host needed the relay; newest first, ten at most. */
+export function rememberRelayHost(host: string, store: Store = browserStore()): Promise<Settings> {
+  return serial(async () => {
+    const current = await readSettings(store);
+    const name = normalizeRelayHosts([host])[0];
+    if (!name) return current;
+    const next: Settings = {
+      ...current,
+      provider: {
+        ...current.provider,
+        relayHosts: normalizeRelayHosts([name, ...(current.provider.relayHosts ?? [])]),
+      },
+    };
+    await store.put<SettingsRow>("settings", { id: "settings", value: next });
+    markChanged();
+    return next;
+  });
+}
+
+/** Forget a host: a direct answer proved the relay is not needed for it. */
+export function forgetRelayHost(host: string, store: Store = browserStore()): Promise<Settings> {
+  return serial(async () => {
+    const current = await readSettings(store);
+    const name = normalizeRelayHosts([host])[0];
+    if (!name) return current;
+    const known = current.provider.relayHosts ?? [];
+    if (!known.includes(name)) return current;
+    const next: Settings = {
+      ...current,
+      provider: { ...current.provider, relayHosts: known.filter((entry) => entry !== name) },
+    };
+    await store.put<SettingsRow>("settings", { id: "settings", value: next });
+    markChanged();
+    return next;
+  });
+}
+
+/** The provider key, or an empty string when the learner has not set one. */export async function readProviderKey(store: Store = browserStore()): Promise<string> {
   const row = await store.get<KeyRow>("settings", "provider-key");
   return row?.key ?? "";
 }

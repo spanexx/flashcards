@@ -121,6 +121,29 @@ into `NEXT_PUBLIC_SYSTEM_API_BASE` and `NEXT_PUBLIC_SYSTEM_PROVIDER_NAME`.
 grep -rIl "sk_live\|sk_test\|whsec_\|SYSTEM_LLM_API_KEY" v1/out || echo "clean"
 ```
 
+## 5b. The learner-provider relay (no new secret)
+
+The same service carries the relay for learners who use their own provider. A
+provider that refuses browser calls (CORS) is retried through
+`POST /api/relay/chat`; everything else stays direct. Nothing extra is deployed
+and no secret is added.
+
+- **What the relay uses.** Only the learner's own key, which arrives as the
+  bearer of that one relayed call and is injected into the provider request.
+  The service never stores or logs it, and never substitutes the operator's
+  `SYSTEM_LLM_API_KEY`. The relay is available even when the Stripe and model
+  groups are unset.
+- **What the relay refuses.** Anything but `https` on port 443 whose path ends
+  `/chat/completions`, credentials in the URL, private or local addresses
+  (checked after DNS and pinned to the checked address), redirects, bodies over
+  1 MB and replies over 2 MB.
+- **The knob.** `RELAY_RATE_LIMIT_PER_HOUR` (default 60) caps each client
+  address; the paid lane keeps its own `RATE_LIMIT_PER_HOUR`. Restarting resets
+  both counters.
+- **Prove it.** `GET /healthz` shows `relay` next to `checkout` and `proxy`. A
+  relayed call with no bearer is 401; a private target is 400 with a plain
+  sentence; the N+1th call in the hour is 429 with `retry-after`.
+
 ## 6. Go live
 
 - Swap `sk_test_…` for `sk_live_…`, the test price for the live price, and redo
