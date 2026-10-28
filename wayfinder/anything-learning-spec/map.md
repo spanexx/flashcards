@@ -46,6 +46,7 @@ Skills every session should consult: `grill-with-docs` and `domain-modeling`. Us
 - [Build a plan from many packs and decks](tickets/plan-multi-select.md) - the plan scope is a multi-select of packs and decks (a union, with all decks included); individual cards stay the algorithm's job.
 - [Full screen stays inside the browser](tickets/full-screen-in-browser.md) - the card's Full screen fills the browser viewport only, shrinks with the window and never takes the monitor; system fullscreen is not requested.
 - [Advance without reaching for Next](tickets/session-advance.md) - the learner chose all three simulated answers together: a pinned action row, Enter to continue after the answer, and a 420px minimum card height.
+- [A kinder typing card](tickets/study-card-guidance.md) - the Answer button waits for a real attempt; beginner typed cards complete the expected answer inline through Tab, the right arrow or a Complete control; a quiet "I don't know" reveals on purpose; a completion has its own soft cue, and help never caps the outcome.
 
 *Locked during charting, before any ticket was resolved:*
 

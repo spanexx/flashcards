@@ -1,0 +1,122 @@
+GRILL — study-card-guidance
+Status: Locked
+Date: 2026-10-28
+Decisions by: agent, delegated by the learner on 2026-10-28
+Source ticket: wayfinder/anything-learning-spec/tickets/study-card-guidance.md
+
+Verbatim from the learner on 2026-10-28:
+
+  "add validation to the flashcard so we dont allow no input, lerner must
+  attempt to answer before answer button can be enabled"
+
+  "add more learner experience to be better, like sound effects, use the answer
+  to give auto complete fo beginner, you can add other better experiences. use
+  @surgical-change and goal skill and merge to main then push when done. then
+  remove all branches. make sure to screenshot, test visuals and view to make
+  sure all works before merging, clean up after yourself"
+
+The first request is the locked gate. The second sentence delegates the shape of
+the extra help ("you can add other better experiences"). Every choice below is
+marked [agent decision] unless the learner's words lock it.
+
+--------------------------------------------------------------------------------
+Q1. What counts as an attempt?
+A. A typed card needs at least one non-space character. A cloze card needs at
+   least one filled blank; the other blanks may stay empty and are judged as
+   misses. A picks card keeps its existing rule: one choice selected.
+   Why: the learner said "we dont allow no input ... must attempt to answer".
+   Spaces are not input; a partly filled cloze is a real try.
+   Rules out: an empty submit from a stray click or Enter, and forcing every
+   blank before the learner may ask for judgement.
+   Source: learner message; `v1/src/lib/core/answer-attempt.ts`.
+
+Q2. Does the gate apply to all four answering surfaces?
+A. Yes. The Answer button and the Enter-to-check key share one rule. Picks
+   already required a choice; the rule now names that in the same place.
+   Why: one gate cannot disagree with itself.
+   Rules out: a keyboard path that bypasses the disabled button.
+   Source: `v1/src/app/study/StudyCard.tsx`, `v1/src/lib/core/answer-attempt.ts`.
+
+Q3. Who gets a completion, and on which cards?
+A. Only a beginner deck, and only the one typed answer surface (type and
+   hear-then-type). The level is the card's own deck level, resolved by
+   `deckLevelFor`, the same level the teaching layer uses. No completion for
+   cloze blanks or picks.
+   Why: the learner said "auto complete fo beginner". Stronger levels should
+   recall the line unaided; cloze blanks and picks answer in place and would
+   need a different surface.
+   Rules out: global-level completion, completion on every mode, a new card
+   field.
+   Source: learner message; `v1/src/app/StudyClient.tsx:125` (`deckLevelFor`).
+
+Q4. When does the ghost appear, and what does it show?
+A. After at least one typed character, when the typed text is a case- and
+   diacritic-insensitive start of one of the card's expected answers. The rest
+   of the expected answer shows as a muted suffix after the cursor. The typed
+   part stays normal. The shortest remaining suffix wins when several expected
+   answers match. No ghost before the first character, after a full match, or
+   when nothing matches.
+   Why: an empty field with the whole answer ghosted is a reveal, not an
+   autocomplete; typing a start is the intent to answer. Folding case and
+   diacritics matches the loose judge, so a keyboard without Polish letters
+   still gets help.
+   Rules out: fuzzy mid-word matching, a dropdown of answer choices, showing
+   the answer before the learner starts.
+   Source: `v1/src/lib/core/answer-completion.ts` (new), the judge's
+   `normalizeAnswer` rule.
+
+Q5. How is a completion accepted?
+A. Tab, or the right arrow while the cursor is at the end of the line, or a
+   small Complete control beside the input. Nothing is inserted on its own and
+   Enter still checks the answer the learner typed. On a phone the Complete
+   control is the route, because there is no Tab key.
+   Why: autocomplete must never silently answer for the learner; a visible
+   control keeps the choice explicit and touch-friendly.
+   Rules out: accepting on Enter, accepting on any keystroke, a hidden gesture,
+   auto-filling when the input blurs.
+   Source: learner asked for autocomplete; the card's existing Enter-to-check
+   rule stays.
+
+Q6. Does using a completion count as help that caps the outcome?
+A. No. A completion does not cap a Got it at Nearly. It is a teaching aid, like
+   the teaching layer, not a hint. The hint cap stays exactly as it is.
+   Why: the app already distinguishes teaching from hints ("Help is teaching,
+   not a hint: the layer never caps the outcome"). The completion teaches the
+   spelling and shape of the line; a hint answers the question.
+   Rules out: silently turning a completed answer into Nearly, and a second
+   evidence flag that the record does not need.
+   Source: `v1/src/app/StudyClient.tsx:564` (the existing help rule),
+   `docs/features/teaching-layers/PRD-TRD-teaching-layers.md`.
+
+Q7. What happens to a learner who is stuck?
+A. A quiet "I don't know" control submits an empty attempt on purpose, reveals
+   the answer and records the card as missed. It sits apart from the Answer
+   button, which stays disabled until the learner types. It is not offered on
+   picks, where the options are the attempt.
+   Why: a gate with no exit traps a learner who does not know the card. An
+   explicit reveal keeps the record honest and the session moving.
+   Rules out: a hidden skip, an automatic reveal after a timer, enabling the
+   Answer button with empty input.
+   Source: agent decision, delegated 2026-10-28.
+
+Q8. What sound is added?
+A. One short, soft cue when a completion is accepted, played only when the
+   learner has sound on. The existing Got it, Nearly, Missed and Finish cues
+   are unchanged, and sound stays off until the learner turns it on.
+   Why: the learner asked for sound effects; the completion is the one new
+   action that has no cue yet. A second outcome sound would compete with the
+   judged cue that follows.
+   Rules out: a key-click loop, sounds on every keystroke, autoplay.
+   Source: learner message; `v1/src/lib/client/sound.ts`.
+
+Q9. What does not change?
+A. The judge, the evidence shape, the session loop, the plan, the provider and
+   the privacy boundary do not change. No card is stored differently. The
+   completion reads only the card's own expected answers and the learner's typing;
+   nothing leaves the machine.
+   Why: this is a card-level guide, not a new learning model.
+   Rules out: a second answer field, a new outcome, a provider call for hints,
+   storing the ghost or the acceptance.
+   Source: agent decision under the learner's scope.
+
+No remaining open questions.

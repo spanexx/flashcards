@@ -11,7 +11,9 @@
    2026-10-28 opencode: scope dropdown green dots, capped deck lists, and no
    menu shadow after learner review. [pack: plan-multi-select]
    2026-10-28 opencode: the phone plan fold reuses the aside tabs and caps its
-   body after learner review. [pack: study-sidebar-and-history] */
+   body after learner review. [pack: study-sidebar-and-history]
+   2026-10-28 opencode: the typing card grows a quiet ghost completion and a
+   pair of small aids under the answer. [pack: study-card-guidance] */
 
 :root {
   color-scheme: light;
@@ -621,6 +623,60 @@ p.lead {
 textarea.answer-input {
   resize: vertical;
   min-height: 64px;
+}
+
+/* WHY: The ghost sits exactly on the typed line. Its typed part keeps the same
+   font and padding as the input but stays invisible, so only the rest of the
+   expected answer shows, in a quiet colour. A long line clips here rather than
+   widening the card. */
+.answer-field {
+  position: relative;
+}
+
+.answer-ghost {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  padding: 9px 11px;
+  border: 1px solid transparent;
+  font: inherit;
+  font-size: 1.1rem;
+  white-space: pre;
+  overflow: hidden;
+  pointer-events: none;
+  color: color-mix(in srgb, var(--quiet) 70%, transparent);
+}
+
+.answer-ghost-typed {
+  visibility: hidden;
+}
+
+/* WHY: The Complete control needs a phone route, and the deliberate reveal
+   stays apart from the Answer button it can never enable. Both wrap quietly. */
+.study-answer-aids {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 14px;
+  margin-top: 8px;
+  min-height: 1.2rem;
+}
+
+.study-complete {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.study-complete-key {
+  font-size: 0.78rem;
+}
+
+.study-dont-know {
+  margin-left: auto;
+  white-space: nowrap;
 }
 
 .options {
@@ -2913,6 +2969,10 @@ td {
 
 .study-stage.stage-full .answer-input {
   min-height: 56px;
+  font-size: 1.04rem;
+}
+
+.study-stage.stage-full .answer-ghost {
   font-size: 1.04rem;
 }
 

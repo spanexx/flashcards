@@ -3,6 +3,8 @@
 // off unless it says "on". These are the parts a browser cannot pin cheaply.
 // PACK: learner-delight
 // 2026-10-25 opencode: created for the learner-delight pack [pack: learner-delight]
+// 2026-10-28 opencode: the completion tick joins the cue table and is pinned as
+// one short, quiet note. [pack: study-card-guidance]
 
 import { describe, expect, it } from "vitest";
 import {
@@ -14,7 +16,7 @@ import {
   type SoundCue,
 } from "@/lib/client/sound";
 
-const CUES: SoundCue[] = ["got_it", "nearly", "missed", "finish"];
+const CUES: SoundCue[] = ["got_it", "nearly", "missed", "finish", "complete"];
 
 describe("cue selection", () => {
   it("maps every judged outcome to a cue", () => {
@@ -59,6 +61,13 @@ describe("the note table", () => {
     expect(finish).toHaveLength(3);
     expect(finish[0].freq).toBeLessThan(finish[1].freq);
     expect(finish[1].freq).toBeLessThan(finish[2].freq);
+  });
+
+  it("keeps the completion tick one short, quiet note", () => {
+    const complete = cueNotes("complete");
+    expect(complete).toHaveLength(1);
+    expect(complete[0].length).toBeLessThanOrEqual(0.08);
+    expect(complete[0].gain).toBeLessThan(0.04);
   });
 
   it("hands out copies, so a caller cannot edit the table", () => {

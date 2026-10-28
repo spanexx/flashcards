@@ -551,14 +551,16 @@ export default function StudyClient() {
     void requestHint();
   }, [requestHint]);
 
-  const submitAnswer = useCallback(async () => {
+  // WHY: The I-don't-know control sends an empty map on purpose; every other
+  // path sends exactly what the learner typed.
+  const submitAnswer = useCallback(async (answersOverride?: Record<string, string>) => {
     if (!entry || busy) return;
     setBusy(true);
     const submitted = entry;
     try {
       const response = await apiSend<AnswerResult>("/api/answer", "POST", {
         cardId: submitted.card.id,
-        answers,
+        answers: answersOverride ?? answers,
         timeMs: Date.now() - startedRef.current,
         hintUsed,
         // Help is teaching, not a hint: the layer never caps the outcome.
@@ -837,6 +839,7 @@ export default function StudyClient() {
         <StudyCard
           key={entry.entryId}
           card={card}
+          level={level}
           answers={answers}
           onAnswerChange={updateAnswers}
           working={working}
@@ -855,7 +858,7 @@ export default function StudyClient() {
           instruction={instruction}
           isLast={index + 1 >= queue.length}
           onHint={askHint}
-          onSubmit={() => void submitAnswer()}
+          onSubmit={(override) => void submitAnswer(override)}
           onNext={nextCard}
           onCorrect={(region, outcome) => void correct(region, outcome)}
         />

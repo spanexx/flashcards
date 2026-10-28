@@ -12,18 +12,27 @@
 // 2026-10-27 opencode: Next says Enter continues, and the footer pins itself
 // while the card scrolls; the session card reserves a minimum height.
 // [pack: session-advance]
+// 2026-10-28 opencode: the Answer button and Enter stay disabled until the card
+// holds an attempt; a beginner can finish the expected answer inline, a quiet
+// I-don't-know reveals on purpose, and accepting a completion has a soft cue
+// and hands the caret back to the field. [pack: study-card-guidance]
 
 import Link from "next/link";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { answerSpeech } from "@/lib/client/answer-speech";
+import { playCue } from "@/lib/client/sound";
+import { answerCompletion } from "@/lib/core/answer-completion";
+import { hasAnswerAttempt } from "@/lib/core/answer-attempt";
 import { speak, speakLines, speechSupported } from "@/lib/client/speech";
 import { LISTEN_INSTRUCTION, listenPrompt, studyModeLabel } from "@/lib/client/study-view";
 import { OUTCOME_LABELS, OUTCOME_MEANINGS } from "@/lib/core/outcome";
-import type { AnswerResult, Card, CardPart, Outcome } from "@/lib/shared/types";
+import type { AnswerResult, Card, CardPart, Outcome, StudyLevel } from "@/lib/shared/types";
 import CardSide from "./CardSide";
 
 interface StudyCardProps {
   card: Card;
+  /** The card's deck level; beginner is the only level that completes. */
+  level: StudyLevel;
   answers: Record<string, string>;
   onAnswerChange: (next: Record<string, string>) => void;
   working: string;
@@ -46,7 +55,8 @@ interface StudyCardProps {
   instruction: string;
   isLast: boolean;
   onHint: () => void;
-  onSubmit: () => void;
+  /** Checks what is typed; a given map is sent instead (the I-don't-know path). */
+  onSubmit: (answersOverride?: Record<string, string>) => void;
   onNext: () => void;
   onCorrect: (region: string | null, outcome: Outcome) => void;
 }
@@ -54,6 +64,7 @@ interface StudyCardProps {
 /** The question, the hint block and the answer reveal. */
 export default function StudyCard({
   card,
+  level,
   answers,
   onAnswerChange,
   working,
@@ -95,7 +106,60 @@ export default function StudyCard({
       active = false;
     };
   }, []);
-  const canSubmit = mode !== "picks" || (answers.choice ?? "").length > 0;
+  // WHY: An empty card is not an attempt; submitting one would record a miss
+  // the learner never made. The button and the Enter key share this one gate.
+  const canSubmit = hasAnswerAttempt(card, answers);
+
+  // WHY: A click on Complete takes the caret out of the field. The promised
+  // Enter key needs the field focused again, so the accept path returns it.
+  const answerRef = useRef<HTMLInputElement>(null);
+
+  // WHY: The ghost is a beginner's teaching aid on the one typed answer surface,
+  // and only while the card is still being answered. It is not a hint, so
+  // accepting it does not cap the outcome.
+  const completion =
+    level === "beginner" && !result && !busy && (mode === "type" || mode === "hear_type")
+      ? answerCompletion(answers.answer ?? "", card.answerDef.expected ?? [])
+      : null;
+
+  const acceptCompletion = () => {
+    if (!completion) return;
+    onAnswerChange({ ...answers, answer: completion.value });
+    playCue("complete");
+    const input = answerRef.current;
+    if (input) {
+      input.focus();
+      requestAnimationFrame(() => {
+        const end = input.value.length;
+        input.setSelectionRange(end, end);
+      });
+    }
+  };
+
+  // WHY: Tab and the right arrow accept only at the end of the line, so both
+  // keys keep their normal meaning for moving around and leaving the field.
+  const answerKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (!completion || event.nativeEvent.isComposing) return;
+    const input = event.currentTarget;
+    const atEnd =
+      input.selectionStart === input.value.length && input.selectionEnd === input.value.length;
+    if (!atEnd) return;
+    if (event.key === "Tab" && !event.shiftKey) {
+      event.preventDefault();
+      acceptCompletion();
+      return;
+    }
+    if (
+      event.key === "ArrowRight" &&
+      !event.shiftKey &&
+      !event.altKey &&
+      !event.ctrlKey &&
+      !event.metaKey
+    ) {
+      event.preventDefault();
+      acceptCompletion();
+    }
+  };
   const listen = mode === "hear_type" ? listenPrompt(card) : null;
   const blanks = card.prompt.filter(
     (part): part is Extract<CardPart, { type: "blank" }> => part.type === "blank",
@@ -224,12 +288,22 @@ export default function StudyCard({
               ))}
             </div>
           ) : mode === "cloze" ? null : (
-            <input
-              className="answer-input"
-              placeholder={mode === "hear_type" ? "Type what you hear" : "Your answer"}
-              value={answers.answer ?? ""}
-              onChange={(event) => onAnswerChange({ answer: event.target.value })}
-            />
+            <div className="answer-field">
+              <input
+                className="answer-input"
+                ref={answerRef}
+                placeholder={mode === "hear_type" ? "Type what you hear" : "Your answer"}
+                value={answers.answer ?? ""}
+                onChange={(event) => onAnswerChange({ answer: event.target.value })}
+                onKeyDown={answerKeyDown}
+              />
+              {completion ? (
+                <span className="answer-ghost" aria-hidden="true">
+                  <span className="answer-ghost-typed">{answers.answer ?? ""}</span>
+                  {completion.suffix}
+                </span>
+              ) : null}
+            </div>
           )}
           {card.answerDef.working ? (
             <textarea
@@ -238,6 +312,32 @@ export default function StudyCard({
               value={working}
               onChange={(event) => onWorkingChange(event.target.value)}
             />
+          ) : null}
+          {/* WHY: A learner who is stuck needs an exit from the gate, and a
+              beginner needs a visible way to take the completion on a phone.
+              Neither control ever fills the answer on its own. */}
+          {mode !== "picks" ? (
+            <div className="study-answer-aids">
+              <span className="study-complete">
+                {completion ? (
+                  <>
+                    <button className="study-link" type="button" onClick={acceptCompletion}>
+                      Complete
+                    </button>
+                    <span className="muted study-complete-key">Tab or →</span>
+                  </>
+                ) : null}
+              </span>
+              <button
+                className="study-link study-dont-know"
+                type="button"
+                onClick={() => onSubmit({})}
+                disabled={busy}
+                title="Reveals the answer and records this card as missed."
+              >
+                I don&apos;t know
+              </button>
+            </div>
           ) : null}
           <div className="study-card-actions">
             {mode !== "picks" ? (
@@ -250,7 +350,7 @@ export default function StudyCard({
             <button
               className="btn primary"
               type="button"
-              onClick={onSubmit}
+              onClick={() => onSubmit()}
               disabled={busy || !canSubmit}
             >
               {busy ? "Checking…" : "Answer"}

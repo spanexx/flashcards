@@ -4,8 +4,10 @@
 // error.
 // PACK: learner-delight
 // 2026-10-25 opencode: created for the learner-delight pack [pack: learner-delight]
+// 2026-10-28 opencode: a completion has its own short tick, separate from the
+// judged outcome cue. [pack: study-card-guidance]
 
-export type SoundCue = "got_it" | "nearly" | "missed" | "finish";
+export type SoundCue = "got_it" | "nearly" | "missed" | "finish" | "complete";
 
 export const SOUND_KEY = "flashcards.sound";
 
@@ -45,6 +47,8 @@ const NOTES: Record<SoundCue, CueNote[]> = {
     { freq: 659.25, start: 0.12, length: 0.14, gain: 0.045 },
     { freq: 783.99, start: 0.24, length: 0.22, gain: 0.04 },
   ],
+  // One soft tick: the rest of the line landed, not a verdict.
+  complete: [{ freq: 587.33, start: 0, length: 0.06, gain: 0.03 }],
 };
 
 export function cueNotes(cue: SoundCue): CueNote[] {
