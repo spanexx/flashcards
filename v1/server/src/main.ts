@@ -6,7 +6,9 @@
 
 import { enabledGroups, parseConfig } from "./config";
 import { createSystemServer } from "./http";
+import { createBrevoMailer } from "./mailer";
 import type { ProxyOptions } from "./proxy";
+import { RecoveryCooldown } from "./recovery";
 import { createStripeClient } from "./stripe";
 import { StatusCache, stripeSubscriptionLoader } from "./subscriptions";
 
@@ -44,6 +46,26 @@ const server = createSystemServer({
   // The relay holds no secret: each call carries the learner's own key, so it
   // is always available on this service.
   relay: { timeoutMs: config.upstreamTimeoutMs },
+  // Recovery needs both the mail key and Stripe; config allows the group only
+  // when Stripe is present, so the fallback below never hides a broken setup.
+  recovery:
+    config.recovery && stripe
+      ? {
+          stripe,
+          mailer: createBrevoMailer({
+            apiKey: config.recovery.brevoApiKey,
+            fromEmail: config.recovery.fromEmail,
+            fromName: config.recovery.fromName,
+          }),
+          secret: config.recovery.secret,
+          appUrl: config.appUrl,
+          tokenTtlSeconds: config.recovery.tokenTtlSeconds,
+          licenseSecret: config.licenseSecret,
+          licenseTtlSeconds: config.licenseTtlSeconds,
+          cooldown: new RecoveryCooldown(config.recovery.cooldownSeconds * 1000),
+          log: (line: string) => console.warn(line),
+        }
+      : null,
 });
 server.listen(config.port, "0.0.0.0", () => {
   console.info(

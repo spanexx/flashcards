@@ -4,6 +4,19 @@
 // PACK: system-provider-subscription
 // 2026-10-28 qoder: created for the paid system provider. [pack: system-provider-subscription]
 
+import { isPlainEmail } from "./recovery";
+
+/** The recovery group, complete or absent. One-time links need all three facts. */
+export interface RecoveryConfig {
+  brevoApiKey: string;
+  secret: string;
+  fromEmail: string;
+  fromName: string;
+  tokenTtlSeconds: number;
+  rateLimitPerHour: number;
+  cooldownSeconds: number;
+}
+
 /** Everything the service needs, after validation. */
 export interface ServerConfig {
   port: number;
@@ -24,6 +37,7 @@ export interface ServerConfig {
   rateLimitPerHour: number;
   relayRateLimitPerHour: number;
   subscriptionCacheMs: number;
+  recovery: RecoveryConfig | null;
 }
 
 /** A name that needs the operator's attention, with a reason that holds no value. */
@@ -154,6 +168,40 @@ export function parseConfig(env: Record<string, string | undefined>): ConfigResu
   const relayRateLimitPerHour = integer(env, "RELAY_RATE_LIMIT_PER_HOUR", 60, 1, 100_000, problems);
   const subscriptionCacheMs = integer(env, "SUBSCRIPTION_CACHE_MS", 120_000, 0, 60 * 60_000, problems);
 
+  // Recovery is one group: a mail key, a signing secret and a sender. Half a
+  // group would let the form appear while every link is refused, so it is off
+  // unless all three are usable.
+  const brevoApiKey = text(env, "BREVO_API_KEY");
+  const recoverySecret = text(env, "RECOVERY_SECRET");
+  const recoveryFromEmail = text(env, "RECOVERY_FROM_EMAIL");
+  const recoveryGiven = [brevoApiKey, recoverySecret, recoveryFromEmail].filter(
+    (value) => value.length > 0,
+  ).length;
+  let recovery: RecoveryConfig | null = null;
+  if (recoveryGiven > 0) {
+    if (brevoApiKey.length === 0) problems.push({ name: "BREVO_API_KEY", reason: "is required for recovery" });
+    if (recoverySecret.length < 32) {
+      problems.push({ name: "RECOVERY_SECRET", reason: "must be at least 32 characters" });
+    }
+    if (!isPlainEmail(recoveryFromEmail)) {
+      problems.push({ name: "RECOVERY_FROM_EMAIL", reason: "must be a full email address" });
+    }
+    if (stripeSecretKey.length === 0) {
+      problems.push({ name: "STRIPE_SECRET_KEY", reason: "is required for recovery" });
+    }
+    if (recoveryGiven === 3 && stripeSecretKey.length > 0) {
+      recovery = {
+        brevoApiKey,
+        secret: recoverySecret,
+        fromEmail: recoveryFromEmail,
+        fromName: text(env, "RECOVERY_FROM_NAME") || "Study tutor",
+        tokenTtlSeconds: integer(env, "RECOVERY_TOKEN_TTL_SECONDS", 30 * 60, 60, DAY, problems),
+        rateLimitPerHour: integer(env, "RECOVERY_RATE_LIMIT_PER_HOUR", 5, 1, 1_000, problems),
+        cooldownSeconds: integer(env, "RECOVERY_EMAIL_COOLDOWN_SECONDS", 10 * 60, 0, DAY, problems),
+      };
+    }
+  }
+
   if (problems.length > 0) return { ok: false, problems };
 
   return {
@@ -177,6 +225,7 @@ export function parseConfig(env: Record<string, string | undefined>): ConfigResu
       rateLimitPerHour,
       relayRateLimitPerHour,
       subscriptionCacheMs,
+      recovery,
     },
   };
 }
@@ -187,12 +236,14 @@ export function publicConfig(config: ServerConfig): {
   priceLabel: string;
   checkout: boolean;
   proxy: boolean;
+  recovery: boolean;
 } {
   return {
     name: config.providerName,
     priceLabel: config.priceLabel,
     checkout: Boolean(config.stripeSecretKey && config.stripePriceId),
     proxy: Boolean(config.llmBaseUrl && config.llmModel && config.llmApiKey),
+    recovery: config.recovery !== null,
   };
 }
 
@@ -202,5 +253,6 @@ export function enabledGroups(config: ServerConfig): string[] {
   if (config.stripeSecretKey && config.stripePriceId) groups.push("checkout", "portal");
   if (config.stripeWebhookSecret) groups.push("webhook");
   if (config.llmBaseUrl && config.llmModel && config.llmApiKey) groups.push("proxy");
+  if (config.recovery) groups.push("recovery");
   return groups;
 }

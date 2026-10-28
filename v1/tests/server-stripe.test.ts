@@ -199,3 +199,62 @@ describe("Stripe payload readers", () => {
     });
   });
 });
+
+describe("the reads recovery needs", () => {
+  it("asks Stripe for customers of one exact email and keeps usable rows", async () => {
+    const { client, calls } = clientWith(() =>
+      json({
+        data: [
+          { id: "cus_1", email: "ana@example.com" },
+          { email: "no-id@example.com" },
+          "junk",
+        ],
+      }),
+    );
+    expect(await client.listCustomersByEmail("ana@example.com")).toEqual([
+      { id: "cus_1", email: "ana@example.com" },
+    ]);
+    expect(calls).toHaveLength(1);
+    expect(calls[0].url).toBe(
+      "https://stripe.test/v1/customers?email=ana%40example.com&limit=10",
+    );
+    expect(calls[0].init.method).toBe("GET");
+    expect(calls[0].init.body).toBeUndefined();
+  });
+
+  it("asks for every subscription of a customer and skips unusable rows", async () => {
+    const { client, calls } = clientWith(() =>
+      json({
+        data: [
+          {
+            id: "sub_1",
+            status: "active",
+            customer: "cus_1",
+            current_period_end: 1_700_000_000,
+            cancel_at_period_end: true,
+          },
+          { status: "active" },
+        ],
+      }),
+    );
+    expect(await client.listCustomerSubscriptions("cus_1")).toEqual([
+      {
+        id: "sub_1",
+        status: "active",
+        customer: "cus_1",
+        renewsAt: 1_700_000_000,
+        cancelAtPeriodEnd: true,
+      },
+    ]);
+    expect(calls[0].url).toBe(
+      "https://stripe.test/v1/subscriptions?customer=cus_1&status=all&limit=100",
+    );
+    expect(calls[0].init.method).toBe("GET");
+  });
+
+  it("treats an answer without a list as empty", async () => {
+    const { client } = clientWith(() => json({}));
+    expect(await client.listCustomersByEmail("ana@example.com")).toEqual([]);
+    expect(await client.listCustomerSubscriptions("cus_1")).toEqual([]);
+  });
+});

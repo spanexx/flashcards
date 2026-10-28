@@ -12,6 +12,11 @@ import { parseConfig, type ServerConfig } from "../server/src/config";
 import { appReturnUrl, createSystemServer, RateLimiter } from "../server/src/http";
 import { issueLicense } from "../server/src/license";
 import type { ProxyOptions } from "../server/src/proxy";
+import {
+  RecoveryCooldown,
+  signRecoveryToken,
+  type RecoveryDeps,
+} from "../server/src/recovery";
 import type { PinnedTarget, RelayOptions } from "../server/src/relay";
 import type { StripeClient, StripeSessionView, StripeSubscriptionView } from "../server/src/stripe";
 import { StatusCache } from "../server/src/subscriptions";
@@ -66,6 +71,8 @@ function fakeStripe(): StripeClient {
     getCheckoutSession: vi.fn(async () => session),
     getSubscription: vi.fn(async () => subscription),
     createPortalSession: vi.fn(async () => ({ url: "https://portal.test/p_1" })),
+    listCustomersByEmail: vi.fn(async () => [{ id: "cus_1", email: "ana@example.com" }]),
+    listCustomerSubscriptions: vi.fn(async () => [{ ...subscription }]),
   };
 }
 
@@ -98,9 +105,11 @@ interface StartOptions {
   stripe?: StripeClient | null;
   proxy?: ProxyOptions | null;
   relay?: RelayOptions | null;
+  recovery?: RecoveryDeps | null;
   subscriptions?: StatusCache;
   rateLimiter?: RateLimiter;
   relayRateLimiter?: RateLimiter;
+  recoveryRateLimiter?: RateLimiter;
 }
 
 async function start(options: StartOptions = {}) {
@@ -114,8 +123,10 @@ async function start(options: StartOptions = {}) {
     subscriptions,
     proxy: options.proxy ?? null,
     relay: options.relay ?? null,
+    recovery: options.recovery ?? null,
     rateLimiter: options.rateLimiter,
     relayRateLimiter: options.relayRateLimiter,
+    recoveryRateLimiter: options.recoveryRateLimiter,
   });
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   open.push(server);
@@ -142,6 +153,7 @@ describe("public routes", () => {
       checkout: true,
       proxy: true,
       relay: false,
+      recovery: false,
     });
 
     const config = await fetch(`${base}/api/config`, { headers: { origin: ORIGIN } });
@@ -154,6 +166,7 @@ describe("public routes", () => {
       priceLabel: "EUR 5 / month",
       checkout: true,
       proxy: true,
+      recovery: false,
     });
     const text = JSON.stringify(body);
     expect(text).not.toContain("sk_test_server");
@@ -520,5 +533,157 @@ describe("the Stripe webhook", () => {
       body: JSON.stringify({ license }),
     });
     expect(after.status).toBe(402);
+  });
+});
+
+describe("the recovery routes", () => {
+  const RECOVERY_SECRET = "recovery-secret-that-is-long-enough-01";
+  const recoveryEnv = {
+    BREVO_API_KEY: "xkeysib-server-value",
+    RECOVERY_SECRET,
+    RECOVERY_FROM_EMAIL: "links@example.com",
+  };
+
+  function recoveryFor(stripe: StripeClient, sent: { email: string; link: string }[]): RecoveryDeps {
+    return {
+      stripe,
+      mailer: {
+        sendRecoveryLink: vi.fn(async (email: string, link: string) => {
+          sent.push({ email, link });
+        }),
+      },
+      secret: RECOVERY_SECRET,
+      appUrl: APP,
+      tokenTtlSeconds: 1800,
+      licenseSecret: SECRET,
+      licenseTtlSeconds: 30 * 24 * 60 * 60,
+      cooldown: new RecoveryCooldown(600_000),
+    };
+  }
+
+  function post(base: string, path: string, body: unknown) {
+    return fetch(`${base}${path}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  }
+
+  it("answers 503 and keeps the form hidden when recovery is off", async () => {
+    const { base } = await start();
+    const request = await post(base, "/api/recovery/request", { email: "ana@example.com" });
+    expect(request.status).toBe(503);
+    expect(await request.json()).toEqual({ error: "Recovery is not set up." });
+    expect((await post(base, "/api/recovery/redeem", { token: "a.b" })).status).toBe(503);
+    const config = (await (await fetch(`${base}/api/config`)).json()) as Record<string, unknown>;
+    expect(config.recovery).toBe(false);
+  });
+
+  it("names recovery as on once the group is complete", async () => {
+    const stripe = fakeStripe();
+    const { base } = await start({
+      extra: { ...selling, ...recoveryEnv },
+      stripe,
+      recovery: recoveryFor(stripe, []),
+    });
+    const health = (await (await fetch(`${base}/healthz`)).json()) as Record<string, unknown>;
+    expect(health.recovery).toBe(true);
+    const config = (await (await fetch(`${base}/api/config`)).json()) as Record<string, unknown>;
+    expect(config.recovery).toBe(true);
+    expect(JSON.stringify(config)).not.toContain("xkeysib-server-value");
+    expect(JSON.stringify(config)).not.toContain("links@example.com");
+  });
+
+  it("sends one mail for a live plan and answers a stranger identically", async () => {
+    const stripe = fakeStripe();
+    stripe.listCustomersByEmail = vi.fn(async (email: string) =>
+      email === "ana@example.com" ? [{ id: "cus_1", email }] : [],
+    );
+    const sent: { email: string; link: string }[] = [];
+    const { base } = await start({
+      extra: { ...selling, ...recoveryEnv },
+      stripe,
+      recovery: recoveryFor(stripe, sent),
+    });
+
+    const known = await post(base, "/api/recovery/request", { email: "ana@example.com" });
+    expect(known.status).toBe(200);
+    expect(await known.json()).toEqual({ ok: true });
+    expect(sent).toHaveLength(1);
+    expect(new URL(sent[0].link).searchParams.get("recover")).toBeTruthy();
+
+    const unknown = await post(base, "/api/recovery/request", { email: "nobody@example.com" });
+    expect(unknown.status).toBe(200);
+    expect(await unknown.json()).toEqual({ ok: true });
+    expect(sent).toHaveLength(1);
+  });
+
+  it("refuses a missing or malformed address and sends nothing", async () => {
+    const stripe = fakeStripe();
+    const sent: { email: string; link: string }[] = [];
+    const { base } = await start({
+      extra: { ...selling, ...recoveryEnv },
+      stripe,
+      recovery: recoveryFor(stripe, sent),
+    });
+    for (const body of [{}, { email: "nope" }, { email: 42 }]) {
+      const response = await post(base, "/api/recovery/request", body);
+      expect(response.status).toBe(400);
+      expect(await response.json()).toEqual({ error: "Enter the email you used at checkout." });
+    }
+    expect(sent).toHaveLength(0);
+  });
+
+  it("stops the sixth request in the hour with a plain sentence", async () => {
+    const stripe = fakeStripe();
+    const sent: { email: string; link: string }[] = [];
+    const { base } = await start({
+      extra: { ...selling, ...recoveryEnv },
+      stripe,
+      recovery: recoveryFor(stripe, sent),
+    });
+    for (let count = 0; count < 5; count += 1) {
+      expect((await post(base, "/api/recovery/request", { email: "ana@example.com" })).status).toBe(200);
+    }
+    const sixth = await post(base, "/api/recovery/request", { email: "ana@example.com" });
+    expect(sixth.status).toBe(429);
+    expect(await sixth.json()).toEqual({ error: "Too many requests. Try again in an hour." });
+    expect(Number(sixth.headers.get("retry-after"))).toBeGreaterThan(0);
+  });
+
+  it("redeems a fresh link for a pass and refuses an old one", async () => {
+    const stripe = fakeStripe();
+    const { base } = await start({
+      extra: { ...selling, ...recoveryEnv },
+      stripe,
+      recovery: recoveryFor(stripe, []),
+    });
+
+    const fresh = signRecoveryToken("ana@example.com", RECOVERY_SECRET);
+    const redeemed = await post(base, "/api/recovery/redeem", { token: fresh });
+    expect(redeemed.status).toBe(200);
+    const answer = (await redeemed.json()) as { license: string; entitlement: { status: string } };
+    expect(answer.license.split(".")).toHaveLength(2);
+    expect(answer.entitlement.status).toBe("active");
+
+    const old = signRecoveryToken("ana@example.com", RECOVERY_SECRET, Date.now() - 1_801_000);
+    const expired = await post(base, "/api/recovery/redeem", { token: old });
+    expect(expired.status).toBe(401);
+    expect(await expired.json()).toEqual({ error: "That link has expired. Ask for a new one." });
+  });
+
+  it("refuses a cancelled plan even for a fresh link", async () => {
+    const stripe = fakeStripe();
+    stripe.listCustomerSubscriptions = vi.fn(async () => [{ ...subscription, status: "canceled" }]);
+    const { base } = await start({
+      extra: { ...selling, ...recoveryEnv },
+      stripe,
+      recovery: recoveryFor(stripe, []),
+    });
+    const response = await post(base, "/api/recovery/redeem", {
+      token: signRecoveryToken("ana@example.com", RECOVERY_SECRET),
+    });
+    expect(response.status).toBe(402);
+    expect(await response.json()).toEqual({ error: "This subscription is not active." });
   });
 });

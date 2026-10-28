@@ -55,7 +55,14 @@ describe("answer shapes", () => {
   it("reads the public facts", () => {
     expect(
       readSystemConfig({ name: "Tutor", priceLabel: "5 € a month", checkout: true, proxy: false }),
-    ).toEqual({ name: "Tutor", priceLabel: "5 € a month", checkout: true, proxy: false });
+    ).toEqual({
+      name: "Tutor",
+      priceLabel: "5 € a month",
+      checkout: true,
+      proxy: false,
+      recovery: false,
+    });
+    expect(readSystemConfig({ name: "Tutor", recovery: true })).toMatchObject({ recovery: true });
     expect(readSystemConfig({ name: "  " })).toBeNull();
     expect(readSystemConfig(null)).toBeNull();
   });
@@ -183,6 +190,56 @@ describe("talking to the service", () => {
     await expect(client.openSystemPortal("pass.token")).rejects.toMatchObject({
       status: 0,
       message: expect.stringContaining("could not be reached"),
+    });
+  });
+
+  it("asks for a recovery link with the address in the body", async () => {
+    const client = await clientWith("https://sub.example.com");
+    const fetchMock = vi.fn(async () => answer(200, { ok: true }));
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(client.requestRecovery("ana@example.com")).resolves.toBeUndefined();
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe("https://sub.example.com/api/recovery/request");
+    expect(init.method).toBe("POST");
+    expect(JSON.parse(String(init.body))).toEqual({ email: "ana@example.com" });
+    expect((init.headers as Record<string, string>).authorization).toBeUndefined();
+  });
+
+  it("hands a recovery link over once and reads the pass back", async () => {
+    const client = await clientWith("https://sub.example.com");
+    const payload = {
+      license: "payload.signature",
+      entitlement: { status: "active", renewsAt: 100, cancelAtPeriodEnd: false, expiresAt: 200 },
+    };
+    const fetchMock = vi.fn(async () => answer(200, payload));
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(client.redeemRecovery("token.value")).resolves.toEqual(payload);
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe("https://sub.example.com/api/recovery/redeem");
+    expect(JSON.parse(String(init.body))).toEqual({ token: "token.value" });
+  });
+
+  it("keeps the service's own sentence for an expired link", async () => {
+    const client = await clientWith("https://sub.example.com");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => answer(401, { error: "That link has expired. Ask for a new one." })),
+    );
+    await expect(client.redeemRecovery("old.value")).rejects.toMatchObject({
+      status: 401,
+      message: "That link has expired. Ask for a new one.",
+    });
+  });
+
+  it("refuses a redemption answer that carries no pass", async () => {
+    const client = await clientWith("https://sub.example.com");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => answer(200, { entitlement: { status: "active", expiresAt: 1 } })),
+    );
+    await expect(client.redeemRecovery("token.value")).rejects.toMatchObject({
+      status: 0,
+      message: expect.stringContaining("no subscription pass came back"),
     });
   });
 

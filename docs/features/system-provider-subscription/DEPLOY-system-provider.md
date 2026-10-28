@@ -16,6 +16,9 @@ small service runs elsewhere. Nothing here is done by the app itself.
 | `STRIPE_PRICE_ID` | service environment | the Pages build |
 | `STRIPE_WEBHOOK_SECRET` | service environment | the repo, the browser |
 | `LICENSE_SECRET` | service environment | the repo, the browser |
+| `RECOVERY_SECRET` | service environment | the repo, the browser |
+| `BREVO_API_KEY` | service environment | the repo, the Pages build, the browser |
+| `RECOVERY_FROM_EMAIL` | service environment | the repo (it is not a credential, but it is still server-side config) |
 | `SYSTEM_LLM_API_KEY` | service environment | the repo, the Pages build, the browser |
 
 The Pages build gets exactly two public facts: the service address and a
@@ -144,6 +147,67 @@ and no secret is added.
   relayed call with no bearer is 401; a private target is 400 with a plain
   sentence; the N+1th call in the hour is 429 with `retry-after`.
 
+## 5c. Subscription recovery (free mailer, no domain)
+
+A learner who clears browser data or moves to another device can bring a live
+subscription back without an account: Stripe is the record, the inbox is the
+proof, and the service stores nothing. The form appears on **Settings → Provider**
+only when this group is fully configured.
+
+1. Create a free [Brevo](https://www.brevo.com) account and verify **one sender
+   address** under **Senders & IPs → Senders**. A plain mailbox works; no domain
+   and no DNS records are needed. Use that exact address for
+   `RECOVERY_FROM_EMAIL` — Brevo refuses to send from an unverified sender.
+2. In **SMTP & API → API Keys**, create a key and copy it once. It starts `xkeysib-`.
+3. On Render, set all three together and restart:
+
+```
+RECOVERY_SECRET=<32+ random characters, different from LICENSE_SECRET>
+RECOVERY_FROM_EMAIL=<the verified sender address>
+BREVO_API_KEY=xkeysib-...
+```
+
+Behaviour:
+
+- **All three or none.** A partial group is reported by name only at startup and
+  the process exits non-zero, exactly like the other groups. Recovery also
+  requires `STRIPE_SECRET_KEY`, since Stripe is the record it reads.
+- **Off is a working state.** With the group unset, `/api/config` reports
+  `recovery:false`, the form is hidden, and both endpoints answer 503. The paid
+  lane and the relay are unaffected.
+- **The link.** One short-lived link (30 minutes) to
+  `APP_URL + "settings/?recover=<token>"`. `APP_URL` must keep its trailing
+  slash so the path joins correctly. Opening the link asks Stripe again for a
+  live plan before minting a fresh 30-day pass, so a link mailed yesterday to a
+  subscription cancelled today brings back nothing.
+- **The answer never varies.** The same sentence is shown whether or not the
+  address belongs to a subscription. The mail is only sent when one exists.
+- **The limits.** 5 requests per client address per hour (the 6th is a visible
+  429 with `retry-after`) and one mail per address per 10 minutes (silent).
+  Both counters live in memory and reset on restart;
+  `RECOVERY_RATE_LIMIT_PER_HOUR` changes the first,
+  `RECOVERY_EMAIL_COOLDOWN_SECONDS` the second and `RECOVERY_TOKEN_TTL_SECONDS`
+  the link lifetime. `RECOVERY_FROM_NAME` is the sender's display name
+  (defaults to "Study tutor").
+- **What is not stored.** No database, no log line with an address. The
+  per-address cooldown is a hash held in memory for ten minutes.
+
+Prove it in test mode:
+
+1. `GET /healthz` shows `recovery:true`, and `/api/config` no longer needs a
+   rebuild — the form appears on the next Settings visit.
+2. Subscribe with `4242 4242 4242 4242` in one browser profile, then open a
+   private window on the same site. Settings → Provider shows **Restore a
+   subscription**.
+3. Type the checkout address. The page says the link is on its way, and Brevo's
+   **Statistics → Email** shows one sent message.
+4. Open the link; the pass is stored, the provider switches to the system lane,
+   and **Active until …** appears. The `?recover=` part is removed from the
+   address bar.
+5. Type an address with no subscription: the identical sentence, no mail.
+6. Re-open the same link inside the 30 minutes: it works again. After 30
+   minutes: "This link has expired. Ask for a new one." with the form usable.
+
 ## 6. Go live
 
 - Swap `sk_test_…` for `sk_live_…`, the test price for the live price, and redo
@@ -153,9 +217,9 @@ and no secret is added.
 
 ## Limits you are accepting
 
-- **The pass is local.** Clearing browser data or moving to another device loses
-  access. There is no login, email recovery or device sync; help by hand through
-  Stripe.
+- **The pass is local, with one way back.** Clearing browser data or moving to
+  another device loses the pass; recovery (section 5c) is that way back, and it
+  needs the inbox that paid. With recovery off, help by hand through Stripe.
 - **One pass, one subscription.** The token names the subscription it came from;
   the service checks that subscription each time (cache ≤ 2 minutes).
 - **The rate limit is memory-only.** Restarting resets it, and two instances
@@ -171,4 +235,6 @@ and no secret is added.
 | `STRIPE_SECRET_KEY` | checkout/portal stop until replaced | set, restart |
 | `STRIPE_WEBHOOK_SECRET` | webhook 400s; cache falls back to its window | set, restart |
 | `SYSTEM_LLM_API_KEY` | proxy 502s until replaced | set, restart |
+| `RECOVERY_SECRET` | every mailed link stops working; issued passes are untouched | set, restart; a learner asks for a new link |
+| `BREVO_API_KEY` | recovery asks succeed but send nothing; learners see the same sentence and get no mail | set, restart |
 | `SYSTEM_API_BASE` | the old build calls the old host | update the variable, re-run Pages |

@@ -78,7 +78,7 @@ async function liveSubscription(
 }
 
 /** The browser-facing facts of one live subscription. */
-function view(subscription: SubscriptionStatus, expiresAt: number): EntitlementView {
+export function entitlementView(subscription: SubscriptionStatus, expiresAt: number): EntitlementView {
   return {
     status: subscription.status,
     renewsAt: subscription.renewsAt,
@@ -142,7 +142,7 @@ export async function completeCheckout(
   deps.subscriptions.seed(subscription);
   return {
     ok: true,
-    entitlement: view(subscription, issued.payload.exp),
+    entitlement: entitlementView(subscription, issued.payload.exp),
     license: issued.token,
   };
 }
@@ -159,7 +159,7 @@ export async function readEntitlement(
   if (!live.ok) return live;
   return {
     ok: true,
-    entitlement: view(live.subscription, read.payload.exp),
+    entitlement: entitlementView(live.subscription, read.payload.exp),
     license: null,
   };
 }
@@ -187,7 +187,7 @@ export async function refreshEntitlement(
   );
   return {
     ok: true,
-    entitlement: view(live.subscription, issued.payload.exp),
+    entitlement: entitlementView(live.subscription, issued.payload.exp),
     license: issued.token,
   };
 }

@@ -16,6 +16,12 @@ import {
   type EntitlementFailure,
 } from "./entitlement";
 import { proxyChat, type ProxyOptions } from "./proxy";
+import {
+  deliverRecoveryLink,
+  normaliseEmail,
+  redeemRecoveryLink,
+  type RecoveryDeps,
+} from "./recovery";
 import { relayChat, type RelayOptions } from "./relay";
 import type { StripeClient } from "./stripe";
 import type { StatusCache } from "./subscriptions";
@@ -69,9 +75,11 @@ export interface AppDeps {
   subscriptions: StatusCache;
   proxy: ProxyOptions | null;
   relay: RelayOptions | null;
+  recovery: RecoveryDeps | null;
   now?: () => number;
   rateLimiter?: RateLimiter;
   relayRateLimiter?: RateLimiter;
+  recoveryRateLimiter?: RateLimiter;
   log?: (line: string) => void;
 }
 
@@ -269,6 +277,9 @@ export async function handleRequest(
   const rateLimiter = deps.rateLimiter ?? new RateLimiter(config.rateLimitPerHour, undefined, deps.now);
   const relayRateLimiter =
     deps.relayRateLimiter ?? new RateLimiter(config.relayRateLimitPerHour, undefined, deps.now);
+  const recoveryRateLimiter =
+    deps.recoveryRateLimiter ??
+    new RateLimiter(config.recovery?.rateLimitPerHour ?? 5, undefined, deps.now);
 
   if (method === "GET" && path === "/healthz") {
     const publicFacts = publicConfig(config);
@@ -278,6 +289,7 @@ export async function handleRequest(
       checkout: publicFacts.checkout,
       proxy: publicFacts.proxy,
       relay: Boolean(deps.relay),
+      recovery: publicFacts.recovery,
     });
     return;
   }
@@ -360,6 +372,54 @@ export async function handleRequest(
       return;
     }
     sendJson(res, 200, { url: result.url });
+    return;
+  }
+
+  if (method === "POST" && path === "/api/recovery/request") {
+    if (!deps.recovery) {
+      sendError(res, 503, "Recovery is not set up.");
+      return;
+    }
+    // The address limit runs before the body is read: a flood costs nothing.
+    const limit = recoveryRateLimiter.take(`recovery:${clientAddress(req)}`);
+    if (!limit.ok) {
+      sendJson(
+        res,
+        429,
+        { error: "Too many requests. Try again in an hour." },
+        { "retry-after": String(limit.retryAfterSeconds) },
+      );
+      return;
+    }
+    const body = await readJsonBody(req, res, MAX_BODY_BYTES);
+    if (!body.ok) return;
+    const email = normaliseEmail(body.value.email);
+    if (!email) {
+      sendError(res, 400, "Enter the email you used at checkout.");
+      return;
+    }
+    // The answer never varies: subscribed, unknown, failed lookup and failed
+    // send all end with the same sentence, so the form cannot be used to test
+    // whether an address is a customer.
+    await deliverRecoveryLink(deps.recovery, email);
+    sendJson(res, 200, { ok: true });
+    return;
+  }
+
+  if (method === "POST" && path === "/api/recovery/redeem") {
+    if (!deps.recovery) {
+      sendError(res, 503, "Recovery is not set up.");
+      return;
+    }
+    const body = await readJsonBody(req, res, MAX_BODY_BYTES);
+    if (!body.ok) return;
+    const token = typeof body.value.token === "string" ? body.value.token : "";
+    const result = await redeemRecoveryLink(deps.recovery, token);
+    if (!result.ok) {
+      sendFailure(res, result);
+      return;
+    }
+    sendJson(res, 200, { license: result.license, entitlement: result.entitlement });
     return;
   }
 
@@ -475,6 +535,9 @@ export function createRequestHandler(deps: AppDeps): (req: IncomingMessage, res:
     relayRateLimiter:
       deps.relayRateLimiter ??
       new RateLimiter(deps.config.relayRateLimitPerHour, undefined, deps.now),
+    recoveryRateLimiter:
+      deps.recoveryRateLimiter ??
+      new RateLimiter(deps.config.recovery?.rateLimitPerHour ?? 5, undefined, deps.now),
   };
   return (req, res) => {
     void handleRequest(req, res, ready).catch(() => {

@@ -33,6 +33,8 @@ export type CheckoutReturn = { kind: "success"; sessionId: string } | { kind: "c
 interface SystemProviderCardProps {
   mode: "custom" | "system";
   checkout: CheckoutReturn | null;
+  /** A bumped number means the pass changed outside this card, so read again. */
+  reloadSignal: number;
   onChanged: () => Promise<void>;
   onNotice: (message: string) => void;
   onError: (message: string) => void;
@@ -54,6 +56,7 @@ function sentenceOf(error: unknown, fallback: string): string {
 export default function SystemProviderCard({
   mode,
   checkout,
+  reloadSignal,
   onChanged,
   onNotice,
   onError,
@@ -123,7 +126,7 @@ export default function SystemProviderCard({
     return () => {
       void pending;
     };
-  }, [loadCard]);
+  }, [loadCard, reloadSignal]);
 
   // A return from Stripe is exchanged for a pass once. The parent clears the
   // query afterwards, so a reload does not exchange the same session again.

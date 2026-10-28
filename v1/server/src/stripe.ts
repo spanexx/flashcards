@@ -37,6 +37,12 @@ export interface StripeSessionView {
   subscription: StripeSubscriptionView | null;
 }
 
+/** A customer as recovery sees it: an id and the email Stripe matched. */
+export interface StripeCustomerView {
+  id: string;
+  email: string | null;
+}
+
 /** Encode the flat form body Stripe expects. */
 export function formEncode(fields: Record<string, string | number | boolean>): string {
   const body = new URLSearchParams();
@@ -105,6 +111,21 @@ export function readSession(raw: unknown): StripeSessionView | null {
   };
 }
 
+/** Read the `data` array of a Stripe list answer; an absent list is empty. */
+function listData(payload: Record<string, unknown>): unknown[] {
+  const data = payload.data;
+  return Array.isArray(data) ? data : [];
+}
+
+/** Normalise one customer payload; null when it has no identity. */
+export function readCustomer(raw: unknown): StripeCustomerView | null {
+  if (!raw || typeof raw !== "object") return null;
+  const record = raw as Record<string, unknown>;
+  const id = stringField(record, "id");
+  if (!id) return null;
+  return { id, email: stringField(record, "email") };
+}
+
 export interface StripeClient {
   createCheckoutSession(args: {
     priceId: string;
@@ -114,6 +135,8 @@ export interface StripeClient {
   getCheckoutSession(id: string): Promise<StripeSessionView>;
   getSubscription(id: string): Promise<StripeSubscriptionView>;
   createPortalSession(args: { customer: string; returnUrl: string }): Promise<{ url: string }>;
+  listCustomersByEmail(email: string): Promise<StripeCustomerView[]>;
+  listCustomerSubscriptions(customer: string): Promise<StripeSubscriptionView[]>;
 }
 
 export interface StripeClientOptions {
@@ -218,6 +241,32 @@ export function createStripeClient(options: StripeClientOptions): StripeClient {
       const url = stringField(payload, "url");
       if (!url) throw new StripeError(502, "Stripe did not return a portal address.");
       return { url };
+    },
+
+    async listCustomersByEmail(email) {
+      // Stripe filters the email exactly as stored; the caller tries the forms
+      // a person may have typed. Ten is more than one person ever has.
+      const payload = await request("GET", "/v1/customers", { email, limit: 10 });
+      const customers: StripeCustomerView[] = [];
+      for (const item of listData(payload)) {
+        const customer = readCustomer(item);
+        if (customer) customers.push(customer);
+      }
+      return customers;
+    },
+
+    async listCustomerSubscriptions(customer) {
+      const payload = await request("GET", "/v1/subscriptions", {
+        customer,
+        status: "all",
+        limit: 100,
+      });
+      const subscriptions: StripeSubscriptionView[] = [];
+      for (const item of listData(payload)) {
+        const subscription = readSubscription(item);
+        if (subscription) subscriptions.push(subscription);
+      }
+      return subscriptions;
     },
   };
 }

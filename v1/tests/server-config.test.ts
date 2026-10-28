@@ -91,6 +91,7 @@ describe("parseConfig", () => {
       priceLabel: "EUR 5 / month",
       checkout: true,
       proxy: false,
+      recovery: false,
     });
     expect(enabledGroups(result.config)).toContain("checkout");
     expect(enabledGroups(result.config)).toContain("portal");
@@ -144,5 +145,69 @@ describe("parseConfig", () => {
     expect(text).not.toContain("whsec_value");
     expect(text).not.toContain("sk-llm-value");
     expect(text).not.toContain(SECRET);
+  });
+
+  it("turns recovery off unless the whole group is present", () => {
+    const bare = parseConfig(minimal());
+    expect(bare.ok).toBe(true);
+    if (!bare.ok) return;
+    expect(publicConfig(bare.config).recovery).toBe(false);
+    expect(bare.config.recovery).toBeNull();
+
+    expect(problems(minimal({ BREVO_API_KEY: "xkeysib-1" }))).toEqual([
+      "RECOVERY_SECRET",
+      "RECOVERY_FROM_EMAIL",
+      "STRIPE_SECRET_KEY",
+    ]);
+    expect(problems(minimal({ RECOVERY_SECRET: "r".repeat(40) }))).toEqual([
+      "BREVO_API_KEY",
+      "RECOVERY_FROM_EMAIL",
+      "STRIPE_SECRET_KEY",
+    ]);
+    expect(problems(minimal({ RECOVERY_FROM_EMAIL: "links@example.com" }))).toEqual([
+      "BREVO_API_KEY",
+      "RECOVERY_SECRET",
+      "STRIPE_SECRET_KEY",
+    ]);
+  });
+
+  it("requires Stripe, a long secret and a real sender for recovery", () => {
+    const complete = {
+      BREVO_API_KEY: "xkeysib-1",
+      RECOVERY_SECRET: "r".repeat(40),
+      RECOVERY_FROM_EMAIL: "links@example.com",
+    };
+    expect(problems(minimal(complete))).toEqual(["STRIPE_SECRET_KEY"]);
+    expect(
+      problems(minimal({ ...complete, STRIPE_SECRET_KEY: "sk", RECOVERY_SECRET: "short" })),
+    ).toEqual(["STRIPE_PRICE_ID", "RECOVERY_SECRET"]);
+    expect(
+      problems(minimal({ ...complete, STRIPE_SECRET_KEY: "sk", RECOVERY_FROM_EMAIL: "not-an-address" })),
+    ).toEqual(["STRIPE_PRICE_ID", "RECOVERY_FROM_EMAIL"]);
+  });
+
+  it("reads recovery defaults and reports the group by name only", () => {
+    const result = parseConfig(
+      minimal({
+        STRIPE_SECRET_KEY: "sk_test_x",
+        STRIPE_PRICE_ID: "price_x",
+        BREVO_API_KEY: "xkeysib-secret-value",
+        RECOVERY_SECRET: "r".repeat(40),
+        RECOVERY_FROM_EMAIL: "links@example.com",
+      }),
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.config.recovery).toMatchObject({
+      fromName: "Study tutor",
+      tokenTtlSeconds: 1800,
+      rateLimitPerHour: 5,
+      cooldownSeconds: 600,
+    });
+    expect(publicConfig(result.config).recovery).toBe(true);
+    expect(enabledGroups(result.config)).toContain("recovery");
+    const text = JSON.stringify(publicConfig(result.config));
+    expect(text).not.toContain("xkeysib-secret-value");
+    expect(text).not.toContain("links@example.com");
   });
 });

@@ -19,10 +19,18 @@
 // opening. [pack: study-resilience]
 // 2026-10-28 qoder: the provider card names the relay road and its key transit.
 // [pack: provider-relay]
+// 2026-10-28 qoder: a recovery link from the inbox brings the paid pass back
+// to a new browser. [pack: subscription-recovery]
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { apiGet, apiSend } from "@/lib/client/api";
-import { systemEnabled, systemProviderName } from "@/lib/client/system";
+import {
+  RECOVERY_REDEEMED,
+  redeemRecovery,
+  systemEnabled,
+  systemProviderName,
+} from "@/lib/client/system";
+import RecoverySection from "./RecoverySection";
 import SoundSwitch from "./SoundSwitch";
 import SystemProviderCard, { type CheckoutReturn } from "./SystemProviderCard";
 import TeachingSwitch from "./TeachingSwitch";
@@ -35,6 +43,7 @@ import {
   type AutosaveState,
 } from "@/lib/browser/autosave";
 import { exportBackupZip, restoreBackupFile } from "@/lib/browser/archive";
+import { writeSystemLicense } from "@/lib/browser/repository";
 import { interruptJobs } from "@/lib/browser/jobs";
 import type { ProviderStatus, Settings } from "@/lib/shared/types";
 
@@ -83,6 +92,10 @@ export default function SettingsClient() {
   });
   const [tab, setTab] = useState<SettingsTab>("profile");
   const [checkout, setCheckout] = useState<CheckoutReturn | null>(null);
+  const [recoveryToken, setRecoveryToken] = useState<string | null>(null);
+  const [recovering, setRecovering] = useState(false);
+  const [cardReload, setCardReload] = useState(0);
+  const handledRecovery = useRef(false);
 
   const refresh = useCallback(async () => {
     try {
@@ -112,31 +125,74 @@ export default function SettingsClient() {
     };
   }, [refresh]);
 
-  // WHY: Stripe sends the learner back with the outcome in the query. Read it
-  // once, remember it for the system card, then clean the address bar so a
-  // reload does not repeat the exchange. [pack: system-provider-subscription]
+  // WHY: Stripe sends the learner back with the outcome in the query, and a
+  // recovery mail brings a link token the same way. Read each once, then clean
+  // the address bar so a reload does not repeat the exchange.
+  // [pack: system-provider-subscription] [pack: subscription-recovery]
   useEffect(() => {
     const pending = Promise.resolve().then(() => {
       const query = new URLSearchParams(window.location.search);
       const outcome = query.get("checkout");
       const sessionId = query.get("session_id");
+      const token = query.get("recover");
+      const cleaned = new URL(window.location.href);
+      let found = false;
       if (outcome === "success" && sessionId) {
         setCheckout({ kind: "success", sessionId });
+        cleaned.searchParams.delete("checkout");
+        cleaned.searchParams.delete("session_id");
+        found = true;
       } else if (outcome === "cancel") {
         setCheckout({ kind: "cancel" });
-      } else {
-        return;
+        cleaned.searchParams.delete("checkout");
+        found = true;
       }
+      if (token) {
+        setRecoveryToken(token);
+        cleaned.searchParams.delete("recover");
+        found = true;
+      }
+      if (!found) return;
       setTab("provider");
-      const cleaned = new URL(window.location.href);
-      cleaned.searchParams.delete("checkout");
-      cleaned.searchParams.delete("session_id");
       window.history.replaceState({}, "", cleaned.toString());
     });
     return () => {
       void pending;
     };
   }, []);
+
+  // One page load exchanges the token once; the link itself stays usable for
+  // its 30 minutes, so opening it again on another browser works too. Keep the
+  // new pass in this browser and make the system provider the lane in use.
+  useEffect(() => {
+    if (!recoveryToken || handledRecovery.current) return;
+    handledRecovery.current = true;
+    const pending = Promise.resolve().then(async () => {
+      setRecovering(true);
+      setMessage(null);
+      setNotice(null);
+      try {
+        const answer = await redeemRecovery(recoveryToken);
+        await writeSystemLicense(answer.license, answer.entitlement.expiresAt * 1000);
+        await apiSend("/api/settings", "PATCH", { provider: { mode: "system" } });
+        setNotice(RECOVERY_REDEEMED);
+        await refresh();
+        setCardReload((count) => count + 1);
+      } catch (error) {
+        setMessage(
+          error instanceof Error && error.message.trim().length > 0
+            ? error.message
+            : "The link could not be used. Ask for a new one.",
+        );
+      } finally {
+        setRecovering(false);
+        setRecoveryToken(null);
+      }
+    });
+    return () => {
+      void pending;
+    };
+  }, [recoveryToken, refresh]);
 
   useEffect(() => {
     const pending = autosaveState().then(setAuto);
@@ -366,6 +422,11 @@ export default function SettingsClient() {
 
       {message ? <div className="notice error">{message}</div> : null}
       {notice ? <div className="notice">{notice}</div> : null}
+      {recovering ? (
+        <div className="notice" role="status">
+          Bringing your subscription back to this browser…
+        </div>
+      ) : null}
 
       <div className="tabs" role="tablist" aria-label="Settings">
         <button className="tab" type="button" role="tab" aria-selected={tab === "profile"} onClick={() => setTab("profile")}>
@@ -456,14 +517,18 @@ export default function SettingsClient() {
       {tab === "provider" ? (
         <div className="stack">
           {systemEnabled() ? (
-            <SystemProviderCard
-              mode={settings.provider.mode ?? "custom"}
-              checkout={checkout}
-              onChanged={refresh}
-              onNotice={setNotice}
-              onError={setMessage}
-              onReturnHandled={clearCheckout}
-            />
+            <>
+              <SystemProviderCard
+                mode={settings.provider.mode ?? "custom"}
+                checkout={checkout}
+                reloadSignal={cardReload}
+                onChanged={refresh}
+                onNotice={setNotice}
+                onError={setMessage}
+                onReturnHandled={clearCheckout}
+              />
+              <RecoverySection />
+            </>
           ) : null}
 
           <div className="card stack">

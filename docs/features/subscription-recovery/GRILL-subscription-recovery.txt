@@ -1,0 +1,282 @@
+Subscription recovery - Grill Notes
+
+Status: Locked
+Date: 2026-10-28
+Source: this session's request (quoted below), sibling pack
+docs/features/system-provider-subscription/, map line "A paid system provider"
+
+What this feature is about
+
+- A learner who bought the subscription on one browser can get a working pass on
+  another browser (or after clearing site data) by proving they control the
+  email they paid with.
+- Stripe stays the record of who is subscribed. The service gains no database,
+  no account, no password and no stored email.
+- The new browser ends up holding its own signed pass, exactly like one issued
+  after a finished checkout; the old browser's pass keeps working until it
+  expires.
+- It does NOT add a login, a profile, settings or card sync, SMS, or recovery
+  for the learner's own (bring-your-own) provider.
+- It does NOT recover a cancelled or unpaid plan; the learner sees that the
+  subscription is not active and is offered the existing Subscribe button.
+
+
+Questions and answers locked so far
+
+1. "Yeah, but there is a loophole I am going to tell you. You can see it now. So
+   now, because we don't have a. The server we don't store, we don't save user
+   data. In the server. Which is for me. When a user subscribes. So if they are
+   subscribed in one browser, If they move to another browser, their
+   subscription is gone because it is only saved in the browser. In fact, if
+   there is a clear of data in the browser. They lose their subscription. Which
+   is really stupid. So I am guessing. I want to maintain that I don't want to
+   have. You don't have to. But there should be a way that our server can
+   recognize who is subscribed. Right. Oh. There should be a way if they move to
+   another place. Maybe we should just keep... Something like an ID for each
+   user. And not have their name or any, just their ID. Now we have to give the
+   user their ID. They have to have it if they lose it. Then they will have to
+   subscribe. So, or we can just have... And have their data, and they can just
+   log in. But this is also a lot of tunnels of doors. Okay, we don't have to
+   keep their data. We can just have their profile. You know, have their name,
+   their email. Ah, their password, right? What? How can we... Can you tell me
+   how we can make this happen?"
+   (Dictated; "because we don't have a." is a false start. Kept verbatim.)
+
+Answer:
+- The pass stays browser-local, but a learner can ask for a new one on any
+  browser by typing the email they paid with.
+- The service recognises a subscriber through Stripe, not through a record of
+  its own: it looks up the Stripe customer for that email and the live
+  subscription behind it.
+- Nothing new is stored: no ID to keep, no profile, no password.
+
+Why:
+- The complaint is real and the current behaviour is the worst kind of loss:
+  clearing site data silently destroys something paid for
+  (v1/src/lib/browser/repository.ts:368 `system-license`).
+- A saved ID only works if the learner still has it — which is exactly what
+  losing the browser takes away.
+- An account with name, email and password would store personal data and add a
+  password surface the app has never had.
+- Stripe already holds the email and the subscription, so it is the cheapest
+  honest record. This rules out a new database, device sync and a login.
+
+
+2. "perfect!!! lets use stripe!!!"
+
+Answer:
+- Stripe is the record of who subscribes: the customer, the email on it, and the
+  live subscription state.
+- The service derives everything from Stripe per request; it keeps no copy.
+
+Why:
+- Checkout already runs in subscription mode and creates a Customer, so the
+  email exists at Stripe
+  (v1/server/src/stripe.ts:181 `createCheckoutSession`, mode: "subscription").
+- The service is stateless by design today; a recovery flow that asks Stripe
+  each time preserves that property
+  (v1/server/src/subscriptions.ts, `StatusCache`).
+- Rules out: an accounts table, a saved recovery ID, a separate identity
+  provider.
+
+
+3. "can we use clerk?"
+
+Answer:
+- Not in this pack.
+- If real accounts (settings or card sync, not just recovery) are wanted later,
+  Clerk is a fair candidate then. This design does not block it: the app only
+  ever consumes a pass.
+
+Why:
+- Clerk is a hosted login: a third-party script in the app, a Clerk secret on
+  the service, session tokens to verify, and somewhere to map a Clerk user to a
+  Stripe customer — the one thing this service has deliberately never held.
+- It replaces "Local only. No account." on every screen for every learner, which
+  is a product change larger than this recovery pack.
+- Cost is not the objection (free to 10k monthly users). The recovery work — mint
+  a pass, check the subscription live — remains either way, so Clerk would add a
+  platform on top of it, not instead of it.
+- Source: learner question in this session; product promise as written in the
+  app's sidebar and the system-provider ticket.
+
+
+4. "Which identity route should this recovery pack take?"
+
+Answer:
+- Email one-time link: the learner types the email used at Stripe Checkout, the
+  service emails a short-lived link, and opening it in the new browser stores a
+  fresh pass.
+- No password, no account; the service stores nothing.
+
+Why:
+- Uses the email Stripe already has; nothing to remember except an inbox the
+  learner already owns.
+- Out: a saved recovery code (lost with the old browser, so it fails on the exact
+  day it is needed) and an email + password account (stored personal data,
+  password reset, breach surface).
+- Recorded after the three options were put with these trade-offs; the learner
+  first asked about Clerk (entry 3) and then chose this route.
+
+
+5. "How long should a recovery link live, and which spam limits do we apply?"
+
+Answer:
+- The link lives 30 minutes and can be opened more than once inside that window;
+  redeeming always re-checks the live subscription with Stripe.
+- Each address may request 5 links an hour.
+- Each email address gets at most one link every 10 minutes, tracked as a hash in
+  memory only.
+
+Why:
+- Mail can be slow; 30 minutes leaves room without leaving a leaked link useful
+  for long.
+- Limits stop the form becoming a way to flood a stranger's inbox; the in-memory
+  map fits the service and clears on restart, exactly like the rate limiter
+  (v1/server/src/http.ts:28).
+- Not single-use, because single-use needs stored state, and the live Stripe
+  check already limits what a reused link achieves.
+
+
+6. "What should the form answer when the email has no live subscription?"
+
+Answer:
+- Always the same sentence and status: "If that email has a subscription, a link
+  is on its way."
+- A sending failure is logged without the address, and the answer is unchanged.
+
+Why:
+- Any difference in wording or status would let a stranger test whether a given
+  address is a customer.
+- Cost accepted: a subscriber who mistypes their email gets silence; the card
+  says "Use the email you paid with" and the form stays usable.
+
+
+Decisions taken under delegated authority (not asked)
+
+- Mailer: Brevo free tier, sent over the HTTPS API
+  (POST https://api.brevo.com/v3/smtp/email), no SDK, no SMTP client.
+  Source: the learner asked for "a free mailer for now" and delegated the
+  choice on 2026-10-28 (.reports/goal-provider-relay-merge.md). Brevo verifies a
+  single sender address by email, so no domain is needed; Resend would need a
+  verified domain before mailing arbitrary learners.
+- Recovery is optional and off by default: it is available only when
+  BREVO_API_KEY, RECOVERY_SECRET and RECOVERY_FROM_EMAIL are all set. Otherwise
+  /api/config reports recovery: false, the form is not rendered, and the endpoint
+  answers 503. Existing deployments keep working untouched.
+- A separate RECOVERY_SECRET signs links, not LICENSE_SECRET, so rotating one
+  does not invalidate the other.
+- Link token shape: base64url JSON {v, email, iat} plus an HMAC-SHA256
+  signature, 30-minute expiry (RECOVERY_TOKEN_TTL_SECONDS, default 1800).
+- One email may cover more than one live subscription: the most recently
+  renewing live one is used. (Inferred; Stripe allows several subscriptions per
+  customer.)
+- Stripe filters customers by email exactly as stored, so the service asks for
+  the address as typed and again in lowercase, and uses both answers
+  (v1/server/src/stripe.ts:246). A single exact query would silently miss a
+  learner who typed different case at Checkout.
+- Redeeming stores the pass and switches the provider to the system lane, the
+  same end state as a finished checkout.
+- The email carries one sentence, the link and the expiry; no learner text, no
+  card data, no price.
+- Brevo processes the address to deliver the message; the service itself neither
+  logs nor stores it.
+- The pass format does not change; a recovered pass is indistinguishable from one
+  issued at checkout.
+
+Non-goals
+
+- No account, password, session or profile on the service.
+- No sync of settings, cards, progress or the provider key between browsers.
+- No recovery of a cancelled or unpaid subscription; the existing Subscribe
+  button is the path back.
+- No SMS or other second channel.
+- No recovery for the bring-your-own provider lane.
+- No change to backup rules: the pass still never enters a backup.
+- No marketing or notification email; recovery links only.
+
+Edge cases named
+
+- Email mistyped: silence by design; the card repeats "Use the email you paid
+  with".
+- Mail delayed past 30 minutes: the link says it expired and the form offers a
+  new one (subject to the 10-minute per-email cooldown).
+- Link opened twice: both openings work inside the window, each stores a pass.
+- Link opened on the same browser that already holds a pass: replaces it, no
+  harm.
+- Subscription cancelled after the link was sent: redemption refuses with "This
+  subscription is not active."
+- Service restarted between request and redeem: the link still works, because
+  nothing about it lived in memory.
+- Mailer down: the learner sees the same sentence and tries again; the operator
+  sees one server-side log line without the address.
+- The learner's browser blocks the service: the form reports the plain
+  "could not reach" sentence, as the subscription card already does.
+
+7. "Should the recovery form always be visible on the Provider tab?"
+   (Asked while reviewing the pre-impl simulation.)
+
+Answer:
+- Yes: the section sits under the System card in both states, also when this
+  browser already holds a working pass.
+
+Why:
+- A learner with a working laptop may still want their phone; hiding the form on
+  an active card leaves no visible road.
+- It stays quiet and secondary, so it does not compete with Subscribe or with
+  the provider switch.
+
+
+8. "OK, we can leave the email link. Since the user actually has to. The phone.
+   Ah, the unit. So, yeah. And I don't know if there's a way we can validate that
+   email. Is connected to another account, so it can be one email. For one.
+   Flask card accounts. Is that possible? Speak to me."
+   (Dictated; "Flask card" is "flashcard". Kept verbatim.)
+
+Answer:
+- No, not without keeping a record, and this pack keeps none.
+- Stripe can say that some customer holds that address. It cannot say that the
+  person typing it is that customer; only the inbox proves that.
+- One address may carry more than one live subscription; recovery uses the live
+  one that renews latest (see "Decisions taken under delegated authority").
+
+Why:
+- One email for one account needs stored state — an accounts table or a device
+  id — which is the thing this service has refused since the system-provider
+  pack.
+- Binding a pass to a device would break the laptop-and-phone case that makes
+  recovery worth building.
+- A shared inbox really can hold two subscriptions. Refusing the second does not
+  stop the sharing; it only locks out the person who paid. Whoever can read the
+  inbox is the owner, by design.
+
+9. "Coming to think of it, I was thinking. There is no. There is no need to send
+   them a one-time link. You know, because if. If the app is already checking
+   Stripe, To check if the user has a subscription. There is no need. Stripe can
+   just... we can just use Stripe to validate that that email is subscribed. And
+   then just... Activated. I mean, if... Since there is no special order
+   product—like the one that costs 5, the other one costs 10, and the other one
+   costs 15—there is really no need. To send them an email. An email is just
+   the... Another job. For us to do, if we are already asking, "Hey, is this
+   person subscribed?"There is really no need to send them an email."
+   (Dictated. Kept verbatim.)
+
+Answer:
+- Priced and refused: the email link stays.
+- The learner first chose "Drop the link", then reversed: "Okay, I guess you're
+  right. There is no way to actually prove that. Yeah, email."
+
+Why:
+- If the form activates on the typed address alone, anyone who knows a
+  subscriber's address gets the paid lane on the operator's key. No inbox access
+  is needed; addresses are guessable.
+- No rate limit makes that safe: the attacker's requests look like the
+  subscriber's, and every accepted guess spends the operator's key.
+- Asking Stripe whether the address is subscribed is an enumeration oracle — the
+  form would answer differently for a customer than for a stranger, which
+  entry 6 forbids.
+- Entry 4 had already locked the link. This entry records the alternative as
+  considered and rejected so it is not reopened without new facts.
+
+
+No remaining open questions

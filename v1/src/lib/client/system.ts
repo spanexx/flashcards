@@ -13,7 +13,18 @@ export interface SystemPublicConfig {
   priceLabel: string;
   checkout: boolean;
   proxy: boolean;
+  recovery: boolean;
 }
+
+/**
+ * The one answer every address gets. It must not differ for a stranger, or the
+ * form would say whether an address buys a subscription.
+ */
+export const RECOVERY_ANSWER =
+  "If that address belongs to a subscription, a link is on its way. The link lasts 30 minutes.";
+
+/** What the settings page says after a link brings the pass back. */
+export const RECOVERY_REDEEMED = "Your subscription is active on this browser now.";
 
 /** One live subscription, in the shape the screen shows. Times are epoch seconds. */
 export interface SystemEntitlement {
@@ -105,6 +116,7 @@ export function readSystemConfig(payload: unknown): SystemPublicConfig | null {
     priceLabel: typeof record.priceLabel === "string" ? record.priceLabel.trim() : "",
     checkout: record.checkout === true,
     proxy: record.proxy === true,
+    recovery: record.recovery === true,
   };
 }
 
@@ -272,4 +284,26 @@ export async function openSystemPortal(license: string): Promise<string> {
     throw new SystemError("The billing portal address was missing. Try again in a moment.", 0);
   }
   return url;
+}
+
+/** Ask the service to mail a recovery link. A stranger and a subscriber hear the same thing. */
+export async function requestRecovery(email: string): Promise<void> {
+  await request("/api/recovery/request", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
+/** Trade a recovery link for a fresh pass in this browser. */
+export async function redeemRecovery(token: string): Promise<SystemLicenseAnswer> {
+  const answer = readLicenseAnswer(
+    await request("/api/recovery/redeem", {
+      method: "POST",
+      body: JSON.stringify({ token }),
+    }),
+  );
+  if (!answer) {
+    throw new SystemError("The link was accepted, but no subscription pass came back.", 0);
+  }
+  return answer;
 }
