@@ -43,6 +43,20 @@ export function chatEndpoints(baseUrl: string): string[] {
   return candidates;
 }
 
+/**
+ * Read the plain sentence a service put in an error body. The system provider
+ * explains a refused subscription this way, and the learner should see that
+ * sentence instead of a generic key warning.
+ */
+export function readErrorSentence(payload: unknown): string | null {
+  if (payload === null || typeof payload !== "object") return null;
+  const value = (payload as { error?: unknown }).error;
+  if (typeof value !== "string") return null;
+  const sentence = value.trim();
+  if (sentence.length === 0 || sentence.length > 300) return null;
+  return sentence;
+}
+
 /** Plain sentence for an HTTP failure. Never includes a key or a header. */
 export function describeHttpFailure(status: number, url: string): string {
   if (status === 401 || status === 403) return "The provider rejected the key. Check the key in settings.";
@@ -109,11 +123,21 @@ export async function callProvider(
       });
 
       if (!response.ok) {
+        const willRetry = response.status === 404 && index + 1 < endpoints.length;
         lastMessage = describeHttpFailure(response.status, url);
+        // The service's own sentence wins when it gave one: a refused
+        // subscription needs a different answer than a wrong key.
+        if (!willRetry) {
+          try {
+            lastMessage = readErrorSentence(await response.json()) ?? lastMessage;
+          } catch {
+            // No JSON body; the status sentence stands.
+          }
+        }
         console.warn(`[provider] ${response.status} from ${url} in ${Date.now() - startedAt}ms — ${lastMessage}`);
         // A 404 may mean the other candidate shape is the right one; anything
         // else is a real answer and should not be retried against a second URL.
-        if (response.status === 404 && index + 1 < endpoints.length) continue;
+        if (willRetry) continue;
         return { ok: false, message: lastMessage, reason: "http" };
       }
 

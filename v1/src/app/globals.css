@@ -418,6 +418,12 @@ p.lead {
   padding: 13px 15px;
 }
 
+/* The paid lane is a different bargain from a learner's own key. A quiet
+   accent edge says so without shouting over the rest of settings. */
+.system-card {
+  border-left: 3px solid var(--accent);
+}
+
 .btn {
   font: inherit;
   min-height: 40px;

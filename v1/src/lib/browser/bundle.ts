@@ -29,10 +29,12 @@ import {
   readProviderKey,
   readSessions,
   readSettings,
+  readSystemLicense,
   patchSettings,
   upsertCards,
   writePack,
   writeProviderKey,
+  writeSystemLicense,
   appendEvidence,
   appendPrompt,
   appendSession,
@@ -866,6 +868,10 @@ export async function applyBackup(
   options: { beforeApply?: () => Promise<void> } = {},
 ): Promise<{ ok: true; packs: number; cards: number }> {
   const key = await readProviderKey();
+  // WHY: A backup never carries a stored secret, and restoring replaces the
+  // settings store. Both the provider key and the subscription pass survive
+  // the restore that way, matching the promise the screen makes.
+  const license = await readSystemLicense();
   // The caller may stop background work after validation, but before the
   // library changes. A malformed backup must not kill a healthy job.
   await options.beforeApply?.();
@@ -891,6 +897,7 @@ export async function applyBackup(
     await patchSettings(normalizeSettings(backup.settings));
     if (key) await writeProviderKey(key);
     else await clearProviderKey();
+    if (license) await writeSystemLicense(license.license, license.expiresAt);
     restored = true;
     return { ok: true, packs: backup.packs.length, cards: backup.cards.length };
   } finally {

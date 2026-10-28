@@ -25,6 +25,11 @@ jobs:
     runs-on: ubuntu-latest
     env:
       NEXT_PUBLIC_BASE_PATH: /flashcards
+      # WHY: The provider address and name are public build facts; the price id,
+      # webhook secret, licence secret and provider key stay on the service and
+      # are never repository variables. [pack: system-provider-subscription]
+      NEXT_PUBLIC_SYSTEM_API_BASE: ${{ vars.SYSTEM_API_BASE }}
+      NEXT_PUBLIC_SYSTEM_PROVIDER_NAME: ${{ vars.SYSTEM_PROVIDER_NAME }}
     defaults:
       run:
         working-directory: v1

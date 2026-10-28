@@ -727,9 +727,16 @@ async function updateSettings(body: Record<string, unknown>) {
   const provider = asRecord(body.provider);
   if (provider) {
     const current = await readSettings();
+    // WHY: The mode chooses which lane answers: the learner's provider or the
+    // paid system one. An absent mode keeps what was already chosen.
+    const mode = provider.mode;
+    if (mode !== undefined && mode !== "custom" && mode !== "system") {
+      fail("That is not a provider mode the app knows.");
+    }
     patch.provider = {
       url: typeof provider.url === "string" ? provider.url.trim() : current.provider.url,
       model: typeof provider.model === "string" ? provider.model.trim() : current.provider.model,
+      mode: mode === "custom" || mode === "system" ? mode : current.provider.mode,
     };
   }
   const settings = await patchSettings(patch);

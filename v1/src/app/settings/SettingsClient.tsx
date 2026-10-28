@@ -20,7 +20,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { apiGet, apiSend } from "@/lib/client/api";
+import { systemEnabled, systemProviderName } from "@/lib/client/system";
 import SoundSwitch from "./SoundSwitch";
+import SystemProviderCard, { type CheckoutReturn } from "./SystemProviderCard";
 import TeachingSwitch from "./TeachingSwitch";
 import ThemeSwitch from "./ThemeSwitch";
 import {
@@ -78,6 +80,7 @@ export default function SettingsClient() {
     permission: null,
   });
   const [tab, setTab] = useState<SettingsTab>("profile");
+  const [checkout, setCheckout] = useState<CheckoutReturn | null>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -106,6 +109,32 @@ export default function SettingsClient() {
       void pending;
     };
   }, [refresh]);
+
+  // WHY: Stripe sends the learner back with the outcome in the query. Read it
+  // once, remember it for the system card, then clean the address bar so a
+  // reload does not repeat the exchange. [pack: system-provider-subscription]
+  useEffect(() => {
+    const pending = Promise.resolve().then(() => {
+      const query = new URLSearchParams(window.location.search);
+      const outcome = query.get("checkout");
+      const sessionId = query.get("session_id");
+      if (outcome === "success" && sessionId) {
+        setCheckout({ kind: "success", sessionId });
+      } else if (outcome === "cancel") {
+        setCheckout({ kind: "cancel" });
+      } else {
+        return;
+      }
+      setTab("provider");
+      const cleaned = new URL(window.location.href);
+      cleaned.searchParams.delete("checkout");
+      cleaned.searchParams.delete("session_id");
+      window.history.replaceState({}, "", cleaned.toString());
+    });
+    return () => {
+      void pending;
+    };
+  }, []);
 
   useEffect(() => {
     const pending = autosaveState().then(setAuto);
@@ -137,15 +166,17 @@ export default function SettingsClient() {
   const saveProvider = useCallback(async () => {
     setMessage(null);
     try {
+      // WHY: Saving your own address and model means you want it to answer;
+      // this is also the way back from the system provider.
       const data = await apiSend<{ settings: Settings; provider: ProviderStatus }>("/api/settings", "PATCH", {
-        provider: { url, model },
+        provider: { url, model, mode: "custom" },
       });
       setSettings(data.settings);
       setProvider(data.provider);
       setTestResult(null);
       setTested(false);
       setEditingProvider(false);
-      setNotice("The provider profile was saved.");
+      setNotice("Your own provider is saved and in use.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "The provider could not be saved.");
     }
@@ -177,6 +208,8 @@ export default function SettingsClient() {
       setMessage(error instanceof Error ? error.message : "The key could not be cleared.");
     }
   }, [refresh]);
+
+  const clearCheckout = useCallback(() => setCheckout(null), []);
 
   const testProvider = useCallback(async () => {
     setTestBusy(true);
@@ -216,7 +249,11 @@ export default function SettingsClient() {
   // A chosen zip may carry local media; an older JSON backup simply has none.
   const restoreFromFile = useCallback(
     async (file: File) => {
-      if (!window.confirm("Restoring replaces everything in this browser. The provider key stays. Continue?")) {
+      if (
+        !window.confirm(
+          "Restoring replaces everything in this browser. The provider key and subscription pass stay. Continue?",
+        )
+      ) {
         return;
       }
       setMessage(null);
@@ -278,7 +315,12 @@ export default function SettingsClient() {
   }, []);
 
   const restoreBackup = useCallback(async () => {
-    if (!window.confirm("Restoring replaces everything in this browser. The provider key stays. Continue?")) return;
+    if (
+      !window.confirm(
+        "Restoring replaces everything in this browser. The provider key and subscription pass stay. Continue?",
+      )
+    )
+      return;
     setMessage(null);
     setNotice(null);
     try {
@@ -296,11 +338,16 @@ export default function SettingsClient() {
     : !provider.configured
       ? "Not set up"
       : !provider.hasKey
-        ? "Needs a key"
+        ? provider.mode === "system"
+          ? "Needs a pass"
+          : "Needs a key"
         : tested
           ? "Tested"
-          : "Set up";
+          : provider.mode === "system"
+            ? "Subscribed"
+            : "Set up";
   const providerTested = tested;
+  const systemInUse = settings?.provider.mode === "system";
 
   if (!settings || !provider) {
     return message ? <div className="notice error">{message}</div> : <p className="muted">Loading settings…</p>;
@@ -402,17 +449,38 @@ export default function SettingsClient() {
 
       {tab === "provider" ? (
         <div className="stack">
+          {systemEnabled() ? (
+            <SystemProviderCard
+              mode={settings.provider.mode ?? "custom"}
+              checkout={checkout}
+              onChanged={refresh}
+              onNotice={setNotice}
+              onError={setMessage}
+              onReturnHandled={clearCheckout}
+            />
+          ) : null}
+
           <div className="card stack">
             <div className="row" style={{ justifyContent: "space-between" }}>
               <div>
                 <h2 style={{ margin: 0 }}>Provider profile</h2>
                 <p className="muted" style={{ margin: 0 }}>
-                  {provider.configured
-                    ? `${providerName(provider.endpoint)} · ${provider.model}`
-                    : "No provider saved yet."}
+                  {provider.mode === "system"
+                    ? `${systemProviderName()} · subscription`
+                    : provider.configured
+                      ? `${providerName(provider.endpoint)} · ${provider.model}`
+                      : "No provider saved yet."}
                 </p>
               </div>
-              <span className={`status-pill ${providerTested ? "ready" : providerState === "Needs a key" ? "waiting" : ""}`}>
+              <span
+                className={`status-pill ${
+                  providerTested || (provider.mode === "system" && provider.hasKey)
+                    ? "ready"
+                    : providerState === "Needs a key" || providerState === "Needs a pass"
+                      ? "waiting"
+                      : ""
+                }`}
+              >
                 {providerState}
               </span>
             </div>
@@ -423,8 +491,9 @@ export default function SettingsClient() {
               </p>
             )}
             <p className="muted" style={{ margin: 0 }}>
-              Key: {provider.hasKey ? "stored in this browser" : "not stored"} · the address and model are saved here
-              too. Backups never include the key.
+              {provider.mode === "system"
+                ? `Pass: ${provider.hasKey ? "stored in this browser" : "not stored"} · the operator's key never reaches this page, and backups never include the pass.`
+                : `Key: ${provider.hasKey ? "stored in this browser" : "not stored"} · the address and model are saved here too. Backups never include the key.`}
             </p>
 
             {testResult ? (
@@ -455,10 +524,15 @@ export default function SettingsClient() {
           {editingProvider || !provider.configured || !provider.hasKey ? (
             <div className="card stack">
               <div>
-                <h2 style={{ margin: 0 }}>Set up the provider</h2>
+                <h2 style={{ margin: 0 }}>Set up your own provider</h2>
                 <p className="muted" style={{ margin: 0 }}>
                   Use an OpenAI-compatible address and model. The key stays in this browser and is never shown back.
                 </p>
+                {systemInUse ? (
+                  <p className="muted" style={{ margin: 0 }}>
+                    Saving here switches from the subscription back to your own provider.
+                  </p>
+                ) : null}
               </div>
 
               <div className="row">
@@ -477,7 +551,7 @@ export default function SettingsClient() {
                   style={{ flex: 1, minWidth: "10rem" }}
                 />
                 <button className="btn" type="button" onClick={() => void saveProvider()}>
-                  Save profile
+                  {systemInUse ? "Save and use my provider" : "Save profile"}
                 </button>
               </div>
 
@@ -614,8 +688,8 @@ export default function SettingsClient() {
             <h2>Backup</h2>
             <p className="muted" style={{ margin: 0 }}>
               A backup holds packs, cards, the record, sessions, settings, the prompt log and any pictures or videos on
-              cards. The provider key is never included. It downloads as a zip; restoring replaces everything here and
-              the key stays in this browser.
+              cards. The provider key and subscription pass are never included. It downloads as a zip; restoring
+              replaces everything here and both stay in this browser.
             </p>
             <div className="row">
               <button className="btn" type="button" onClick={() => void exportBackup()}>

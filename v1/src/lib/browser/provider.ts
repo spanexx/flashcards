@@ -42,18 +42,38 @@ import {
   readPacks,
   readProviderKey,
   readSettings,
+  readSystemLicense,
   writeProviderKey,
   clearProviderKey,
   packRecord,
   type BrowserPack,
 } from "@/lib/browser/repository";
 import { importBundle } from "@/lib/browser/bundle";
+import { systemApiBase, systemChatBase } from "@/lib/client/system";
 
 /** No key, no call. This is the one refusal every provider feature shares. */
 export async function providerConfig(): Promise<
   { ok: true; config: ProviderConfig } | { ok: false; message: string }
 > {
   const settings = await readSettings();
+  // WHY: The paid lane replaces the learner's address and key with the
+  // subscription service and the pass this browser keeps. A pass is not the
+  // operator's key: the service never sends that key to the page.
+  if (settings.provider.mode === "system") {
+    const base = systemApiBase();
+    if (base.length === 0) {
+      return { ok: false, message: "This build has no system provider address. Use your own provider." };
+    }
+    const license = await readSystemLicense();
+    if (!license) {
+      return { ok: false, message: "The system provider needs a subscription. Open settings and subscribe." };
+    }
+    return {
+      ok: true,
+      config: { url: systemChatBase(base), model: "system", key: license.license, swappedForWsl: false },
+    };
+  }
+
   const url = settings.provider.url.trim();
   const model = settings.provider.model.trim();
   if (url.length === 0 || model.length === 0) {
@@ -69,6 +89,25 @@ export async function providerConfig(): Promise<
 /** Provider state in plain words; the key itself is never returned. */
 export async function browserProviderStatus(): Promise<ProviderStatus> {
   const settings = await readSettings();
+  if (settings.provider.mode === "system") {
+    const enabled = systemApiBase().length > 0;
+    const license = await readSystemLicense();
+    return {
+      configured: enabled,
+      hasKey: license !== null,
+      endpoint: enabled ? systemChatBase() : null,
+      model: enabled ? "system" : null,
+      keyStore: license ? "browser" : "none",
+      swappedForWsl: false,
+      mode: "system",
+      message: !enabled
+        ? "This build has no system provider address. Use your own provider."
+        : license
+          ? "The system provider answers through your subscription. No key is stored."
+          : "The system provider needs a subscription. Subscribe in settings.",
+    };
+  }
+
   const key = await readProviderKey();
   const configured = settings.provider.url.trim().length > 0 && settings.provider.model.trim().length > 0;
   let message = "The browser calls the provider directly. Some providers refuse browser calls (CORS).";
@@ -81,6 +120,7 @@ export async function browserProviderStatus(): Promise<ProviderStatus> {
     model: settings.provider.model.trim() || null,
     keyStore: key.length > 0 ? "browser" : "none",
     swappedForWsl: false,
+    mode: "custom",
     message,
   };
 }

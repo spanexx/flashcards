@@ -327,6 +327,46 @@ export function clearProviderKey(store: Store = browserStore()): Promise<void> {
   return serial(() => store.delete("settings", "provider-key"));
 }
 
+/** A paid pass is stored on its own row, like the key, so a backup leaves it behind. */
+interface SystemLicenseRow extends StoredValue {
+  id: "system-license";
+  license: string;
+  expiresAt: number;
+}
+
+/** The facts the System card needs to show and renew the pass. */
+export interface StoredSystemLicense {
+  license: string;
+  /** Expiry in milliseconds, so it can meet `Date.now` directly. */
+  expiresAt: number;
+}
+
+/** The paid pass, or null when this browser has none. */
+export async function readSystemLicense(
+  store: Store = browserStore(),
+): Promise<StoredSystemLicense | null> {
+  const row = await store.get<SystemLicenseRow>("settings", "system-license");
+  if (!row || typeof row.license !== "string" || row.license.length === 0) return null;
+  if (typeof row.expiresAt !== "number" || !Number.isFinite(row.expiresAt)) return null;
+  return { license: row.license, expiresAt: row.expiresAt };
+}
+
+/** Store or replace the paid pass. */
+export function writeSystemLicense(
+  license: string,
+  expiresAt: number,
+  store: Store = browserStore(),
+): Promise<void> {
+  return serial(() =>
+    store.put<SystemLicenseRow>("settings", { id: "system-license", license, expiresAt }),
+  );
+}
+
+/** Forget the paid pass. The subscription itself is untouched; Stripe owns it. */
+export function clearSystemLicense(store: Store = browserStore()): Promise<void> {
+  return serial(() => store.delete("settings", "system-license"));
+}
+
 /** Read one named fact. */
 export async function readMeta(id: string, store: Store = browserStore()): Promise<string | null> {
   const row = await store.get<MetaRow>("meta", id);
