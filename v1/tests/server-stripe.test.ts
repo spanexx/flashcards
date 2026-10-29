@@ -212,7 +212,7 @@ describe("the reads recovery needs", () => {
       }),
     );
     expect(await client.listCustomersByEmail("ana@example.com")).toEqual([
-      { id: "cus_1", email: "ana@example.com" },
+      { id: "cus_1", email: "ana@example.com", metadata: {} },
     ]);
     expect(calls).toHaveLength(1);
     expect(calls[0].url).toBe(
@@ -256,5 +256,25 @@ describe("the reads recovery needs", () => {
     const { client } = clientWith(() => json({}));
     expect(await client.listCustomersByEmail("ana@example.com")).toEqual([]);
     expect(await client.listCustomerSubscriptions("cus_1")).toEqual([]);
+  });
+
+  it("keeps a customer's string metadata and drops anything else", async () => {
+    const { client } = clientWith(() =>
+      json({
+        data: [{ id: "cus_1", email: "ana@example.com", metadata: { recovery_used_iat: "1800000000", odd: 7 } }],
+      }),
+    );
+    expect(await client.listCustomersByEmail("ana@example.com")).toEqual([
+      { id: "cus_1", email: "ana@example.com", metadata: { recovery_used_iat: "1800000000" } },
+    ]);
+  });
+
+  it("writes the one-use mark under the key recovery reads", async () => {
+    const { client, calls } = clientWith(() => json({ id: "cus_1", metadata: {} }));
+    await client.updateCustomerMetadata("cus_1", { recovery_used_iat: "1800000000" });
+    expect(calls[0].url).toBe("https://stripe.test/v1/customers/cus_1");
+    expect(calls[0].init.method).toBe("POST");
+    const body = new URLSearchParams(String(calls[0].init.body));
+    expect(body.get("metadata[recovery_used_iat]")).toBe("1800000000");
   });
 });

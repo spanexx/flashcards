@@ -280,3 +280,37 @@ Why:
 
 
 No remaining open questions
+
+
+Amendment 2026-10-29 - the link works once
+
+10. "make the link single use, fix the cold start timeout so the first email
+   doesnt fail."
+   (Asked after the pack shipped; kept verbatim.)
+
+Answer:
+- A link buys one pass. Redeeming writes the token's issue moment to the Stripe
+  customer's metadata (recovery_used_iat); any link issued at or before that
+  moment is refused with "That link has already been used. Ask for a new one."
+- A link requested after a redemption still works.
+- The service still stores nothing of its own: the mark sits on the Stripe
+  customer, the record that already holds the address and the plan.
+- The browser now waits 60 seconds for a service answer instead of 20, because
+  the free plan sleeps when idle and its cold start can take most of a minute.
+
+Why:
+- Supersedes entry 5 ("Not single-use, because single-use needs stored state")
+  and its edge case "Link opened twice: both openings work inside the window".
+  The learner asked for one use after the trade-off was put to them: a forwarded
+  or archived link should not be a second key.
+- The stored state entry 5 worried about is not a database. The customer record
+  is its natural home: the mark survives a restart and a redeploy, which an
+  in-memory set would not, and the free plan sleeps whenever it is idle.
+- One-second resolution is enough because the per-email cooldown is ten minutes:
+  two links for one address can never share an issue second.
+- Cost accepted: opening the link on the wrong browser spends it, and the learner
+  asks for a new one. The form says so before they click.
+- The mark is written before the pass is minted. If Stripe refuses the write, no
+  pass is handed out, so a success can never be replayed.
+- A simultaneous double open is not a compare-and-set and can both succeed; any
+  later use is refused. Accepted: both openings would come from one page load.

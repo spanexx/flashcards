@@ -21,7 +21,7 @@ export interface SystemPublicConfig {
  * form would say whether an address buys a subscription.
  */
 export const RECOVERY_ANSWER =
-  "If that address belongs to a subscription, a link is on its way. The link lasts 30 minutes.";
+  "If that address belongs to a subscription, a link is on its way. The link lasts 30 minutes and works once.";
 
 /** What the settings page says after a link brings the pass back. */
 export const RECOVERY_REDEEMED = "Your subscription is active on this browser now.";
@@ -54,8 +54,12 @@ export class SystemError extends Error {
 /** How long a pass stays fresh enough without asking; the service uses 7 days too. */
 export const LICENSE_REFRESH_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
-/** One request may take this long before it is called a timeout. */
-const REQUEST_TIMEOUT_MS = 20000;
+/**
+ * One request may take this long before it is called a timeout. The free plan
+ * sleeps when idle, and waking it can take most of a minute; a shorter wait
+ * failed the first call of the day, which looked like a broken service.
+ */
+const REQUEST_TIMEOUT_MS = 60000;
 
 /** The address is a build fact, never a learner setting. */
 const API_BASE = normaliseApiBase(process.env.NEXT_PUBLIC_SYSTEM_API_BASE);

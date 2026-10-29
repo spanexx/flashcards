@@ -10,7 +10,7 @@ import { entitlementView, type EntitlementResult } from "./entitlement";
 import { issueLicense } from "./license";
 import type { RecoveryMailer } from "./mailer";
 import { grantsAccess } from "./subscriptions";
-import type { StripeClient, StripeSubscriptionView } from "./stripe";
+import type { StripeClient, StripeCustomerView, StripeSubscriptionView } from "./stripe";
 
 /** What a link carries: the address the learner paid with and when it was asked for. */
 export interface RecoveryTokenPayload {
@@ -23,7 +23,7 @@ export interface RecoveryTokenPayload {
 export type RecoveryTokenFailure = "invalid" | "expired";
 
 export type RecoveryTokenResult =
-  | { ok: true; email: string }
+  | { ok: true; email: string; iat: number }
   | { ok: false; reason: RecoveryTokenFailure };
 
 /** The address shape this flow accepts: one @, a dot after it, no spaces. */
@@ -58,6 +58,8 @@ export function signRecoveryToken(email: string, secret: string, now: number = D
   return `${payloadText}.${sign(payloadText, secret)}`;
 }
 
+/** Read a link token: signature first, then version, then its age. */
+/** Read a link token: signature first, then version, then its age. */
 /** Read a link token: signature first, then version, then its age. */
 export function verifyRecoveryToken(
   token: string,
@@ -96,7 +98,7 @@ export function verifyRecoveryToken(
   if (nowSeconds - payload.iat > Math.max(1, Math.floor(ttlSeconds))) {
     return { ok: false, reason: "expired" };
   }
-  return { ok: true, email: payload.email };
+  return { ok: true, email: payload.email, iat: payload.iat };
 }
 
 /** The live subscription that should back a recovered pass. */
@@ -144,7 +146,10 @@ export class RecoveryCooldown {
 
 /** The fixed pieces a recovery request needs. The cooldown joins them per server. */
 export interface RecoverySettings {
-  stripe: Pick<StripeClient, "listCustomersByEmail" | "listCustomerSubscriptions">;
+  stripe: Pick<
+    StripeClient,
+    "listCustomersByEmail" | "listCustomerSubscriptions" | "updateCustomerMetadata"
+  >;
   mailer: RecoveryMailer;
   secret: string;
   appUrl: string;
@@ -176,8 +181,8 @@ function emailForms(email: string): string[] {
 async function findCustomers(
   stripe: RecoverySettings["stripe"],
   email: string,
-): Promise<{ id: string }[]> {
-  const found = new Map<string, { id: string }>();
+): Promise<StripeCustomerView[]> {
+  const found = new Map<string, StripeCustomerView>();
   for (const form of emailForms(email)) {
     for (const customer of await stripe.listCustomersByEmail(form)) {
       if (customer.id.length > 0) found.set(customer.id, customer);
@@ -186,16 +191,34 @@ async function findCustomers(
   return [...found.values()];
 }
 
+/** The live subscription behind an address, and the customer that owns it. */
+export interface RecoveryMatch {
+  subscription: StripeSubscriptionView;
+  customer: StripeCustomerView;
+}
+
 /** The live subscription behind an address, or null. Throws only on Stripe failure. */
 async function findLiveSubscription(
   stripe: RecoverySettings["stripe"],
   email: string,
-): Promise<StripeSubscriptionView | null> {
+): Promise<RecoveryMatch | null> {
+  const customers = await findCustomers(stripe, email);
   const subscriptions: StripeSubscriptionView[] = [];
-  for (const customer of await findCustomers(stripe, email)) {
+  for (const customer of customers) {
     subscriptions.push(...(await stripe.listCustomerSubscriptions(customer.id)));
   }
-  return pickLiveSubscription(subscriptions);
+  const subscription = pickLiveSubscription(subscriptions);
+  if (!subscription || !subscription.customer) return null;
+  // The owner is always one of the customers just searched: the listing above
+  // asked for that customer's subscriptions by id.
+  const customer = customers.find((item) => item.id === subscription.customer);
+  return customer ? { subscription, customer } : null;
+}
+
+/** The issue moment of the newest redeemed link, from the customer's metadata. */
+export function lastUsedIat(metadata: Record<string, string>): number {
+  const value = Number.parseInt(metadata.recovery_used_iat ?? "", 10);
+  return Number.isFinite(value) && value > 0 ? value : 0;
 }
 
 /** The link a learner opens in the browser that should receive the pass. */
@@ -213,14 +236,14 @@ export async function deliverRecoveryLink(deps: RecoveryDeps, email: string): Pr
   const now = deps.now ?? Date.now;
   if (!deps.cooldown.take(recoveryHash(email, deps.secret))) return;
 
-  let subscription: StripeSubscriptionView | null = null;
+  let match: RecoveryMatch | null = null;
   try {
-    subscription = await findLiveSubscription(deps.stripe, email);
+    match = await findLiveSubscription(deps.stripe, email);
   } catch {
     deps.log?.("[system-provider] recovery lookup failed");
     return;
   }
-  if (!subscription) return;
+  if (!match) return;
 
   const token = signRecoveryToken(email, deps.secret, now());
   try {
@@ -249,6 +272,18 @@ const INACTIVE = {
   message: "This subscription is not active.",
 };
 
+const USED_LINK = {
+  ok: false as const,
+  code: "invalid_license" as const,
+  message: "That link has already been used. Ask for a new one.",
+};
+
+const LINK_UNCHECKED = {
+  ok: false as const,
+  code: "stripe" as const,
+  message: "The link could not be checked. Try again in a moment.",
+};
+
 const STRIPE_FAILED = {
   ok: false as const,
   code: "stripe" as const,
@@ -267,23 +302,37 @@ export async function redeemRecoveryLink(
   const read = verifyRecoveryToken(token, deps.secret, deps.tokenTtlSeconds, now());
   if (!read.ok) return read.reason === "expired" ? EXPIRED_LINK : INVALID_LINK;
 
-  let subscription: StripeSubscriptionView | null;
+  let match: RecoveryMatch | null;
   try {
-    subscription = await findLiveSubscription(deps.stripe, read.email);
+    match = await findLiveSubscription(deps.stripe, read.email);
   } catch {
     return STRIPE_FAILED;
   }
-  if (!subscription || !subscription.customer) return INACTIVE;
+  if (!match) return INACTIVE;
+
+  // WHY: A link is the proof of one inbox, so it buys one pass. The mark lives
+  // in Stripe's customer record: the service stays stateless, a restart cannot
+  // forget it, and every link issued up to the used moment stops working while
+  // a later request still gets a usable link.
+  if (read.iat <= lastUsedIat(match.customer.metadata)) return USED_LINK;
+  try {
+    await deps.stripe.updateCustomerMetadata(match.customer.id, {
+      recovery_used_iat: String(read.iat),
+    });
+  } catch {
+    // No mark, no pass: a pass handed out here could be handed out again.
+    return LINK_UNCHECKED;
+  }
 
   const issued = issueLicense(
-    { sub: subscription.id, cus: subscription.customer },
+    { sub: match.subscription.id, cus: match.customer.id },
     deps.licenseSecret,
     deps.licenseTtlSeconds,
     now(),
   );
   return {
     ok: true,
-    entitlement: entitlementView(subscription, issued.payload.exp),
+    entitlement: entitlementView(match.subscription, issued.payload.exp),
     license: issued.token,
   };
 }

@@ -23,7 +23,8 @@ Files:
 Checks:
 
 - Token: round-trip; expired by `iat`; wrong secret; edited payload; wrong
-  version; garbage; the email is lowercased before signing.
+  version; garbage; the email is kept as typed, because Stripe matches the
+  address exactly and the lowercase form is a second lookup.
 - Picker: one live plan; ignored trialing/past-due/cancelled; latest
   `currentPeriodEnd` wins; none → null.
 - Request: live plan sends one mail with a `?recover=` link; unknown email,
@@ -99,9 +100,42 @@ Checks:
   sentence; an unreachable service shows the plain one.
 - `?recover=` is handled once, the query is removed, a working pass is stored
   and the provider switches to system; the System card reads the new pass and
-  lane in place, with no reload; expired link shows the expired sentence and
-  leaves the form usable.
+  lane in place, with no reload; expired link shows the expired sentence, a used
+  link shows the used sentence, and the form stays usable.
 - No copy claims a login or an account.
+
+## Phase 6 — Follow-up 2026-10-29: one use, and a cold start
+
+Files:
+
+- `v1/server/src/stripe.ts`: `StripeCustomerView.metadata`, `readMetadata`,
+  `updateCustomerMetadata`.
+- `v1/server/src/recovery.ts`: `verifyRecoveryToken` returns `iat`; the live
+  lookup returns the owning customer; `lastUsedIat`; `USED_LINK` and
+  `LINK_UNCHECKED`; the used check and the mark write in `redeemRecoveryLink`.
+- `v1/src/lib/client/system.ts`: the request wait is 60 seconds, and
+  `RECOVERY_ANSWER` says the link works once.
+- `v1/src/app/settings/RecoverySection.tsx`, `SettingsClient.tsx`: copy and the
+  stale comment.
+- `v1/tests/server-recovery.test.ts`, `v1/tests/server-http.test.ts`,
+  `v1/tests/server-stripe.test.ts`.
+- Pack docs: GRILL amendment, ticket amendment, PRD-TRD BS-5/BS-6/BS-11 and the
+  simulation contract, this file, the DEPLOY runbook.
+
+Checks:
+
+- The same link twice → second is 401 "That link has already been used. Ask for
+  a new one."; a link issued later still works.
+- The mark lands on the owning customer as `recovery_used_iat`, before the pass
+  is minted; a failed write gives 502 "The link could not be checked. Try again
+  in a moment." and hands out no pass.
+- A cancelled plan spends no link.
+- A restart between the two redeems still refuses the second: the mark is read
+  from Stripe, not memory.
+- Stripe client: metadata strings are read, other types dropped; the write is a
+  POST to `/v1/customers/<id>` with `metadata[recovery_used_iat]`.
+- A restore still works after a 40-second wait: the client timeout is 60
+  seconds.
 
 ## Phase 5 — Verification, simulation, docs
 
@@ -117,6 +151,6 @@ Checks:
 - `v1/server` build; `v1` lint, typecheck, full `npm test`, CI-shaped build
   (`/flashcards` base path) and `check-pwa`.
 - Bundle scan for every secret name and value.
-- Post-impl simulation covers all twelve contract items with real output.
+- Post-impl simulation covers all thirteen contract items with real output.
 - Drift gates: `npm run check:drift`, `npm run check:drift:staged`.
 - Stop at the commit gate; no commit, merge or push without the learner's go.

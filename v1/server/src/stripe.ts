@@ -37,10 +37,11 @@ export interface StripeSessionView {
   subscription: StripeSubscriptionView | null;
 }
 
-/** A customer as recovery sees it: an id and the email Stripe matched. */
+/** A customer as recovery sees it: an id, the matched email, and its metadata. */
 export interface StripeCustomerView {
   id: string;
   email: string | null;
+  metadata: Record<string, string>;
 }
 
 /** Encode the flat form body Stripe expects. */
@@ -117,13 +118,23 @@ function listData(payload: Record<string, unknown>): unknown[] {
   return Array.isArray(data) ? data : [];
 }
 
+/** A customer's metadata as plain strings; anything else is ignored. */
+export function readMetadata(value: unknown): Record<string, string> {
+  if (!value || typeof value !== "object") return {};
+  const metadata: Record<string, string> = {};
+  for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
+    if (typeof item === "string") metadata[key] = item;
+  }
+  return metadata;
+}
+
 /** Normalise one customer payload; null when it has no identity. */
 export function readCustomer(raw: unknown): StripeCustomerView | null {
   if (!raw || typeof raw !== "object") return null;
   const record = raw as Record<string, unknown>;
   const id = stringField(record, "id");
   if (!id) return null;
-  return { id, email: stringField(record, "email") };
+  return { id, email: stringField(record, "email"), metadata: readMetadata(record.metadata) };
 }
 
 export interface StripeClient {
@@ -137,6 +148,8 @@ export interface StripeClient {
   createPortalSession(args: { customer: string; returnUrl: string }): Promise<{ url: string }>;
   listCustomersByEmail(email: string): Promise<StripeCustomerView[]>;
   listCustomerSubscriptions(customer: string): Promise<StripeSubscriptionView[]>;
+  /** Set metadata keys on one customer; the recovery one-use mark lives here. */
+  updateCustomerMetadata(customer: string, metadata: Record<string, string>): Promise<void>;
 }
 
 export interface StripeClientOptions {
@@ -267,6 +280,15 @@ export function createStripeClient(options: StripeClientOptions): StripeClient {
         if (subscription) subscriptions.push(subscription);
       }
       return subscriptions;
+    },
+
+    async updateCustomerMetadata(customer, metadata) {
+      // A POST replaces the named keys and leaves the rest of the object alone.
+      const fields: Record<string, string> = {};
+      for (const [key, value] of Object.entries(metadata)) {
+        fields[`metadata[${key}]`] = value;
+      }
+      await request("POST", `/v1/customers/${encodeURIComponent(customer)}`, fields);
     },
   };
 }

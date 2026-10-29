@@ -179,7 +179,12 @@ Behaviour:
   `APP_URL + "settings/?recover=<token>"`. `APP_URL` must keep its trailing
   slash so the path joins correctly. Opening the link asks Stripe again for a
   live plan before minting a fresh 30-day pass, so a link mailed yesterday to a
-  subscription cancelled today brings back nothing.
+  subscription cancelled today brings back nothing. The link works once: the
+  redemption writes its issue moment to the customer's metadata
+  (`recovery_used_iat`), and any link issued at or before that moment is refused
+  with "That link has already been used. Ask for a new one." A link asked for
+  afterwards still works. If the write fails, no pass is handed out and the link
+  stays usable.
 - **The answer never varies.** The same sentence is shown whether or not the
   address belongs to a subscription. The mail is only sent when one exists.
 - **The limits.** 5 requests per client address per hour (the 6th is a visible
@@ -190,7 +195,10 @@ Behaviour:
   the link lifetime. `RECOVERY_FROM_NAME` is the sender's display name
   (defaults to "Study tutor").
 - **What is not stored.** No database, no log line with an address. The
-  per-address cooldown is a hash held in memory for ten minutes.
+  per-address cooldown is a hash held in memory for ten minutes. The only
+  durable fact is the one-use mark on the Stripe customer — a timestamp, no
+  address and no token — which keeps a spent link spent across restarts and
+  redeploys.
 
 Prove it in test mode:
 
@@ -205,8 +213,10 @@ Prove it in test mode:
    and **Active until …** appears. The `?recover=` part is removed from the
    address bar.
 5. Type an address with no subscription: the identical sentence, no mail.
-6. Re-open the same link inside the 30 minutes: it works again. After 30
-   minutes: "This link has expired. Ask for a new one." with the form usable.
+6. Re-open the same link inside the 30 minutes: "That link has already been used.
+   Ask for a new one." Ask for a fresh link and it works; after 30 minutes an
+   unused one says "This link has expired. Ask for a new one." with the form
+   usable.
 
 ## 6. Go live
 

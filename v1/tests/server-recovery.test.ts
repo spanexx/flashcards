@@ -10,6 +10,7 @@ import { verifyLicense } from "../server/src/license";
 import { MailError, type RecoveryMailer } from "../server/src/mailer";
 import {
   deliverRecoveryLink,
+  lastUsedIat,
   normaliseEmail,
   pickLiveSubscription,
   RecoveryCooldown,
@@ -44,26 +45,37 @@ interface StripeFakeOptions {
   customers?: Record<string, StripeCustomerView[]>;
   subscriptions?: Record<string, StripeSubscriptionView[]>;
   fail?: boolean;
+  failMark?: boolean;
 }
 
 function fakeStripe(options: StripeFakeOptions = {}) {
   const customers = options.customers ?? {
-    "ana@example.com": [{ id: "cus_1", email: "ana@example.com" }],
+    "ana@example.com": [{ id: "cus_1", email: "ana@example.com", metadata: {} }],
   };
   const subscriptions = options.subscriptions ?? { cus_1: [active] };
+  const marks = new Map<string, Record<string, string>>();
   const lookedUp: string[] = [];
+  const marked: { customer: string; metadata: Record<string, string> }[] = [];
   const stripe = {
     listCustomersByEmail: vi.fn(async (email: string) => {
       lookedUp.push(email);
       if (options.fail) throw new StripeError(500, "Stripe answered 500.");
-      return customers[email] ?? [];
+      return (customers[email] ?? []).map((customer) => ({
+        ...customer,
+        metadata: { ...customer.metadata, ...(marks.get(customer.id) ?? {}) },
+      }));
     }),
     listCustomerSubscriptions: vi.fn(async (customer: string) => {
       if (options.fail) throw new StripeError(500, "Stripe answered 500.");
       return subscriptions[customer] ?? [];
     }),
+    updateCustomerMetadata: vi.fn(async (customer: string, metadata: Record<string, string>) => {
+      if (options.fail || options.failMark) throw new StripeError(500, "Stripe answered 500.");
+      marked.push({ customer, metadata });
+      marks.set(customer, { ...(marks.get(customer) ?? {}), ...metadata });
+    }),
   };
-  return { stripe, lookedUp };
+  return { stripe, lookedUp, marked };
 }
 
 function fakeMailer() {
@@ -124,6 +136,7 @@ describe("recovery token", () => {
     expect(verifyRecoveryToken(token, SECRET, TTL, NOW)).toEqual({
       ok: true,
       email: "ana@example.com",
+      iat: Math.floor(NOW / 1000),
     });
   });
 
@@ -195,6 +208,15 @@ describe("pickLiveSubscription", () => {
   });
 });
 
+describe("lastUsedIat", () => {
+  it("reads the mark and treats anything else as never used", () => {
+    expect(lastUsedIat({ recovery_used_iat: "1800000000" })).toBe(1_800_000_000);
+    expect(lastUsedIat({})).toBe(0);
+    expect(lastUsedIat({ recovery_used_iat: "later" })).toBe(0);
+    expect(lastUsedIat({ recovery_used_iat: "-5" })).toBe(0);
+  });
+});
+
 describe("RecoveryCooldown", () => {
   it("allows one request per window", () => {
     let at = NOW;
@@ -238,6 +260,7 @@ describe("deliverRecoveryLink", () => {
     expect(verifyRecoveryToken(token, SECRET, TTL, NOW)).toEqual({
       ok: true,
       email: "ana@example.com",
+      iat: Math.floor(NOW / 1000),
     });
   });
 
@@ -316,10 +339,50 @@ describe("redeemRecoveryLink", () => {
     });
   });
 
-  it("accepts the same link twice inside its window", async () => {
-    const first = await redeemRecoveryLink(makeDeps(), token());
-    const second = await redeemRecoveryLink(makeDeps(), token());
-    expect(first.ok && second.ok).toBe(true);
+  it("refuses the second use of the same link", async () => {
+    const deps = makeDeps();
+    const first = await redeemRecoveryLink(deps, token());
+    expect(first.ok).toBe(true);
+    expect(await redeemRecoveryLink(deps, token())).toEqual({
+      ok: false,
+      code: "invalid_license",
+      message: "That link has already been used. Ask for a new one.",
+    });
+  });
+
+  it("writes the used moment on the customer that owns the plan", async () => {
+    const { stripe, marked } = fakeStripe();
+    await redeemRecoveryLink(makeDeps({ stripe }), token());
+    expect(marked).toEqual([
+      { customer: "cus_1", metadata: { recovery_used_iat: String(Math.floor(NOW / 1000)) } },
+    ]);
+  });
+
+  it("lets a link asked for after the used one through", async () => {
+    const deps = makeDeps();
+    expect((await redeemRecoveryLink(deps, token())).ok).toBe(true);
+    const later = signRecoveryToken("ana@example.com", SECRET, NOW + 60_000);
+    expect((await redeemRecoveryLink(deps, later)).ok).toBe(true);
+  });
+
+  it("hands out no pass when the used mark cannot be written", async () => {
+    const { stripe, marked } = fakeStripe({ failMark: true });
+    const result = await redeemRecoveryLink(makeDeps({ stripe }), token());
+    expect(result).toMatchObject({
+      ok: false,
+      code: "stripe",
+      message: "The link could not be checked. Try again in a moment.",
+    });
+    expect(marked).toHaveLength(0);
+  });
+
+  it("does not spend a link on a cancelled plan", async () => {
+    const { stripe, marked } = fakeStripe({
+      subscriptions: { cus_1: [{ ...active, status: "canceled" }] },
+    });
+    const result = await redeemRecoveryLink(makeDeps({ stripe }), token());
+    expect(result).toMatchObject({ ok: false, code: "inactive" });
+    expect(marked).toHaveLength(0);
   });
 
   it("refuses an old link and a forged one with different sentences", async () => {

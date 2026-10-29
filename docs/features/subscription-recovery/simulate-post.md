@@ -91,7 +91,8 @@ printed PASS, including the exact bodies quoted in the checklist:
 for `/healthz`; `200 {"ok":true} mails=0` for a stranger and `200 mails=1` for a
 subscriber; `mails=2` after a mixed-case request; a pass payload
 `{"v":1,"sub":"sub_ana","cus":"cus_ana","iat":1793178723,"exp":1795770723}`; a
-re-redeem of the same link returning the same active entitlement; `401 {"error":"That link has expired. Ask for a new one."}`
+re-redeem of the same link returning the same active entitlement (superseded on
+2026-10-29: that second redeem is now a 401, see the follow-up below); `401 {"error":"That link has expired. Ask for a new one."}`
 against `401 {"error":"That link is not valid. Ask for a new one."}`; two live
 plans resolving to `sub_new` at `renewsAt=1800300000`; the mailer-failure and
 Stripe-failure log lines carrying no address; `400` for an empty address; `429`
@@ -124,3 +125,54 @@ in place. The second run above is the proof.
 and the Render deployment — those are the operator's steps in
 `DEPLOY-system-provider.md` §5c. The per-email cooldown and the hourly limit are
 memory-only, so a restart clears them by design and nothing here tests a restart.
+
+## Follow-up 2026-10-29 — one use, and a cold start
+
+Requested: "make the link single use, fix the cold start timeout so the first
+email doesnt fail." The GRILL entry and the ticket carry the decision; this
+section carries the evidence.
+
+**Service (fake Stripe with a memory of metadata, the real `dist/main.js`).**
+Eight scenarios printed PASS against the built service on `:34002`:
+
+- `PASS health names recovery` — `{"ok":true,…,"recovery":true}`.
+- `PASS a fresh link mints a pass` — `200` with a licence.
+- `PASS the mark is written once` — `writes=1 metadata={"recovery_used_iat":"1793243094"}`.
+- `PASS the same link is refused` — `401 {"error":"That link has already been used. Ask for a new one."}`.
+- `PASS a restart does not revive it` — the same `401` after stopping and
+  starting `dist/main.js`, because the mark is read from Stripe, not memory.
+- `PASS a later link still works` — a token signed for a later second mints a
+  pass, so a refused request does not lock the learner out.
+- `PASS a failed mark hands out no pass` — the fake Stripe refuses the write;
+  the answer is `502 {"error":"The link could not be checked. Try again in a moment."}`
+  and no licence is minted.
+- `PASS the same link works after the write recovers` — the retry mints and
+  spends the link exactly once.
+
+The fake Stripe refused only the first two writes, so the last line is the
+recovery after a transient failure, not a fresh link.
+
+**Browser (bundle built against a stub whose recovery POST takes 40 seconds,
+which is longer than the old 20-second wait).** The page on `:8791` read the
+stub with `recovery:true` and showed the **Restore a subscription** card at once,
+because only the recovery POST was delayed. Submitting `ana@example.com`:
+
+- at 25 502 ms the form still said **Sending…** — the old 20-second wait would
+  already have replaced it with "The subscription service took too long to
+  answer.";
+- at 40 202 ms the form said "If that address belongs to a subscription, a link
+  is on its way. The link lasts 30 minutes and works once.", the field was
+  empty and the button live again;
+- the stub logged `POST /api/recovery/request arrived at 2026-10-29T04:11:14.130Z delay=40000`
+  and `answered after 40022 ms`.
+
+The served chunk carries the new wait as `setTimeout(()=>a.abort(),6e4)`; the
+old value was `20000`. The sentence in the card and the footnote both say the
+link works once.
+
+**Still true, and worth saying again.** A real Render wake-up was not timed
+here; 40 seconds is a stand-in for it, not a guarantee. The one-use check is a
+read followed by a write, not a compare-and-set, so two openings at the very
+same moment may both mint a pass; the mark is written before minting, so no
+later opening of the same link works. A link spent in the wrong browser still
+costs the learner a new request, which the 10-minute cooldown makes cheap.

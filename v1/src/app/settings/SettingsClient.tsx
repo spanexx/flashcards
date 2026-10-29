@@ -161,9 +161,9 @@ export default function SettingsClient() {
     };
   }, []);
 
-  // One page load exchanges the token once; the link itself stays usable for
-  // its 30 minutes, so opening it again on another browser works too. Keep the
-  // new pass in this browser and make the system provider the lane in use.
+  // One page load exchanges the token once, and the service marks the link as
+  // used, so a second opening — here or on another browser — is refused. Keep
+  // the new pass in this browser and make the system provider the lane in use.
   useEffect(() => {
     if (!recoveryToken || handledRecovery.current) return;
     handledRecovery.current = true;

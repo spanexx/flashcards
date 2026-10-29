@@ -66,13 +66,21 @@ const upstream = {
 };
 
 function fakeStripe(): StripeClient {
+  // The recovery one-use mark is the one thing a fake must remember: it is
+  // written by a redeem and read by the next one.
+  let metadata: Record<string, string> = {};
   return {
     createCheckoutSession: vi.fn(async () => ({ id: "cs_1", url: "https://checkout.test/cs_1" })),
     getCheckoutSession: vi.fn(async () => session),
     getSubscription: vi.fn(async () => subscription),
     createPortalSession: vi.fn(async () => ({ url: "https://portal.test/p_1" })),
-    listCustomersByEmail: vi.fn(async () => [{ id: "cus_1", email: "ana@example.com" }]),
+    listCustomersByEmail: vi.fn(async () => [
+      { id: "cus_1", email: "ana@example.com", metadata: { ...metadata } },
+    ]),
     listCustomerSubscriptions: vi.fn(async () => [{ ...subscription }]),
+    updateCustomerMetadata: vi.fn(async (_customer: string, values: Record<string, string>) => {
+      metadata = { ...metadata, ...values };
+    }),
   };
 }
 
@@ -597,7 +605,7 @@ describe("the recovery routes", () => {
   it("sends one mail for a live plan and answers a stranger identically", async () => {
     const stripe = fakeStripe();
     stripe.listCustomersByEmail = vi.fn(async (email: string) =>
-      email === "ana@example.com" ? [{ id: "cus_1", email }] : [],
+      email === "ana@example.com" ? [{ id: "cus_1", email, metadata: {} }] : [],
     );
     const sent: { email: string; link: string }[] = [];
     const { base } = await start({
@@ -665,6 +673,12 @@ describe("the recovery routes", () => {
     const answer = (await redeemed.json()) as { license: string; entitlement: { status: string } };
     expect(answer.license.split(".")).toHaveLength(2);
     expect(answer.entitlement.status).toBe("active");
+
+    const reused = await post(base, "/api/recovery/redeem", { token: fresh });
+    expect(reused.status).toBe(401);
+    expect(await reused.json()).toEqual({
+      error: "That link has already been used. Ask for a new one.",
+    });
 
     const old = signRecoveryToken("ana@example.com", RECOVERY_SECRET, Date.now() - 1_801_000);
     const expired = await post(base, "/api/recovery/redeem", { token: old });

@@ -43,19 +43,21 @@ subscription to a new browser, and the small form that asks for it.
 **BS-1 Ask for a link.** Under the System card, in both states (pass or no
 pass), a quiet section reads "Moved to a new browser, or cleared your data?" and
 offers one field, "Email used at checkout", and one button, "Email me a link".
-A note says "We send one email and keep nothing."
+A note says "The service keeps nothing from this request." and that the link
+works once.
 
-**BS-2 One answer, always.** After the button, the page says "If that email has
-a subscription, a link is on its way. It expires in 30 minutes." — the same
-sentence, same status, for a subscriber, a stranger, a mistyped address, a
-failed Stripe read and a failed send. The only visible exception is the address
-limit (BS-7), which depends on the requester, never on the address.
+**BS-2 One answer, always.** After the button, the page says "If that address
+belongs to a subscription, a link is on its way. The link lasts 30 minutes and
+works once." — the same sentence, same status, for a subscriber, a stranger, a
+mistyped address, a failed Stripe read and a failed send. The only visible
+exception is the address limit (BS-7), which depends on the requester, never on
+the address.
 
 **BS-3 What the service does behind that answer.** It asks Stripe for customers
 with that email, then for their subscriptions; if one is live it signs a
 30-minute token naming the email and the request time and sends one Brevo
-message with the link. No live subscription means no mail. Nothing is written to
-disk or logged with the address.
+message with the link. No live subscription means no mail. Nothing is stored by
+the service and no line names the address.
 
 **BS-4 The email.** From the configured sender, subject "Study tutor — your
 subscription link", one sentence, the link
@@ -63,17 +65,22 @@ subscription link", one sentence, the link
 card data, no price, no key.
 
 **BS-5 The link.** Opening it in the new browser shows "Checking the link…",
-then the service re-checks the live subscription with Stripe, issues a fresh
+then the service re-checks the live subscription with Stripe, writes the link's
+issue moment to the customer's metadata (`recovery_used_iat`), issues a fresh
 30-day pass for that subscription and customer, and answers
 `{license, entitlement}`. The page stores the pass, switches the provider to the
 system lane (the same end state as a finished checkout), strips `?recover=` from
 the address bar, and says "Your subscription is active on this browser now."
 
-**BS-6 Refusals on the link.** Expired or forged link: "That link has expired.
-Ask for a new one." Cancelled or unpaid plan: "This subscription is not active."
-The form stays on screen so a new link can be asked for at once. A link may be
-opened more than once inside its window; each opening mints a pass, because the
-live Stripe check is the real guard.
+**BS-6 Refusals on the link.** Expired link: "That link has expired. Ask for a
+new one." Forged link: "That link is not valid. Ask for a new one." A link that
+was already redeemed, or one issued at or before a redeemed one: "That link has
+already been used. Ask for a new one." Cancelled or unpaid plan: "This
+subscription is not active." The form stays on screen so a new link can be asked
+for at once. A link buys one pass: its issue moment is written to the Stripe
+customer before the pass is minted, so a restart cannot forget it and a forwarded
+link is not a second key. If that write fails, no pass is handed out ("The link
+could not be checked. Try again in a moment.") and the link is not spent.
 
 **BS-7 Limits.** Five requests an hour per requester address: the sixth answers
 "Too many requests. Try again in an hour." (429). One request per email address
@@ -95,6 +102,11 @@ issued at checkout, and still never enters a backup.
 **BS-10 Unreachable service.** The form says "The subscription service could not
 be reached. Try again in a moment." No mail is claimed, nothing is stored.
 
+**BS-11 A sleeping service.** The free plan sleeps when idle, so every call waits
+up to 60 seconds for an answer — long enough for a cold start — instead of the
+20 seconds the rest of the app was built with. Only a call that never answers
+inside that wait is reported as a timeout.
+
 ## 4. Simulation contract
 
 The post-impl simulation must demonstrate, with real commands and real output:
@@ -103,7 +115,9 @@ The post-impl simulation must demonstrate, with real commands and real output:
    the fake mailer receives exactly one message whose link carries a real
    `?recover=<token>`.
 2. Redeem that token → 200 `{license, entitlement}`; the licence verifies with
-   `verifyLicense` and names the same `sub`/`cus`; a second redeem works too.
+   `verifyLicense` and names the same `sub`/`cus`; a second redeem of the same
+   token is 401 "That link has already been used. Ask for a new one.", and a link
+   asked for afterwards still works.
 3. Request for an unknown email, a mistyped address and a cancelled plan → the
    same 200 and the same sentence; no mail is sent.
 4. Expired token (iat older than TTL) → 401; forged signature → 401; both with
@@ -115,13 +129,17 @@ The post-impl simulation must demonstrate, with real commands and real output:
    per-email window returns the fixed sentence and adds no mail.
 8. Not configured → `/api/config` `recovery:false`, endpoint 503, no form.
 9. One server restart between request and redeem → the same link still redeems.
-10. Browser side, with a stubbed `fetch`: the client shows the fixed sentence on
+   A restart between the first and a second redeem → the second is still refused,
+   because the used mark lives in Stripe, not in the process.
+10. The used mark fails to write → 502 "The link could not be checked. Try again
+    in a moment.", no pass, and the same link redeems once the write succeeds.
+11. Browser side, with a stubbed `fetch`: the client shows the fixed sentence on
     success, an unknown email and a 500; shows the service sentence on 429; the
     redeem path stores the pass, PATCHes `provider.mode = "system"`, and reports
     the success sentence; a `?recover=` in the address is read once.
-11. No secrets in the bundle: the build output contains no Brevo key, recovery
+12. No secrets in the bundle: the build output contains no Brevo key, recovery
     secret, licence secret, Stripe secret or operator key.
-12. Full suite, lint, typecheck, CI-shaped build and both drift gates pass.
+13. Full suite, lint, typecheck, CI-shaped build and both drift gates pass.
 
 ## 5. Technical design
 
@@ -129,8 +147,9 @@ The post-impl simulation must demonstrate, with real commands and real output:
 
 ```text
 signRecoveryToken(email, secret, now) -> token       // payload {v:1,email,iat}
-verifyRecoveryToken(token, secret, now, ttl) -> {ok,email} | {ok:false, reason:"expired"|"invalid"}
+verifyRecoveryToken(token, secret, now, ttl) -> {ok,email,iat} | {ok:false, reason:"expired"|"invalid"}
 pickLiveSubscription(subscriptions[]) -> live one with the latest currentPeriodEnd
+lastUsedIat(customer.metadata) -> epoch seconds of the newest redeemed link, or 0
 requestLink(deps, raw) -> {status, body}             // always 200 unless 400/429/503
 redeemLink(deps, raw) -> EntitlementResult           // reuses entitlement shapes
 RecoveryCooldown                                    // Map<hash, lastMs>, pruned, memory only
@@ -145,15 +164,19 @@ and merge the answers.
 
 ### 5.2 Server — Stripe and mail
 
-`StripeClient` gains two reads:
+`StripeClient` gains two reads and one write:
 
 ```text
 listCustomersByEmail(email) -> Customer[]   GET /v1/customers?email=..&limit=10
 listCustomerSubscriptions(cus) -> Sub[]     GET /v1/subscriptions?customer=..&status=all&limit=100
+updateCustomerMetadata(cus, {k:v})          POST /v1/customers/<cus> metadata[k]=v
 ```
 
-Both reuse the existing bounded fetch, form/query encoding and `StripeError`
-mapping; `readSubscription` already maps the fields the picker needs.
+Both reads reuse the existing bounded fetch, form/query encoding and `StripeError`
+mapping; `readSubscription` already maps the fields the picker needs. The write
+stores the one-use mark on the customer, which is the record that already holds
+the address and the plan; the service keeps no copy, and a restart cannot forget
+it. A customer payload's `metadata` is read as plain strings only.
 
 `v1/server/src/mailer.ts` — one function, no SDK:
 
@@ -172,9 +195,9 @@ with the status only, never the address.
   400 `Enter the email you used at checkout.` when absent or not a plain
   address; 429 from the per-address limiter; 503 when recovery is off; otherwise
   200 `{ok:true}` regardless of Stripe or mail outcome.
-- `POST /api/recovery/redeem` `{token}`: 401 expired/invalid, 402 inactive,
-  502 Stripe failure, 200 `{license, entitlement}`. `StatusCache` is used for the
-  live read.
+- `POST /api/recovery/redeem` `{token}`: 401 expired, invalid or already used,
+  402 inactive, 502 Stripe failure or a used mark that could not be written, 200
+  `{license, entitlement}`. `StatusCache` is used for the live read.
 - `AppDeps` gains `recovery: RecoveryOptions | null` and `recoveryCooldown`.
 - `ServerConfig` gains `brevoApiKey`, `recoverySecret` (≥ 32 chars),
   `recoveryFromEmail`, `recoveryFromName` (default "Study tutor"),
@@ -194,6 +217,9 @@ with the status only, never the address.
   `readLicenseAnswer`.
 - `RECOVERY_ANSWER` and `RECOVERY_REDEEMED` sentences live here so the UI has one
   source.
+- One request may wait 60 seconds for an answer (was 20). The free plan sleeps
+  when idle and waking it can take most of a minute; the shorter wait failed the
+  first call of the day and read as a broken service (BS-11).
 
 ### 5.5 Browser — UI
 
@@ -216,20 +242,23 @@ use it; crypto is `node:crypto`.
 ### 5.7 Non-goals
 
 Accounts, passwords, sessions, profiles, a database, card/settings sync,
-single-use links, recovery of a cancelled or unpaid plan, SMS, recovery for the
-bring-your-own lane, marketing mail, a change to the pass format, and any change
-to the relay.
+recovery of a cancelled or unpaid plan, SMS, recovery for the bring-your-own
+lane, marketing mail, a change to the pass format, and any change to the relay.
 
 ### 5.8 Risks
 
 - **Enumeration** — closed by one status and one sentence; the per-email
   cooldown is silent so it adds no signal.
-- **Mailbox takeover** — the link is a bearer secret for 30 minutes; it names no
-  learner data and a redeemed pass still dies with the subscription.
+- **Mailbox takeover** — the link is a bearer secret for 30 minutes and buys one
+  pass; it names no learner data and a redeemed pass still dies with the
+  subscription. The used mark lives in Stripe, so a restart cannot revive a spent
+  link. Two simultaneous openings of the same link are not a compare-and-set and
+  can both succeed; any later use is refused.
 - **Brevo free tier** — 300 messages a day; the per-address limit keeps abuse
   below it, and a failed send costs the learner nothing but another attempt.
-- **Cold start** — the browser call keeps the existing 20-second timeout and
-  reports the plain "could not be reached" sentence.
+- **Cold start** — the browser waits 60 seconds, which covers a sleeping free
+  instance; a call that never answers still reports the plain "could not be
+  reached" sentence.
 
 ## 6. References
 

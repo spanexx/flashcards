@@ -113,8 +113,9 @@ export default function RecoverySection() {
       ) : null}
 
       <p className="muted" style={{ margin: 0 }}>
-        The service keeps nothing from this request. The link lasts 30 minutes, and it only
-        brings back a subscription that is still live.
+        The service keeps nothing from this request. The link lasts 30 minutes and works once, so
+        open it in the browser that needs the pass. It only brings back a subscription that is
+        still live.
       </p>
     </div>
   );
