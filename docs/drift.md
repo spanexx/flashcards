@@ -1,9 +1,9 @@
 # Drift Log
-**Last updated:** 2026-10-27  **Open:** 0  **Awaiting:** 0  **Resolved:** 31  **Critical/High:** 0
+**Last updated:** 2026-10-29  **Open:** 0  **Awaiting:** 0  **Resolved:** 32  **Critical/High:** 0
 
 ## Open
 
-_None. The 2026-10-27 gap D-31 was fixed and verified the same day; see Resolved._
+_None. The 2026-10-29 gap D-41 was fixed and verified the same day; see Resolved._
 
 ## Awaiting decision
 
@@ -17,6 +17,15 @@ the IMPL reconcile section, is in progress._
 ---
 
 ## Resolved
+
+- **D-41** (High, 2026-10-29, reporter: the learner, who asked why the course videos did not appear) — Every YouTube teaching part rendered a player that YouTube refused, so a curated video showed "Video player configuration error" instead of the lesson.
+  - Doc claim: "plays through a privacy-friendly embed" (`docs/features/teaching-layers/PRD-TRD-teaching-layers.md:115`); "The player sends only the page origin as its referrer" (`docs/features/teaching-layers/PRD-TRD-teaching-layers.md:117-119`).
+  - Code reality: the player iframe set `referrerPolicy="no-referrer"` (`v1/src/app/TeachingMedia.tsx:215` before fix), so the embed request arrived with no Referer and YouTube answered with player error 153.
+  - Why matters: no YouTube part could play in the app, on any pack; the system-design course ships 24 curated videos and its teaching contract depends on them.
+  - Owner: teaching-layers
+  - To fix: fix code — the embed sends only the page origin, which YouTube accepts and which still hides the page path (`v1/src/app/TeachingMedia.tsx:208-219`).
+  - Verified by: "sends the page origin and never a missing referrer" (`v1/tests/teaching-layer.test.ts:253-267`); the built export (localhost:4173/flashcards, service worker removed) played the Foundations card's video instead of error 153; `npm run build` passed `check-pwa: passed (base path: /flashcards, files: 107)`; typecheck and `npx eslint src/app/TeachingMedia.tsx tests/teaching-layer.test.ts` clean; full suite 84 files / 970 tests; `npm run check:drift` green.
+  - Related: system-design-course.
 
 - **D-28** (High, 2026-10-27, reporter: the learner, who noticed Generate still used the old prompting) — Adding cards into an existing deck through Generate never asked for teaching layers whenever the pack shipped its own prompt template, so the learner's main writing path made layerless cards while pack and deck generation taught.
   - Doc claim: "each card may carry a short teaching layer with optional media" (`docs/features/teaching-layers/PRD-TRD-teaching-layers.md:155-158`); "The prompt asks for a short explanation and an optional image or video only when it helps" (`docs/features/teaching-layers/GRILL-teaching-layers.txt:311-316`).
