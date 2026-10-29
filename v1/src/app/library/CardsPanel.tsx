@@ -7,6 +7,7 @@
 // 2026-10-21 opencode: created during the Cards management rework [pack: library-create-flow]
 
 import { useState } from "react";
+import Link from "next/link";
 import { apiSend } from "@/lib/client/api";
 import type { Card, PackStatus } from "@/lib/shared/types";
 import TeachingEditor from "./TeachingEditor";
@@ -19,9 +20,16 @@ import {
   type CardFocus,
 } from "./library-utils";
 
+/** The book mark that opens a card's Dictionary page. */
+const BOOK = (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+  </svg>
+);
+
 /** What the Cards panel needs from the shell and the loaded library. */
-interface CardsPanelProps {
-  cards: Card[];
+interface CardsPanelProps {  cards: Card[];
   packs: PackStatus[];
   focus: (CardFocus & { token: number }) | null;
   onOpenRecord: (cardId: string) => void;
@@ -177,6 +185,14 @@ export default function CardsPanel({
                   </div>
                 </div>
                 <div className="row">
+                  <Link
+                    className="btn small icon-only"
+                    href={`/dictionary?card=${encodeURIComponent(card.id)}`}
+                    aria-label="Open the card page"
+                    title="Card page"
+                  >
+                    {BOOK}
+                  </Link>
                   <button className="btn small" type="button" onClick={() => onOpenRecord(card.id)}>
                     Record
                   </button>

@@ -42,6 +42,54 @@ export type TeachingPart =
       alt?: string;
     };
 
+/** The three levels a Dictionary page belongs to, from narrowest to widest. */
+export type PageLevel = "pack" | "deck" | "card";
+
+/** The content of one page, apart from where it is stored and who wrote it. */
+export interface PageContent {
+  /** Overrides the card summary or deck name when written. */
+  title?: string;
+  /** The one-sentence promise under a pack or deck page's title. */
+  lead?: string;
+  /** The band picture on a pack or deck page. */
+  cover?: Extract<TeachingPart, { type: "image" }>;
+  /** The ordered body. A card page reads one part at a time. */
+  parts: TeachingPart[];
+}
+
+/**
+ * One Dictionary page: the long material behind a pack, a deck or a card.
+ * The id names the entity it belongs to, so a page is never a second copy of
+ * the card. A built-in course's page is the same record with `learnerEdited`
+ * set once the learner changes it.
+ */
+export interface DictionaryPage extends PageContent {
+  id: string;
+  level: PageLevel;
+  packName: string;
+  deckId?: string;
+  cardId?: string;
+  createdAt: string;
+  updatedAt: string;
+  /** This row was saved by the learner, not written by a pack file. */
+  learnerEdited?: boolean;
+  /** This edit replaced a page that arrived in a pack file, so it can revert. */
+  editedFromShipped?: boolean;
+  /**
+   * The shipped page this overlay replaced, kept beside the learner's words so
+   * a revert restores it at once, offline, without waiting for a seed.
+   */
+  shippedCopy?: PageContent;
+}
+
+/** One page's earned traces, kept apart so a seed never erases reading. */
+export interface PageTrace {
+  id: string;
+  traced: number[];
+  readAt?: string;
+  updatedAt: string;
+}
+
 /** An ordered piece of a card side. The core lays these out, never interprets. */
 export type CardPart =
   | { type: "text"; text: string; role?: "translation" | "note"; lang?: string }
@@ -277,6 +325,8 @@ export interface PackStatus {
   language?: string;
   sourceLanguage?: string;
   studyInstruction?: string;
+  /** The course asks for a card's page before an attempt; it warns, never blocks. */
+  requirePageRead?: boolean;
   prompts?: import("@/lib/packs/types").PackPrompts | null;
   decks?: Deck[];
   topics: string[];

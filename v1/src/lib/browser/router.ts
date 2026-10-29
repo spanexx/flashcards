@@ -43,6 +43,7 @@ import { recentSessions } from "@/lib/core/past-sessions";
 import { cardIsInScope, normalizePlanScope, parsePlanScope } from "@/lib/core/plan-scope";
 import { parseCardSources } from "@/lib/core/import";
 import { readProgress } from "@/lib/core/progress";
+import { pageIdFor, readCount, savedPageSchema } from "@/lib/core/pages";
 import { describeTutorShape, describeTutorSlots, tutorSlotNames } from "@/lib/provider/prompt";
 import {
   appendEvidence,
@@ -77,6 +78,8 @@ import {
   type ImportTarget,
 } from "@/lib/browser/bundle";
 import { deleteBuiltInCard, dismissPack, ensureSeeded } from "@/lib/browser/seed";
+import { readPage, readPages, readTraces, recordTracedPart, revertPage, savePage } from "@/lib/browser/pages";
+import { generatePageDraft, preparePageDraft, type PageDraftTarget } from "@/lib/browser/page-draft";
 import {
   askHint,
   browserProviderStatus,
@@ -500,6 +503,12 @@ async function updatePack(packName: string, body: Record<string, unknown>) {
       next.prompts = parsed.data;
     }
   }
+  if (body.requirePageRead !== undefined) {
+    if (typeof body.requirePageRead !== "boolean") fail("The page reading rule is either on or off.");
+    // Off removes the field; a pack that does not ask stays neutral.
+    if (body.requirePageRead) next.requirePageRead = true;
+    else delete next.requirePageRead;
+  }
 
   const updatedAt = new Date().toISOString();
   const saved = { ...next, updatedAt };
@@ -668,6 +677,32 @@ async function updateTeaching(id: string, body: Record<string, unknown>) {
   return { card: next };
 }
 
+/** The page a save names must have its pack, deck and card still in the library. */
+async function checkPageParent(save: { level: "pack" | "deck" | "card"; packName: string; deckId?: string; cardId?: string }) {
+  const pack = await readPack(save.packName);
+  if (!pack) fail(`There is no pack "${save.packName}" here.`);
+  if (save.level === "deck") {
+    if (!pack.decks.some((deck) => deck.id === save.deckId)) fail(`That deck is not in "${pack.name}".`);
+    return;
+  }
+  if (save.level === "card") {
+    const card = (await readCards()).find((entry) => entry.id === save.cardId);
+    if (!card || card.packName !== pack.name) fail("That card is not in this pack.");
+    if (card.retired) fail("That card was replaced by an edit. Write its page from the new card.");
+  }
+}
+
+/** Save one page through the one validator, keyed by the id the URL names. */
+async function writePageFrom(id: string, body: Record<string, unknown>) {
+  const parsed = savedPageSchema.safeParse(body);
+  if (!parsed.success) fail("The page needs fixing.", issuesFromZod(parsed.error, 0));
+  const save = parsed.data;
+  const expected = pageIdFor(save.level, save.packName, save.deckId, save.cardId);
+  if (expected !== id) fail("That page id does not match the page it names.");
+  await checkPageParent(save);
+  return { page: await savePage(save, new Date().toISOString()) };
+}
+
 /** The old flat import is wrapped in the one bundle format, targeting one deck. */
 async function importFlatCards(body: Record<string, unknown>) {
   const text = asString(body.json);
@@ -764,8 +799,18 @@ export async function localGet<T>(url: string): Promise<T> {
   }
   if (path === "/api/progress") {
     const state = await loadState();
-    const rows = await readEvidence();
-    return { progress: readProgress(state.cards, rows, {}) } as T;
+    const [rows, pages, traces] = await Promise.all([readEvidence(), readPages(), readTraces()]);
+    return { progress: readProgress(state.cards, rows, {}), pages: readCount(pages, traces) } as T;
+  }
+  if (path === "/api/pages") {
+    // WHY: The seed owns the shipped pages, so a read waits for it exactly like
+    // every other library read. Traces are returned only for pages in scope.
+    await loadState();
+    const packName = query.get("pack")?.trim() || undefined;
+    const [pages, traces] = await Promise.all([readPages(packName), readTraces()]);
+    const ids = new Set(pages.map((page) => page.id));
+    const scoped = traces.filter((trace) => ids.has(trace.id));
+    return { pages, traces: scoped, progress: readCount(pages, traces) } as T;
   }
   if (path === "/api/evidence") {
     const cardId = query.get("cardId");
@@ -869,6 +914,50 @@ export async function localSend<T>(
     const requestId = record ? asString(record.requestId) : null;
     if (!requestId) fail("A prepared repair id is needed.");
     return (await repairImportJob(requestId)) as T;
+  }
+  if (path === "/api/pages/draft" && method === "POST") {
+    if (!record) fail("The draft request arrived in a shape the app does not understand.");
+    const level = asString(record.level);
+    if (level !== "pack" && level !== "deck" && level !== "card") fail("Choose the page level to draft.");
+    const packName = asString(record.packName);
+    if (!packName) fail("Choose the pack this page belongs to.");
+    const target: PageDraftTarget = { level, packName };
+    const deckId = asString(record.deckId);
+    if (deckId) target.deckId = deckId;
+    const cardId = asString(record.cardId);
+    if (cardId) target.cardId = cardId;
+    const instruction = asString(record.instruction);
+    if (instruction) target.instruction = instruction;
+    return (await preparePageDraft(target)) as T;
+  }
+  if (path === "/api/pages/draft/send" && method === "POST") {
+    const requestId = record ? asString(record.requestId) : null;
+    if (!requestId) fail("A prepared prompt id is needed.");
+    return { draft: await generatePageDraft(requestId) } as T;
+  }
+  const tracedPath = /^\/api\/pages\/([^/]+)\/traced$/.exec(path);
+  if (tracedPath && method === "POST") {
+    const id = decodeURIComponent(tracedPath[1]);
+    const index = record ? record.index : null;
+    if (typeof index !== "number" || !Number.isInteger(index) || index < 0) {
+      fail("A trace needs the number of the part it read.");
+    }
+    const trace = await recordTracedPart(id, index, new Date().toISOString());
+    if (!trace) fail("That page is not here.");
+    return { trace } as T;
+  }
+  const pagePath = /^\/api\/pages\/([^/]+)$/.exec(path);
+  if (pagePath && method === "PATCH") {
+    if (!record) fail("The page arrived in a shape the app does not understand.");
+    return (await writePageFrom(decodeURIComponent(pagePath[1]), record)) as T;
+  }
+  if (pagePath && method === "DELETE") {
+    const id = decodeURIComponent(pagePath[1]);
+    if (!(await readPage(id))) fail("That page is not here.");
+    // WHY: deleting an overlay is a revert; the shipped page kept beside it
+    // returns now, so the screen never shows an empty page until a seed runs.
+    const page = await revertPage(id, new Date().toISOString());
+    return { deleted: true, page } as T;
   }
   const jobPath = /^\/api\/jobs\/([^/]+)$/.exec(path);
   if (jobPath && method === "DELETE") {

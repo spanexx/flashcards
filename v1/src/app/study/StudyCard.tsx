@@ -29,6 +29,28 @@ import { OUTCOME_LABELS, OUTCOME_MEANINGS } from "@/lib/core/outcome";
 import type { AnswerResult, Card, CardPart, Outcome, StudyLevel } from "@/lib/shared/types";
 import CardSide from "./CardSide";
 
+/** A hint bulb and a book mark; the words ride beside them on a wide screen. */
+const BULB = (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M9 18h6" />
+    <path d="M10 22h4" />
+    <path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z" />
+  </svg>
+);
+
+const BOOK = (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+  </svg>
+);
+
+const CHECK = (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="m5 12 5 5 9-10" />
+  </svg>
+);
+
 interface StudyCardProps {
   card: Card;
   /** The card's deck level; beginner is the only level that completes. */
@@ -55,6 +77,14 @@ interface StudyCardProps {
   instruction: string;
   isLast: boolean;
   onHint: () => void;
+  /** The card page; the Dictionary button always opens it. */
+  dictionaryHref: string;
+  /** The pack asks for the page first; this only adds a chip and a warning. */
+  askPageRead?: boolean;
+  /** A written page exists for this card in this browser. */
+  hasPage?: boolean;
+  /** Every part of that page is traced in this browser. */
+  pageRead?: boolean;
   /** Checks what is typed; a given map is sent instead (the I-don't-know path). */
   onSubmit: (answersOverride?: Record<string, string>) => void;
   onNext: () => void;
@@ -83,6 +113,10 @@ export default function StudyCard({
   instruction,
   isLast,
   onHint,
+  dictionaryHref,
+  askPageRead,
+  hasPage,
+  pageRead,
   onSubmit,
   onNext,
   onCorrect,
@@ -210,15 +244,47 @@ export default function StudyCard({
     >
       <div className="study-card-top">
         <span className="study-mode">{studyModeLabel(mode)}</span>
-        {result ? (
-          <span className={`outcome outcome-${result.cardOutcome} study-outcome`}>
-            {OUTCOME_LABELS[result.cardOutcome]}
-          </span>
-        ) : (
-          <button className="study-link" type="button" onClick={onHint} disabled={hintBusy}>
-            {hintBusy ? "Asking…" : hintTexts.length > 0 ? "Ask for another hint" : "Ask for a hint"}
-          </button>
-        )}
+        <div className="study-card-tools">
+          {askPageRead && hasPage ? (
+            <Link
+              className={`chip study-chip ${pageRead ? "good" : "accent"}`}
+              href={dictionaryHref}
+              prefetch={false}
+              aria-label={pageRead ? "Page read" : "Page not read"}
+              title={pageRead ? "Page read — open the card page" : "Page not read — open the card page"}
+            >
+              {pageRead ? CHECK : BOOK}
+              <span className="study-chip-word">{pageRead ? "Page read" : "Page not read"}</span>
+            </Link>
+          ) : null}
+          {result ? (
+            <span className={`outcome outcome-${result.cardOutcome} study-outcome`}>
+              {OUTCOME_LABELS[result.cardOutcome]}
+            </span>
+          ) : (
+            <button
+              className="btn small study-tool"
+              type="button"
+              onClick={onHint}
+              disabled={hintBusy}
+              aria-label="Ask for a hint"
+              title="Ask for a hint"
+            >
+              {BULB}
+              <span className="study-tool-word">{hintBusy ? "Asking…" : "Hint"}</span>
+            </button>
+          )}
+          <Link
+            className="btn small study-tool"
+            href={dictionaryHref}
+            prefetch={false}
+            aria-label="Dictionary"
+            title="Dictionary — open the card page"
+          >
+            {BOOK}
+            <span className="study-tool-word">Dictionary</span>
+          </Link>
+        </div>
       </div>
 
       {returned ? (
@@ -359,6 +425,16 @@ export default function StudyCard({
         </>
       ) : (
         <div className="study-result">
+          {askPageRead && hasPage && !pageRead ? (
+            <div className="notice study-page-warning">
+              <p style={{ margin: 0 }}>
+                This course asks you to read the card page first. Your answer still counts.
+              </p>
+              <Link className="btn small" href={dictionaryHref} prefetch={false}>
+                Read the card page
+              </Link>
+            </div>
+          ) : null}
           <div className="study-answer">
             <CardSide parts={card.answer} />
           </div>

@@ -166,3 +166,15 @@ bundle means create, import and export cannot drift. Browser storage is the
 only copy, so backup and autosave are part of the answer, not polish.
 
 **Source:** learner conversation, 2026-10-20.
+
+## Amendment 2026-10-29 - the save reminder gate
+
+Answer 10 promised phones "Save a backup now" plus a reminder. The learner set the reminder's gate:
+
+- It appears when either comes first: **10 content changes** since the last successful save, or **7 days** since that save.
+- Content changes are the learner's own material: packs, decks, cards, pages, media and imports. Practice answers and evidence rows are not counted; they change on every answer, so counting them would leave the reminder on screen.
+- It never blocks and never saves by itself. It is dismissible, and pressing it opens the same save flow as the always-visible control. On desktop with a picked file, autosave covers this; the reminder is the fallback when autosave is unavailable or its permission has lapsed.
+- The bridge stays a file: no account, no server, no "login" wording. Accounts remain out of scope.
+- Still proposals, not locked: the floating reminder's placement and wording, the dated standard file name, and the one-click import that accepts a dropped file.
+
+**Source:** learner message 2026-10-29, answering the reminder-gate question: "both, 10 changes or 7 days".

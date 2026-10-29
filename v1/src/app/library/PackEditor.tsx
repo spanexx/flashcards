@@ -57,6 +57,7 @@ export default function PackEditor({
   const [targetLanguage, setTargetLanguage] = useState(pack.language ?? "");
   const [sourceLanguage, setSourceLanguage] = useState(pack.sourceLanguage ?? "");
   const [studyInstruction, setStudyInstruction] = useState(pack.studyInstruction ?? "");
+  const [requirePageRead, setRequirePageRead] = useState(Boolean(pack.requirePageRead));
   const [customizing, setCustomizing] = useState(Boolean(pack.prompts));
   const [promptDraft, setPromptDraft] = useState<Record<PromptKey, string>>({
     generationSystem: initialPrompts.generation.system,
@@ -79,6 +80,7 @@ export default function PackEditor({
         targetLanguage,
         sourceLanguage,
         studyInstruction,
+        requirePageRead,
         prompts: customizing ? packPromptsFrom(promptDraft) : null,
       });
       await onSaved();
@@ -152,6 +154,24 @@ export default function PackEditor({
             onChange={(event) => setStudyInstruction(event.target.value)}
             placeholder="e.g. Read the English line, then type the full Polish line."
           />
+        </label>
+
+        <label
+          className="brief-wide"
+          style={{ display: "flex", gap: 8, alignItems: "flex-start", marginTop: 2 }}
+        >
+          <input
+            type="checkbox"
+            checked={requirePageRead}
+            onChange={(event) => setRequirePageRead(event.target.checked)}
+          />
+          <span>
+            <strong>Ask learners to read a card&apos;s page first</strong>
+            <span className="brief-note" style={{ display: "block", marginTop: 2 }}>
+              After an answer, a card with an unread page shows a warning. It never blocks an
+              answer and never changes a score.
+            </span>
+          </span>
         </label>
       </div>
 

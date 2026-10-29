@@ -42,7 +42,9 @@ import {
   disconnectAutosave,
   type AutosaveState,
 } from "@/lib/browser/autosave";
-import { exportBackupZip, restoreBackupFile } from "@/lib/browser/archive";
+import { backupMediaBytes, exportBackupZip, restoreBackupFile } from "@/lib/browser/archive";
+import { backupSizeWarning } from "@/lib/core/media-rules";
+import { deviceIsTouchFirstMobile } from "@/lib/browser/media";
 import { writeSystemLicense } from "@/lib/browser/repository";
 import { interruptJobs } from "@/lib/browser/jobs";
 import type { ProviderStatus, Settings } from "@/lib/shared/types";
@@ -95,6 +97,9 @@ export default function SettingsClient() {
   const [recoveryToken, setRecoveryToken] = useState<string | null>(null);
   const [recovering, setRecovering] = useState(false);
   const [cardReload, setCardReload] = useState(0);
+  // WHY: a full backup is built in one blocking step, so the size is stated
+  // before the learner starts it (GRILL entry 29). Null means no question.
+  const [backupAsk, setBackupAsk] = useState<number | null>(null);
   const handledRecovery = useRef(false);
 
   const refresh = useCallback(async () => {
@@ -292,6 +297,15 @@ export default function SettingsClient() {
     }
   }, [refresh]);
 
+  const askBackup = useCallback(async () => {
+    setMessage(null);
+    try {
+      setBackupAsk(await backupMediaBytes());
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "The backup size could not be read.");
+    }
+  }, []);
+
   const exportBackup = useCallback(async () => {
     setMessage(null);
     try {
@@ -302,6 +316,7 @@ export default function SettingsClient() {
       anchor.download = `flashcards-backup-${new Date().toISOString().slice(0, 10)}.zip`;
       anchor.click();
       URL.revokeObjectURL(url);
+      setBackupAsk(null);
       setNotice("The backup was downloaded as a zip. It holds everything except the provider key.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "The backup could not be exported.");
@@ -753,7 +768,7 @@ export default function SettingsClient() {
                   This browser cannot rewrite a file by itself. On this device, use Download a backup now.
                 </p>
                 <div className="row">
-                  <button className="btn" type="button" onClick={() => void exportBackup()}>
+                  <button className="btn" type="button" onClick={() => void askBackup()}>
                     Save a backup now
                   </button>
                 </div>
@@ -769,7 +784,7 @@ export default function SettingsClient() {
               replaces everything here and both stay in this browser.
             </p>
             <div className="row">
-              <button className="btn" type="button" onClick={() => void exportBackup()}>
+              <button className="btn" type="button" onClick={() => void askBackup()}>
                 Download a backup
               </button>
               <label className="btn">
@@ -804,6 +819,35 @@ export default function SettingsClient() {
           </div>
 
           <p className="muted">App version {version}.</p>
+        </div>
+      ) : null}
+
+      {backupAsk !== null ? (
+        <div className="backup-ask" role="dialog" aria-label="Before the backup">
+          <p style={{ margin: 0 }}>
+            {backupAsk === 0
+              ? "This backup holds no kept pictures or videos."
+              : backupAsk < 1_000_000
+                ? "This backup holds under 1 MB of kept media."
+                : `This backup holds about ${Math.round(backupAsk / 1_000_000)} MB of kept media.`}
+          </p>
+          {backupSizeWarning(backupAsk) ? (
+            <p className="muted" style={{ margin: 0 }}>
+              {backupSizeWarning(backupAsk)}
+            </p>
+          ) : deviceIsTouchFirstMobile() ? (
+            <p className="muted" style={{ margin: 0 }}>
+              On a phone or tablet, export one pack at a time instead.
+            </p>
+          ) : null}
+          <div className="row">
+            <button className="btn primary" type="button" onClick={() => void exportBackup()}>
+              Build the backup
+            </button>
+            <button className="btn small" type="button" onClick={() => setBackupAsk(null)}>
+              Cancel
+            </button>
+          </div>
         </div>
       ) : null}
     </div>

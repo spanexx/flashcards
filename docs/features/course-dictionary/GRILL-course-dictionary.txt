@@ -1,0 +1,830 @@
+A Dictionary of course knowledge - Grill Notes
+
+Status: Locked
+Date: 2026-10-29
+Decisions by: agent, for entries 29-32 (delegated by the learner,
+              2026-10-29: "make all other decisions and start implementing
+              course dictionary with the feature pipeline")
+Source: user messages 2026-10-29 (this session); current build in
+        flashcards/v1; teaching layers locked in
+        docs/features/teaching-layers/GRILL-teaching-layers.txt
+
+What this feature is about
+
+- Every pack, every deck and every card gains its own detail page. The
+  learner calls it a "Dictionary": detailed knowledge about the thing
+  being learned, not a word definition.
+- A page carries text, images and/or video: a short story, the origin of
+  the idea, a short description that makes it memorable.
+- The pages connect upward: card page, then deck page, then pack page.
+- Course material can be written after the cards are generated. Writing
+  course material and generating cards are separate jobs.
+- The pages serve two routes: lessons in course order, and reference
+  opened on demand.
+- Authoring becomes its own feature with shared tools: a Course Builder
+  workspace plus Edit buttons on each page. Both manual writing and
+  optional AI drafting are supported; a draft is reviewed before saving.
+- The same tools serve personal courses and the shipped built-in
+  courses.
+- A learner may personalise a built-in course privately; only the course
+  author changes the shipped course.
+
+Questions and answers locked so far
+
+1. "i have realized there is an issue with learning. the teaching layer
+   while good is not enough to some users, I suggest a "Dictionary",
+   this dictionary is not just about words, this has to do with a short
+   story, image and/or video that has a short description of what is
+   being learned. This will allow the user to go through the origin or
+   short information that will make what is being learnt memorable for
+   the user, by all means lets talk about this, and come to an
+   understanding."
+
+Answer:
+- The gap is real. The teaching layer helps one card; it does not give
+  the origin and background a learner needs for an idea to stick.
+- The "Dictionary" is detailed knowledge, not word definitions: a short
+  story, an image and/or a video with a short description of what is
+  being learned.
+- The purpose is memory: the learner can reach the origin of an idea, or
+  the short information that makes it memorable.
+
+Why:
+- The teaching layer is locked as short, card-scoped help
+  (GRILL-teaching-layers entries 1, 3 and 13). The learner reports it is
+  not enough for some users.
+- The layer already supports text, image and video
+  (v1/src/lib/shared/types.ts:27), so the missing piece is not media
+  capability. It is the detailed material itself.
+
+2. "i propose adding a dictionary as a detailed based knowledge for the
+   that card and the subject being learn. it should be connected to the
+   cards and the deck and then the pack. this means each card should
+   have its own detail page, each deck has its own detailed page and
+   each pack too. This will obviously require a lot of work, but users
+   can add their own dictionary but not necessarily at the same time the
+   pack, deck or cards are being generated, they can do this after that,
+   this means it will carry a lot of text, images and/or videos. In the
+   inbuilt level we have to make this very accessible to me so i can
+   build a complete course for people weather individual or the main app
+   inbuilt courses. this will allow individual target learning or target
+   courses that will be complete and rich"
+
+Answer:
+- Three levels of detail pages: one per card, one per deck, one per
+  pack. They connect upward: card page, then deck page, then pack page.
+- A page holds text, images and/or video, and may be long.
+- Pages are authored later than the cards. Adding pages never waits for
+  card generation.
+- The same authoring tools serve both personal courses and the shipped
+  built-in courses.
+- The goal is complete, rich, targeted courses, for an individual
+  learner or for people using the in-app courses.
+
+Why:
+- A course is richer than its cards; the detail pages carry the course.
+- Generating cards and writing course material are different jobs with
+  different quality bars, so an author can add pages after the cards
+  exist.
+- The learner builds the shipped courses, so the authoring path must be
+  practical for them first.
+
+3. "Support both: ordered lessons plus open-on-demand reference"
+   (answers "Do you picture learners browsing the Dictionary on its own,
+   or opening entries only from a card?" and "Should a learner be able to
+   follow these pages as lessons in order, not just open them when
+   stuck?")
+
+Answer:
+- Lessons: the pages can be read in order. (Revised 2026-10-29 by
+  entry 8: the order is anchored on the card, not the deck, because one
+  session can cover two decks.)
+- Reference: any page can be opened on demand from its card, deck or
+  pack.
+- Both routes use the same pages. There is no second copy written for
+  lessons.
+
+Why:
+- The learner wants complete, rich courses and also help the moment they
+  are stuck.
+- One set of pages under two routes keeps a single source of truth.
+
+4. "yes both. In fact, at this point i think we need to consolidate
+   editing tool to be its own feature, since we are going to be editing
+   in a couple of places, the prompts already allow editing so we might
+   need a component dedicated for this, this gives us room for scaling
+   that part"
+
+Answer:
+- Both manual writing and optional AI drafting are supported. A draft is
+  reviewed before it is saved.
+- Authoring becomes its own feature, with shared editing tools used by
+  the pages, the teaching layers, the cards and the prompts.
+- Shared tools, not shared rules. A page editor offers text, image and
+  video. A prompt editor stays plain text. Editing a card's question or
+  answer still makes a new card; editing teaching material still updates
+  in place.
+- AI drafting is an optional action on a page, separate from card
+  generation.
+
+Why:
+- Editing now happens in several places, and the prompts already allow
+  edits (CreatePanel.tsx prepared-prompt edit, PackEditor prompt text).
+- One shared Authoring feature gives that surface room to grow instead
+  of a fourth one-off editor.
+- The save rules already differ per object
+  (TeachingEditor.tsx:159; PATCH /api/cards/:id vs
+  PATCH /api/cards/:id/teaching), so the tools are shared but the rules
+  stay with each object.
+
+5. "Yes, both — central workspace plus edit buttons on each page"
+
+Answer:
+- A central Course Builder workspace: move through a pack, its decks and
+  their cards, and write their pages in course order.
+- Edit buttons beside each page wherever it is read, for a quick fix
+  without opening the workspace.
+
+Why:
+- A whole course is built in one place; a single page is fixed where it
+  is read.
+- Both routes lead to the same pages, so neither can drift from the
+  other.
+
+6. "Yes, keep personal changes private to that learner"
+
+Answer:
+- A learner may personalise a built-in course's pages.
+- The personal change belongs to that learner's copy and stays on their
+  device. It never changes the shipped course.
+- Only the course author changes the shipped course.
+
+Why:
+- Built-in course content is authored and checked work
+  (GRILL-teaching-layers entries 23 and 24: a person must check the
+  facts).
+- A private copy lets one learner adapt the course without changing
+  what everyone else studies, and it matches the browser-owned data rule
+  (wayfinder/anything-learning-spec/tickets/browser-owned-packs.md).
+
+7. "yes teaching layer stays short and links to the card page. You can
+   also access the dictionary for a particular card through the card."
+
+Answer:
+- The teaching layer stays short: the in-session help, not the full
+  lesson.
+- The layer gains one link to the card's page: open the full page.
+- The card itself also reaches its page, so a card with no teaching layer
+  still has a way in. This is read as an entry point on the card, not
+  only on the layer; where it sits on the card is still open.
+- The page holds the full story, images and video. There is one long
+  reference, not two.
+
+Why:
+- Two long explanations of the same card would drift and repeat.
+- The layer is already short by rule (GRILL-teaching-layers entries 19
+  and 25), and a page needs room a modal does not have.
+- Source: user message 2026-10-29.
+
+8. "you have to know that most times 2 decks might be selected as the user
+   is building a session. So idealy 'ordered lessons' should be per card.
+   before a use attempt a card they might be required to go through the
+   lesson depending on the requirements of that course. However, to
+   support your take, on the deck level, a learner could go from the
+   lessons of the card up to the lessons of the deck and pack. The
+   dictionary should not be gated. What we are planning here is from where
+   it can be accessed from."
+
+Answer:
+- A session can cover two decks at once, so the order is anchored on the
+  card, never on the deck. A deck-level path would break as soon as a
+  session mixes two decks.
+- From a card's material the learner can move upward: card, then deck,
+  then pack.
+- The Dictionary is never gated: no level gate, no progress gate. Any
+  page can be opened at any time.
+- A course may require that a card's material is read before that card is
+  attempted. This is read as a rule on the attempt, not a lock on the
+  page: the page itself stays readable, and reading is checked before the
+  attempt. Flagged for confirmation.
+- The decision now on the table is access: from where each level is
+  opened.
+
+Why:
+- Sessions draw from more than one deck (ticket 22, plan multi-select),
+  so card order is the only stable unit.
+- Non-gating keeps the Dictionary usable as reference at any moment; the
+  course requirement shapes the practice flow instead of hiding content.
+- Source: user message 2026-10-29.
+
+9. "a couple of things since we are literally working of flashcards i
+   will go for B. However i need it to have a stable hieght and icons as
+   left and right in the big screen and swappable in the small screen.
+   Now remove A and leave B, from now we will use the visual, you use it
+   to give me options and i choose one, you remove what i didnt choose"
+
+Answer:
+- The card page is B: one part at a time, stepped. A (one long page of
+  sections) is deleted. This answers open question 1.
+- The panel keeps the height of its tallest part, so stepping never moves
+  the page.
+- Wide screen: one arrow at the left and one at the right, vertically
+  centred. The Back and Next words are gone. **Superseded by entry 10.**
+- Narrow screen: the two arrows swap into a row under the part, previous
+  at the left and next at the right. **Superseded by entry 10.**
+- Working rule for the rest of this pack: options are shown inside the
+  simulation, the learner picks one, and the unchosen one is removed
+  from the simulation.
+
+Why:
+- A session already walks one card at a time, so a page per part matches
+  how the learner moves; one long scroll hides the end of the page.
+- A jumping panel moves the arrows under the cursor, so the height is
+  fixed to the tallest part.
+- On a wide screen the arrows sit beside the reading column; on a narrow
+  screen there is no room beside the text, so they move below it.
+- Source: user message 2026-10-29.
+
+10. "i said!!! move the arrows left and right to the bottom of the
+    container to the right."
+
+Answer:
+- Both arrows sit at the bottom right of the card, side by side, at every
+  width: previous then next. Entry 9's side arrows and narrow-screen row
+  are withdrawn. The reading column now spans the full page.
+- Every text part carries a speaker icon that reads that part aloud. A
+  picture part and a video part carry none. Pressing it again stops the
+  voice; changing part or leaving the card page also stops it.
+- The panel height is fixed by laying all parts in one grid cell and
+  showing one, so the tallest part sets the height at any width.
+- Pack page and deck page do not exist in the app today. They are new
+  pages this feature adds, and the simulation marks them "New page · not
+  in the app today":
+  - a pack page is one page about the whole course: what it teaches, what
+    the learner will be able to do, the deck path, and a way into each
+    deck;
+  - a deck page is one page about one deck: what it teaches, its cards in
+    order, and a way into each card page;
+  - card pages sit under them, one per card.
+- Today the app has the Library shelf, the deck list and the card rows
+  inside a pack, plus the Study flow. No page exists for a pack or a deck
+  on its own.
+
+Why:
+- The learner corrected the earlier reading: the side arrows were not
+  moved. Arrows at the bottom right sit after the text, so the next
+  action follows the reading.
+- A speaker icon serves learners who listen rather than read, and the
+  teaching layer already has Listen, so this follows it.
+- The learner asked what pack page and deck page mean because the words
+  were used without saying they were new. Entry 2 already asked for a
+  detail page per pack, deck and card; this records the plain meaning.
+- Source: user messages 2026-10-29.
+
+11. "why is the coure rule section necesary, why cant it be an icon on
+    the card in small page and an icon with text on the card in larger
+    screen, by card i mean the learning cards"
+
+Answer:
+- The "Course rule" section on the study screen is removed. Nothing else
+  on that screen moves into its place; the card now uses the full width.
+- The rule shows as one status chip on the learning card itself, on the
+  row above the question:
+  - narrow screen: the icon alone, round, with the words kept as the
+    accessible name and tooltip;
+  - wide screen: the same icon with the words beside it.
+- The chip carries both the state and the way in. Unread it shows a book
+  and "Read the page first"; pressing it marks the page read and opens
+  the card page. Read it shows a check and "Page read"; pressing it opens
+  the card page again. The attempt buttons stay disabled until it reads
+  "Page read". **Superseded by entry 13: the attempt is warned, never
+  blocked, and the chip reads "Page not read".**
+- The rule itself stays a per-course option set by the course author.
+  Whether an unread page blocks the attempt or only warns before it is
+  still open (open question 1).
+
+Why:
+- The panel duplicated a single fact and a single action; the learner
+  reads the card, so the state belongs on the card.
+- A chip replaces two controls (a checkbox to turn the rule on and a
+  separate button to mark the page read) with one control that shows the
+  state and does the next useful thing.
+- Icon-only on a small screen keeps the chip out of the question's way;
+  the words are still announced to a screen reader.
+- Source: user message 2026-10-29 (with a screenshot of the old panel).
+
+12. "apply same rules fo the hint and dictionary, icons, small screen,
+    with text large, the icons should appear as though its a sticking
+    coming from the back and sticking out the front"
+
+Answer:
+- The Hint and Dictionary buttons follow the same rule as the reading
+  chip: icon alone on a narrow screen, icon with the word beside it on a
+  wide one. The word moves out of view at the same 700px breakpoint, and
+  the icon keeps the word as its accessible name and tooltip.
+- Both are drawn as stickers, read as "sticker" from the dictation: a
+  paper face slightly tilted on a solid rim, with a soft shadow under it
+  and a folded bottom-right corner, so they look lifted off the card and
+  meeting the learner, not printed on it. **The drawing in this entry was
+  rejected; entries 14 and 15 replace it. The icon and word rule above
+  still stands.**
+- The sticker face takes a light tint of the accent colour so it still
+  separates from the card in light and dark themes; the icon is drawn in
+  the accent.
+- Pressing lifts the sticker and press pushes it flat. On a narrow screen
+  the fold is dropped and the sticker is a square icon button.
+
+Why:
+- The card already carries one icon rule (the reading chip); repeating it
+  for the two buttons keeps the study card consistent and saves width on
+  a phone.
+- Stickers make the two secondary actions read as something set on the
+  card rather than more card text, which suits a flashcard surface.
+- Source: user message 2026-10-29.
+
+13. "no no do not gate the user with the lesson. Warn them."
+
+Answer:
+- The attempt is never blocked and never disabled. Every answer button
+  stays live at all times.
+- When the page is unread and the learner answers, a warning appears under
+  the answer buttons: "This course asks you to read the card page first.
+  Your answer still counts." with a link to the page. The answer is
+  recorded as normal.
+- The chip on the card is status and a way in, not a lock: it reads "Page
+  not read" or "Page read" and opens the card page when pressed.
+- The page is still never locked, and a course with no such rule never
+  shows the warning.
+
+Why:
+- The learner's call: a flashcard must never refuse an attempt. A blocked
+  answer loses the moment the card exists for; a warning keeps the rule
+  visible and the choice with the learner.
+- This settles open question 1: the rule warns, it does not block, and
+  skipping is allowed.
+- Source: user message 2026-10-29.
+
+14. "i dont like hint and dictionary yet. just make it a bit simpler. and
+    move on from that"
+
+Answer:
+- The sticker drawings are dropped. The three treatments and their
+  comparison screen are gone: no tilt, no rim, no fold, no shadow.
+- Hint and Dictionary are plain bordered buttons: the icon with the word
+  on a wide screen, the icon alone on a narrow one, the same rule as the
+  reading chip.
+- The icon and word rule from entry 12 still holds.
+- Work on this control stops here. The GRILL moves on to the questions
+  still open.
+
+Why:
+- The learner asked for simpler and asked to move on; the drawings made
+  two small actions louder than the card they sit on.
+- Source: user message 2026-10-29.
+
+15. "i dont appreciate the edges. make it a bit square"
+
+Answer:
+- The card's three controls lose the pill shape. The reading chip, Hint
+  and Dictionary now take an 8px corner instead of a fully round edge.
+- The answer buttons already use a 9px corner, so the card has one corner
+  language.
+- An icon-only button on a narrow screen is a 34×34 square with the same
+  8px corner.
+
+Why:
+- The learner's call after seeing the round pills; "edges" is read as the
+  rounded ends.
+- Slightly rounded reads calmer on a flashcard than a pill, and it lines
+  up with the answer buttons.
+- Source: user message 2026-10-29.
+
+16. "C is good"
+
+Answer:
+- The card page opens from two places: the library card row and the
+  study card. A (study card only) and B (library card rows only) are
+  deleted.
+- In the library, each card row carries a small book button that opens
+  that card's page. On the study card, the Dictionary button opens the
+  same page.
+- The deck page and pack page entry points are a separate question and
+  stay open.
+
+Why:
+- The learner picked option C on screen 5 of the simulation after seeing
+  A, B and C drawn on the same two surfaces.
+- The card is met in two moments — picking decks in the library and
+  answering in study — and its page should be reachable in both without
+  a detour.
+- Source: user message 2026-10-29 (annotation "C is good" on screen 5).
+
+17. "every pack/deck is being selected from a dropdown at the study page, ass
+   [add] an icon for each pack/deck when hovered, this arrow leads to its
+   page. the icon should be an arrow up that slants to the right."
+
+Answer:
+- The deck page and the pack page open from an up-right arrow on their row
+  in the Study page's "Study from" dropdown. Every pack row and every deck
+  row carries one.
+- The arrow appears when its row is hovered or holds keyboard focus. On a
+  touch screen, where nothing can hover, it shows faintly at all times.
+- The arrow is its own control. Pressing it opens the page and never
+  changes what the session will study; pressing the row itself changes the
+  selection.
+- The Library gains no pack or deck buttons. The Study dropdown is the one
+  place packs and decks are picked, so it is also where their pages open
+  from. My A, B and C library-based options were wrong in premise and are
+  deleted.
+
+Why:
+- The learner named the Study dropdown as the only place packs and decks
+  are picked, so the way down belongs on the same rows.
+- Keeping the arrow off the selection makes "where I go" and "what I
+  study" two separate acts.
+- My earlier guess that the library deck rows should carry the way down
+  was wrong; the library's deck checkboxes and Start button were invented
+  and are removed.
+- Source: user message 2026-10-29, dictated; "ass" read as "add".
+
+18. "while you got it right for the icon in the drop down, the pages layout
+   for deck and pack is still not what i would go for"
+   then "go for A"
+
+Answer:
+- The deck page and the pack page take the cover shape (option A): the
+  picture leads in a band across the page; the eyebrow, title, facts and
+  Edit button sit under it; the contents run down one column, one row per
+  card on a deck page and one row per deck on a pack page. A row carries a
+  dot, a level where it applies, and a chevron on the right.
+- The Authoring sidebar is gone from both pages. Writing stays in the
+  Course Builder and behind one Edit button.
+- The pack page's "What you will be able to do" bullets and the deck
+  page's side list are gone with the sidebar. The lead carries the
+  promise; the list carries the contents.
+- Shapes B (reading page) and C (card-page rhythm with a stepper) are
+  deleted.
+
+Why:
+- The learner turned down the earlier two-column page and picked A after
+  seeing A, B and C drawn side by side.
+- One column with the picture first reads as a page, not a dashboard, and
+  leaves one list as the only thing to scroll.
+- Source: user messages 2026-10-29.
+
+19. "the path which has the decks should have a max height and infinity scroll.
+   make sure the scroll bar is not visible, it just works. also add a search
+   icon that searches decks. just an icon the input appears when its clicked"
+   then "the search input should not be full length, add max length. just
+   enough length to contain the text, overflow can hide"
+   then "looks like the search input is dragging down the path wall, can we
+   detatch it from that container?"
+   then "it should be in same vertical line as the icon just beside it to the
+   left ad same height as the icon. slim input"
+
+Answer:
+- "The path" on a pack page becomes its own window with a fixed maximum
+  height. The page does not grow with the deck count.
+- The scroll bar is hidden in both engines while the wheel, trackpad and
+  keyboard still scroll. The row cut at the bottom edge is the only cue
+  that more sits below.
+- A search icon sits at the right of "The path". The input stays hidden
+  until the icon is pressed, then takes focus. Escape or a press outside
+  closes it and clears the filter. Typing filters decks by name.
+- The deck page's card list gets the same treatment: a capped window, no
+  visible bar, and a slim "Search cards" input beside its icon. The learner
+  asked for it right after approving the pack page's path.
+- The input is slim: 180px wide, capped at 40vw, 30px tall, on the same
+  line as the icon and immediately to its left, which keeps the icon in
+  place when the input opens. Long text scrolls inside
+  it. It shares the header line, so opening it never moves the list.
+- "Infinite scroll" is read as a bounded scrolling window, not as loading
+  more rows on demand. If a pack ever holds more decks than one fetch
+  returns, the same window can fill later; the sample's 14 decks need no
+  batching.
+
+Why:
+- The learner wants the deck list bounded and quiet, with no visible bar.
+- A hidden input keeps the pack page calm until someone looks for a deck.
+- The first try put the input in the list's flow and pushed the list down;
+  the second floated it under the icon. Both were turned down. Beside the
+  icon on the same line is the one that leaves the list untouched.
+- Source: user messages 2026-10-29.
+
+20. "if reading counts we have to actually leave interactive traces that shows
+   learner actually interacted with the text and media. I will go with B but,
+   how do you propose we get the knowledge lerner read the text and saw the
+   media?"
+
+Answer:
+- Reading counts as coverage, never as score (B). Progress gains one
+  separate line, "Pages read 23 of 138"; it never mixes with the answer
+  count or with "known".
+- A page counts as read only when every part of it has a trace of time
+  spent with that part. A page with some parts traced counts for nothing
+  yet; the card page's step dots show which parts are traced, and traced
+  parts stay traced when the learner leaves and comes back.
+- The trace rules themselves are proposed and still open (see below):
+  the learner asked how to know a text was read and media was seen.
+
+Why:
+- The learner picked B after seeing A (no trace), B (coverage) and C
+  (read marks the card seen) drawn side by side; A and C are deleted.
+- The learner's condition: coverage must be earned by interaction, or the
+  "Pages read" line would be decoration.
+- Source: user message 2026-10-29.
+
+21. "agreed"
+
+Answer:
+- A text part counts after one second per ten words on screen, with a
+  floor of five seconds, or after the speaker reads it to the end.
+- A picture counts after three seconds on screen. It is the weakest trace;
+  a page that holds only a picture rests on that one trace alone.
+- A video counts at eighty percent played. The speaker counts only when it
+  reaches the end.
+- Traces live on the device with the pack. They are hints rather than
+  proof, and they never raise a score, unlock anything or block an answer.
+- A page counts as read only when every part is traced; the step dots show
+  which parts are traced, and traced parts survive leaving the page.
+
+Why:
+- The learner approved the proposal drawn on screen 6 after asking how we
+  would know the text was read and the media seen.
+- Source: user message 2026-10-29 ("agreed").
+
+22. "tap-to-enlarge is good."
+
+Answer:
+- A picture also earns its trace at once when the learner taps it to
+  enlarge: the deliberate gesture replaces the three-second look.
+- The enlarged view is the same picture at the size of the screen, and
+  closing it returns to the same part.
+- A page that holds only a picture still needs that tap or the three
+  seconds; the trace stays a hint, not proof.
+
+Why:
+- The three-second look was named as the weakest trace, so the learner
+  approved enlargement as a second, deliberate one.
+- Source: user message 2026-10-29.
+
+23. "no i actually do not want videos too big in a browser, lets set a cap
+   to the video size that will go to browser. tje choice we made is ok. the
+   one on browser"
+
+Answer:
+- A page's picture or video is one of two kinds, and the page says which
+  kind each part is: kept in the browser, or linked online.
+- Kept in the browser: the file lives with the pack, works offline, and
+  travels as a file inside a shared pack and the full backup. It obeys a
+  size cap, and the learner wants that cap below the 20 MB the app allows
+  today. The exact number is the next question. (Entry 24 answers it: the
+  cap stays at 20 MB.)
+- Linked: YouTube, a Drive preview or any address. The page holds the
+  address; nothing lands on the device; it needs a connection, and a
+  shared pack or backup carries the address only. A file that disappears
+  leaves a "gone" note.
+- No Google login: the app never stores a learner's files in a Google
+  account.
+
+Why:
+- Screen 7 drew both kinds side by side after the learner proposed
+  YouTube/Drive storage; the learner confirmed the shape and pointed at
+  the browser kind for files kept on the device.
+- Source: user message 2026-10-29.
+
+24. "20 is ok"
+
+Answer:
+- A video kept in the browser stays capped at 20 MB, the limit the app
+  already enforces: the picker says "Choose a video (up to 20 MB)" and
+  the refusal says "That video is larger than 20 MB. Choose a smaller
+  one."
+- A linked video has no cap, because nothing is copied.
+- The cap applies when a file is added; a video already saved above it
+  stays where it is.
+
+Why:
+- The agent recommended 10 MB with the arithmetic; the learner kept the
+  existing 20 MB limit instead.
+- Source: user message 2026-10-29 ("20 is ok").
+
+25. "but the cap i meant was overall cap not per video"
+
+Answer:
+- The 20 MB per-video limit is unchanged: it is the refusal the app
+  already makes.
+- The cap the learner asked for is an overall one: how much room kept
+  media may take across the whole library, not how big one file may be.
+- Its size is still open. Read as an overall number, 20 MB holds exactly
+  one maximum-size video, about two minutes of video in total. Agent
+  recommendation: 250 MB overall for kept media, counted across every
+  pack, with the 20 MB per-video limit inside it.
+
+Why:
+- The learner corrected the earlier reading: the request was for a
+  total, not a per-file cap.
+- Source: user message 2026-10-29.
+
+Correction: entry 24's per-video answer stands. Its "20 is ok" was taken
+as keeping the per-video limit, but the learner meant to ask for an
+overall cap, which is this entry.
+
+26. "300"
+
+Answer:
+- The overall cap on kept media is 300 MB across the whole library: every
+  kept picture and video, in every pack, counts towards one total. The
+  20 MB per-video limit stays inside it.
+- A save that would pass the cap is refused with a plain reason: link the
+  video instead, or remove a kept file. The editor shows a meter of kept
+  megabytes against 300 MB.
+- Linked media does not count towards it: nothing is copied onto the
+  device.
+- What 300 MB costs: a full backup loads every kept blob and builds the
+  zip in one blocking step, so it needs about twice the total in working
+  memory, about 600 MB when the library is full. On a phone that can end
+  in a crashed tab. The mitigations belong to the open export question:
+  warn with the size before a backup, write the zip in pieces, or advise a
+  phone to export one pack at a time.
+
+Why:
+- The learner answered "300" after being shown 20 / 150 / 250 with the
+  backup arithmetic. 150 MB was the recommendation; the learner chose
+  more room and accepted the larger backup peak.
+- Source: user message 2026-10-29 ("300").
+
+27. "refuse local video for phone unless its from internet"
+
+Answer:
+- On a phone, a video part cannot be kept in the browser. The authoring
+  screen offers only the address field for a video, and choosing a video
+  file is refused with a plain reason: on a phone, videos are linked, not
+  kept.
+- Pictures may still be kept on a phone. The rule names video only.
+- "From the internet" means a link: YouTube, a Drive preview or any web
+  address. A video file that was downloaded is still a file, and is
+  refused.
+- The rule covers adding a video on a phone. A kept video that arrives
+  inside an imported or shared pack still plays; this is a rule on
+  authoring, not a lock on the page.
+- A phone is read as a mobile browser. A tablet that reports itself as a
+  desktop is not caught by the rule; the size caps still apply there.
+  **Revised by entry 28: the rule follows the cause, so tablets are
+  included.**
+
+Why:
+- The learner's call: a phone should not carry kept video. It removes the
+  heaviest case from the phone's store and from its backup, which needs
+  about twice the kept total in working memory.
+- Cost, named: a phone author cannot add footage they shot unless it is
+  posted somewhere first.
+- Source: user message 2026-10-29 ("refuse local video for phone unless
+  its from internet").
+
+28. "follow the cause, tablets too"
+
+Answer:
+- The rule follows the cause, not the device name: on any touch-first
+  mobile browser, phone or tablet, a video part must be linked, never
+  kept. Pictures may still be kept.
+- Read as: a touch device running a mobile system (Android, iOS, iPadOS),
+  including an iPad that reports a Macintosh user agent. A touch-screen
+  laptop running Windows, macOS or ChromeOS counts as a computer and may
+  keep video.
+- The rest of entry 27 stands: a downloaded file is still a file, the rule
+  covers authoring only, and a kept video inside an imported or shared
+  pack still plays.
+
+Why:
+- The risk is the same on a tablet: a full 300 MB backup peaks near 600 MB
+  in working memory, iPad Safari gives a tab about a gigabyte, and iPads
+  are evicted and shipped small like phones.
+- A phone-only rule would miss every iPad, because iPadOS presents a
+  desktop user agent.
+- Source: user message 2026-10-29 ("follow the cause, tablets too").
+
+29. [agent decision] Do the pages travel with an exported pack and with
+    the full backup?
+
+Answer:
+- Yes to both, with one difference. A shared pack (JSON or zip) carries
+  the pack page, its deck pages and its card pages, and the kept media
+  those pages point at travels as files the same way card media already
+  does. The full backup carries the pages and the learner's reading
+  traces. A shared pack never carries reading traces.
+- At the 300 MB cap a full backup still peaks near 600 MB of working
+  memory (entry 26). Before a backup starts, the app states the size it
+  is about to build; on a touch-first device it also suggests exporting
+  one pack at a time.
+- A streaming zip was considered and not built. The backup is assembled
+  in one blocking step today (zipSync), and restore already promises
+  all-or-nothing; putting that promise at risk to remove a warning is a
+  bad trade for this pack.
+
+Why:
+- Pages are course material, so they belong to the course and leave with
+  it. Traces are one learner's record (entry 21), like evidence, so they
+  belong to the learner's own backup and nowhere else.
+- Media already travels by the ids named inside the exported JSON
+  (archive.ts), so pages join one reference set instead of inventing a
+  second packing rule.
+
+Source: entries 21 and 26; open question 1; code archive.ts:114,
+bundle.ts:806.
+
+30. [agent decision] How is a personal change to a built-in course
+    stored so it stays private: a personal copy of the pack, or an
+    overlay on the shipped content?
+
+Answer:
+- An overlay, never a personal copy of the pack. Each page is one record
+  keyed by the pack, deck or card it belongs to and stored in the
+  learner's browser.
+- A shipped page is written only when the learner has not edited that
+  page. A seed leaves an edited page alone, and deleting the learner's
+  overlay brings the shipped page back on the next seed.
+
+Why:
+- A whole-pack copy forks the course and goes stale as soon as the
+  shipped cards update. An overlay keeps one shipped course and one
+  private layer above it, which is exactly entry 6's promise.
+- The app already remembers a deleted built-in card without touching the
+  shipped pack (seed.ts), so the overlay follows a rule that exists.
+
+Source: entry 6; seed.ts.
+
+Amendment 2026-10-29 (drift fix, still entry 30): the shipped page
+returns at once, not on the next seed. The overlay keeps the shipped page
+beside the learner's words as a snapshot (`shippedCopy`); a delete
+restores that snapshot immediately, offline, and drops the trace that
+proved the learner's body. A later seed or pack update still leaves the
+overlay alone and refreshes the snapshot. The locked intent (one shipped
+course plus a private layer, never a personal copy of the pack) is
+unchanged; only the timing is stronger. Recorded in
+wayfinder/anything-learning-spec/tickets/course-dictionary.md.
+
+31. [agent decision] Draft with AI: which provider lane, what does the
+    prompt see, and what does it cost?
+
+Answer:
+- The existing provider lane: the learner's own key, or the paid system
+  provider. No new service is added.
+- One draft is one provider call. The exact prompt is shown and approved
+  before it is sent, the same prepare-and-approve path generation uses,
+  and the answer lands in the editor as unsaved text. Nothing is saved
+  until the learner presses Save.
+- The prompt sees the page's level, the pack, deck and card it belongs
+  to (names, the card's summary, question and answer text), the pack's
+  language pair and the learner's own instruction. It never sees
+  evidence, settings, a provider key or a backup.
+- Cost: one call. On the custom lane it is one call to the learner's own
+  provider; on the system lane it is one call through the same relay
+  that answers a hint or a summary.
+
+Why:
+- Entry 4 already says drafting is optional and reviewed before saving;
+  this fixes the lane without pricing a new vendor.
+- The disclosure matches the provider screen's existing promise: card
+  text may be sent, evidence and settings never are.
+
+Source: entries 2 and 4; provider.ts:59; prepare.ts.
+
+32. [agent decision] Does editing a page change card identity?
+
+Answer:
+- No. A page is a separate record keyed by the pack, deck or card it
+  belongs to. Saving a page writes only that record: no card is created,
+  retired or edited, and every evidence row stays with its card.
+
+Why:
+- Card identity changes when the question or answer changes (entry 4).
+  A page is neither, so it follows the teaching-material rule: edited in
+  place, never a new card (GRILL-teaching-layers entry 27).
+
+Source: entry 4; GRILL-teaching-layers entry 27.
+
+No remaining open questions
+
+Linked, not a Dictionary decision: the storage-ownership thread (the file
+as the bridge between browsers, no accounts, the save reminder) is
+recorded in wayfinder/anything-learning-spec/tickets/browser-owned-packs.md,
+amendment 2026-10-29. The reminder gate is locked there: 10 content
+changes or 7 days since the last save, whichever comes first.
+
+Source corrections 2026-10-29 (drift fix, no decision changed)
+
+- Entry 29: the bundle's media reference set is bundle.ts:996, and
+  bundle.ts:806 is the page mapper this pack added. archive.ts:114-121
+  remains the backup export that packs media by the ids named in its
+  JSON, and archive.ts:203 is the pack archive's reference set.
+- Entry 31: provider.ts:59 is providerConfig, the no-key refusal, not a
+  disclosure. The existing promise the entry leans on is the provider
+  card's key-transit sentence (SettingsClient.tsx:583) and the
+  send-what-you-see rule (ProgressClient.tsx:329-330). The draft
+  prompt's own boundary is built in page-draft.ts:31-52
+  (buildPageDraftPrompt at page-draft.ts:70): level, pack/deck/card
+  names, card text, language pair and the instruction only.
+
+The locked answers above are unchanged; only these pointers were wrong.
+Recorded as D-40 in docs/drift.md.

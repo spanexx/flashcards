@@ -9,6 +9,7 @@
 // opening by itself; Collapse keeps its place. [pack: study-resilience]
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import TeachingMedia from "../TeachingMedia";
 import { layerExplanation, layerSpeech } from "@/lib/client/layer";
 import type { StudyLevel, TeachingPart } from "@/lib/shared/types";
@@ -42,6 +43,8 @@ interface TeachingLayerProps {
   answered: boolean;
   /** True while the layer still opens by itself on beginner cards. */
   autoOpen: boolean;
+  /** The card's full page, when the screen knows where it lives. */
+  dictionaryHref?: string;
   onCollapse: () => void;
   /** Stop automatic opening for every later card on this device. */
   onDismissAutoOpen: () => void;
@@ -54,6 +57,7 @@ export default function TeachingLayer({
   level,
   answered,
   autoOpen,
+  dictionaryHref,
   onCollapse,
   onDismissAutoOpen,
 }: TeachingLayerProps) {
@@ -130,6 +134,11 @@ export default function TeachingLayer({
           <p className="muted small">{layerExplanation(level, answered)}</p>
         </div>
         <div className="row">
+          {dictionaryHref ? (
+            <Link className="btn small" href={dictionaryHref} prefetch={false}>
+              Open the full card page
+            </Link>
+          ) : null}
           <button className="btn small" type="button" onClick={onCollapse} autoFocus>
             Collapse to the question
           </button>

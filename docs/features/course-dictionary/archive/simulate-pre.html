@@ -1,0 +1,1940 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flashcards - Dictionary design simulation</title>
+<!--
+WHY: Design-time simulation for the course Dictionary pack. It mirrors the
+GRILL entries 1-25: a detail page for every pack, deck and card; card-anchored
+order; upward navigation; never gated; a short teaching layer that links to
+the full card page; authoring as its own feature with a Course Builder and
+per-page Edit. Hardcoded sample data; saves nothing.
+PACK: course-dictionary
+2026-10-29 qoder: created before implementation [pack: course-dictionary]
+2026-10-29 qoder: A and B of the card page sat side by side for the learner to
+compare. [pack: course-dictionary]
+2026-10-29 qoder: the learner chose B, so A is gone. The card page is now one
+part at a time: both arrows sit at the bottom right of the card at every
+width, every text part carries a speaker, and the panel keeps the height of
+its tallest part so it never jumps. [pack: course-dictionary]
+2026-10-29 qoder: the course-rule panel became one chip on the learning card:
+icon only when narrow, icon with words when wide. [pack: course-dictionary]
+2026-10-29 qoder: Hint and Dictionary follow the same icon rule; the sticker
+drawings were dropped for plain buttons, and the card's three controls took an
+8px corner instead of a pill. [pack: course-dictionary]
+2026-10-29 qoder: GRILL entry 16: the card page opens from both places, the
+library card row and the study card. [pack: course-dictionary]
+2026-10-29 qoder: GRILL entry 17: pack and deck pages open from an up-right
+arrow on their row in the Study dropdown, shown on hover or keyboard focus
+and faded on touch screens; the arrow never changes the selection. The
+Library's invented deck checkboxes and Start button are gone. [pack: course-dictionary]
+2026-10-29 qoder: GRILL entry 18: the pack and deck pages take the cover
+shape: picture first, facts under it, one column of rows, no side panel and
+no Authoring sidebar. Shapes B and C are deleted. [pack: course-dictionary]
+2026-10-29 qoder: GRILL entry 19: the pack page's path and the deck page's
+card list are capped scroll windows with no visible bar; each has a slim
+search input beside its icon on the same line, and the list never moves.
+[pack: course-dictionary]
+2026-10-29 qoder: GRILL entry 20: reading counts as coverage, never as score;
+a page needs a trace on every part. [pack: course-dictionary]
+2026-10-29 qoder: GRILL entry 21: the trace rules are locked: text dwell or a
+full speaker read, a three-second picture, a video at eighty percent, the
+speaker only to the end. [pack: course-dictionary]
+2026-10-29 qoder: GRILL entry 22: a picture also counts when the learner taps
+it to enlarge, and the card page now earns its read mark from real traces:
+text dwell timers, the enlarged picture, a played video and a finished
+speaker read, shown on the step dots. [pack: course-dictionary]
+2026-10-29 qoder: screen 7 draws the two media kinds, kept in the browser or
+linked online, after the learner proposed YouTube/Drive storage; the card
+page now labels its picture and video with their kind. GRILL entries 23-26
+lock them: a kept video stays under 20 MB, all kept media together stay
+under 300 MB, and a linked video has no cap. Entries 27-28: on a phone or
+tablet - any touch-first mobile browser - a video must be linked; choosing
+a video file is refused, while pictures may still be kept. A touch-screen
+laptop on a desktop system is treated as a computer.
+[pack: course-dictionary]
+-->
+<style>
+  /* WHY: The simulation must look like the app it describes, so these tokens
+     and the shell are copied from v1/src/app/globals.css, not invented here. */
+  :root {
+    color-scheme: light dark;
+    --bg: #f7f6f3;
+    --ink: #23211d;
+    --quiet: #6d6a63;
+    --card: #ffffff;
+    --line: #dedbd3;
+    --accent: #2f5d50;
+    --accent-ink: #ffffff;
+    --good: #2f6d3f;
+    --near: #8a6d1f;
+    --miss: #8a3b2f;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #191816;
+      --ink: #ece9e2;
+      --quiet: #a5a199;
+      --card: #232220;
+      --line: #3a3833;
+      --accent: #7fb3a2;
+      --accent-ink: #10120f;
+      --good: #8ec79b;
+      --near: #d9bc6a;
+      --miss: #e0968a;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.55;
+  }
+
+  button, input, select, textarea { font: inherit; }
+  button { cursor: pointer; }
+
+  /* Design-time strip. Deliberately not the app's own chrome. */
+  .simbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 9px 16px;
+    background: #23211d;
+    color: #ece9e2;
+    font-size: 0.8rem;
+  }
+  .simbar strong { color: #f2d98a; letter-spacing: 0.02em; }
+  .simbar .sim-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+  .sim-tabs button {
+    background: transparent;
+    color: #d9d5cc;
+    border: 1px solid #4a473f;
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-size: 0.8rem;
+  }
+  .sim-tabs button.on { background: #ece9e2; color: #23211d; border-color: #ece9e2; font-weight: 650; }
+  #notesBtn {
+    background: #3a3833;
+    color: #ece9e2;
+    border: 1px solid #5a564d;
+    border-radius: 8px;
+    padding: 5px 10px;
+    font-size: 0.8rem;
+  }
+
+  .shell { display: grid; grid-template-columns: 236px minmax(0, 1fr); min-height: calc(100vh - 46px); }
+
+  .sidebar {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    height: calc(100vh - 46px);
+    display: flex;
+    flex-direction: column;
+    padding: 22px 14px;
+    border-right: 1px solid var(--line);
+    background: color-mix(in srgb, var(--card) 55%, var(--bg));
+  }
+  .brand { display: flex; align-items: center; gap: 9px; padding: 0 10px; font-weight: 650; }
+  .brand-mark {
+    width: 30px; height: 30px; border-radius: 9px;
+    background: var(--accent); color: var(--accent-ink);
+    display: grid; place-items: center;
+  }
+  .brand-mark svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .side-nav { display: grid; gap: 2px; margin-top: 18px; }
+  .side-nav button {
+    text-align: left; background: none; border: 0; color: var(--quiet);
+    padding: 9px 10px; border-radius: 8px;
+  }
+  .side-nav button.on { background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); font-weight: 650; }
+  .side-foot { margin-top: auto; color: var(--quiet); font-size: 0.76rem; padding: 0 10px; }
+
+  main { padding: 26px 30px 60px; }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+
+  h1 { font-size: 1.7rem; letter-spacing: -0.02em; margin: 0 0 4px; }
+  h2 { font-size: 1.08rem; margin: 18px 0 8px; }
+  h3 { font-size: 0.95rem; margin: 14px 0 6px; }
+  p { margin: 8px 0; }
+  ul { margin: 6px 0; padding-left: 20px; }
+
+  .eyebrow { margin: 0; color: var(--quiet); font-size: 0.74rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; }
+  .lead { color: var(--quiet); margin: 0 0 14px; max-width: 72ch; }
+  .muted { color: var(--quiet); }
+  .small { font-size: 0.82rem; }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .stack { display: grid; gap: 12px; }
+  .grow { flex: 1; min-width: 0; }
+
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+  .panel.tight { padding: 12px; }
+
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 2px 9px; font-size: 0.76rem; color: var(--quiet); background: var(--bg);
+  }
+  .chip.good { color: var(--good); border-color: color-mix(in srgb, var(--good) 40%, var(--line)); }
+  .chip.accent { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
+
+  .btn { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 9px; padding: 8px 13px; font-weight: 600; font-size: 0.9rem; }
+  .btn:hover { background: color-mix(in srgb, var(--accent) 6%, var(--card)); }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .btn.primary:hover { filter: brightness(1.06); }
+  .btn.ghost { background: none; border-color: transparent; color: var(--quiet); }
+  .btn.small { padding: 5px 9px; font-size: 0.8rem; }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .link { background: none; border: 0; padding: 0; color: var(--accent); font-weight: 650; }
+  .link:hover { text-decoration: underline; }
+
+  .crumb { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; color: var(--quiet); font-size: 0.84rem; margin-bottom: 10px; }
+  .crumb .sep { opacity: 0.6; }
+  .crumb .here { color: var(--ink); font-weight: 650; }
+
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+
+  /* WHY: the learner asked for both arrows at the bottom right of the card,
+     at every width, so the reading column spans the full page. */
+  .step-nav {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .step-arrow {
+    width: 46px; height: 46px; border-radius: 50%;
+    display: grid; place-items: center;
+    border: 1px solid var(--line);
+    background: var(--card); color: var(--ink);
+  }
+  .step-arrow:hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 10%, var(--card)); }
+  .step-arrow:disabled { opacity: 0.35; cursor: not-allowed; }
+  .step-arrow svg {
+    width: 22px; height: 22px; fill: none;
+    stroke: currentColor; stroke-width: 2.2;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* WHY: every part sits in the same grid cell, hidden or shown, so the page is
+     always as tall as the tallest part and stepping never moves the arrows. */
+  .step-stack { display: grid; }
+  .step-stack > .part { grid-area: 1 / 1; visibility: hidden; }
+  .step-stack > .part.on { visibility: visible; }
+
+  /* WHY: the read-before-practice rule is one chip on the card, not a panel.
+     A narrow screen keeps the icon; a wide one shows the icon and the words.
+     Corners stay only slightly rounded; the card does not wear pill shapes. */
+  .gate {
+    display: inline-flex; align-items: center; gap: 8px;
+    border: 1px solid color-mix(in srgb, var(--near) 40%, var(--line));
+    background: var(--card); color: var(--near);
+    border-radius: 8px; padding: 6px 12px;
+    font-size: 0.82rem; font-weight: 650;
+  }
+  .gate.read { color: var(--good); border-color: color-mix(in srgb, var(--good) 40%, var(--line)); }
+  .gate svg {
+    width: 16px; height: 16px; fill: none;
+    stroke: currentColor; stroke-width: 2;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  @media (max-width: 700px) {
+    .gate-text { display: none; }
+    .gate { padding: 8px; }
+  }
+
+  /* WHY: Hint and Dictionary are secondary actions, so they stay plain: a
+     bordered button with the icon and the word, and the icon alone on a
+     narrow screen. Corners are only slightly rounded, like the reading chip. */
+  .simple-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    border: 1px solid var(--line); border-radius: 8px;
+    background: var(--card); color: var(--ink);
+    padding: 7px 13px; font-size: 0.84rem; font-weight: 600;
+    transition: background 140ms ease, border-color 140ms ease;
+  }
+  .simple-btn:hover {
+    background: color-mix(in srgb, var(--accent) 7%, var(--card));
+    border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+  }
+  .simple-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .simple-btn svg {
+    width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  @media (max-width: 700px) {
+    .simple-btn { padding: 8px; }
+    .simple-btn-text { display: none; }
+  }
+
+  /* WHY: a course may ask for the card page to be read first, but the learner
+     is warned, never stopped, so the warning sits under the answer buttons
+     and stays until the page is read. */
+  .warn {
+    display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+    margin-top: 10px; padding: 9px 12px;
+    border: 1px solid color-mix(in srgb, var(--near) 45%, var(--line));
+    background: color-mix(in srgb, var(--near) 9%, var(--card));
+    border-radius: 10px; font-size: 0.86rem;
+  }
+  .warn svg {
+    width: 16px; height: 16px; flex: 0 0 auto; fill: none;
+    stroke: var(--near); stroke-width: 2;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* WHY: the access question is decided on screen 5, so each option shows the
+     same two surfaces with the entry in a different place. A dashed slot marks
+     where an entry would be if that option leaves it out. */
+  .access-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .access-card {
+    display: grid; gap: 10px; align-content: start;
+    border: 1px solid var(--line); border-radius: 12px;
+    background: var(--card); padding: 13px; text-align: left;
+  }
+  .access-card.chosen { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent); }
+  .access-card .use { justify-self: start; }
+  .mock { border: 1px dashed var(--line); border-radius: 9px; padding: 9px 10px; background: color-mix(in srgb, var(--bg) 40%, var(--card)); }
+  .mock-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 0.8rem; padding: 6px 0; border-bottom: 1px solid var(--line); }
+  .mock-row:last-child { border-bottom: 0; }
+  .mini {
+    width: 28px; height: 28px; flex: 0 0 auto;
+    display: grid; place-items: center;
+    border: 1px solid var(--line); border-radius: 6px;
+    background: var(--card); color: var(--quiet);
+  }
+  .mini svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .slot {
+    width: 28px; height: 28px; flex: 0 0 auto;
+    display: grid; place-items: center;
+    border: 1px dashed color-mix(in srgb, var(--ink) 22%, transparent);
+    border-radius: 6px; font-size: 0.6rem; color: var(--quiet);
+  }
+  .mini-btn { font-size: 0.74rem; padding: 5px 9px; border-radius: 7px; }
+  .mini-btn svg { width: 14px; height: 14px; }
+  .card-rows { display: grid; margin: 2px 0 6px 22px; padding-left: 12px; border-left: 2px solid color-mix(in srgb, var(--line) 80%, transparent); }
+  .card-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 5px 0; font-size: 0.82rem; color: var(--quiet); }
+  button.mini { padding: 0; cursor: pointer; transition: border-color 140ms ease, background 140ms ease, color 140ms ease; }
+  button.mini:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); background: color-mix(in srgb, var(--accent) 8%, var(--card)); color: var(--accent); }
+  button.mini:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* WHY: packs and decks are picked in one dropdown on the Study screen, so the
+     way down to their pages lives on the same rows: an up-right arrow appears
+     under the pointer and is its own control, never a change to the selection. */
+  .scope { position: relative; max-width: 360px; margin-top: 12px; }
+  .scope-label { display: block; font-size: 0.78rem; color: var(--quiet); }
+  .scope-trigger {
+    display: flex; align-items: center; gap: 10px; width: 100%;
+    margin-top: 5px; padding: 9px 12px;
+    border: 1px solid var(--line); border-radius: 10px;
+    background: var(--card); color: var(--ink);
+    font: inherit; font-size: 0.86rem; text-align: left; cursor: pointer;
+  }
+  .scope-trigger:hover { border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
+  .scope-trigger:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .scope-chev { width: 16px; height: 16px; flex: 0 0 auto; margin-left: auto; transition: transform 160ms ease; }
+  .scope-trigger[aria-expanded="true"] .scope-chev { transform: rotate(180deg); }
+  .scope-panel {
+    position: absolute; z-index: 30; left: 0; right: 0; top: calc(100% + 6px);
+    padding: 8px; border: 1px solid var(--line); border-radius: 12px;
+    background: var(--card);
+    box-shadow: 0 18px 40px color-mix(in srgb, var(--ink) 18%, transparent);
+  }
+  .scope-search { width: 100%; margin-bottom: 6px; }
+  .scope-list { max-height: 320px; overflow-y: auto; overscroll-behavior: contain; }
+  .scope-row { display: flex; align-items: flex-start; gap: 2px; padding: 1px 4px; border-radius: 8px; }
+  .scope-row:hover { background: color-mix(in srgb, var(--accent) 6%, var(--card)); }
+  .scope-select {
+    display: flex; align-items: flex-start; gap: 9px; flex: 1 1 auto; min-width: 0;
+    padding: 6px 4px; border: 0; border-radius: 7px; background: transparent;
+    color: var(--ink); font: inherit; font-size: 0.84rem; text-align: left; cursor: pointer;
+  }
+  .scope-select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .scope-name { display: grid; min-width: 0; }
+  .scope-name strong { font-weight: 500; color: var(--quiet); overflow-wrap: anywhere; transition: color 120ms ease; }
+  .scope-row:hover .scope-name strong { color: var(--ink); }
+  .scope-select[aria-checked="true"] .scope-name strong,
+  .scope-select[aria-checked="mixed"] .scope-name strong { color: var(--ink); }
+  .scope-sub { font-size: 0.72rem; color: var(--quiet); }
+  .scope-dot {
+    width: 9px; height: 9px; flex: 0 0 auto; margin-top: 4px; border-radius: 50%;
+    background: var(--good);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 14%, transparent);
+  }
+  .scope-dot.off { background: transparent; box-shadow: none; }
+  .scope-dot.partial {
+    background: linear-gradient(90deg, var(--good) 50%, transparent 50%);
+    box-shadow: inset 0 0 0 1px var(--good), 0 0 0 3px color-mix(in srgb, var(--good) 10%, transparent);
+  }
+  .scope-decks {
+    display: grid; gap: 1px; max-height: 160px; margin: 1px 0 5px 18px;
+    padding-right: 4px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin;
+  }
+  .scope-decks .scope-select { padding: 2px 4px; font-size: 0.78rem; gap: 6px; }
+  .scope-empty { margin: 6px 4px 4px; color: var(--quiet); font-size: 0.8rem; line-height: 1.45; }
+  .scope-go, .scope-expand {
+    width: 28px; height: 28px; flex: none; margin-top: 1px;
+    display: grid; place-items: center;
+    border: 0; border-radius: 7px; background: transparent; color: var(--quiet); cursor: pointer;
+  }
+  .scope-go { opacity: 0; pointer-events: none; transition: opacity 140ms ease, color 140ms ease, background 140ms ease; }
+  .scope-row:hover .scope-go, .scope-row:focus-within .scope-go { opacity: 1; pointer-events: auto; }
+  .scope-go:hover { background: color-mix(in srgb, var(--accent) 10%, var(--card)); color: var(--accent); }
+  .scope-go:focus-visible, .scope-expand:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .scope-expand:hover { background: color-mix(in srgb, var(--ink) 6%, var(--card)); color: var(--ink); }
+  .scope-expand svg { transition: transform 160ms ease; }
+  .scope-expand[aria-expanded="true"] svg { transform: rotate(180deg); }
+  .scope-go svg, .scope-expand svg, .scope-chev { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .scope-go svg { width: 15px; height: 15px; }
+  .scope-expand svg { width: 14px; height: 14px; }
+  @media (hover: none) { .scope-go { opacity: 0.55; pointer-events: auto; } }
+
+
+  /* WHY: One open question at a time is drawn, not described: three answers
+     side by side, each showing the same two surfaces it would change. */
+  .ev-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: start; }
+  .ev-option { border: 1px solid var(--line); border-radius: 14px; background: var(--card); padding: 12px; display: grid; gap: 10px; align-content: start; }
+  .ev-option.pick { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+  .ev-head { display: flex; align-items: baseline; gap: 8px; }
+  .ev-head h2 { margin: 0; font-size: 0.94rem; }
+  .ev-flag { margin-left: auto; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line)); border-radius: 999px; padding: 1px 8px; font-size: 0.66rem; }
+  .ev-option > p { margin: 0; color: var(--quiet); font-size: 0.79rem; line-height: 1.45; }
+  .ev-shot { display: grid; gap: 8px; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); font-size: 0.74rem; }
+  .ev-shot .lbl { color: var(--quiet); font-size: 0.62rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; }
+  .ev-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .ev-chip { padding: 1px 7px; border: 1px solid var(--line); border-radius: 999px; color: var(--quiet); font-size: 0.66rem; }
+  .ev-chip.on { color: var(--good); border-color: color-mix(in srgb, var(--good) 40%, var(--line)); }
+  .ev-line { color: var(--ink); }
+  .ev-bar { height: 5px; border-radius: 999px; background: var(--line); overflow: hidden; }
+  .ev-bar i { display: block; height: 100%; width: 17%; background: var(--accent); }
+  .ev-note { color: var(--quiet); font-size: 0.72rem; line-height: 1.4; }
+  .ev-ask { margin-top: 16px; color: var(--quiet); font-size: 0.86rem; }
+  @media (max-width: 900px) { .ev-options { grid-template-columns: 1fr; } }
+
+  .tr-rules { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .tr-rule { display: flex; gap: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
+  .tr-rule strong { font-size: 0.88rem; }
+  .tr-rule p { margin: 4px 0 0; color: var(--quiet); font-size: 0.79rem; line-height: 1.45; }
+  .tr-icon { width: 30px; height: 30px; flex: none; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 8px; color: var(--quiet); }
+  .tr-icon svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .tr-dots { display: flex; gap: 5px; }
+  .tr-dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
+  .tr-dots i.on { background: var(--good); }
+  .tr-honest { margin-top: 16px; padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line)); border-radius: 12px; background: color-mix(in srgb, var(--accent) 6%, var(--card)); }
+  .tr-honest strong { font-size: 0.86rem; }
+  .tr-honest p { margin: 5px 0 0; color: var(--quiet); font-size: 0.82rem; line-height: 1.5; }
+  @media (max-width: 900px) { .tr-rules { grid-template-columns: 1fr; } }
+  @media (max-width: 980px) { .access-grid { grid-template-columns: 1fr; } }
+
+  .part-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .part-head h3 { margin: 0; }
+  .speak {
+    flex: 0 0 auto;
+    width: 34px; height: 34px; border-radius: 50%;
+    display: grid; place-items: center;
+    border: 1px solid var(--line);
+    background: var(--card); color: var(--quiet);
+  }
+  .speak:hover { color: var(--ink); background: color-mix(in srgb, var(--accent) 10%, var(--card)); }
+  .speak.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .speak svg {
+    width: 18px; height: 18px; fill: none;
+    stroke: currentColor; stroke-width: 2;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  .grid2 { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(260px, 0.9fr); gap: 16px; align-items: start; }
+  /* WHY: The learner picked the cover shape: the picture leads, the facts sit
+     under it, and the page stays one column with nothing to the side. */
+  .page-cover { min-height: 230px; }
+  .page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-top: 16px; }
+  .page-head h1 { margin: 2px 0 8px; }
+  .page-list { display: grid; margin-top: 6px; border-top: 1px solid var(--line); }
+  .page-row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 2px; border: 0; border-bottom: 1px solid var(--line); background: transparent; color: var(--ink); font: inherit; font-size: 0.92rem; text-align: left; }
+  .page-row:hover { color: var(--accent); }
+  .page-row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .page-row .dot { width: 7px; height: 7px; flex: 0 0 auto; border-radius: 50%; background: var(--line); }
+  .page-row .dot.ok { background: var(--good); }
+  .page-row .tag { margin-left: auto; color: var(--quiet); font-size: 0.76rem; }
+  .page-row .go { margin-left: auto; color: var(--quiet); }
+  .page-row .tag + .go { margin-left: 12px; }
+  .page-row:hover .go { color: var(--accent); }
+  .page-row.dead { color: var(--quiet); }
+  /* WHY: A pack can hold many decks, so the path gets its own window. The bar
+     is hidden because the cut row already says there is more; the search icon
+     opens an input only when it is wanted, keeping the header quiet. */
+  .list-head { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+  .list-search-toggle { width: 30px; height: 30px; flex: none; display: grid; place-items: center; border: 1px solid transparent; border-radius: 7px; background: transparent; color: var(--quiet); }
+  .list-search-toggle:hover { background: var(--card); border-color: var(--line); color: var(--ink); }
+  .list-search-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .list-search-toggle[aria-expanded="true"] { background: color-mix(in srgb, var(--accent) 12%, var(--card)); color: var(--accent); }
+  .list-search-toggle svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .list-actions { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+  .list-search { flex: 0 1 180px; max-width: 40vw; }
+  .list-search .field { width: 100%; height: 30px; padding: 0 8px; font-size: 0.78rem; background: var(--card); }
+  .page-list.scroll { max-height: 384px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
+  .page-list.scroll::-webkit-scrollbar { width: 0; height: 0; display: none; }
+  .page-list.scroll .page-row:last-child { border-bottom: 0; }
+  .builder-grid { display: grid; grid-template-columns: 250px minmax(0, 1fr) 250px; gap: 16px; align-items: start; }
+  @media (max-width: 980px) {
+    .shell { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .grid2, .builder-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 700px) {
+    .row2 { grid-template-columns: 1fr; }
+  }
+
+  .media {
+    border: 1px solid var(--line); border-radius: 12px; min-height: 150px;
+    background: linear-gradient(135deg, #e7e2d6, #d6d0c1);
+    display: grid; place-items: center; text-align: center; padding: 12px;
+    color: #5b574e; font-size: 0.85rem;
+  }
+  @media (prefers-color-scheme: dark) {
+    .media { background: linear-gradient(135deg, #2c2a26, #3a372f); color: #c9c4b8; }
+  }
+
+  .section { border-top: 1px dashed var(--line); padding-top: 14px; margin-top: 14px; }
+  .section:first-child { border-top: 0; margin-top: 0; padding-top: 0; }
+  .section h3 { margin: 0 0 6px; }
+
+  .stepper-dots { display: flex; gap: 6px; }
+  .stepper-dots span { width: 8px; height: 8px; border-radius: 50%; background: var(--line); }
+  .stepper-dots span.on { background: var(--accent); }
+  .stepper-dots span.traced { background: var(--good); }
+
+  .media-zoom { display: block; width: 100%; border: 0; padding: 0; background: none; color: inherit; cursor: zoom-in; text-align: center; }
+  .media-zoom:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .media-hint { display: block; margin-top: 6px; font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--quiet); }
+  .zoom-card { width: 100%; max-width: 880px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
+  .zoom-card .media { min-height: min(58vh, 460px); font-size: 1rem; }
+  .media-play { gap: 12px; }
+  .play-btn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: var(--card); color: inherit; display: grid; place-items: center; cursor: pointer; }
+  .play-btn svg { width: 16px; height: 16px; fill: currentColor; stroke: none; }
+  .play-bar { width: min(320px, 80%); height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
+  .play-bar span { display: block; height: 100%; width: 0; background: var(--accent); }
+
+  .kinds { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 900px) { .kinds { grid-template-columns: 1fr; } }
+  .kind-head { display: flex; align-items: flex-start; gap: 10px; }
+  .kind-head h2 { margin: 0; font-size: 1rem; }
+  .kind-icon { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--line); display: grid; place-items: center; flex: none; }
+  .kind-icon svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .kind-head .chip { margin-left: auto; flex: none; }
+  .kind-list { margin: 10px 0 0; padding-left: 18px; display: grid; gap: 6px; font-size: 0.85rem; color: var(--quiet); }
+  .kind-list strong { color: var(--ink); }
+  .meter { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; margin-top: 8px; }
+  .meter span { display: block; height: 100%; background: var(--good); }
+  .travel { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  .travel th, .travel td { text-align: left; padding: 8px 10px; border-top: 1px solid var(--line); vertical-align: top; }
+  .travel th { color: var(--quiet); font-weight: 500; font-size: 0.75rem; letter-spacing: 0.04em; text-transform: uppercase; }
+  .travel td:first-child { color: var(--quiet); }
+  .travel td.yes { color: var(--good); }
+  .travel td.no { color: var(--quiet); }
+
+  .tree { display: grid; gap: 2px; }
+  .node {
+    display: flex; align-items: center; gap: 8px; padding: 7px 9px;
+    border-radius: 8px; background: none; border: 0; font-size: 0.86rem;
+    text-align: left; color: var(--ink);
+  }
+  .node:hover { background: color-mix(in srgb, var(--accent) 6%, transparent); }
+  .node.on { background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); font-weight: 650; }
+  .node .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--line); flex: 0 0 auto; }
+  .node .dot.ok { background: var(--good); }
+  .node.child { padding-left: 26px; }
+  .node.grandchild { padding-left: 42px; }
+
+  .block { border: 1px solid var(--line); border-radius: 11px; padding: 12px; background: color-mix(in srgb, var(--bg) 45%, var(--card)); display: grid; gap: 8px; }
+  .block-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+
+  .field { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 0.88rem; background: var(--card); color: var(--ink); }
+  textarea.field { resize: vertical; min-height: 90px; }
+
+  .banner { border: 1px solid color-mix(in srgb, var(--near) 45%, var(--line)); background: color-mix(in srgb, var(--near) 10%, var(--card)); border-radius: 11px; padding: 11px 13px; font-size: 0.88rem; }
+  .banner.good { border-color: color-mix(in srgb, var(--good) 45%, var(--line)); background: color-mix(in srgb, var(--good) 9%, var(--card)); }
+
+  .note { border-left: 3px solid var(--accent); background: color-mix(in srgb, var(--accent) 7%, var(--card)); padding: 10px 13px; border-radius: 0 10px 10px 0; font-size: 0.86rem; }
+
+  .outcomes { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 26px; transform: translate(-50%, 20px);
+    background: #23211d; color: #f5f2ea; padding: 10px 16px; border-radius: 10px;
+    font-size: 0.86rem; opacity: 0; pointer-events: none; z-index: 100;
+    transition: opacity 0.18s ease, transform 0.18s ease; max-width: min(90vw, 560px);
+  }
+  .toast.on { opacity: 1; transform: translate(-50%, 0); }
+
+  .modal { position: fixed; inset: 0; background: rgba(20, 19, 17, 0.45); display: grid; place-items: center; padding: 20px; z-index: 90; }
+  .modal-card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; width: 100%; max-width: 620px; padding: 20px; max-height: 86vh; overflow: auto; }
+
+  #notes {
+    position: fixed; right: 18px; bottom: 18px; width: min(430px, calc(100vw - 36px));
+    max-height: 74vh; overflow: auto; background: var(--card);
+    border: 1px solid var(--line); border-radius: 14px; padding: 16px;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18); z-index: 80;
+  }
+  #notes ol { display: grid; gap: 8px; margin: 10px 0 0; }
+</style>
+</head>
+<body>
+
+<div class="simbar">
+  <strong>Design simulation</strong>
+  <span>Sample content · saves nothing · not the real app</span>
+  <div class="sim-tabs">
+    <button data-screen="library">1 · Library</button>
+    <button data-screen="study">2 · Study card</button>
+    <button data-screen="dictionary" class="on">3 · Dictionary</button>
+    <button data-screen="builder">4 · Course Builder</button>
+    <button data-screen="access">5 · Where it opens</button>
+    <button data-screen="reading">6 · Reading as evidence</button>
+    <button data-screen="media">7 · Media: kept or linked</button>
+  </div>
+  <button id="notesBtn">What this answers</button>
+</div>
+
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="13" height="15" rx="2"></rect><path d="M8 5V3h11a2 2 0 0 1 2 2v13h-2"></path><path d="M7 10h5M7 14h5"></path></svg>
+      </span>
+      <span>Flashcards</span>
+    </div>
+    <nav class="side-nav">
+      <button data-screen="study">Study</button>
+      <button data-screen="library" class="on">Library</button>
+      <button data-demo="Progress is not part of this simulation.">Progress</button>
+      <button data-demo="Settings is not part of this simulation.">Settings</button>
+    </nav>
+    <p class="side-foot">The sidebar does not gain a Dictionary screen. The pages open from where the content lives.</p>
+  </aside>
+
+  <main>
+    <!-- 1 · LIBRARY -->
+    <section id="screen-library" class="wrap">
+      <p class="eyebrow">Library</p>
+      <h1>Your courses</h1>
+      <p class="lead">A course is a pack, its decks and their cards. Every pack, deck and card also has a Dictionary page you can read at any time.</p>
+
+      <div class="grid2">
+        <div class="stack">
+          <div class="panel">
+            <div class="row" style="justify-content:space-between; align-items:flex-start">
+              <div>
+                <h2 style="margin:0">Browser Dev</h2>
+                <p class="muted small" style="margin:2px 0 0">14 decks · 138 cards · built-in course</p>
+              </div>
+              <div class="row">
+                <span class="chip accent">Your copy is private</span>
+              </div>
+            </div>
+
+            <div class="section">
+              <div class="row" style="justify-content:space-between">
+                <h3 style="margin:0">Decks in this course</h3>
+                <span class="small muted">Each card row opens its page</span>
+              </div>
+              <div class="stack" style="margin-top:6px">
+                <div class="row" style="justify-content:space-between; border-bottom:1px solid var(--line); padding:7px 0">
+                  <span class="row" style="gap:8px"><strong>Network</strong> <span class="chip">Intermediate</span> <span class="chip good">page written</span></span>
+                </div>
+                <div class="card-rows">
+                  <div class="card-row"><span>What does the waterfall show?</span><button class="mini" data-go="dict" data-view="card" aria-label="Open the card page for What does the waterfall show?" title="Open the card page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 2v8l3-3 3 3V2"/><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/></svg></button></div>
+                  <div class="card-row"><span>Where does a request start?</span><button class="mini" data-go="dict" data-view="card" aria-label="Open the card page for Where does a request start?" title="Open the card page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 2v8l3-3 3 3V2"/><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/></svg></button></div>
+                  <div class="card-row"><span>What gets cached?</span><button class="mini" data-go="dict" data-view="card" aria-label="Open the card page for What gets cached?" title="Open the card page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 2v8l3-3 3 3V2"/><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/></svg></button></div>
+                </div>
+                <div class="row" style="justify-content:space-between; border-bottom:1px solid var(--line); padding:7px 0">
+                  <span class="row" style="gap:8px"><strong>Sources and Debugging</strong> <span class="chip">Intermediate</span></span>
+                  <span class="small muted">No page yet</span>
+                </div>
+                <div class="row" style="justify-content:space-between; border-bottom:1px solid var(--line); padding:7px 0">
+                  <span class="row" style="gap:8px"><strong>Console</strong> <span class="chip">Beginner</span></span>
+                  <span class="small muted">No page yet</span>
+                </div>
+                <div class="row" style="justify-content:space-between; padding:7px 0">
+                  <span class="row" style="gap:8px"><strong>Performance</strong> <span class="chip">Advanced</span></span>
+                  <span class="small muted">No page yet</span>
+                </div>
+              </div>
+              <p class="small muted" style="margin:10px 0 0">A session starts on the Study screen, where packs and decks are picked from one dropdown.</p>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="row" style="justify-content:space-between">
+              <div>
+                <h2 style="margin:0">Polish from Scratch</h2>
+                <p class="muted small" style="margin:2px 0 0">12 decks · 120 cards · built-in course</p>
+              </div>
+              <div class="row">
+                <span class="chip">Text-only deck pages</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="stack">
+          <div class="note"><strong>Order is per card.</strong> A session can pull from two decks at once, so the reading order follows the card, never the deck.</div>
+          <div class="panel tight">
+            <p class="eyebrow">Entry points</p>
+            <p class="small muted" style="margin:6px 0 0">A card page opens from its library card row, the study card and the teaching layer. Pack and deck pages open from the arrow on their row in the Study dropdown. None of them is locked.</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- 2 · STUDY -->
+    <section id="screen-study" hidden class="wrap">
+      <p class="eyebrow">Study</p>
+      <div class="row" style="justify-content:space-between; align-items:flex-start">
+        <h1 style="margin:0">Session</h1>
+        <div class="row">
+          <span class="chip">card 3 of 12</span>
+        </div>
+      </div>
+      <p class="lead">Cards come from both decks. The Dictionary stays per card, so each card keeps its own page and its own place.</p>
+
+      <div class="scope">
+        <span class="scope-label">Study from</span>
+        <button class="scope-trigger" id="scopeTrigger" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="scopePanel" aria-label="Study from 2 decks in Browser Dev">
+          <span id="scopeSummary">2 decks in Browser Dev</span>
+          <svg class="scope-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+
+        <div class="scope-panel" id="scopePanel" role="dialog" aria-label="Choose packs and decks" hidden>
+          <input class="field scope-search" id="scopeSearch" type="search" placeholder="Search packs and decks" aria-label="Search packs and decks" spellcheck="false">
+          <div class="scope-row" data-all>
+            <button class="scope-select" type="button" role="checkbox" aria-checked="false">
+              <span class="scope-dot off" aria-hidden="true"></span>
+              <span class="scope-name"><strong>All cards</strong><span class="scope-sub">the whole library</span></span>
+            </button>
+          </div>
+          <p class="scope-empty" id="scopeEmpty" hidden></p>
+          <div class="scope-list">
+            <div class="scope-pack" data-pack="Browser Dev">
+              <div class="scope-row">
+                <button class="scope-select" type="button" role="checkbox" aria-checked="false">
+                  <span class="scope-dot off" aria-hidden="true"></span>
+                  <span class="scope-name"><strong>Browser Dev</strong><span class="scope-sub">14 decks · 138 cards</span></span>
+                </button>
+                <button class="scope-go" type="button" data-go="dict" data-view="pack" title="Open the Browser Dev page" aria-label="Open the Browser Dev page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></button>
+                <button class="scope-expand" type="button" aria-expanded="true" title="Hide decks in Browser Dev" aria-label="Hide decks in Browser Dev"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+              </div>
+              <div class="scope-decks">
+                <div class="scope-row" data-deck="Network">
+                  <button class="scope-select" type="button" role="checkbox" aria-checked="true">
+                    <span class="scope-dot" aria-hidden="true"></span>
+                    <span class="scope-name"><strong>Network</strong></span>
+                  </button>
+                  <button class="scope-go" type="button" data-go="dict" data-view="deck" title="Open the Network page" aria-label="Open the Network page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></button>
+                </div>
+                <div class="scope-row" data-deck="Sources and Debugging">
+                  <button class="scope-select" type="button" role="checkbox" aria-checked="true">
+                    <span class="scope-dot" aria-hidden="true"></span>
+                    <span class="scope-name"><strong>Sources and Debugging</strong></span>
+                  </button>
+                  <button class="scope-go" type="button" data-demo="Sample only: the Sources and Debugging page is not drawn here. The Browser Dev and Network arrows open real pages." title="Open the Sources and Debugging page" aria-label="Open the Sources and Debugging page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></button>
+                </div>
+                <div class="scope-row" data-deck="Console">
+                  <button class="scope-select" type="button" role="checkbox" aria-checked="false">
+                    <span class="scope-dot off" aria-hidden="true"></span>
+                    <span class="scope-name"><strong>Console</strong></span>
+                  </button>
+                  <button class="scope-go" type="button" data-demo="Sample only: the Console page is not drawn here. The Browser Dev and Network arrows open real pages." title="Open the Console page" aria-label="Open the Console page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></button>
+                </div>
+                <div class="scope-row" data-deck="Performance">
+                  <button class="scope-select" type="button" role="checkbox" aria-checked="false">
+                    <span class="scope-dot off" aria-hidden="true"></span>
+                    <span class="scope-name"><strong>Performance</strong></span>
+                  </button>
+                  <button class="scope-go" type="button" data-demo="Sample only: the Performance page is not drawn here. The Browser Dev and Network arrows open real pages." title="Open the Performance page" aria-label="Open the Performance page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></button>
+                </div>
+              </div>
+            </div>
+            <div class="scope-pack" data-pack="Polish from Scratch">
+              <div class="scope-row">
+                <button class="scope-select" type="button" role="checkbox" aria-checked="false">
+                  <span class="scope-dot off" aria-hidden="true"></span>
+                  <span class="scope-name"><strong>Polish from Scratch</strong><span class="scope-sub">12 decks · 120 cards</span></span>
+                </button>
+                <button class="scope-go" type="button" data-demo="Sample only: the Polish from Scratch page is not drawn here. The Browser Dev and Network arrows open real pages." title="Open the Polish from Scratch page" aria-label="Open the Polish from Scratch page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></button>
+                <button class="scope-expand" type="button" aria-expanded="false" title="Show decks in Polish from Scratch" aria-label="Show decks in Polish from Scratch"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+              </div>
+              <div class="scope-decks" hidden>
+                <div class="scope-row" data-deck="Greetings">
+                  <button class="scope-select" type="button" role="checkbox" aria-checked="false">
+                    <span class="scope-dot off" aria-hidden="true"></span>
+                    <span class="scope-name"><strong>Greetings</strong></span>
+                  </button>
+                  <button class="scope-go" type="button" data-demo="Sample only: the Greetings page is not drawn here. The Browser Dev and Network arrows open real pages." title="Open the Greetings page" aria-label="Open the Greetings page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></button>
+                </div>
+                <div class="scope-row" data-deck="Numbers">
+                  <button class="scope-select" type="button" role="checkbox" aria-checked="false">
+                    <span class="scope-dot off" aria-hidden="true"></span>
+                    <span class="scope-name"><strong>Numbers</strong></span>
+                  </button>
+                  <button class="scope-go" type="button" data-demo="Sample only: the Numbers page is not drawn here. The Browser Dev and Network arrows open real pages." title="Open the Numbers page" aria-label="Open the Numbers page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stack">
+        <div class="panel">
+          <div class="banner" style="border-color:var(--line); background:color-mix(in srgb, var(--bg) 55%, var(--card))">
+            <div class="row" style="justify-content:space-between">
+              <p class="eyebrow" style="margin:0">Teaching layer · short</p>
+              <button class="btn small" data-demo="The device voice would read this short layer.">Listen</button>
+            </div>
+            <p style="margin:8px 0 6px">The waterfall is a timeline, not a list. Each row is one request; the bar shows when it started and how long it waited. A long bar is not always slow work; it can be waiting.</p>
+            <button class="link" data-go="dict" data-view="card">Open the full card page →</button>
+          </div>
+
+          <div class="section">
+            <div class="row" style="justify-content:space-between; align-items:center">
+              <p class="eyebrow" style="margin:0">Question</p>
+              <button class="gate" id="gateChip" type="button" aria-label="Page not read. Open the card page." title="Page not read">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7v14"/><path d="M3 18a1 1 0 01-1-1V4a1 1 0 011-1h5a4 4 0 014 4 4 4 0 014-4h5a1 1 0 011 1v13a1 1 0 01-1 1h-6a3 3 0 00-3 3 3 3 0 00-3-3z"/></svg>
+                <span class="gate-text">Page not read</span>
+              </button>
+            </div>
+            <h2 style="margin:4px 0 10px">What does the waterfall show?</h2>
+            <input class="field" placeholder="Your answer">
+          </div>
+
+          <div class="section">
+            <div class="outcomes">
+              <button class="btn" data-outcome>Again</button>
+              <button class="btn" data-outcome>Nearly</button>
+              <button class="btn" data-outcome>Got it</button>
+              <button class="btn" data-outcome>No</button>
+            </div>
+            <div class="warn" id="readWarn" hidden>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+              <span>This course asks you to read the card page first. Your answer still counts.</span>
+              <button class="link" data-go="dict" data-view="card" style="margin-left:auto">Read the page →</button>
+            </div>
+            <div class="row" style="margin-top:14px">
+              <button class="simple-btn" data-demo="A hint caps the card at Nearly, as locked." aria-label="Hint" title="Hint">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>
+                <span class="simple-btn-text">Hint</span>
+              </button>
+              <button class="simple-btn" id="studyDictBtn" data-go="dict" data-view="card" aria-label="Dictionary" title="Dictionary">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 2v8l3-3 3 3V2"/><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/></svg>
+                <span class="simple-btn-text">Dictionary</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 · DICTIONARY -->
+    <section id="screen-dictionary" class="wrap">
+      <div class="crumb" id="dictCrumb"></div>
+
+      <div id="dict-card">
+        <div class="row" style="justify-content:space-between; align-items:flex-start">
+          <div>
+            <p class="eyebrow">Card page</p>
+            <h1>What does the waterfall show?</h1>
+            <div class="row" style="margin-top:8px">
+              <span class="chip good">Always open</span>
+              <span class="chip">Not the card's question or answer</span>
+              <span class="chip accent">Your copy — private</span>
+            </div>
+          </div>
+          <div class="row">
+            <span class="chip">One part per page</span>
+            <button class="btn small" data-go="builder">Edit page</button>
+          </div>
+        </div>
+
+        <div class="stack" style="margin-top:16px">
+          <div class="row" style="justify-content:space-between">
+            <p class="eyebrow" style="margin:0">The card page, one part at a time</p>
+            <span class="chip" id="stepCount">Step 1 of 5</span>
+          </div>
+          <div class="panel step-panel">
+            <div class="step-body">
+              <div class="stepper-dots" id="stepDots"></div>
+              <div id="stepBody" class="step-stack" style="margin-top:12px"></div>
+            </div>
+            <div class="step-nav">
+              <button class="step-arrow prev" id="stepPrev" aria-label="Previous part">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+              </button>
+              <button class="step-arrow next" id="stepNext" aria-label="Next part">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="row2" style="margin-top:16px">
+            <div class="panel tight">
+              <p class="eyebrow">Where this page opens from</p>
+              <div class="stack" style="margin-top:8px">
+                <button class="btn small" data-entry="the teaching layer's “Open the full card page”">Teaching layer</button>
+                <button class="btn small" data-entry="the card's Dictionary button">The card</button>
+                <button class="btn small" data-entry="the Library card row">Library card row</button>
+                <button class="btn small" data-entry="the deck page's card list">Deck page</button>
+                <button class="btn small" data-entry="the pack page's course path">Pack page</button>
+                <button class="btn small" data-entry="the Course Builder tree">Course Builder</button>
+              </div>
+              <p class="small muted" style="margin:10px 0 0">The page is never locked. Only the attempt can wait for a course rule.</p>
+            </div>
+            <div class="panel tight">
+              <p class="eyebrow">Upward</p>
+              <div class="row" style="margin-top:8px">
+                <button class="btn small" data-go="dict" data-view="deck">Deck page ↑</button>
+                <button class="btn small" data-go="dict" data-view="pack">Pack page ↑</button>
+              </div>
+              <p class="small muted" style="margin:10px 0 0">From any card page the learner can move up to the deck and the pack.</p>
+            </div>
+        </div>
+      </div>
+
+      <div id="dict-deck" hidden>
+        <div class="media page-cover">Deck picture · a page loading, one request highlighted<br><span class="small">image · sample placeholder</span></div>
+
+        <div class="page-head">
+          <div>
+            <p class="eyebrow" style="margin:0">Deck page</p>
+            <h1>Network</h1>
+            <div class="row">
+              <span class="chip">Intermediate</span>
+              <span class="chip">10 cards</span>
+              <span class="chip good">Always open</span>
+              <span class="chip accent">Your copy — private</span>
+              <span class="chip">New page · not in the app today</span>
+            </div>
+          </div>
+          <button class="btn small" data-go="builder">Edit page</button>
+        </div>
+
+        <p class="lead" style="margin-top:12px">Everything the browser asks for and waits on. Start with one request, then read a whole page load.</p>
+
+        <div class="list-head">
+          <p class="eyebrow" style="margin:0">The cards</p>
+          <div class="list-actions">
+            <div class="list-search" id="cardSearch" hidden>
+              <input class="field" type="search" id="cardSearchInput" placeholder="Search cards" aria-label="Search cards" spellcheck="false">
+            </div>
+            <button class="list-search-toggle" id="cardSearchToggle" type="button" aria-expanded="false" aria-controls="cardSearch" aria-label="Search cards" title="Search cards">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            </button>
+          </div>
+        </div>
+        <p class="small muted" id="cardEmpty" hidden></p>
+        <div class="page-list scroll" id="cardList">
+          <button class="page-row" data-go="dict" data-view="card"><span class="dot ok"></span> What does the waterfall show? <span class="go">›</span></button>
+          <button class="page-row dead" data-demo="This page is not written in the sample."><span class="dot"></span> Where does a request start? <span class="go">›</span></button>
+          <button class="page-row dead" data-demo="This page is not written in the sample."><span class="dot"></span> What gets cached? <span class="go">›</span></button>
+          <button class="page-row dead" data-demo="This page is not written in the sample."><span class="dot"></span> Reading a status code <span class="go">›</span></button>
+          <button class="page-row dead" data-demo="This page is not written in the sample."><span class="dot"></span> When is a request slow? <span class="go">›</span></button>
+          <button class="page-row dead" data-demo="This page is not written in the sample."><span class="dot"></span> Redirects and the chain <span class="go">›</span></button>
+          <button class="page-row dead" data-demo="This page is not written in the sample."><span class="dot"></span> Reading the headers <span class="go">›</span></button>
+          <button class="page-row dead" data-demo="This page is not written in the sample."><span class="dot"></span> Timing a request <span class="go">›</span></button>
+          <button class="page-row dead" data-demo="This page is not written in the sample."><span class="dot"></span> Cache rules in practice <span class="go">›</span></button>
+          <button class="page-row dead" data-demo="This page is not written in the sample."><span class="dot"></span> What the size column says <span class="go">›</span></button>
+        </div>
+        <p class="small muted" style="margin:10px 0 0">A green dot means the page is written. A grey dot means it is empty.</p>
+        <div class="row" style="margin-top:14px">
+          <button class="btn small" data-go="dict" data-view="pack">Pack page ↑</button>
+        </div>
+      </div>
+
+      <div id="dict-pack" hidden>
+        <div class="media page-cover">Course picture · the path from first principles to debugging<br><span class="small">image · sample placeholder</span></div>
+
+        <div class="page-head">
+          <div>
+            <p class="eyebrow" style="margin:0">Pack page</p>
+            <h1>Browser Dev</h1>
+            <div class="row">
+              <span class="chip">14 decks</span>
+              <span class="chip">Beginner to advanced</span>
+              <span class="chip">Built-in course</span>
+              <span class="chip accent">Your copy — private</span>
+              <span class="chip">New page · not in the app today</span>
+            </div>
+          </div>
+          <button class="btn small" data-go="builder">Edit page</button>
+        </div>
+
+        <p class="lead" style="margin-top:12px">From how a browser works to finding a memory leak. Each deck is one slice; each card has its own page.</p>
+
+        <div class="list-head">
+          <p class="eyebrow" style="margin:0">The path</p>
+          <div class="list-actions">
+            <div class="list-search" id="pathSearch" hidden>
+              <input class="field" type="search" id="pathSearchInput" placeholder="Search decks" aria-label="Search decks" spellcheck="false">
+            </div>
+            <button class="list-search-toggle" id="pathSearchToggle" type="button" aria-expanded="false" aria-controls="pathSearch" aria-label="Search decks" title="Search decks">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            </button>
+          </div>
+        </div>
+        <p class="small muted" id="pathEmpty" hidden></p>
+        <div class="page-list scroll" id="pathList">
+          <button class="page-row dead" data-demo="This deck's page is not written in the sample."><span class="dot"></span> How the Browser Works <span class="tag">Beginner</span><span class="go">›</span></button>
+          <button class="page-row dead" data-demo="This deck's page is not written in the sample."><span class="dot"></span> DevTools Basics <span class="tag">Beginner</span><span class="go">›</span></button>
+          <button class="page-row dead" data-demo="This deck's page is not written in the sample."><span class="dot"></span> Elements and the DOM <span class="tag">Beginner</span><span class="go">›</span></button>
+          <button class="page-row dead" data-demo="This deck's page is not written in the sample."><span class="dot"></span> Styles and the Box Model <span class="tag">Beginner</span><span class="go">›</span></button>
+          <button class="page-row dead" data-demo="This deck's page is not written in the sample."><span class="dot"></span> Console <span class="tag">Beginner</span><span class="go">›</span></button>
+          <button class="page-row dead" data-demo="This deck's page is not written in the sample."><span class="dot"></span> Responsive and Device Mode <span class="tag">Beginner</span><span class="go">›</span></button>
+          <button class="page-row" data-go="dict" data-view="deck"><span class="dot ok"></span> Network <span class="tag">Intermediate</span><span class="go">›</span></button>
+          <button class="page-row dead" data-demo="This deck's page is not written in the sample."><span class="dot"></span> Sources and Debugging <span class="tag">Intermediate</span><span class="go">›</span></button>
+          <button class="page-row dead" data-demo="This deck's page is not written in the sample."><span class="dot"></span> Application and Storage <span class="tag">Intermediate</span><span class="go">›</span></button>
+          <button class="page-row dead" data-demo="This deck's page is not written in the sample."><span class="dot"></span> Accessibility <span class="tag">Intermediate</span><span class="go">›</span></button>
+          <button class="page-row dead" data-demo="This deck's page is not written in the sample."><span class="dot"></span> Performance <span class="tag">Advanced</span><span class="go">›</span></button>
+          <button class="page-row dead" data-demo="This deck's page is not written in the sample."><span class="dot"></span> Memory and Leaks <span class="tag">Advanced</span><span class="go">›</span></button>
+          <button class="page-row dead" data-demo="This deck's page is not written in the sample."><span class="dot"></span> Security Essentials <span class="tag">Advanced</span><span class="go">›</span></button>
+          <button class="page-row dead" data-demo="This deck's page is not written in the sample."><span class="dot"></span> Debugging Recipes <span class="tag">Advanced</span><span class="go">›</span></button>
+        </div>
+        <p class="small muted" style="margin:10px 0 0">A green dot means the deck's page is written. A grey dot means it is empty.</p>
+        <div class="row" style="margin-top:14px">
+          <button class="btn primary" data-go="dict" data-view="deck">First deck ↓</button>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- 6 · READING AS EVIDENCE -->
+
+    <section id="screen-reading" hidden class="wrap">
+      <p class="eyebrow">Question · reading as evidence · decided B</p>
+      <h1>Reading counts as coverage, never as score</h1>
+      <p class="lead">Progress gains one separate line, "Pages read", and the answer count is left alone. A page earns its read mark only from traces of real time spent with it.</p>
+
+      <div class="ev-options">
+        <div class="ev-option pick">
+          <div class="ev-head"><h2>B · Reading shows coverage</h2><span class="ev-flag">Chosen</span></div>
+          <p>Progress gains a second, separate line: how many pages you have read. It never mixes with the answer count or with "known".</p>
+          <div class="ev-shot">
+            <span class="lbl">Study card</span>
+            <div class="ev-chips"><span class="ev-chip">Always open</span><span class="ev-chip on">Page read</span></div>
+            <span class="lbl">Progress</span>
+            <span class="ev-line">24 answers · 18 known</span>
+            <span class="ev-line">Pages read 23 of 138</span>
+            <span class="ev-bar"><i></i></span>
+            <span class="ev-note">Coverage, not score. The two counters never meet.</span>
+          </div>
+        </div>
+        <div class="ev-option">
+          <div class="ev-head"><h2>What a trace is</h2></div>
+          <p>A trace is one sign that the learner spent real time with one part of a page. A page is read only when every part has one.</p>
+          <div class="ev-shot">
+            <span class="lbl">Card page · step dots</span>
+            <div class="tr-dots"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div>
+            <span class="ev-line">3 of 5 parts traced</span>
+            <div class="ev-chips"><span class="ev-chip">Page not read</span></div>
+            <span class="ev-note">Traced parts stay traced; leaving and coming back resumes.</span>
+          </div>
+        </div>
+      </div>
+
+      <h2 style="margin-top:22px">How each part earns its trace</h2>
+      <p class="lead" style="margin-bottom:12px">Locked. A number can still move if it proves wrong in use.</p>
+
+      <div class="tr-rules">
+        <div class="tr-rule">
+          <span class="tr-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 11h16M4 16h10"/></svg></span>
+          <div>
+            <strong>Text</strong>
+            <p>Counts once it has been on screen long enough to read: one second per ten words, at least five seconds. Hearing it read to the end counts too.</p>
+          </div>
+        </div>
+        <div class="tr-rule">
+          <span class="tr-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m4 16 5-5 4 4 3-3 4 4"/><circle cx="9" cy="9" r="1.5"/></svg></span>
+          <div>
+            <strong>Picture</strong>
+            <p>Counts once it has been on screen for three seconds, or at once when the learner taps it to enlarge: the tap is deliberate. A look alone is the weakest trace, so a page that holds only a picture rests on it alone.</p>
+          </div>
+        </div>
+        <div class="tr-rule">
+          <span class="tr-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m10 9 5 3-5 3z"/></svg></span>
+          <div>
+            <strong>Video and voice</strong>
+            <p>Video counts at eighty percent played. The speaker counts only when it reaches the end. Pausing or leaving keeps what already played.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="tr-honest">
+        <strong>What this proves, and what it does not.</strong>
+        <p>These traces live on the learner's device with the pack. Anything on a learner's own machine can be edited, so a trace is a hint, not proof. It feeds "Pages read" only: it never raises a score, never unlocks anything, and never blocks an answer. A short page still needs its five seconds; the speaker and the video are the strongest traces because they measure time that was actually played.</p>
+      </div>
+
+      <p class="ev-ask">Locked. Next: whether pages travel in an exported pack and the full backup.</p>
+    </section>
+
+    <!-- 7 · MEDIA: KEPT OR LINKED -->
+    <section id="screen-media" hidden class="wrap">
+      <p class="eyebrow">Pictures and videos</p>
+      <h1 style="margin:6px 0 4px">Two kinds of media: kept in the browser, or linked</h1>
+      <p class="lead">Videos make the browser store heavy. Google as the store would break offline study and whole backups. This shape keeps both: a page may hold a file, or an address.</p>
+
+      <div class="kinds" style="margin-top:14px">
+        <article class="panel">
+          <div class="kind-head">
+            <span class="kind-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4v16M9 4v16M14 4v16M18 4v16"/><path d="M3 8h18M3 16h18"/></svg></span>
+            <div>
+              <h2>Kept in the browser</h2>
+              <p class="small muted" style="margin:2px 0 0">The file itself lives with the pack, on this device.</p>
+            </div>
+            <span class="chip good">Offline</span>
+          </div>
+          <ul class="kind-list">
+            <li><strong>Size:</strong> a picture up to 1 MB, shrunk to 1600 pixels; a video up to 20 MB.</li>
+            <li><strong>Phones and tablets:</strong> pictures may be kept; a video must be linked, never kept.</li>
+            <li><strong>Total:</strong> every kept file, across every pack, counts towards one 300 MB cap.</li>
+            <li><strong>Offline:</strong> shows and plays with no connection.</li>
+            <li><strong>Travels:</strong> inside a shared pack zip and inside the full backup.</li>
+            <li><strong>Room:</strong> a meter shows kept MB against the cap. A save that would pass 300 MB is refused: link it instead, or remove a kept file. Free space is checked too.</li>
+          </ul>
+        </article>
+
+        <article class="panel">
+          <div class="kind-head">
+            <span class="kind-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15 15 0 010 18a15 15 0 010-18"/></svg></span>
+            <div>
+              <h2>Linked · online</h2>
+              <p class="small muted" style="margin:2px 0 0">YouTube, a Drive file, or any address. The file stays where it is.</p>
+            </div>
+            <span class="chip">Needs a connection</span>
+          </div>
+          <ul class="kind-list">
+            <li><strong>Size:</strong> none on this device; the page holds only the address.</li>
+            <li><strong>Offline:</strong> the part shows a note and the address instead of the file.</li>
+            <li><strong>Travels:</strong> the address goes with the page; the file does not. A shared pack still needs a connection.</li>
+            <li><strong>Backup:</strong> the address is saved, the file is not. A file the author deletes leaves a “gone” note, not a broken page.</li>
+          </ul>
+        </article>
+      </div>
+
+      <h2 style="margin-top:22px">When the author adds it</h2>
+      <p class="lead" style="margin-bottom:12px">The same two buttons for a picture or a video. The kind is chosen once, and the page says it ever after.</p>
+
+      <div class="kinds">
+        <div class="panel">
+          <p class="eyebrow" style="margin:0 0 8px">A file</p>
+          <div class="row" style="gap:8px; flex-wrap:wrap">
+            <button class="btn small" data-demo="A file picker opens. Pictures shrink to 1600 pixels; a video over 20 MB is refused.">Upload a file</button>
+            <button class="btn small" data-demo="The file stays in this browser, with the pack.">Keep it here</button>
+          </div>
+          <p class="small muted" style="margin:8px 0 0">On a phone or tablet, this path takes pictures only. A video there must be linked: choosing a video file is refused. A touch-screen laptop is treated as a computer.</p>
+          <p class="small muted" style="margin:12px 0 0">Kept media: <strong>18 MB of 300 MB</strong>. This video is 18 MB, and the device has 2.1 GB free.</p>
+          <div class="meter" aria-hidden="true"><span style="width:6%"></span></div>
+          <p class="small muted" style="margin:6px 0 0">A save that would pass 300 MB is refused: link the video instead, or remove a kept file. A pack shows its size before export.</p>
+        </div>
+
+        <div class="panel">
+          <p class="eyebrow" style="margin:0 0 8px">An address</p>
+          <div class="row" style="gap:8px; flex-wrap:wrap">
+            <input class="field" style="flex:1 1 180px" value="https://youtu.be/AbCdEf12345" aria-label="Media address">
+            <button class="btn small" data-demo="The address is checked and the source is named: YouTube.">Paste a link</button>
+          </div>
+          <p style="margin:12px 0 0"><span class="chip">YouTube</span> <span class="chip">online</span></p>
+          <p class="small muted" style="margin:8px 0 0">YouTube videos, Drive previews and plain addresses all work. The file never lands on this device, so there is no size to check.</p>
+        </div>
+      </div>
+
+      <h2 style="margin-top:22px">What each kind does</h2>
+      <table class="travel">
+        <thead><tr><th></th><th>Kept</th><th>Linked</th></tr></thead>
+        <tbody>
+          <tr><td>Works offline</td><td class="yes">Yes</td><td class="no">No</td></tr>
+          <tr><td>Inside a shared pack</td><td class="yes">The file</td><td class="no">The address only</td></tr>
+          <tr><td>Inside the full backup</td><td class="yes">The file</td><td class="no">The address only</td></tr>
+          <tr><td>Uses this device's room</td><td class="yes">Yes, capped</td><td class="no">No</td></tr>
+          <tr><td>Counts its trace</td><td class="yes">At 80% played</td><td class="yes">At 80%, through the player</td></tr>
+          <tr><td>If the file disappears</td><td class="yes">It stays with the pack</td><td class="no">A “gone” note replaces it</td></tr>
+        </tbody>
+      </table>
+
+      <div class="tr-honest" style="margin-top:16px">
+        <strong>What this leaves out, on purpose.</strong>
+        <p>No Google login. A learner's files never leave their device unless the learner pastes an address. YouTube is a source of videos, not the place a course is saved. That keeps the app offline-first, keeps a backup whole, and avoids a sign-in that would expire about every hour.</p>
+      </div>
+
+      <p class="ev-ask">This would be the rule: every picture and video says which kind it is, on the page and in the Course Builder. Confirm it, or change a line.</p>
+    </section>
+
+    <!-- 4 · COURSE BUILDER -->
+    <section id="screen-builder" hidden class="wrap">
+      <p class="eyebrow">Course Builder</p>
+      <div class="row" style="justify-content:space-between; align-items:flex-start">
+        <h1 style="margin:0">Browser Dev</h1>
+        <div class="row">
+          <span class="chip accent">Your copy — private</span>
+          <button class="btn small" id="revertBtn">Revert to shipped page</button>
+        </div>
+      </div>
+      <p class="lead">The central workspace: pack, decks and cards in one tree. The Edit button on each page opens the same editor.</p>
+
+      <div class="builder-grid" style="margin-top:16px">
+        <div class="panel tight">
+          <p class="eyebrow">Course</p>
+          <div class="tree" style="margin-top:8px">
+            <button class="node" data-page="pack"><span class="dot ok"></span> Browser Dev <span class="small muted">pack</span></button>
+            <button class="node child" data-page="deck"><span class="dot ok"></span> Network <span class="small muted">deck</span></button>
+            <button class="node grandchild on" data-page="card-waterfall"><span class="dot ok"></span> Waterfall</button>
+            <button class="node grandchild" data-page="card-request"><span class="dot"></span> The request</button>
+            <button class="node grandchild" data-page="card-cache"><span class="dot ok"></span> What gets cached?</button>
+            <button class="node grandchild" data-page="card-status"><span class="dot"></span> Status code</button>
+            <button class="node child" data-page="deck-sources"><span class="dot"></span> Sources and Debugging <span class="small muted">deck</span></button>
+            <button class="node child" data-page="deck-console"><span class="dot"></span> Console <span class="small muted">deck</span></button>
+          </div>
+          <p class="small muted" style="margin:10px 0 0">A green dot means the page is written. A grey dot means it is empty.</p>
+        </div>
+
+        <div class="panel">
+          <div class="row" style="justify-content:space-between; align-items:flex-start">
+            <div>
+              <p class="eyebrow" id="editorKicker">Card page · Network</p>
+              <h2 style="margin:2px 0 0" id="editorTitle">What does the waterfall show?</h2>
+            </div>
+            <div class="row">
+              <span class="chip good">Always open</span>
+              <span class="chip">Not card content</span>
+            </div>
+          </div>
+
+          <div class="stack" id="editorBlocks" style="margin-top:14px">
+            <div class="block">
+              <div class="block-head">
+                <strong>1 · Text</strong>
+                <div class="row">
+                  <button class="btn small" data-demo="Move up is disabled at the top.">Up</button>
+                  <button class="btn small" data-demo="Move down would swap this block with the next.">Down</button>
+                  <button class="btn small" data-demo="The block would be removed.">Remove</button>
+                </div>
+              </div>
+              <textarea class="field">Sam pressed Search and the page froze for two seconds. The waterfall showed why: the button waited for a font it did not use. Nothing was slow; one thing was waiting.</textarea>
+            </div>
+
+            <div class="block">
+              <div class="block-head">
+                <strong>2 · Image</strong>
+                <div class="row">
+                  <button class="btn small" data-demo="Move up would swap this block.">Up</button>
+                  <button class="btn small" data-demo="Move down would swap this block.">Down</button>
+                  <button class="btn small" data-demo="The block would be removed.">Remove</button>
+                </div>
+              </div>
+              <div class="media" style="min-height:110px">waterfall.png · resized to 1600 px wide, 285 KB</div>
+              <input class="field" value="A waterfall with one long grey bar">
+            </div>
+
+            <div class="block">
+              <div class="block-head">
+                <strong>3 · Video</strong>
+                <div class="row">
+                  <button class="btn small" data-demo="Move up would swap this block.">Up</button>
+                  <button class="btn small" data-demo="Move down would swap this block.">Down</button>
+                  <button class="btn small" data-demo="The block would be removed.">Remove</button>
+                </div>
+              </div>
+              <input class="field" value="https://www.youtube.com/watch?v=sample-idea">
+              <div class="row">
+                <input class="field" style="max-width:90px" value="0:42">
+                <input class="field" style="max-width:90px" value="1:10">
+                <span class="small muted">start and end, inside one video</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:10px">
+            <button class="btn small" id="addText">Add text</button>
+            <button class="btn small" id="addImage">Add image</button>
+            <button class="btn small" id="addVideo">Add video</button>
+          </div>
+
+          <div class="row" style="justify-content:space-between; margin-top:14px">
+            <div class="row">
+              <button class="btn" id="draftBtn">Draft with AI</button>
+              <button class="btn" id="previewBtn">Preview</button>
+            </div>
+            <button class="btn primary" id="saveBtn">Save page</button>
+          </div>
+        </div>
+
+        <aside class="stack">
+          <div class="panel tight">
+            <p class="eyebrow">Shared tools, not shared rules</p>
+            <ul class="small muted" style="margin:8px 0 0">
+              <li>Page editor: text, image, video.</li>
+              <li>Prompt editor: plain text only.</li>
+              <li>Card side edit: makes a new card.</li>
+              <li>Teaching layer: short, updates in place.</li>
+            </ul>
+          </div>
+          <div class="panel tight">
+            <p class="eyebrow">Edit on the page too</p>
+            <p class="small muted" style="margin:6px 0 8px">Every page carries the same Edit button where it is read.</p>
+            <button class="btn small" data-go="dict" data-view="card">Open the page and its Edit button</button>
+          </div>
+          <div class="note">Built-in course pages save to your copy. The shipped page is untouched; revert any time.</div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- 5 · ACCESS -->
+    <section id="screen-access" hidden class="wrap">
+      <p class="eyebrow">Access · decided</p>
+      <h1>Where the pages open from</h1>
+      <p class="lead">Both answers are settled. A card page opens from the library card row and from the study card. A pack or deck page opens from the up-right arrow on its row in the Study dropdown.</p>
+
+      <div class="access-grid" style="grid-template-columns: repeat(2, minmax(0, 1fr))">
+        <article class="access-card chosen">
+          <p class="eyebrow" style="margin:0">Library · card rows</p>
+          <div class="mock">
+            <div class="mock-row"><span>What does the waterfall show?</span><span class="mini"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 2v8l3-3 3 3V2"/><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/></svg></span></div>
+            <div class="mock-row"><span>Where does a request start?</span><span class="mini"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 2v8l3-3 3 3V2"/><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/></svg></span></div>
+            <div class="mock-row"><span>What gets cached?</span><span class="mini"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 2v8l3-3 3 3V2"/><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/></svg></span></div>
+          </div>
+        </article>
+        <article class="access-card chosen">
+          <p class="eyebrow" style="margin:0">Study card</p>
+          <div class="mock">
+            <div class="row" style="gap:8px">
+              <span class="simple-btn mini-btn" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg><span class="simple-btn-text">Hint</span></span>
+              <span class="simple-btn mini-btn" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 2v8l3-3 3 3V2"/><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/></svg><span class="simple-btn-text">Dictionary</span></span>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <div class="section" style="margin-top:24px">
+        <p class="eyebrow">Access · part 2 · decided</p>
+        <h2 style="margin:4px 0 6px">Where the deck page and the pack page open from</h2>
+        <p class="small muted" style="margin:0 0 12px">From the Study dropdown. Every pack row and every deck row carries an up-right arrow beside its name, drawn when the row is hovered (and always visible on a touch screen). The arrow opens that pack's or deck's page; the row itself still picks what the session studies.</p>
+
+        <div class="access-grid" style="grid-template-columns: minmax(0, 560px)">
+          <article class="access-card chosen">
+            <p class="eyebrow" style="margin:0">Study · the pack and deck dropdown</p>
+            <div class="mock">
+              <div class="mock-row"><span><strong>Browser Dev</strong> · 14 decks · 138 cards</span><span class="mini" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></span></div>
+              <div class="mock-row" style="padding-left:20px"><span>Network</span><span class="mini" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></span></div>
+              <div class="mock-row" style="padding-left:20px"><span>Console</span><span class="mini" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></span></div>
+              <div class="mock-row"><span><strong>Polish from Scratch</strong> · 12 decks · 120 cards</span><span class="mini" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></span></div>
+            </div>
+            <p class="small muted" style="margin:0">The arrow is its own control: pressing it never changes the selection. The row body still does the picking.</p>
+            <button class="btn small use" type="button" data-go="study">Open the Study screen and hover a row</button>
+          </article>
+        </div>
+
+        <p class="note" style="margin-top:14px">Upward links stay: a card page reaches its deck, a deck page reaches its pack. The Library gains no pack or deck buttons.</p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="draftModal" class="modal" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="draftTitle">
+    <p class="eyebrow">Draft with AI</p>
+    <h2 id="draftTitle" style="margin:2px 0 8px">What does the waterfall show?</h2>
+    <p class="small muted">This is the exact prompt that leaves the app. It uses your provider key. One call, about 900 words in and 500 out.</p>
+    <textarea class="field" rows="7" readonly>Write one Dictionary page for this card, for a beginner who has never read DevTools.
+
+Card: "What does the waterfall show?"
+Deck: Network (intermediate)
+Pack: Browser Dev
+
+Return plain sections, in this order: a short story from ordinary life, what the picture should show, what it means in three points, an optional video moment, and one thing to try. Do not change the card's question or answer. Do not invent DevTools behaviour you are not sure of.</textarea>
+    <p class="small muted">You review the draft before saving. Nothing is saved until you press Save page.</p>
+    <div class="row" style="justify-content:flex-end">
+      <button class="btn" id="draftCancel">Cancel</button>
+      <button class="btn primary" id="draftSend">Send and draft</button>
+    </div>
+  </div>
+</div>
+
+<div id="notes" hidden>
+  <div class="row" style="justify-content:space-between">
+    <p class="eyebrow" style="margin:0">What this is asking</p>
+    <button class="btn ghost small" id="notesClose">Close</button>
+  </div>
+  <ol class="small">
+    <li><strong>Card page structure.</strong> B was chosen: one part at a time, stepped. A is gone.</li>
+    <li><strong>Pack and deck pages.</strong> They do not exist in the app today. This feature adds them: a page for the course and a page for each deck, with the card pages under them.</li>
+    <li><strong>Speaker.</strong> Every text part carries a speaker icon that reads that part aloud. Pictures and videos have none.</li>
+    <li><strong>Access.</strong> The card page opens from both places: the library card row and the study card. Pack and deck pages open from the up-right arrow on their row in the Study dropdown. Both questions on screen 5 are settled.</li>
+    <li><strong>Course rule.</strong> Reading is never locked and never blocks an attempt. On screen 2 the rule is one chip on the card: icon only when narrow, icon with words when wide. Pressing it opens the page; the page earns its read mark when every part is traced, and answering first shows a warning and still counts.</li>
+    <li><strong>Hint and Dictionary.</strong> Same icon rule: icon only when narrow, icon with the word when wide. Plain bordered buttons; the sticker drawings were dropped. The chip and both buttons use an 8px corner, not a pill.</li>
+    <li><strong>Private changes.</strong> The “Your copy” badge marks a built-in course edited by one learner. Correct?</li>
+    <li><strong>The word.</strong> “Lesson” is not used anywhere here; “read in order” is the placeholder. The name is still open.</li>
+    <li><strong>Media kinds and caps.</strong> Locked (entries 23-28): a file kept in the browser, or an address linked online (YouTube, Drive, any URL). A kept video stays under 20 MB and all kept media together stay under 300 MB; linked media has no cap. On a phone or tablet a video must be linked; only pictures may be kept (a touch-screen laptop counts as a computer). No Google login: the app never stores a learner's files on Google.</li>
+  </ol>
+  <p class="small muted" style="margin:10px 0 0">Already locked: per-card order, upward navigation, no gating, a short teaching layer that links to the page, shared Authoring, both edit routes, and private personal changes.</p>
+</div>
+
+<div id="zoomView" class="modal" hidden>
+  <div class="zoom-card" role="dialog" aria-modal="true" aria-label="Enlarged picture">
+    <div class="media"><span>A waterfall with one long grey bar, enlarged<br><span class="small">image · the same file, at the size of the screen</span></span></div>
+    <div class="row" style="justify-content:space-between; align-items:center; margin-top:10px">
+      <p class="small muted" style="margin:0">Enlarging counts as this picture's trace.</p>
+      <button class="btn small" id="zoomClose">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+  const $ = (selector, root = document) => root.querySelector(selector);
+  const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+
+  let toastTimer = null;
+  function toast(message) {
+    const el = $('#toast');
+    el.textContent = message;
+    el.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('on'), 2800);
+  }
+
+  function show(name) {
+    if (name !== 'dictionary') {
+      stopSpeech();
+      stopTraceTimer();
+      stopVideo();
+    }
+    ['library', 'study', 'dictionary', 'builder', 'access', 'reading', 'media'].forEach((screen) => {
+      $('#screen-' + screen).hidden = screen !== name;
+    });
+    $$('.sim-tabs button').forEach((button) => {
+      button.classList.toggle('on', button.dataset.screen === name);
+    });
+    $$('.side-nav button[data-screen]').forEach((button) => {
+      button.classList.toggle('on', button.dataset.screen === name);
+    });
+    if (name === 'dictionary' && !$('#dict-card').hidden) {
+      armTrace();
+      if (step === 3) setVideoUi();
+    }
+  }
+
+  function crumbFor(view) {
+    const pack = '<button class="link" data-go="dict" data-view="pack">Browser Dev</button>';
+    const deck = '<button class="link" data-go="dict" data-view="deck">Network</button>';
+    const sep = '<span class="sep">/</span>';
+    if (view === 'pack') return '<span class="here">Browser Dev</span>';
+    if (view === 'deck') return pack + sep + '<span class="here">Network</span>';
+    return pack + sep + deck + sep + '<span class="here">What does the waterfall show?</span>';
+  }
+
+  function showDict(view) {
+    show('dictionary');
+    if (view !== 'card') { stopSpeech(); stopTraceTimer(); stopVideo(); }
+    if (view === 'card') {
+      step = 0;
+      renderStep();
+    }
+    ['card', 'deck', 'pack'].forEach((name) => {
+      $('#dict-' + name).hidden = name !== view;
+    });
+    $('#dictCrumb').innerHTML = crumbFor(view);
+  }
+
+  document.addEventListener('click', (event) => {
+    const tab = event.target.closest('[data-screen]');
+    if (tab) { show(tab.dataset.screen); return; }
+
+    const home = event.target.closest('[data-go]');
+    if (home) {
+      if (home.dataset.go === 'dict') showDict(home.dataset.view || 'card');
+      else show(home.dataset.go);
+      return;
+    }
+
+    const demo = event.target.closest('[data-demo]');
+    if (demo) { toast(demo.dataset.demo); return; }
+
+    const entry = event.target.closest('[data-entry]');
+    if (entry) { toast('Opened from ' + entry.dataset.entry + '.'); return; }
+
+    const page = event.target.closest('[data-page]');
+    if (page) {
+      $$('[data-page]').forEach((node) => node.classList.toggle('on', node === page));
+      const titles = {
+        pack: ['Pack page', 'Browser Dev'],
+        deck: ['Deck page · Network', 'Network'],
+        'card-waterfall': ['Card page · Network', 'What does the waterfall show?'],
+        'card-request': ['Card page · Network', 'Where does a request start?'],
+        'card-cache': ['Card page · Network', 'What gets cached?'],
+        'card-status': ['Card page · Network', 'Reading a status code'],
+        'deck-sources': ['Deck page · Sources and Debugging', 'Sources and Debugging'],
+        'deck-console': ['Deck page · Console', 'Console']
+      };
+      const picked = titles[page.dataset.page] || ['Page', 'Page'];
+      $('#editorKicker').textContent = picked[0];
+      $('#editorTitle').textContent = picked[1];
+      return;
+    }
+  });
+
+  // The stepper answers question 1 (variant B). `read` is the plain text the
+  // speaker icon reads; parts with no text (a picture, a video) have none.
+  const steps = [
+    {
+      title: 'The story',
+      read: 'Sam pressed Search and the page froze for two seconds. The waterfall showed why: the button waited for a font it did not use. Nothing was slow; one thing was waiting.',
+      body: '<p>Sam pressed Search and the page froze for two seconds. The waterfall showed why: the button waited for a font it did not use. Nothing was slow; one thing was waiting.</p>'
+    },
+    {
+      title: 'The picture',
+      kind: 'Kept in the browser',
+      body: '<button type="button" class="media-zoom" data-zoom aria-label="Enlarge the picture"><div class="media" style="min-height:130px"><span>A waterfall with one long grey bar<br><span class="small">image · sample placeholder</span><span class="media-hint">Tap to enlarge</span></span></div></button>'
+    },
+    {
+      title: 'What it means',
+      read: 'Start: when the request began. Length: how long it took, including waiting. Gaps: time the browser spent before asking.',
+      body: '<ul><li><strong>Start:</strong> when the request began.</li><li><strong>Length:</strong> how long it took, including waiting.</li><li><strong>Gaps:</strong> time the browser spent before asking.</li></ul>'
+    },
+    {
+      title: 'Watch',
+      kind: 'YouTube · online',
+      body: '<div class="media media-play"><button type="button" class="play-btn" data-play aria-label="Play the sample video"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button><div class="play-bar"><span data-progress></span></div><span class="small" data-video-label>YouTube · sample placeholder · 0:28 · counts at 80%</span></div>'
+    },
+    {
+      title: 'Try it',
+      read: 'Open DevTools, reload, and find the longest bar. Ask: was it working, or waiting?',
+      body: '<p>Open DevTools, reload, and find the longest bar. Ask: was it working, or waiting?</p>'
+    }
+  ];
+  let step = 0;
+  // A part earns its trace the way the GRILL locked it; the page is read only
+  // when every part is traced. The dots show the current step and the traces.
+  const tracedParts = new Set();
+  let traceTimer = null;
+  let videoTimer = null;
+  let videoPlayed = 0;
+  const CHEVRON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+  const CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>';
+  const SPEAKER = '<button class="speak" data-speak aria-label="Listen to this part" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5L6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 010 7"/><path d="M18.5 5.5a9 9 0 010 13"/></svg></button>';
+
+  function stopSpeech() {
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    const button = $('.speak.on');
+    if (button) {
+      button.classList.remove('on');
+      button.setAttribute('aria-pressed', 'false');
+      button.setAttribute('aria-label', 'Listen to this part');
+    }
+  }
+
+  function speakPart(button) {
+    if (!('speechSynthesis' in window)) {
+      toast('This browser has no voice to read with.');
+      return;
+    }
+    if (button.classList.contains('on')) {
+      stopSpeech();
+      return;
+    }
+    stopSpeech();
+    const at = step;
+    const utterance = new SpeechSynthesisUtterance(steps[step].read);
+    utterance.lang = 'en-GB';
+    utterance.onend = () => { if (button.classList.contains('on')) markTraced(at); stopSpeech(); };
+    utterance.onerror = stopSpeech;
+    window.speechSynthesis.speak(utterance);
+    button.classList.add('on');
+    button.setAttribute('aria-pressed', 'true');
+    button.setAttribute('aria-label', 'Stop reading');
+  }
+
+  function partHtml(part) {
+    if (part.kind) {
+      return '<div class="part-head"><h3>' + part.title + '</h3><span class="chip">' + part.kind + '</span></div>' + part.body;
+    }
+    const head = part.read
+      ? '<div class="part-head"><h3>' + part.title + '</h3>' + SPEAKER + '</div>'
+      : '<h3>' + part.title + '</h3>';
+    return head + part.body;
+  }
+
+  // WHY: the panel must not jump as the learner steps, so all parts are laid
+  // out in the same cell and only one is visible. The tallest part sets the
+  // height, at any width, with no measurement to drift.
+  function buildSteps() {
+    $('#stepBody').innerHTML = steps.map((part, index) =>
+      '<div class="part' + (index === 0 ? ' on' : '') + '">' + partHtml(part) + '</div>'
+    ).join('');
+  }
+
+  function renderDots() {
+    $('#stepDots').innerHTML = steps.map((_, index) =>
+      '<span class="' + (index === step ? 'on' : tracedParts.has(index) ? 'traced' : '') + '"></span>'
+    ).join('');
+  }
+
+  function markTraced(index) {
+    if (tracedParts.has(index)) return;
+    tracedParts.add(index);
+    renderDots();
+    if (tracedParts.size === steps.length) {
+      read = true;
+      renderGate();
+      toast('Every part is traced. The page counts as read.');
+    }
+  }
+
+  function stopTraceTimer() { clearTimeout(traceTimer); traceTimer = null; }
+
+  // WHY: text counts after one second per ten words with a floor of five
+  // seconds, and the timer only runs while that part is the one on screen.
+  function armTrace() {
+    stopTraceTimer();
+    const part = steps[step];
+    if (!part.read || tracedParts.has(step) || $('#screen-dictionary').hidden) return;
+    const words = part.read.trim().split(/\s+/).length;
+    traceTimer = setTimeout(() => markTraced(step), Math.max(5, Math.round(words / 10)) * 1000);
+  }
+
+  function stopVideo() { clearInterval(videoTimer); videoTimer = null; }
+
+  function setVideoUi() {
+    const bar = $('[data-progress]');
+    const button = $('[data-play]');
+    if (!bar || !button) return;
+    bar.style.width = videoPlayed + '%';
+    button.classList.toggle('playing', Boolean(videoTimer));
+    button.setAttribute('aria-label', videoTimer ? 'Pause the sample video' : 'Play the sample video');
+  }
+
+  function togglePlay() {
+    if (videoTimer) { stopVideo(); setVideoUi(); return; }
+    videoTimer = setInterval(() => {
+      videoPlayed = Math.min(100, videoPlayed + 1);
+      if (videoPlayed >= 80) { stopVideo(); markTraced(3); }
+      setVideoUi();
+    }, 100);
+    setVideoUi();
+  }
+
+  function renderStep() {
+    stopSpeech();
+    stopTraceTimer();
+    stopVideo();
+    $('#stepCount').textContent = 'Step ' + (step + 1) + ' of ' + steps.length;
+    renderDots();
+    $$('#stepBody > .part').forEach((node, index) => node.classList.toggle('on', index === step));
+    const last = step === steps.length - 1;
+    $('#stepPrev').disabled = step === 0;
+    $('#stepNext').innerHTML = last ? CHECK : CHEVRON;
+    $('#stepNext').setAttribute('aria-label', last ? 'Finish this card page' : 'Next part');
+    if (step === 3) setVideoUi();
+    armTrace();
+  }
+
+  function openZoom() {
+    $('#zoomView').hidden = false;
+    markTraced(1);
+    $('#zoomClose').focus();
+  }
+
+  function closeZoom() {
+    $('#zoomView').hidden = true;
+    const opener = $('[data-zoom]');
+    if (opener) opener.focus();
+  }
+
+  $('#zoomClose').addEventListener('click', closeZoom);
+  $('#zoomView').addEventListener('click', (event) => { if (event.target === event.currentTarget) closeZoom(); });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !$('#zoomView').hidden) closeZoom();
+  });
+
+  $('#stepPrev').addEventListener('click', () => { if (step > 0) { step -= 1; renderStep(); } });
+  $('#stepNext').addEventListener('click', () => {
+    if (step < steps.length - 1) { step += 1; renderStep(); }
+    else toast('End of this card page. The next card has its own page.');
+  });
+  $('#stepBody').addEventListener('click', (event) => {
+    const speaker = event.target.closest('[data-speak]');
+    if (speaker) { speakPart(speaker); return; }
+    if (event.target.closest('[data-zoom]')) { openZoom(); return; }
+    if (event.target.closest('[data-play]')) togglePlay();
+  });
+
+  // The course rule warns the learner, never stops them. It shows as one chip
+  // on the card: icon only on a narrow screen, icon and words on a wide one.
+  const GATE_BOOK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7v14"/><path d="M3 18a1 1 0 01-1-1V4a1 1 0 011-1h5a4 4 0 014 4 4 4 0 014-4h5a1 1 0 011 1v13a1 1 0 01-1 1h-6a3 3 0 00-3 3 3 3 0 00-3-3z"/></svg>';
+  const GATE_CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>';
+  let read = false;
+
+  function renderGate() {
+    const chip = $('#gateChip');
+    if (!chip) return;
+    chip.classList.toggle('read', read);
+    chip.innerHTML = (read ? GATE_CHECK : GATE_BOOK) + '<span class="gate-text">' + (read ? 'Page read' : 'Page not read') + '</span>';
+    chip.setAttribute('aria-label', read ? 'Page read. Open the card page.' : 'Page not read. Open the card page.');
+    chip.setAttribute('title', read ? 'Page read' : 'Page not read');
+    const warn = $('#readWarn');
+    if (warn && read) warn.hidden = true;
+  }
+
+  $('#gateChip').addEventListener('click', () => {
+    showDict('card');
+    toast('Opened the card page. Nothing was blocked; the course only asks.');
+  });
+
+  // An attempt before reading is allowed and counted; the course only warns.
+  $$('[data-outcome]').forEach((button) => {
+    button.addEventListener('click', () => {
+      if (!read) {
+        $('#readWarn').hidden = false;
+        toast('Answer recorded. The course asked for the page first; nothing was blocked.');
+      } else {
+        toast('Answer recorded: ' + button.textContent.trim() + '.');
+      }
+    });
+  });
+
+  // The Study dropdown picks what a session studies and is also the way down:
+  // each pack and deck row carries an up-right arrow that opens its page without
+  // touching the selection. The rules below match ScopePicker.tsx.
+  const scopePacks = () => $$('#scopePanel [data-pack]');
+  const scopeDecks = () => $$('#scopePanel .scope-decks [data-deck]');
+  const scopeDecksIn = (pack) => [...pack.querySelectorAll('.scope-decks [data-deck]')];
+  const scopeButton = (row) => row.querySelector('.scope-select');
+  const scopeChecked = (button) => button.getAttribute('aria-checked') === 'true';
+  const scopeIsExpanded = (pack) => pack.querySelector('.scope-expand')?.getAttribute('aria-expanded') === 'true';
+
+  function scopeSet(row, state) {
+    const button = scopeButton(row);
+    button.setAttribute('aria-checked', state === 'mixed' ? 'mixed' : String(state));
+    const dot = button.querySelector('.scope-dot');
+    if (dot) dot.className = 'scope-dot' + (state === 'mixed' ? ' partial' : state === true ? '' : ' off');
+  }
+
+  /** Same wording as the real picker's summary: the trigger reads the scope. */
+  function scopeSummaryText() {
+    const picked = scopePacks()
+      .map((pack) => {
+        const decks = scopeDecksIn(pack);
+        return { name: pack.dataset.pack, decks, chosen: decks.filter((deck) => scopeChecked(scopeButton(deck))) };
+      })
+      .filter((pack) => pack.chosen.length > 0);
+    if (picked.length === 0) return 'the whole library';
+    if (picked.length === 1) {
+      const only = picked[0];
+      if (only.chosen.length === only.decks.length) return only.name;
+      if (only.chosen.length === 1) return only.name + ' / ' + only.chosen[0].dataset.deck;
+      return only.chosen.length + ' decks in ' + only.name;
+    }
+    if (picked.every((pack) => pack.chosen.length === pack.decks.length)) {
+      return 'all decks in ' + picked.length + ' packs';
+    }
+    return picked.length + ' packs';
+  }
+
+  function syncScope() {
+    scopePacks().forEach((pack) => {
+      const decks = scopeDecksIn(pack);
+      const on = decks.filter((deck) => scopeChecked(scopeButton(deck))).length;
+      const head = pack.querySelector('.scope-row');
+      scopeSet(head, on === 0 ? false : on === decks.length ? true : 'mixed');
+    });
+    const allEmpty = scopeDecks().every((deck) => !scopeChecked(scopeButton(deck)));
+    scopeSet($('#scopePanel [data-all]'), allEmpty);
+    const summary = scopeSummaryText();
+    $('#scopeSummary').textContent = summary;
+    $('#scopeTrigger').setAttribute('aria-label', 'Study from ' + summary);
+  }
+
+  /** Searching lists every deck that matches; the chevron is put away meanwhile. */
+  function filterScope() {
+    const query = $('#scopeSearch').value.trim();
+    const needle = query.toLowerCase();
+    let shown = 0;
+    scopePacks().forEach((pack) => {
+      const packMatch = needle === '' || pack.dataset.pack.toLowerCase().includes(needle);
+      let deckHit = false;
+      scopeDecksIn(pack).forEach((deck) => {
+        const hit = packMatch || deck.dataset.deck.toLowerCase().includes(needle);
+        deck.hidden = needle !== '' && !hit;
+        deckHit = deckHit || hit;
+      });
+      const hide = needle !== '' && !packMatch && !deckHit;
+      pack.hidden = hide;
+      if (!hide) shown += 1;
+      const expand = pack.querySelector('.scope-expand');
+      if (expand) expand.hidden = needle !== '';
+      const list = pack.querySelector('.scope-decks');
+      if (list) list.hidden = hide || (!scopeIsExpanded(pack) && needle === '');
+    });
+    const empty = $('#scopeEmpty');
+    empty.hidden = shown !== 0;
+    empty.textContent = shown === 0 ? 'No pack or deck matches “' + query + '”.' : '';
+  }
+
+  function openScope() {
+    $('#scopePanel').hidden = false;
+    $('#scopeTrigger').setAttribute('aria-expanded', 'true');
+    syncScope();
+    filterScope();
+    $('#scopeSearch').focus();
+  }
+
+  function closeScope(returnFocus) {
+    $('#scopePanel').hidden = true;
+    $('#scopeTrigger').setAttribute('aria-expanded', 'false');
+    $('#scopeSearch').value = '';
+    filterScope();
+    if (returnFocus) $('#scopeTrigger').focus();
+  }
+
+  $('#scopeTrigger').addEventListener('click', () => {
+    if ($('#scopePanel').hidden) openScope(); else closeScope(false);
+  });
+
+  $('#scopePanel').addEventListener('click', (event) => {
+    const select = event.target.closest('.scope-select');
+    if (select) {
+      const row = select.closest('.scope-row');
+      if (row.hasAttribute('data-all')) {
+        scopeDecks().forEach((deck) => scopeSet(deck, false));
+      } else if (row.hasAttribute('data-pack')) {
+        const pack = row.closest('[data-pack]');
+        const decks = scopeDecksIn(pack);
+        const fully = decks.every((deck) => scopeChecked(scopeButton(deck)));
+        decks.forEach((deck) => scopeSet(deck, !fully));
+      } else {
+        scopeSet(row, !scopeChecked(select));
+      }
+      syncScope();
+      return;
+    }
+    const expand = event.target.closest('.scope-expand');
+    if (expand) {
+      const pack = expand.closest('[data-pack]');
+      const open = !scopeIsExpanded(pack);
+      const name = pack.dataset.pack;
+      expand.setAttribute('aria-expanded', String(open));
+      expand.setAttribute('aria-label', (open ? 'Hide' : 'Show') + ' decks in ' + name);
+      expand.title = (open ? 'Hide' : 'Show') + ' decks in ' + name;
+      filterScope();
+      return;
+    }
+    if (event.target.closest('.scope-go[data-go]')) closeScope(false);
+  });
+
+  $('#scopeSearch').addEventListener('input', filterScope);
+
+  document.addEventListener('pointerdown', (event) => {
+    const scope = $('.scope');
+    if (scope && !scope.contains(event.target)) closeScope(false);
+  });
+
+  // Course Builder controls.
+  $('#saveBtn').addEventListener('click', () => toast('Page saved on this device. No card was changed.'));
+  $('#previewBtn').addEventListener('click', () => { show('dictionary'); showDict('card'); toast('Previewing the page as a learner sees it.'); });
+  $('#revertBtn').addEventListener('click', () => toast('The shipped page was restored in your copy.'));
+
+  function addBlock(label, inner) {
+    const block = document.createElement('div');
+    block.className = 'block';
+    block.innerHTML = '<div class="block-head"><strong>New · ' + label + '</strong><div class="row"><button class="btn small" data-demo="Move up is simulated.">Up</button><button class="btn small" data-demo="Move down is simulated.">Down</button><button class="btn small" data-demo="The block would be removed.">Remove</button></div></div>' + inner;
+    $('#editorBlocks').appendChild(block);
+  }
+  $('#addText').addEventListener('click', () => addBlock('Text', '<textarea class="field" placeholder="Write the next section"></textarea>'));
+  $('#addImage').addEventListener('click', () => addBlock('Image', '<div class="media" style="min-height:100px">Choose a picture, or paste a web address</div><input class="field" placeholder="What the picture shows">'));
+  $('#addVideo').addEventListener('click', () => addBlock('Video', '<input class="field" placeholder="YouTube link or id"><div class="row"><input class="field" style="max-width:90px" placeholder="start"><input class="field" style="max-width:90px" placeholder="end"></div>'));
+
+  // Draft with AI modal.
+  function openDraft() { $('#draftModal').hidden = false; }
+  function closeDraft() { $('#draftModal').hidden = true; }
+  $('#draftBtn').addEventListener('click', openDraft);
+  $('#draftCancel').addEventListener('click', closeDraft);
+  $('#draftSend').addEventListener('click', () => { closeDraft(); toast('A draft would appear for review. Nothing is saved yet.'); });
+  $('#draftModal').addEventListener('click', (event) => { if (event.target.id === 'draftModal') closeDraft(); });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') { closeDraft(); closeScope(true); }
+  });
+
+  // Notes drawer.
+  $('#notesBtn').addEventListener('click', () => { $('#notes').hidden = !$('#notes').hidden; });
+  $('#notesClose').addEventListener('click', () => { $('#notes').hidden = true; });
+
+  // The path and the card list share one behaviour: a capped scroll window and
+  // a search icon that opens a slim input to its left on the same line.
+  function wireListSearch(listId, panelId, inputId, toggleId, emptyId, noun) {
+    const panel = $('#' + panelId);
+    const input = $('#' + inputId);
+    const toggle = $('#' + toggleId);
+    const empty = $('#' + emptyId);
+    const rows = () => $$('#' + listId + ' .page-row');
+
+    function filter() {
+      const query = input.value.trim();
+      const needle = query.toLowerCase();
+      let shown = 0;
+      rows().forEach((row) => {
+        const hit = needle === '' || row.textContent.toLowerCase().includes(needle);
+        row.hidden = !hit;
+        if (hit) shown += 1;
+      });
+      empty.hidden = shown !== 0;
+      empty.textContent = shown === 0 ? 'No ' + noun + ' matches \u201c' + query + '\u201d.' : '';
+    }
+
+    function close() {
+      panel.hidden = true;
+      toggle.setAttribute('aria-expanded', 'false');
+      input.value = '';
+      filter();
+    }
+
+    toggle.addEventListener('click', () => {
+      if (!panel.hidden) { close(); return; }
+      panel.hidden = false;
+      toggle.setAttribute('aria-expanded', 'true');
+      input.focus();
+    });
+
+    input.addEventListener('input', filter);
+    input.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return;
+      event.stopPropagation();
+      close();
+      toggle.focus();
+    });
+    document.addEventListener('pointerdown', (event) => {
+      if (panel.hidden) return;
+      if (event.target.closest('#' + panelId) || event.target.closest('#' + toggleId)) return;
+      close();
+    });
+  }
+
+  wireListSearch('pathList', 'pathSearch', 'pathSearchInput', 'pathSearchToggle', 'pathEmpty', 'deck');
+  wireListSearch('cardList', 'cardSearch', 'cardSearchInput', 'cardSearchToggle', 'cardEmpty', 'card');
+
+  syncScope();
+  buildSteps();
+  showDict('card');
+  renderGate();
+</script>
+</body>
+</html>

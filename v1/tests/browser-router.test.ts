@@ -17,7 +17,8 @@ import { PACK_BUNDLE_SCHEMA } from "@/lib/browser/bundle";
 import { createJobRunner } from "@/lib/browser/jobs";
 import type { BrowserJob, JobView } from "@/lib/browser/jobs";
 import { ApiError } from "@/lib/client/errors";
-import type { AnswerResult, Card, Plan, ProviderStatus } from "@/lib/shared/types";
+import { cardPageId, deckPageId, packPageId } from "@/lib/core/pages";
+import type { AnswerResult, Card, DictionaryPage, PageTrace, Plan, ProviderStatus } from "@/lib/shared/types";
 
 function packBundle(): string {
   return JSON.stringify({
@@ -1425,5 +1426,178 @@ describe("background job routes", () => {
     await expect(localSend(`/api/jobs/${created.job.id}`, "DELETE")).rejects.toThrow(
       "cannot be dismissed",
     );
+  });
+});
+
+describe("dictionary pages through the router", () => {
+  it("saves a card page, records a traced part and counts it read", async () => {
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
+    const card = (await localGet<{ cards: Card[] }>("/api/cards")).cards[0];
+    const id = cardPageId(card.id);
+
+    const saved = await localSend<{ page: DictionaryPage }>(`/api/pages/${id}`, "PATCH", {
+      level: "card",
+      packName: "starter",
+      deckId: "basics",
+      cardId: card.id,
+      title: "Drinking",
+      parts: [{ type: "text", text: "Piję is the first person form of pić." }],
+    });
+    expect(saved.page.id).toBe(id);
+    expect(saved.page.learnerEdited).toBe(true);
+
+    const traced = await localSend<{ trace: PageTrace }>(`/api/pages/${id}/traced`, "POST", {
+      index: 0,
+    });
+    expect(traced.trace.traced).toEqual([0]);
+
+    const listed = await localGet<{
+      pages: DictionaryPage[];
+      traces: PageTrace[];
+      progress: { read: number; total: number };
+    }>("/api/pages?pack=starter");
+    expect(listed.pages.map((page) => page.id)).toEqual([id]);
+    expect(listed.traces).toHaveLength(1);
+    expect(listed.progress).toEqual({ read: 1, total: 1 });
+
+    const progress = await localGet<{ pages: { read: number; total: number } }>("/api/progress");
+    expect(progress.pages).toEqual({ read: 1, total: 1 });
+  });
+
+  it("refuses a page whose URL and body disagree, and a card from another pack", async () => {
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
+    const card = (await localGet<{ cards: Card[] }>("/api/cards")).cards[0];
+
+    await expect(
+      localSend(`/api/pages/${deckPageId("starter", "basics")}`, "PATCH", {
+        level: "card",
+        packName: "starter",
+        deckId: "basics",
+        cardId: card.id,
+        parts: [{ type: "text", text: "A line." }],
+      }),
+    ).rejects.toThrow("does not match the page it names");
+
+    await expect(
+      localSend(`/api/pages/${cardPageId("nope")}`, "PATCH", {
+        level: "card",
+        packName: "starter",
+        deckId: "basics",
+        cardId: "nope",
+        parts: [{ type: "text", text: "A line." }],
+      }),
+    ).rejects.toThrow("That card is not in this pack.");
+
+    await expect(
+      localSend(`/api/pages/${cardPageId(card.id)}`, "PATCH", {
+        level: "card",
+        packName: "starter",
+        deckId: "basics",
+        cardId: card.id,
+        parts: [],
+      }),
+    ).rejects.toThrow("The page needs fixing.");
+  });
+
+  it("refuses a trace for a missing page and deletes a page with its trace", async () => {
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
+    const packId = packPageId("starter");
+    await localSend(`/api/pages/${packId}`, "PATCH", {
+      level: "pack",
+      packName: "starter",
+      title: "Starter course",
+      parts: [{ type: "text", text: "What this pack teaches." }],
+    });
+    await localSend(`/api/pages/${packId}/traced`, "POST", { index: 0 });
+
+    await expect(
+      localSend(`/api/pages/${cardPageId("gone")}/traced`, "POST", { index: 0 }),
+    ).rejects.toThrow("That page is not here.");
+    await expect(localSend(`/api/pages/${packId}/traced`, "POST", { index: -1 })).rejects.toThrow(
+      "A trace needs the number of the part it read.",
+    );
+
+    const deleted = await localSend<{ deleted: boolean }>(`/api/pages/${packId}`, "DELETE");
+    expect(deleted.deleted).toBe(true);
+    const listed = await localGet<{ pages: DictionaryPage[]; traces: PageTrace[] }>(
+      "/api/pages?pack=starter",
+    );
+    expect(listed.pages).toHaveLength(0);
+    expect(listed.traces).toHaveLength(0);
+    await expect(localSend(`/api/pages/${packId}`, "DELETE")).rejects.toThrow("That page is not here.");
+  });
+
+  it("turns the page reading rule on and off through the pack", async () => {
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
+
+    const on = await localSend<{ pack: { requirePageRead?: boolean } }>("/api/packs/starter", "PATCH", {
+      requirePageRead: true,
+    });
+    expect(on.pack.requirePageRead).toBe(true);
+    const packs = await localGet<{ packs: Array<{ name: string; requirePageRead?: boolean }> }>(
+      "/api/packs",
+    );
+    expect(packs.packs[0].requirePageRead).toBe(true);
+
+    const off = await localSend<{ pack: Record<string, unknown> }>("/api/packs/starter", "PATCH", {
+      requirePageRead: false,
+    });
+    expect("requirePageRead" in off.pack).toBe(false);
+
+    await expect(
+      localSend("/api/packs/starter", "PATCH", { requirePageRead: "yes" }),
+    ).rejects.toThrow("The page reading rule is either on or off.");
+  });
+
+  it("holds a page draft prompt, sends it, and saves nothing on its own", async () => {
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
+    await localSend("/api/settings", "PATCH", {
+      provider: { url: "https://provider.test/v1", model: "test-model" },
+    });
+    await localSend("/api/provider/key", "POST", { key: "secret" });
+    const card = (await localGet<{ cards: Card[] }>("/api/cards")).cards[0];
+
+    const prepared = await localSend<{ requestId: string; prompt: string }>("/api/pages/draft", "POST", {
+      level: "card",
+      packName: "starter",
+      deckId: "basics",
+      cardId: card.id,
+      instruction: "Explain the accusative.",
+    });
+    expect(prepared.prompt).toContain("Piję kawę");
+    expect(prepared.prompt).toContain("Explain the accusative.");
+
+    const reply = JSON.stringify({
+      title: "The accusative",
+      lead: "Why the ending changes.",
+      parts: [{ type: "text", text: "The accusative names the thing the verb reaches." }],
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(JSON.stringify({ choices: [{ message: { content: reply } }] }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+      ),
+    );
+
+    const sent = await localSend<{ draft: { title?: string; parts: Array<{ type: string }> } }>(
+      "/api/pages/draft/send",
+      "POST",
+      { requestId: prepared.requestId },
+    );
+    expect(sent.draft.title).toBe("The accusative");
+    expect(sent.draft.parts).toHaveLength(1);
+
+    const pages = await localGet<{ pages: DictionaryPage[] }>("/api/pages?pack=starter");
+    expect(pages.pages).toHaveLength(0);
+
+    await expect(
+      localSend("/api/pages/draft/send", "POST", { requestId: prepared.requestId }),
+    ).rejects.toThrow("That prepared prompt has expired.");
+    await expect(
+      localSend("/api/pages/draft", "POST", { level: "card", deckId: "basics" }),
+    ).rejects.toThrow("Choose the pack this page belongs to.");
   });
 });

@@ -29,6 +29,8 @@ import {
   writeTombstone,
 } from "@/lib/browser/repository";
 import { putMedia, readAllMedia } from "@/lib/browser/media";
+import { readPage, readPages, recordTracedPart, savePage, writeShippedPage } from "@/lib/browser/pages";
+import { cardPageId, deckPageId, packPageId } from "@/lib/core/pages";
 
 const now = "2026-10-20T10:00:00.000Z";
 
@@ -650,5 +652,100 @@ describe("export and backup", () => {
     const result = await restoreBackup(text);
     expect(result.ok).toBe(true);
     expect(await readProviderKey(store)).toBe("");
+  });
+});
+
+describe("Dictionary pages in bundles and backups", () => {
+  function withPages(version: string, pages: unknown[]): string {
+    const parsed = JSON.parse(bundle(version)) as Record<string, unknown>;
+    return JSON.stringify({ ...parsed, pages });
+  }
+
+  it("writes the shipped pages of a new pack, at the pack and deck level", async () => {
+    const result = await importBundle(
+      withPages("1.0.0", [
+        { level: "pack", title: "Polish", lead: "Start here.", parts: [] },
+        { level: "deck", deckId: "basics", parts: [{ type: "text", text: "Everyday words." }] },
+      ]),
+      { kind: "pack" },
+    );
+    expect(result.ok).toBe(true);
+    expect((await readPage(packPageId("starter"), store))?.title).toBe("Polish");
+    expect((await readPage(deckPageId("starter", "basics"), store))?.parts).toHaveLength(1);
+  });
+
+  it("refuses the whole file when a page names a deck the pack does not have", async () => {
+    const result = await importBundle(
+      withPages("1.0.0", [{ level: "deck", deckId: "ghost", parts: [{ type: "text", text: "No." }] }]),
+      { kind: "pack" },
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.issues[0].field).toBe("pages.deckId");
+    expect(await readPack("starter", store)).toBeNull();
+    expect(await readPages(undefined, store)).toEqual([]);
+  });
+
+  it("never replaces the learner's own page when a newer pack ships one", async () => {
+    await importBundle(withPages("1.0.0", [{ level: "pack", title: "Shipped", parts: [] }]), { kind: "pack" });
+    await savePage({ level: "pack", packName: "starter", title: "Mine", parts: [] }, now);
+    await importBundle(withPages("1.1.0", [{ level: "pack", title: "Newer", parts: [] }]), { kind: "pack" });
+    expect((await readPage(packPageId("starter"), store))?.title).toBe("Mine");
+  });
+
+  it("carries a card page on an update once the card is here", async () => {
+    await importBundle(bundle("1.0.0"), { kind: "pack" });
+    const [card] = await readCards(store);
+    const result = await importBundle(
+      withPages("1.1.0", [{ level: "card", cardId: card.id, parts: [{ type: "text", text: "A lesson." }] }]),
+      { kind: "pack" },
+    );
+    expect(result.ok).toBe(true);
+    const page = await readPage(cardPageId(card.id), store);
+    expect(page?.deckId).toBe("basics");
+    expect(page?.parts).toHaveLength(1);
+  });
+
+  it("exports pages but never reading traces", async () => {
+    await importBundle(withPages("1.0.0", [{ level: "pack", title: "Polish", parts: [] }]), { kind: "pack" });
+    const [card] = await readCards(store);
+    await writeShippedPage({
+      id: cardPageId(card.id),
+      level: "card",
+      packName: "starter",
+      deckId: "basics",
+      cardId: card.id,
+      parts: [{ type: "text", text: "One" }],
+      createdAt: now,
+      updatedAt: now,
+    });
+    await recordTracedPart(cardPageId(card.id), 0, now);
+    const exported = await exportPackBundle("starter");
+    expect(exported.ok).toBe(true);
+    if (!exported.ok) return;
+    const parsed = JSON.parse(exported.json) as { pages: unknown[]; pageTraces?: unknown };
+    expect(parsed.pages).toHaveLength(2);
+    expect(parsed.pageTraces).toBeUndefined();
+  });
+
+  it("carries pages and their traces through a full backup and restore", async () => {
+    await importBundle(bundle("1.0.0"), { kind: "pack" });
+    const [card] = await readCards(store);
+    await writeShippedPage({
+      id: cardPageId(card.id),
+      level: "card",
+      packName: "starter",
+      deckId: "basics",
+      cardId: card.id,
+      parts: [{ type: "text", text: "One" }],
+      createdAt: now,
+      updatedAt: now,
+    });
+    await recordTracedPart(cardPageId(card.id), 0, now);
+    const text = await exportBackup();
+    setBrowserStore((store = new MemoryStore()));
+    const result = await restoreBackup(text);
+    expect(result.ok).toBe(true);
+    expect((await readPage(cardPageId(card.id), store))?.parts).toHaveLength(1);
+    expect((await readPages(undefined, store)).length).toBe(1);
   });
 });

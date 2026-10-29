@@ -4,7 +4,7 @@
 // PACK: teaching-layers
 // 2026-10-25 opencode: created for the teaching layer pack. [pack: teaching-layers]
 
-import type { Card } from "@/lib/shared/types";
+import type { Card, DictionaryPage, TeachingPart } from "@/lib/shared/types";
 
 /** A local media id is the only kind of source this app owns a Blob for. */
 const MEDIA_ID = /^media-[A-Za-z0-9-]+$/;
@@ -29,11 +29,34 @@ export function mediaIdsInCard(card: MediaCarrier): string[] {
   return [...ids];
 }
 
-/** Every local media id the library still needs. Retired cards count. */
-export function referencedMediaIds(cards: MediaCarrier[]): Set<string> {
+/** The page fields that can point at local media. */
+export type PageMediaCarrier = Pick<DictionaryPage, "parts" | "cover" | "shippedCopy">;
+
+/**
+ * Every local media id one Dictionary page points at, cover included. The
+ * shipped copy an overlay keeps is part of the set: a revert needs its files.
+ */
+export function mediaIdsInPage(page: PageMediaCarrier): string[] {
+  const ids = new Set<string>();
+  const collect = (carrier: { parts: TeachingPart[]; cover?: TeachingPart }) => {
+    const parts = [...(carrier.cover ? [carrier.cover] : []), ...carrier.parts];
+    for (const part of parts) {
+      if ((part.type === "image" || part.type === "video") && part.source === "local") ids.add(part.src);
+    }
+  };
+  collect({ parts: page.parts, ...(page.cover ? { cover: page.cover } : {}) });
+  if (page.shippedCopy) collect(page.shippedCopy);
+  return [...ids];
+}
+
+/** Every local media id the library still needs. Retired cards and pages count. */
+export function referencedMediaIds(cards: MediaCarrier[], pages: PageMediaCarrier[] = []): Set<string> {
   const ids = new Set<string>();
   for (const card of cards) {
     for (const id of mediaIdsInCard(card)) ids.add(id);
+  }
+  for (const page of pages) {
+    for (const id of mediaIdsInPage(page)) ids.add(id);
   }
   return ids;
 }
