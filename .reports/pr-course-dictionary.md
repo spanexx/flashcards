@@ -13,29 +13,31 @@
 
 - GRILL locked at 32 entries (four delegated decisions, entries 29–32), entry 30 carrying a dated amendment for immediate revert. Design simulation archived at `docs/features/course-dictionary/archive/simulate-pre.html`.
 - PRD-TRD and IMPL describe the shipped behaviour: data model, API table (`/api/pages…`), pure core (`tracedTextMs`, `savedPageSchema`, `pageRuleProblems`), media rules (`mediaCapProblem(total, adding, replacingBytes = 0)`, `backupSizeWarning`) and architecture notes.
+- The branch merges `main` (system-design pack, PR #5) and keeps the shared player fix D-41; the combined tree is what the evidence below covers.
 
 ## Verification
 
 | Check | Result |
 |---|---|
-| `npm run check:drift` / `check:drift:staged` | 0 open, 0 awaiting, **40 resolved**, no warnings |
-| Full suite (`vitest run`) | **87 files / 1019 tests** passed |
-| `bash docs/features/course-dictionary/simulate.sh` | **12/12 PASS** (scenarios 1–11 + built-screens check) |
-| Build (`next build --webpack`) + `build-pwa` + `check-pwa` | `check-pwa: passed` (base path `/flashcards`, 92 files, 90 precache entries) |
-| `npm run lint` | exit 0 |
-| Built export | carries `/dictionary` and `/builder`; worker caches navigations with a cache fallback |
+| `npm run check:drift` / `check:drift:staged` | 0 open, 0 awaiting, **41 resolved**, no warnings |
+| Full suite (`vitest run`) | **87 files / 1025 tests** passed |
+| `bash docs/features/course-dictionary/simulate.sh` | **12/12 PASS** |
+| `bash docs/features/system-design-course/simulate.sh v1/packs/system-design/pack.json` | **PASS: 0 problem(s)** |
+| Build (`next build --webpack`) + `build-pwa` + `check-pwa` | `check-pwa: passed` (base path `/flashcards`, 121 files, 119 precache entries) |
+| `npm run typecheck` / `npx eslint src tests` | exit 0 both |
+| Built export, browser pass | `/dictionary` shows the pack page, a deck page and a card page; `/builder` lists all three packs and the page editor; the player chunk carries `strict-origin-when-cross-origin` and `enablejsapi=1` |
 
-Drift history: D-32–D-37 record the review's seven fixes (the chip and the tools share one entry); D-38 closed a privacy leak the review did not name (`shareablePage`); D-39 reconciled the PRD-TRD and IMPL with shipped names and shapes; D-40 corrected two design-time source lines in the locked GRILL without moving a locked answer.
+Drift history: D-32–D-37 record the review's seven fixes (the chip and the tools share one entry); D-38 closed a privacy leak the review did not name (`shareablePage`); D-39 reconciled the PRD-TRD and IMPL with shipped names and shapes; D-40 corrected two design-time source lines in the locked GRILL without moving a locked answer; D-41 (from main) made every YouTube embed play by sending the page origin instead of no referrer.
 
 ## Docs touched
 
 - `docs/features/course-dictionary/` — GRILL (dated amendment + source corrections), PRD-TRD, IMPL, `simulate.sh`, `archive/simulate-pre.html`.
-- `wayfinder/anything-learning-spec/tickets/course-dictionary.md`, `wayfinder/anything-learning-spec/map.md`.
-- `docs/drift.md` — D-32…D-40.
+- `wayfinder/anything-learning-spec/tickets/course-dictionary.md`, `wayfinder/anything-learning-spec/map.md` (Dictionary and System Design both marked delivered).
+- `docs/drift.md` — D-32…D-40 plus D-41 after the merge.
 
 ## How to try it
 
-Run the export under the app's base path (CI's shape): `/flashcards/dictionary?pack=polish-starter&card=<id>` and `/flashcards/builder?pack=polish-starter`.
+Run the export under the app's base path (CI's shape): `/flashcards/dictionary?pack=polish-from-scratch&card=<id>` and `/flashcards/builder?pack=polish-from-scratch`.
 
 ## Notes
 
