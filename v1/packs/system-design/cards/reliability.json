@@ -1,0 +1,201 @@
+{
+  "cards": [
+    {
+      "key": "reliability-slo",
+      "summary": "An SLO sets a target for an indicator",
+      "topics": ["reliability"],
+      "tags": ["slo", "sre"],
+      "prompt": [{ "type": "text", "text": "What is a service level objective?" }],
+      "answer": [{ "type": "text", "text": "A target for a service level indicator." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": ["A target for a service level indicator", "A legal contract with penalties", "A dashboard colour", "A type of database"],
+        "correct": ["A target for a service level indicator"]
+      },
+      "hints": ["Indicator measures; objective sets the target."],
+      "teaching": [
+        { "type": "text", "text": "An SLI is the measurement, such as successful requests divided by total requests. An SLO is the target for that measurement, such as 99.9% over 30 days.", "lang": "en" },
+        { "type": "video", "source": "youtube", "src": "Akri1BlGp10", "search": "SLO vs SLI vs SLA vs Error Budget Google SRE", "alt": "A plain-English explanation of SLI, SLO, SLA and the error budget" }
+      ]
+    },
+    {
+      "key": "reliability-error-budget",
+      "summary": "The error budget is what may fail",
+      "topics": ["reliability"],
+      "tags": ["slo", "error-budget"],
+      "prompt": [
+        { "type": "text", "text": "If an SLO allows 99.9% success, the remaining 0.1% is the error " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": "." }
+      ],
+      "answer": [{ "type": "text", "text": "If an SLO allows 99.9% success, the remaining 0.1% is the error budget." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["budget"] }] },
+      "hints": ["It is a spending allowance for failure."],
+      "fullLine": "If an SLO allows 99.9% success, the remaining 0.1% is the error budget.",
+      "teaching": [
+        { "type": "text", "text": "The error budget turns reliability into a shared number. While budget remains, teams may ship faster. When it is spent, feature work pauses until reliability recovers.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/system-design/images/slo-budget.svg", "alt": "A monthly reliability target with a small error budget shown as a spending allowance" }
+      ]
+    },
+    {
+      "key": "reliability-timeout",
+      "summary": "A timeout bounds a wait",
+      "topics": ["reliability"],
+      "tags": ["timeouts"],
+      "prompt": [
+        { "type": "text", "text": "A timeout stops a caller from waiting forever when a dependency is " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": "." }
+      ],
+      "answer": [{ "type": "text", "text": "A timeout stops a caller from waiting forever when a dependency is slow." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["slow", "unresponsive", "down"] }] },
+      "hints": ["The dependency may never answer."],
+      "fullLine": "A timeout stops a caller from waiting forever when a dependency is slow.",
+      "teaching": [
+        { "type": "text", "text": "Without timeouts, threads and connections pile up behind one stuck dependency. Set each timeout from the latency budget, and make it shorter than the caller's own patience.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "reliability-backoff",
+      "summary": "Retries need backoff",
+      "topics": ["reliability"],
+      "tags": ["retries", "backoff"],
+      "prompt": [
+        { "type": "text", "text": "Retries should wait longer after each failure, a pattern called exponential " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": "." }
+      ],
+      "answer": [{ "type": "text", "text": "Retries should wait longer after each failure, a pattern called exponential backoff." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["backoff", "back-off"] }] },
+      "hints": ["The delay grows each time."],
+      "fullLine": "Retries should wait longer after each failure, a pattern called exponential backoff.",
+      "teaching": [
+        { "type": "text", "text": "Backoff gives a recovering dependency room. Add jitter, a small random delay, so many clients do not retry at the same instant and create a second spike.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/system-design/images/retry-backoff-anim.svg", "alt": "A failed call retrying after growing, randomised delays until it succeeds" }
+      ]
+    },
+    {
+      "key": "reliability-circuit-breaker",
+      "summary": "A circuit breaker stops the calls",
+      "topics": ["reliability"],
+      "tags": ["circuit-breaker", "failure"],
+      "prompt": [{ "type": "text", "text": "What does a circuit breaker do after repeated failures?" }],
+      "answer": [{ "type": "text", "text": "Stops calling the failing dependency for a while." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Stops calling the failing dependency for a while",
+          "Restarts the database",
+          "Deletes failed requests",
+          "Increases the timeout forever"
+        ],
+        "correct": ["Stops calling the failing dependency for a while"]
+      },
+      "hints": ["It protects the caller and gives the dependency time to recover."],
+      "teaching": [
+        { "type": "text", "text": "The breaker opens after a failure threshold, fails fast while open, then allows a probe request after a cool-down. It prevents a slow dependency from consuming every caller thread.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "reliability-observability",
+      "summary": "Observability explains the inside",
+      "topics": ["reliability"],
+      "tags": ["observability"],
+      "prompt": [{ "type": "text", "text": "What is observability?" }],
+      "answer": [{ "type": "text", "text": "The ability to understand internal state from outside signals." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "The ability to understand internal state from outside signals",
+          "A list of servers",
+          "A test suite",
+          "A backup schedule"
+        ],
+        "correct": ["The ability to understand internal state from outside signals"]
+      },
+      "hints": ["You ask new questions without shipping new code."],
+      "teaching": [
+        { "type": "text", "text": "Monitoring answers known questions. Observability lets you ask new ones from logs, metrics and traces, which is what an incident actually demands.", "lang": "en" },
+        { "type": "video", "source": "youtube", "src": "35N2buePMsg", "search": "Monitoring vs Observability Logs Metrics Traces APM RUM", "alt": "A comparison of monitoring and observability and the signals each uses" }
+      ]
+    },
+    {
+      "key": "reliability-signals",
+      "summary": "Logs, metrics and traces are the signals",
+      "topics": ["reliability"],
+      "tags": ["observability", "signals"],
+      "prompt": [
+        { "type": "text", "text": "Logs, metrics and traces are the three main " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " of observability." }
+      ],
+      "answer": [{ "type": "text", "text": "Logs, metrics and traces are the three main signals of observability." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["signals", "pillars"] }] },
+      "hints": ["The word used for the data types in OpenTelemetry."],
+      "fullLine": "Logs, metrics and traces are the three main signals of observability.",
+      "teaching": [
+        { "type": "text", "text": "A metric says something changed, a trace shows where the time went, and a log explains the detail. Correlating all three is what shortens an incident.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/system-design/images/power-grid.webp", "alt": "High-voltage power lines and pylons against a clear sky" }
+      ]
+    },
+    {
+      "key": "reliability-chaos",
+      "summary": "Chaos engineering tests failure on purpose",
+      "topics": ["reliability"],
+      "tags": ["chaos"],
+      "prompt": [{ "type": "text", "text": "What is chaos engineering?" }],
+      "answer": [{ "type": "text", "text": "Deliberately injecting failures to test resilience." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Deliberately injecting failures to test resilience",
+          "Randomly deleting production data",
+          "Running tests without assertions",
+          "Hiring more on-call staff"
+        ],
+        "correct": ["Deliberately injecting failures to test resilience"]
+      },
+      "hints": ["It is a controlled experiment, not an accident."],
+      "teaching": [
+        { "type": "text", "text": "Start with a hypothesis, inject a bounded failure in a controlled environment, and measure whether the system degrades as intended. Netflix turned this into a discipline.", "lang": "en" },
+        { "type": "video", "source": "youtube", "src": "Xbn65E-BQhA", "search": "AWS reInvent 2022 evolution of chaos engineering at Netflix", "alt": "Netflix engineers describing how chaos engineering evolved inside their platform" }
+      ]
+    },
+    {
+      "key": "reliability-degrade",
+      "summary": "Degrade the small features first",
+      "topics": ["reliability"],
+      "tags": ["degradation"],
+      "prompt": [
+        { "type": "text", "text": "Graceful degradation keeps the most important features working when part of the system " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": "." }
+      ],
+      "answer": [{ "type": "text", "text": "Graceful degradation keeps the most important features working when part of the system fails." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["fails", "breaks", "goes down"] }] },
+      "hints": ["A recommendations panel may disappear; checkout should not."],
+      "fullLine": "Graceful degradation keeps the most important features working when part of the system fails.",
+      "teaching": [
+        { "type": "text", "text": "Rank features by importance and decide what turns off first. A page that loads without recommendations is better than a page that never loads.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "reliability-health-checks",
+      "summary": "Health checks separate alive from ready",
+      "topics": ["reliability"],
+      "tags": ["health", "platform"],
+      "prompt": [
+        { "type": "text", "text": "A liveness check tells the platform whether a process is still " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": "." }
+      ],
+      "answer": [{ "type": "text", "text": "A liveness check tells the platform whether a process is still alive." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["alive", "running"] }] },
+      "hints": ["A readiness check asks a different question."],
+      "fullLine": "A liveness check tells the platform whether a process is still alive.",
+      "teaching": [
+        { "type": "text", "text": "Liveness asks whether to restart the process. Readiness asks whether it should receive traffic. Mixing them up restarts healthy pods that are merely warming up.", "lang": "en" }
+      ]
+    }
+  ]
+}

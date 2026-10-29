@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-labelledby="t d">
+  <title id="t">A boundary is a promise</title>
+  <desc id="d">A caller reaches a module through a stable port while the parts behind the boundary quietly change.</desc>
+  <style>
+    .paper{fill:#fbf8f1}.ink{fill:#1f2933}.muted{fill:#6b7280}
+    .box{fill:#ffffff;stroke:#1f2933;stroke-width:1.6}
+    .inner{fill:#e6eff1;stroke:#2f6f8f;stroke-width:1.2}
+    .port{fill:#2f6f8f}
+    .dash{fill:none;stroke:#1f2933;stroke-width:1.6;stroke-dasharray:8 6}
+    .pulse{animation:pulse 6s ease-in-out infinite}
+    .pulse.b{animation-delay:1.4s}.pulse.c{animation-delay:2.8s}
+    @keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
+    @media (prefers-reduced-motion: reduce){*{animation:none!important}}
+  </style>
+  <rect class="paper" width="800" height="450"/>
+  <text x="40" y="44" font-family="system-ui, sans-serif" font-size="21" font-weight="650" class="ink">A boundary is a promise</text>
+  <text x="40" y="70" font-family="system-ui, sans-serif" font-size="14" class="muted">Callers depend on the port. The inside is free to change.</text>
+
+  <rect x="70" y="190" width="150" height="90" rx="10" class="box"/>
+  <text x="145" y="228" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" class="ink">Caller</text>
+  <text x="145" y="252" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="muted">knows the promise</text>
+
+  <line x1="400" y1="140" x2="400" y2="360" class="dash"/>
+  <text x="408" y="132" font-family="system-ui, sans-serif" font-size="12" class="muted">boundary</text>
+
+  <rect x="430" y="150" width="300" height="210" rx="12" class="box"/>
+  <text x="580" y="178" text-anchor="middle" font-family="system-ui, sans-serif" font-size="15" class="ink">Module</text>
+  <rect x="455" y="195" width="115" height="52" rx="7" class="inner pulse"/>
+  <rect x="590" y="195" width="115" height="52" rx="7" class="inner pulse b"/>
+  <rect x="455" y="268" width="115" height="52" rx="7" class="inner pulse c"/>
+  <rect x="590" y="268" width="115" height="52" rx="7" class="inner pulse"/>
+  <text x="512" y="226" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="ink">detail</text>
+  <text x="647" y="226" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="ink">detail</text>
+  <text x="512" y="299" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="ink">detail</text>
+  <text x="647" y="299" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="ink">detail</text>
+
+  <circle cx="400" cy="235" r="10" class="port"/>
+  <text x="400" y="205" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="ink">port</text>
+
+  <path d="M 220 235 L 390 235" fill="none" stroke="#2f6f8f" stroke-width="2"/>
+  <circle r="5.5" fill="#2f6f8f">
+    <animateMotion dur="6.5s" repeatCount="indefinite"
+      path="M 220 235 L 390 235 M 390 235 L 455 221 M 455 221 L 390 235 M 390 235 L 220 235"/>
+  </circle>
+
+  <text x="40" y="410" font-family="system-ui, sans-serif" font-size="13" class="muted">The dotted line is the contract: what crosses it is agreed, what stays inside is private.</text>
+</svg>

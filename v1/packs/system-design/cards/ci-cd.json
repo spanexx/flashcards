@@ -1,0 +1,186 @@
+{
+  "cards": [
+    {
+      "key": "ci-cd-stages",
+      "summary": "A pipeline runs stages in order",
+      "topics": ["ci-cd"],
+      "tags": ["pipeline", "ci"],
+      "prompt": [
+        { "type": "text", "text": "A CI pipeline usually runs install, lint, test and " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " before an artifact is deployed." }
+      ],
+      "answer": [{ "type": "text", "text": "A CI pipeline usually runs install, lint, test and build before an artifact is deployed." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["build"] }] },
+      "hints": ["Compiling or bundling the application."],
+      "fullLine": "A CI pipeline usually runs install, lint, test and build before an artifact is deployed.",
+      "teaching": [
+        { "type": "text", "text": "Stages run cheapest and fastest first, so a typo fails in seconds. The build step produces the artifact that later stages promote unchanged.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/system-design/images/pipeline-stages.svg", "alt": "A CI/CD pipeline moving from checkout through test and build to staging and production" }
+      ]
+    },
+    {
+      "key": "ci-cd-workflow",
+      "summary": "A workflow is a YAML file on events",
+      "topics": ["ci-cd"],
+      "tags": ["github-actions", "workflow"],
+      "prompt": [{ "type": "text", "text": "In GitHub Actions, what is a workflow?" }],
+      "answer": [{ "type": "text", "text": "A YAML file that runs jobs on events." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": ["A YAML file that runs jobs on events", "A branch protection rule", "A container image", "A test framework"],
+        "correct": ["A YAML file that runs jobs on events"]
+      },
+      "hints": ["It lives in .github/workflows."],
+      "teaching": [
+        { "type": "text", "text": "A workflow has a trigger, jobs and steps. Jobs run on runners; steps call actions or shell commands. Reusable workflows and actions keep repetition down.", "lang": "en" },
+        { "type": "video", "source": "youtube", "src": "Lj9SennFygM", "search": "How to build a complete CI pipeline with GitHub actions", "alt": "A walkthrough of building a complete continuous integration pipeline with GitHub Actions" }
+      ]
+    },
+    {
+      "key": "ci-cd-build-once",
+      "summary": "Build once and promote the artifact",
+      "topics": ["ci-cd"],
+      "tags": ["artifacts", "promotion"],
+      "prompt": [
+        { "type": "text", "text": "Build the artifact once and " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " the same artifact to every environment." }
+      ],
+      "answer": [{ "type": "text", "text": "Build the artifact once and deploy the same artifact to every environment." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["deploy", "promote", "ship"] }] },
+      "hints": ["Do not rebuild for staging."],
+      "fullLine": "Build the artifact once and deploy the same artifact to every environment.",
+      "teaching": [
+        { "type": "text", "text": "Rebuilding per environment means the tested bytes are not the shipped bytes. Promote one immutable artifact and let configuration change between environments.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/system-design/images/data-center.webp", "alt": "Rows of servers in a data centre with blue status lights" }
+      ]
+    },
+    {
+      "key": "ci-cd-trigger",
+      "summary": "Events start the pipeline",
+      "topics": ["ci-cd"],
+      "tags": ["github-actions", "events"],
+      "prompt": [{ "type": "text", "text": "What triggers a GitHub Actions workflow?" }],
+      "answer": [{ "type": "text", "text": "An event such as a push or pull request." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": ["An event such as a push or pull request", "Only a manual phone call", "The phase of the moon", "A database migration"],
+        "correct": ["An event such as a push or pull request"]
+      },
+      "hints": ["Something happens in the repository."],
+      "teaching": [
+        { "type": "text", "text": "Common triggers are push, pull_request, schedule and workflow_dispatch. Choosing the trigger decides how fast feedback arrives and how often the pipeline runs.", "lang": "en" },
+        { "type": "video", "source": "youtube", "src": "qoalS5ae7fk", "search": "CI CD Made Easy with GitHub Actions Hello World Demo", "alt": "A short hands-on demonstration of a GitHub Actions CI/CD workflow" }
+      ]
+    },
+    {
+      "key": "ci-cd-test-pyramid",
+      "summary": "Many fast tests, few slow ones",
+      "topics": ["ci-cd"],
+      "tags": ["tests", "pyramid"],
+      "prompt": [
+        { "type": "text", "text": "The test pyramid puts many fast unit tests at the bottom and few end-to-end tests at the " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": "." }
+      ],
+      "answer": [{ "type": "text", "text": "The test pyramid puts many fast unit tests at the bottom and few end-to-end tests at the top." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["top", "peak"] }] },
+      "hints": ["The slow, brittle ones."],
+      "fullLine": "The test pyramid puts many fast unit tests at the bottom and few end-to-end tests at the top.",
+      "teaching": [
+        { "type": "text", "text": "Unit tests give fast, precise feedback. End-to-end tests prove the whole path but are slow and flaky, so use them for the few journeys that must not break.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "ci-cd-immutable",
+      "summary": "Artifacts must not change",
+      "topics": ["ci-cd"],
+      "tags": ["artifacts"],
+      "prompt": [{ "type": "text", "text": "Why should a build artifact be immutable?" }],
+      "answer": [{ "type": "text", "text": "So every environment runs exactly what was tested." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": ["So every environment runs exactly what was tested", "So it can be edited by hand", "So it never needs a version", "So tests can be skipped"],
+        "correct": ["So every environment runs exactly what was tested"]
+      },
+      "hints": ["The tested bytes must be the shipped bytes."],
+      "teaching": [
+        { "type": "text", "text": "An artifact is identified by a version or digest and never overwritten. If something must change, build a new artifact; that keeps the audit trail honest.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "ci-cd-secrets",
+      "summary": "CI secrets are injected, not committed",
+      "topics": ["ci-cd"],
+      "tags": ["secrets", "ci"],
+      "prompt": [
+        { "type": "text", "text": "CI secrets must be injected at run time, never committed to the " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": "." }
+      ],
+      "answer": [{ "type": "text", "text": "CI secrets must be injected at run time, never committed to the repository." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["repository", "repo", "codebase"] }] },
+      "hints": ["Where the code lives."],
+      "fullLine": "CI secrets must be injected at run time, never committed to the repository.",
+      "teaching": [
+        { "type": "text", "text": "Store secrets in the CI secret store, scope them to the environment that needs them and mask them in logs. Rotate any secret that was ever committed.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "ci-cd-canary",
+      "summary": "A canary gets a small share first",
+      "topics": ["ci-cd"],
+      "tags": ["canary", "release"],
+      "prompt": [
+        { "type": "text", "text": "A canary release sends a small share of " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " to the new version first." }
+      ],
+      "answer": [{ "type": "text", "text": "A canary release sends a small share of traffic to the new version first." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["traffic", "requests", "users"] }] },
+      "hints": ["What arrives at the servers."],
+      "fullLine": "A canary release sends a small share of traffic to the new version first.",
+      "teaching": [
+        { "type": "text", "text": "The canary proves the new version on a few real requests. Watch error rate and latency against the old version, then widen or roll back.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/system-design/images/canary-anim.svg", "alt": "Most traffic going to the stable version while a small share goes to a canary" }
+      ]
+    },
+    {
+      "key": "ci-cd-progressive",
+      "summary": "Progressive delivery widens gradually",
+      "topics": ["ci-cd"],
+      "tags": ["progressive-delivery"],
+      "prompt": [{ "type": "text", "text": "Which is a progressive delivery technique?" }],
+      "answer": [{ "type": "text", "text": "Blue-green deployment." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": ["Blue-green deployment", "Editing production by hand", "Skipping reviews", "Deleting the pipeline"],
+        "correct": ["Blue-green deployment"]
+      },
+      "hints": ["Two environments swap traffic."],
+      "teaching": [
+        { "type": "text", "text": "Progressive delivery releases to a subset first and widens as confidence grows. Canary, blue-green and ring deployments are all ways to limit the blast radius.", "lang": "en" },
+        { "type": "video", "source": "youtube", "src": "HKkhD6nokC8", "search": "Progressive Delivery Explained Big Bang Blue-Green Rolling Updates Canaries", "alt": "An explanation of progressive delivery techniques including blue-green and canary releases" }
+      ]
+    },
+    {
+      "key": "ci-cd-testing-production",
+      "summary": "Production testing needs observability",
+      "topics": ["ci-cd"],
+      "tags": ["production", "monitoring"],
+      "prompt": [{ "type": "text", "text": "What does testing in production require?" }],
+      "answer": [{ "type": "text", "text": "Strong observability and a fast rollback." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": ["Strong observability and a fast rollback", "No monitoring", "A bigger team", "Ignoring errors"],
+        "correct": ["Strong observability and a fast rollback"]
+      },
+      "hints": ["You must see the problem and undo it quickly."],
+      "teaching": [
+        { "type": "text", "text": "Some failures only appear with real traffic. Testing in production is safe only when you can measure the effect, limit who sees it and roll back within minutes.", "lang": "en" },
+        { "type": "video", "source": "youtube", "src": "sFzKrGSaIr8", "search": "Testing in Production Progressive Delivery Canary Deployments", "alt": "An explanation of testing in production with canary deployments and progressive delivery" }
+      ]
+    }
+  ]
+}

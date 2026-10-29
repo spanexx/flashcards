@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-labelledby="t d">
+  <title id="t">A pipeline makes one promise at each stage</title>
+  <desc id="d">Commit, build, test, package, sign, deploy and verify form a chain with fast feedback and a single sealed artifact.</desc>
+  <style>
+    .paper{fill:#fbf8f1}.ink{fill:#1f2933}.muted{fill:#6b7280}
+    .box{fill:#ffffff;stroke:#1f2933;stroke-width:1.4}
+    .stage{fill:#e6eff1;stroke:#2f6f8f;stroke-width:1.2}
+    .seal{fill:#e5efe8;stroke:#3f7d5a;stroke-width:1.3}
+    .deploy{fill:#f3e8d7;stroke:#b7791f;stroke-width:1.3}
+    .edge{stroke:#1f2933;stroke-width:1.5;fill:none}
+    .back{stroke:#6b7280;stroke-width:1.3;stroke-dasharray:5 5;fill:none}
+  </style>
+  <rect class="paper" width="800" height="450"/>
+  <text x="40" y="44" font-family="system-ui, sans-serif" font-size="21" font-weight="650" class="ink">A pipeline makes one promise at each stage</text>
+  <text x="40" y="70" font-family="system-ui, sans-serif" font-size="14" class="muted">Fast checks first; one artifact moves through every later gate.</text>
+
+  <rect x="30" y="150" width="96" height="60" rx="8" class="stage"/>
+  <rect x="146" y="150" width="96" height="60" rx="8" class="stage"/>
+  <rect x="262" y="150" width="96" height="60" rx="8" class="stage"/>
+  <rect x="378" y="150" width="96" height="60" rx="8" class="stage"/>
+  <rect x="494" y="150" width="96" height="60" rx="8" class="seal"/>
+  <rect x="610" y="150" width="96" height="60" rx="8" class="deploy"/>
+  <rect x="726" y="150" width="60" height="60" rx="8" class="box"/>
+  <text x="78" y="185" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="ink">commit</text>
+  <text x="194" y="185" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="ink">build</text>
+  <text x="310" y="185" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="ink">unit test</text>
+  <text x="426" y="185" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="ink">integration</text>
+  <text x="542" y="185" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="ink">seal</text>
+  <text x="658" y="185" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="ink">deploy</text>
+  <text x="756" y="185" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" class="ink">verify</text>
+
+  <path d="M 126 180 L 141 180" class="edge"/>
+  <path d="M 242 180 L 257 180" class="edge"/>
+  <path d="M 358 180 L 373 180" class="edge"/>
+  <path d="M 474 180 L 489 180" class="edge"/>
+  <path d="M 590 180 L 605 180" class="edge"/>
+  <path d="M 706 180 L 721 180" class="edge"/>
+
+  <path d="M 310 215 Q 310 300 120 300 Q 78 300 78 215" class="back"/>
+  <text x="210" y="320" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" class="muted">fail fast, fix, run again</text>
+
+  <rect x="146" y="245" width="212" height="34" rx="17" class="box"/>
+  <text x="252" y="267" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" class="muted">same commit, same artifact</text>
+  <text x="40" y="410" font-family="system-ui, sans-serif" font-size="13" class="muted">A stage that can be skipped is a suggestion; make the gate required.</text>
+</svg>

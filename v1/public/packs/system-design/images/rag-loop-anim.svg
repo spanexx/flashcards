@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-labelledby="t d">
+  <title id="t">Retrieve, generate, then check</title>
+  <desc id="d">A question is turned into a search, context is retrieved, the model answers, and a checker can send the answer back for another retrieval.</desc>
+  <style>
+    .paper{fill:#fbf8f1}.ink{fill:#1f2933}.muted{fill:#6b7280}
+    .box{fill:#ffffff;stroke:#1f2933;stroke-width:1.5}
+    .ret{fill:#e6eff1;stroke:#2f6f8f;stroke-width:1.2}
+    .model{fill:#f3e8d7;stroke:#b7791f;stroke-width:1.2}
+    .check{fill:#e5efe8;stroke:#3f7d5a;stroke-width:1.4}
+    .edge{stroke:#1f2933;stroke-width:1.6;fill:none}
+    .back{stroke:#a23b3b;stroke-width:1.6;stroke-dasharray:6 5;fill:none}
+    .loop{animation:loop 9s ease-in-out infinite}
+    @keyframes loop{0%,50%{opacity:.1}60%,85%{opacity:1}100%{opacity:.1}}
+    @media (prefers-reduced-motion: reduce){*{animation:none!important}}
+  </style>
+  <rect class="paper" width="800" height="450"/>
+  <text x="40" y="44" font-family="system-ui, sans-serif" font-size="21" font-weight="650" class="ink">Retrieve, generate, then check</text>
+  <text x="40" y="70" font-family="system-ui, sans-serif" font-size="14" class="muted">The model writes the answer; the retrieval and the check decide whether it is allowed.</text>
+
+  <rect x="50" y="185" width="120" height="70" rx="9" class="box"/>
+  <text x="110" y="225" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" class="ink">question</text>
+
+  <rect x="220" y="90" width="150" height="70" rx="9" class="ret"/>
+  <text x="295" y="122" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" class="ink">retrieve</text>
+  <text x="295" y="144" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" class="muted">search the private index</text>
+
+  <rect x="220" y="280" width="150" height="70" rx="9" class="ret"/>
+  <text x="295" y="312" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" class="ink">source passages</text>
+  <text x="295" y="334" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" class="muted">with dates and owners</text>
+
+  <rect x="420" y="185" width="140" height="70" rx="9" class="model"/>
+  <text x="490" y="217" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" class="ink">model</text>
+  <text x="490" y="239" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" class="muted">writes with context</text>
+
+  <rect x="610" y="185" width="140" height="70" rx="9" class="check"/>
+  <text x="680" y="217" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" class="ink">check</text>
+  <text x="680" y="239" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" class="muted">schema, sources, policy</text>
+
+  <rect x="610" y="320" width="140" height="60" rx="9" class="box"/>
+  <text x="680" y="356" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" class="ink">answer</text>
+
+  <path d="M 170 215 L 215 140" class="edge"/>
+  <path d="M 295 160 L 295 275" class="edge"/>
+  <path d="M 370 300 L 415 235" class="edge"/>
+  <path d="M 370 125 L 415 195" class="edge"/>
+  <path d="M 560 220 L 605 220" class="edge"/>
+  <path d="M 680 255 L 680 315" class="edge"/>
+  <path d="M 610 230 Q 400 400 300 355" class="back loop"/>
+  <text x="455" y="398" text-anchor="middle" class="loop" font-family="system-ui, sans-serif" font-size="11" fill="#a23b3b">unsupported? retrieve again</text>
+
+  <circle r="5" fill="#2f6f8f">
+    <animateMotion dur="8s" repeatCount="indefinite"
+      path="M 170 215 L 295 125 L 295 300 L 490 220 L 680 220 L 680 350"/>
+  </circle>
+
+  <text x="40" y="430" font-family="system-ui, sans-serif" font-size="13" class="muted">Without retrieval, a confident answer has no evidence behind it.</text>
+</svg>

@@ -1,0 +1,195 @@
+{
+  "cards": [
+    {
+      "key": "foundations-costly-decisions",
+      "summary": "Architecture is the costly-to-change decisions",
+      "topics": ["foundations"],
+      "tags": ["architecture", "decisions"],
+      "prompt": [{ "type": "text", "text": "Which choice is an architecture decision rather than a coding detail?" }],
+      "answer": [{ "type": "text", "text": "Whether services share one database." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Whether services share one database",
+          "How a button is named",
+          "Which loop style a function uses",
+          "The order of import statements"
+        ],
+        "correct": ["Whether services share one database"]
+      },
+      "hints": ["Pick the choice that is hard to undo after launch."],
+      "teaching": [
+        { "type": "text", "text": "Architecture is the set of decisions that are expensive to reverse later: boundaries, data ownership, communication and deployment. Naming and loop style are coding details because they are cheap to change.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/system-design/images/telephone-exchange-1918.webp", "alt": "Telephone operators at a switchboard in 1918, connecting calls by hand" }
+      ]
+    },
+    {
+      "key": "foundations-evolving",
+      "summary": "An architecture keeps changing",
+      "topics": ["foundations"],
+      "tags": ["architecture", "change"],
+      "prompt": [
+        { "type": "text", "text": "An architecture is never finished; it keeps " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " as the system and its constraints change." }
+      ],
+      "answer": [{ "type": "text", "text": "An architecture is never finished; it keeps evolving as the system and its constraints change." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["evolving", "changing"] }] },
+      "hints": ["Another word for changing over time."],
+      "fullLine": "An architecture is never finished; it keeps evolving as the system and its constraints change.",
+      "teaching": [
+        { "type": "text", "text": "Architects do not produce a final diagram. They keep making and revising decisions as the product, the team and the load change.", "lang": "en" },
+        { "type": "video", "source": "youtube", "src": "K7RkjKTIQbo", "search": "Mark Richards Neal Ford software architecture fundamentals", "alt": "A conversation about the fundamentals of software architecture and how architects work" }
+      ]
+    },
+    {
+      "key": "foundations-boundaries",
+      "summary": "A boundary is a clear interface",
+      "topics": ["foundations"],
+      "tags": ["boundaries", "interfaces"],
+      "prompt": [
+        { "type": "text", "text": "A boundary is useful when each side can change without breaking the other, so components should talk through a clear " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": "." }
+      ],
+      "answer": [{ "type": "text", "text": "A boundary is useful when each side can change without breaking the other, so components should talk through a clear interface." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["interface"] }] },
+      "hints": ["The agreed contract between two parts."],
+      "fullLine": "A boundary is useful when each side can change without breaking the other, so components should talk through a clear interface.",
+      "teaching": [
+        { "type": "text", "text": "A boundary hides an implementation behind a contract. The caller depends on the contract, not on the internals, so either side can be replaced.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/system-design/images/boundaries-anim.svg", "alt": "Two modules exchanging a message through a narrow interface while their insides change" }
+      ]
+    },
+    {
+      "key": "foundations-tradeoff",
+      "summary": "A trade-off buys one quality with another",
+      "topics": ["foundations"],
+      "tags": ["trade-offs"],
+      "prompt": [{ "type": "text", "text": "What does a design trade-off mean?" }],
+      "answer": [{ "type": "text", "text": "Making one quality better by accepting less of another." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Making one quality better by accepting less of another",
+          "Finding a design with no downsides",
+          "Choosing the newest tool available",
+          "Adding every useful feature"
+        ],
+        "correct": ["Making one quality better by accepting less of another"]
+      },
+      "hints": ["Every real design gives something up."],
+      "teaching": [
+        { "type": "text", "text": "Caching improves latency but adds staleness. Strong consistency improves correctness but costs availability during a partition. Naming the cost is part of the decision.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "foundations-coupling",
+      "summary": "Coupling means changing together",
+      "topics": ["foundations"],
+      "tags": ["coupling"],
+      "prompt": [
+        { "type": "text", "text": "Two modules that must change together are tightly " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": "." }
+      ],
+      "answer": [{ "type": "text", "text": "Two modules that must change together are tightly coupled." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["coupled"] }] },
+      "hints": ["The opposite of loosely joined."],
+      "fullLine": "Two modules that must change together are tightly coupled.",
+      "teaching": [
+        { "type": "text", "text": "Coupling is not automatically bad. Some parts must coordinate. The problem is hidden coupling: a change in one place breaks a distant part with no clear contract.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "foundations-cohesion",
+      "summary": "Cohesion is one job done well",
+      "topics": ["foundations"],
+      "tags": ["cohesion"],
+      "prompt": [{ "type": "text", "text": "What is high cohesion?" }],
+      "answer": [{ "type": "text", "text": "One module does one related job well." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "One module does one related job well",
+          "One module touches every part of the app",
+          "Two modules share one database",
+          "Every module uses the same framework"
+        ],
+        "correct": ["One module does one related job well"]
+      },
+      "hints": ["Cohesion is about what belongs together."],
+      "teaching": [
+        { "type": "text", "text": "High cohesion keeps related rules in one place. Low cohesion scatters one job across many modules, so every change touches several files.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "foundations-stateless",
+      "summary": "A stateless service keeps no session",
+      "topics": ["foundations"],
+      "tags": ["stateless", "scaling"],
+      "prompt": [
+        { "type": "text", "text": "A stateless service keeps no session " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " between requests, so any instance can serve the next one." }
+      ],
+      "answer": [{ "type": "text", "text": "A stateless service keeps no session state between requests, so any instance can serve the next one." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["state", "data"] }] },
+      "hints": ["What a session holds."],
+      "fullLine": "A stateless service keeps no session state between requests, so any instance can serve the next one.",
+      "teaching": [
+        { "type": "text", "text": "Stateless services are easy to scale because the load balancer can send each request anywhere. Shared state moves to a database, cache or token.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "foundations-horizontal",
+      "summary": "Horizontal scaling adds machines",
+      "topics": ["foundations"],
+      "tags": ["scaling"],
+      "prompt": [{ "type": "text", "text": "Adding more machines to share the load is called scaling..." }],
+      "answer": [{ "type": "text", "text": "horizontally" }],
+      "answerDef": { "mode": "picks", "options": ["horizontally", "vertically", "diagonally", "recursively"], "correct": ["horizontally"] },
+      "hints": ["Think of a row of servers side by side."],
+      "teaching": [
+        { "type": "text", "text": "Vertical scaling makes one machine bigger. Horizontal scaling adds more machines. Horizontal scaling needs stateless services and a way to balance traffic.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "foundations-evolvable",
+      "summary": "Evolvable means cheap to change",
+      "topics": ["foundations"],
+      "tags": ["change", "design"],
+      "prompt": [{ "type": "text", "text": "What one word describes a design that stays cheap to change over time?" }],
+      "answer": [{ "type": "text", "text": "evolvable" }],
+      "answerDef": { "mode": "type", "expected": ["evolvable", "maintainable", "flexible"], "judge": "loose" },
+      "hints": ["It starts with an e and rhymes with solvable."],
+      "fullLine": "A design that stays cheap to change over time is evolvable.",
+      "teaching": [
+        { "type": "text", "text": "Evolvability is not about predicting the future. It is about keeping decisions reversible and boundaries clear enough that the next change stays small.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "foundations-context",
+      "summary": "The same architecture can fit one team and fail another",
+      "topics": ["foundations"],
+      "tags": ["context", "constraints"],
+      "prompt": [{ "type": "text", "text": "Why can two teams copy the same architecture and get different results?" }],
+      "answer": [{ "type": "text", "text": "Architecture must fit each team's constraints." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Architecture must fit each team's constraints",
+          "One team used the wrong editor",
+          "Architecture only works in the cloud",
+          "Results depend on the diagram tool"
+        ],
+        "correct": ["Architecture must fit each team's constraints"]
+      },
+      "hints": ["Team size, skills and budget matter as much as the pattern."],
+      "teaching": [
+        { "type": "text", "text": "A pattern is advice, not a guarantee. The team's size, skills, budget and domain decide whether the same shape helps or hurts.", "lang": "en" },
+        { "type": "video", "source": "youtube", "src": "vGlxwcyrVd8", "search": "Mark Richards Neal Ford Software Architecture The Hard Parts", "alt": "Architects discussing why architecture decisions depend on context and trade-offs" }
+      ]
+    }
+  ]
+}

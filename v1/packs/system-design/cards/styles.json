@@ -1,0 +1,204 @@
+{
+  "cards": [
+    {
+      "key": "styles-monolith",
+      "summary": "A monolith is one deployable application",
+      "topics": ["styles"],
+      "tags": ["monolith"],
+      "prompt": [
+        { "type": "text", "text": "A single deployable application that contains all of its features is a " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": "." }
+      ],
+      "answer": [{ "type": "text", "text": "A single deployable application that contains all of its features is a monolith." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["monolith", "monolithic application"] }] },
+      "hints": ["From the Greek for one stone."],
+      "fullLine": "A single deployable application that contains all of its features is a monolith.",
+      "teaching": [
+        { "type": "text", "text": "A monolith is not a failure. It has one deploy, one database and one codebase, which is often the cheapest way to find product-market fit.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/system-design/images/circuit-board.webp", "alt": "Close-up of a circuit board with many connected components on one board" }
+      ]
+    },
+    {
+      "key": "styles-modular-monolith",
+      "summary": "A modular monolith keeps clear seams",
+      "topics": ["styles"],
+      "tags": ["monolith", "modularity"],
+      "prompt": [{ "type": "text", "text": "What makes a monolith modular?" }],
+      "answer": [{ "type": "text", "text": "Clear internal boundaries between features." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Clear internal boundaries between features",
+          "Keeping everything in one giant file",
+          "A separate database per screen",
+          "Deploying each function separately"
+        ],
+        "correct": ["Clear internal boundaries between features"]
+      },
+      "hints": ["The seams matter, not the number of deploys."],
+      "teaching": [
+        { "type": "text", "text": "A modular monolith organises features into modules with explicit interfaces. You keep one deployment while making a later split into services cheaper.", "lang": "en" },
+        { "type": "video", "source": "youtube", "src": "Xo3rsiZYsJQ", "search": "Modular Monoliths How To Build One Lessons Learned Milan Jovanovic", "alt": "A practical explanation of building a modular monolith and the lessons learned" }
+      ]
+    },
+    {
+      "key": "styles-microservice",
+      "summary": "A microservice deploys on its own",
+      "topics": ["styles"],
+      "tags": ["microservices"],
+      "prompt": [
+        { "type": "text", "text": "A microservice is independently " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": ", so its team can ship without rebuilding the whole system." }
+      ],
+      "answer": [{ "type": "text", "text": "A microservice is independently deployable, so its team can ship without rebuilding the whole system." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["deployable", "deployed"] }] },
+      "hints": ["The key word is about releasing, not coding."],
+      "fullLine": "A microservice is independently deployable, so its team can ship without rebuilding the whole system.",
+      "teaching": [
+        { "type": "text", "text": "The defining trait is independent deployment. Each service owns its data and talks to others over a network contract, which buys autonomy at the cost of coordination.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/system-design/images/services-anim.svg", "alt": "A request moving through several small services that deploy independently" }
+      ]
+    },
+    {
+      "key": "styles-microservice-cost",
+      "summary": "Microservices trade autonomy for operations",
+      "topics": ["styles"],
+      "tags": ["microservices", "trade-offs"],
+      "prompt": [{ "type": "text", "text": "What is the main cost of microservices?" }],
+      "answer": [{ "type": "text", "text": "Operational complexity across many services." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Operational complexity across many services",
+          "Language lock-in",
+          "No ability to scale",
+          "Slower local editing"
+        ],
+        "correct": ["Operational complexity across many services"]
+      },
+      "hints": ["More moving parts to deploy, observe and secure."],
+      "teaching": [
+        { "type": "text", "text": "Every service adds deployment, networking, tracing and failure handling. A small team often spends more time on plumbing than on the product.", "lang": "en" },
+        { "type": "video", "source": "youtube", "src": "6giotJL8bzc", "search": "Monolithic vs Microservices Architecture Java Guides", "alt": "A comparison of monolithic and microservice architectures" }
+      ]
+    },
+    {
+      "key": "styles-layered",
+      "summary": "Layers point downward",
+      "topics": ["styles"],
+      "tags": ["layers"],
+      "prompt": [
+        { "type": "text", "text": "In a layered architecture, each layer may call the layer " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " it, not the other way around." }
+      ],
+      "answer": [{ "type": "text", "text": "In a layered architecture, each layer may call the layer below it, not the other way around." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["below", "beneath"] }] },
+      "hints": ["Presentation sits on top of business logic."],
+      "fullLine": "In a layered architecture, each layer may call the layer below it, not the other way around.",
+      "teaching": [
+        { "type": "text", "text": "Layers separate presentation, business rules and data access. The rule that dependencies point one way keeps the core from depending on the UI or the database.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "styles-event-driven",
+      "summary": "Events decouple producers from consumers",
+      "topics": ["styles"],
+      "tags": ["events"],
+      "prompt": [{ "type": "text", "text": "What does an event-driven system use to connect producers and consumers?" }],
+      "answer": [{ "type": "text", "text": "Events on a broker." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": ["Events on a broker", "Direct database reads", "Shared global variables", "A single cron job"],
+        "correct": ["Events on a broker"]
+      },
+      "hints": ["Producers publish; consumers subscribe."],
+      "teaching": [
+        { "type": "text", "text": "A producer publishes an event such as order-placed. Consumers react without the producer knowing who they are. This decouples teams but makes the flow harder to trace.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "styles-serverless",
+      "summary": "Serverless runs code on events",
+      "topics": ["styles"],
+      "tags": ["serverless"],
+      "prompt": [
+        { "type": "text", "text": "Serverless removes the need to manage " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " while still charging per request." }
+      ],
+      "answer": [{ "type": "text", "text": "Serverless removes the need to manage servers while still charging per request." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["servers", "machines"] }] },
+      "hints": ["The cloud provider runs the code when an event arrives."],
+      "fullLine": "Serverless removes the need to manage servers while still charging per request.",
+      "teaching": [
+        { "type": "text", "text": "Serverless platforms start code on demand and scale to zero. Cold starts, time limits and per-request pricing are the trade-offs to check against the workload.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "styles-cqrs",
+      "summary": "CQRS separates reads from writes",
+      "topics": ["styles"],
+      "tags": ["cqrs"],
+      "prompt": [
+        { "type": "text", "text": "CQRS separates the write model from the " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " model." }
+      ],
+      "answer": [{ "type": "text", "text": "CQRS separates the write model from the read model." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["read", "query"] }] },
+      "hints": ["The Q stands for query."],
+      "fullLine": "CQRS separates the write model from the read model.",
+      "teaching": [
+        { "type": "text", "text": "Command Query Responsibility Segregation lets each side use the shape it needs: a normalised write model and a denormalised read model. The cost is keeping the two in sync.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "styles-event-sourcing",
+      "summary": "Event sourcing stores the history",
+      "topics": ["styles"],
+      "tags": ["event-sourcing"],
+      "prompt": [{ "type": "text", "text": "What does event sourcing store?" }],
+      "answer": [{ "type": "text", "text": "The ordered history of events that changed the state." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "The ordered history of events that changed the state",
+          "Only the latest row",
+          "A snapshot every second",
+          "A copy of the user interface"
+        ],
+        "correct": ["The ordered history of events that changed the state"]
+      },
+      "hints": ["The log is the source of truth."],
+      "teaching": [
+        { "type": "text", "text": "Event sourcing appends events instead of overwriting rows. Current state is rebuilt by replaying them. The history is valuable, but schema changes and replay cost real effort.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "styles-choose-simplest",
+      "summary": "Choose the simplest style that fits",
+      "topics": ["styles"],
+      "tags": ["decisions", "microservices"],
+      "prompt": [{ "type": "text", "text": "When should a team adopt microservices?" }],
+      "answer": [{ "type": "text", "text": "When independent deployment is worth the operational cost." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "When independent deployment is worth the operational cost",
+          "As soon as they have more than one developer",
+          "Whenever a conference talk recommends it",
+          "Before they understand their domain"
+        ],
+        "correct": ["When independent deployment is worth the operational cost"]
+      },
+      "hints": ["Start simple, split when a real force pushes you."],
+      "teaching": [
+        { "type": "text", "text": "Start with a modular monolith. Split out a service when a team needs to deploy independently, a part needs different scaling, or a boundary is stable enough to become a contract.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/system-design/images/styles-compare.svg", "alt": "A side-by-side comparison of monolith, modular monolith and microservices traits" }
+      ]
+    }
+  ]
+}

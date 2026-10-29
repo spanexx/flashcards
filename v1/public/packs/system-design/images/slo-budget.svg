@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-labelledby="t d">
+  <title id="t">An error budget is time you may lose</title>
+  <desc id="d">A 99.9 percent monthly objective leaves 43.2 minutes of allowed downtime; a gauge shows what is spent and left.</desc>
+  <style>
+    .paper{fill:#fbf8f1}.ink{fill:#1f2933}.muted{fill:#6b7280}
+    .box{fill:#ffffff;stroke:#1f2933;stroke-width:1.4}
+    .track{fill:#eceae3}
+    .spent{fill:#a23b3b}
+    .left{fill:#3f7d5a}
+  </style>
+  <rect class="paper" width="800" height="450"/>
+  <text x="40" y="44" font-family="system-ui, sans-serif" font-size="21" font-weight="650" class="ink">An error budget is time you may lose</text>
+  <text x="40" y="70" font-family="system-ui, sans-serif" font-size="14" class="muted">Reliability is a target with a budget, not a wish for zero failures.</text>
+
+  <rect x="50" y="110" width="220" height="120" rx="10" class="box"/>
+  <text x="160" y="142" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" class="muted">monthly objective</text>
+  <text x="160" y="180" text-anchor="middle" font-family="system-ui, sans-serif" font-size="28" font-weight="650" class="ink">99.9%</text>
+  <text x="160" y="208" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="muted">43.2 minutes allowed</text>
+
+  <rect x="300" y="110" width="220" height="120" rx="10" class="box"/>
+  <text x="410" y="142" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" class="muted">tighter objective</text>
+  <text x="410" y="180" text-anchor="middle" font-family="system-ui, sans-serif" font-size="28" font-weight="650" class="ink">99.95%</text>
+  <text x="410" y="208" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="muted">21.6 minutes allowed</text>
+
+  <rect x="550" y="110" width="200" height="120" rx="10" class="box"/>
+  <text x="650" y="142" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" class="muted">looser objective</text>
+  <text x="650" y="180" text-anchor="middle" font-family="system-ui, sans-serif" font-size="28" font-weight="650" class="ink">99%</text>
+  <text x="650" y="208" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="muted">7.2 hours allowed</text>
+
+  <text x="50" y="292" font-family="system-ui, sans-serif" font-size="13" class="ink">this month</text>
+  <rect x="50" y="308" width="700" height="34" rx="17" class="track"/>
+  <rect x="50" y="308" width="175" height="34" rx="17" class="spent"/>
+  <rect x="225" y="308" width="525" height="34" rx="17" class="left"/>
+  <text x="137" y="330" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" fill="#ffffff">spent 10.8 min</text>
+  <text x="487" y="330" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" fill="#ffffff">left 32.4 min</text>
+
+  <text x="50" y="385" font-family="system-ui, sans-serif" font-size="12" class="muted">Budget left → ship features. Budget gone → slow down and fix reliability.</text>
+  <text x="40" y="430" font-family="system-ui, sans-serif" font-size="13" class="muted">An SLO without a consequence is a dashboard; an SLA adds the contract.</text>
+</svg>

@@ -1,0 +1,109 @@
+GRILL — system-design-course
+Status: Locked
+Date: 2026-10-29
+Decisions by: learner directive, with the agent restating the constraints before building
+Source ticket: wayfinder/anything-learning-spec/tickets/system-design-course.md
+
+Verbatim from the learner on 2026-10-29 (voice dictation; homophones left as spoken):
+
+  "i need you to create a new pack that has a full library. You have to make a
+  very good research to gather images, videos, for where you cannot find videos
+  make subtle animation to be in place. focus on system architecture, and
+  design for setting up a software in AI times and managing up to the CI and
+  CD."
+
+  "Okay, since your post and. You need to. Make a decision. Dictionary looks
+  like. However, I don't have a dictionary at the moment. I see your seven.
+  Saga. There is no. way to actually. So I needed to create a pack. System
+  architecture. System design. Combine together. So your job is to gather
+  enough images, create a library. Line and get documentation to make the
+  library reach. For where you cannot get videos. Use animation to make the
+  videos, and you can get the videos at some short clips. One. You can make it
+  reach. Design course in a part."
+
+  "just. Verify it should be an inbuilt course. So you are going to add it as
+  an inbuilt course. Make sure that you take your time to gather all the
+  evidence, all the documentation. So we can actually make this work."
+
+Restatement the learner accepted by directing the build:
+  A built-in course pack about system architecture and system design for the AI
+  era, carried through delivery up to CI/CD. Real images and real short videos
+  where they exist; subtle animation where a video does not. Documentation and
+  sources must be good enough for the course to teach, not just look full.
+
+--------------------------------------------------------------------------------
+Q1. Is this a new pack, a course, or a replacement for the Dictionary work?
+A. A new built-in pack. The Course Dictionary work on its own branch is not
+   touched. The learner asked for system architecture and system design
+   combined into one library.
+   Why: the learner named a missing subject and said "create a pack".
+   Rules out: editing the Dictionary branch, or shipping an external pack the
+   learner must install.
+
+Q2. Built-in means what, exactly?
+A. The pack ships inside the app: its folder is read by the seed builder, its
+   bundle is written to public/packs, and a fresh install receives it with no
+   import step. The learner confirmed "Verify it should be an inbuilt course."
+   Rules out: a downloadable pack, a demo, or a folder that exists but is not
+   in the seed list.
+
+Q3. How wide is the course?
+A. Ten decks, ten cards each, one hundred cards. The decks follow a learner's
+   path: foundations, requirements, styles, data, reliability, security,
+   designing AI systems, AI-assisted engineering, delivery, CI/CD.
+   Why: the built-in pack tests fix ten cards per deck; a course-shaped library
+   needs a visible start, middle and end. Ten decks keeps every deck a full
+   session and every subject a real deck.
+   Rules out: a loose pile of cards with no sequence.
+
+Q4. What does "for the AI era" change?
+A. Two whole decks: designing AI systems (LLMs, RAG, evals, grounding, token
+   budgets, prompt injection) and AI-assisted engineering (review gates,
+   generated-code security, tests, specs, provenance, accountability). The rest
+   of the course still teaches the durable ideas, because AI does not remove
+   boundaries, data ownership, reliability or delivery.
+   Rules out: a course that is only about prompting.
+
+Q5. What counts as evidence and documentation?
+A. Every deck names the book, paper, standard or vendor documentation behind
+   it in SOURCES.md. Every photo has a creator and licence. Every video is a
+   real clip checked through YouTube oEmbed. Every diagram is original and
+   stored as an SVG in the pack.
+   Why: the learner said "gather all the evidence, all the documentation."
+   Rules out: unattributed images, dead video ids, and cards invented from
+   memory without a source.
+
+Q6. Video or animation?
+A. A verified short video where one exists and fits. Where no video exists, or
+   a clip would not show the idea clearly, an original animated SVG. The app
+   supports built-in images, not built-in video files, so an animation ships as
+   an image and plays inside the teaching layer.
+   Why: the learner asked for animation "where you cannot find videos".
+   Rules out: downloading YouTube files, shipping large video binaries, or
+   leaving a card with no visual teaching.
+
+Q7. How much media per deck?
+A. At least one photograph or static diagram, at least one animation or
+   comparison diagram, and at least one video. Every card carries a teaching
+   layer. The pack ships 10 photographs, 10 animated SVGs, 8 static SVGs and 24
+   verified video clips.
+   Rules out: a deck that is only text, or a course where media is concentrated
+   in the first two decks.
+
+Q8. Does this change the app's schema?
+A. No. The pack uses the existing card and teaching schema, the existing seed
+   builder and the existing static export. Only the seed list and the seed
+   tests change.
+   Why: the pack format is the extension point; a new subject should not need
+   new code.
+   Rules out: a special "course" screen, a new database table, or a runtime
+   server.
+
+Q9. What must never happen?
+A. No commit, push, pull request or merge without the learner's explicit go.
+   The Course Dictionary branch stays untouched. The pack must not break the
+   two existing built-in packs, their decks or their images.
+   Rules out: mixing this work into the Dictionary branch, or "finishing" by
+   pushing unasked.
+
+Open questions: none.

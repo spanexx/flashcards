@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-labelledby="t d">
+  <title id="t">Canary traffic grows while the numbers stay healthy</title>
+  <desc id="d">A small slice of traffic reaches the new version first; the slice widens only while the error rate stays inside the budget.</desc>
+  <style>
+    .paper{fill:#fbf8f1}.ink{fill:#1f2933}.muted{fill:#6b7280}
+    .box{fill:#ffffff;stroke:#1f2933;stroke-width:1.5}
+    .v1{fill:#e6eff1;stroke:#2f6f8f;stroke-width:1.3}
+    .v2{fill:#f3e8d7;stroke:#b7791f;stroke-width:1.4}
+    .track{fill:#eceae3}
+    .bar1{fill:#2f6f8f}
+    .bar2{fill:#b7791f}
+    .l1{animation:l1 12s ease-in-out infinite}
+    .l2{animation:l2 12s ease-in-out infinite}
+    .l3{animation:l3 12s ease-in-out infinite}
+    @keyframes l1{0%,25%{opacity:1}35%,100%{opacity:.15}}
+    @keyframes l2{0%,35%{opacity:.15}45%,65%{opacity:1}75%,100%{opacity:.15}}
+    @keyframes l3{0%,70%{opacity:.15}82%,100%{opacity:1}}
+    @media (prefers-reduced-motion: reduce){*{animation:none!important}}
+  </style>
+  <rect class="paper" width="800" height="450"/>
+  <text x="40" y="44" font-family="system-ui, sans-serif" font-size="21" font-weight="650" class="ink">Canary traffic grows while the numbers stay healthy</text>
+  <text x="40" y="70" font-family="system-ui, sans-serif" font-size="14" class="muted">A small slice of real traffic is the cheapest test you cannot stage.</text>
+
+  <rect x="50" y="175" width="120" height="80" rx="9" class="box"/>
+  <text x="110" y="220" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" class="ink">load balancer</text>
+
+  <rect x="250" y="130" width="150" height="70" rx="9" class="v1"/>
+  <text x="325" y="160" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" class="ink">version 1</text>
+  <text x="325" y="182" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" class="muted">known good</text>
+
+  <rect x="250" y="235" width="150" height="70" rx="9" class="v2"/>
+  <text x="325" y="265" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" class="ink">version 2</text>
+  <text x="325" y="287" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" class="muted">canary</text>
+
+  <path d="M 170 205 L 245 165" stroke="#1f2933" stroke-width="1.5" fill="none"/>
+  <path d="M 170 225 L 245 270" stroke="#1f2933" stroke-width="1.5" fill="none"/>
+
+  <rect x="450" y="130" width="300" height="24" rx="12" class="track"/>
+  <rect x="450" y="130" height="24" rx="12" class="bar1" width="285">
+    <animate attributeName="width" values="285;225;0;285" keyTimes="0;0.45;0.8;1" dur="12s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="450" y="130" height="24" rx="12" class="bar2" width="15">
+    <animate attributeName="width" values="15;75;300;15" keyTimes="0;0.45;0.8;1" dur="12s" repeatCount="indefinite"/>
+  </rect>
+  <text x="450" y="118" font-family="system-ui, sans-serif" font-size="12" class="muted">traffic split</text>
+  <text x="510" y="190" class="l1" font-family="system-ui, sans-serif" font-size="12" fill="#b7791f">5% canary</text>
+  <text x="560" y="190" class="l2" font-family="system-ui, sans-serif" font-size="12" fill="#b7791f">25% canary</text>
+  <text x="620" y="190" class="l3" font-family="system-ui, sans-serif" font-size="12" fill="#b7791f">100% canary</text>
+
+  <rect x="450" y="235" width="300" height="110" rx="9" class="box"/>
+  <text x="600" y="261" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" class="ink">watch the signals</text>
+  <text x="470" y="288" font-family="system-ui, sans-serif" font-size="12" class="muted">error rate</text>
+  <text x="470" y="310" font-family="system-ui, sans-serif" font-size="12" class="muted">latency p95</text>
+  <text x="470" y="332" font-family="system-ui, sans-serif" font-size="12" class="muted">business events</text>
+  <line x1="600" y1="276" x2="600" y2="336" stroke="#3f7d5a" stroke-width="2" stroke-dasharray="6 5"/>
+  <text x="690" y="305" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="#3f7d5a">stay inside</text>
+
+  <text x="40" y="410" font-family="system-ui, sans-serif" font-size="13" class="muted">If the canary is unhealthy, route back before the budget runs out.</text>
+</svg>

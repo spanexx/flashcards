@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-labelledby="t d">
+  <title id="t">The cache hit and miss paths</title>
+  <desc id="d">A green dot travels from the app to the cache on a hit; an amber dot goes to the database on a miss and refills the cache.</desc>
+  <style>
+    .paper{fill:#fbf8f1}.ink{fill:#1f2933}.muted{fill:#6b7280}
+    .box{fill:#ffffff;stroke:#1f2933;stroke-width:1.6}
+    .cache{fill:#e5efe8;stroke:#3f7d5a;stroke-width:1.4}
+    .db{fill:#f3e8d7;stroke:#b7791f;stroke-width:1.4}
+    .hitline{fill:none;stroke:#3f7d5a;stroke-width:2.4}
+    .missline{fill:none;stroke:#b7791f;stroke-width:2.4;stroke-dasharray:7 5}
+    .hitlabel{animation:hit 8s ease-in-out infinite}
+    .misslabel{animation:miss 8s ease-in-out infinite}
+    @keyframes hit{0%,40%{opacity:1}50%,100%{opacity:.15}}
+    @keyframes miss{0%,40%{opacity:.15}50%,90%{opacity:1}100%{opacity:.15}}
+    @media (prefers-reduced-motion: reduce){*{animation:none!important}}
+  </style>
+  <rect class="paper" width="800" height="450"/>
+  <text x="40" y="44" font-family="system-ui, sans-serif" font-size="21" font-weight="650" class="ink">One read, two paths</text>
+  <text x="40" y="70" font-family="system-ui, sans-serif" font-size="14" class="muted">A hit is fast and possibly stale; a miss is slow and fresh.</text>
+
+  <rect x="60" y="190" width="120" height="80" rx="9" class="box"/>
+  <text x="120" y="236" text-anchor="middle" font-family="system-ui, sans-serif" font-size="15" class="ink">app</text>
+
+  <rect x="280" y="120" width="180" height="80" rx="9" class="cache"/>
+  <text x="370" y="152" text-anchor="middle" font-family="system-ui, sans-serif" font-size="15" class="ink">cache</text>
+  <text x="370" y="176" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="muted">same key, short life</text>
+
+  <rect x="280" y="290" width="180" height="80" rx="9" class="db"/>
+  <text x="370" y="322" text-anchor="middle" font-family="system-ui, sans-serif" font-size="15" class="ink">database</text>
+  <text x="370" y="346" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="muted">source of truth</text>
+
+  <path d="M 180 220 L 275 165" class="hitline"/>
+  <path d="M 180 245 L 275 325" class="missline"/>
+  <path d="M 460 325 L 515 325 L 515 165 L 465 165" class="missline"/>
+
+  <text x="210" y="160" class="hitlabel" font-family="system-ui, sans-serif" font-size="13" font-weight="600" fill="#3f7d5a">hit</text>
+  <text x="205" y="325" class="misslabel" font-family="system-ui, sans-serif" font-size="13" font-weight="600" fill="#b7791f">miss</text>
+  <text x="528" y="250" class="misslabel" font-family="system-ui, sans-serif" font-size="12" fill="#b7791f">fill</text>
+
+  <circle r="5" fill="#3f7d5a">
+    <animateMotion dur="8s" repeatCount="indefinite" path="M 180 220 L 275 165 L 370 165"/>
+  </circle>
+  <circle r="5" fill="#b7791f">
+    <animateMotion dur="8s" begin="4s" repeatCount="indefinite" path="M 180 245 L 275 325 L 370 325 L 460 325 L 515 325 L 515 165 L 465 165"/>
+  </circle>
+
+  <text x="40" y="410" font-family="system-ui, sans-serif" font-size="13" class="muted">Every cache is a bet that a short-lived copy is good enough for this read.</text>
+</svg>
