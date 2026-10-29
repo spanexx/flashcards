@@ -6,14 +6,25 @@
 
 import semver from "semver";
 import { z } from "zod";
-import type { Card, CardOrigin, CardSource, Deck, MediaRecord, Tombstone } from "@/lib/shared/types";
+import type {
+  Card,
+  CardOrigin,
+  CardSource,
+  Deck,
+  DictionaryPage,
+  MediaRecord,
+  PageContent,
+  Tombstone,
+} from "@/lib/shared/types";
 import { buildCard, deckCardId, hardRuleIssues } from "@/lib/core/card";
 import { parseJsonLoose, type RepairKind } from "@/lib/core/json-repair";
 import { referencedMediaIds } from "@/lib/core/media";
+import { pageIdFor, pageRuleProblems } from "@/lib/core/pages";
 import {
   cardSourceSchema,
   packPromptsSchema,
   studyLevelSchema,
+  teachingPartSchema,
   type ValidationIssue,
 } from "@/lib/core/schema";
 import { normalizeSettings } from "@/lib/core/settings-shape";
@@ -44,6 +55,7 @@ import {
   type BrowserPack,
 } from "@/lib/browser/repository";
 import { readAllMedia } from "@/lib/browser/media";
+import { readPages, readTraces, writePage, writeShippedPage, writeTrace } from "@/lib/browser/pages";
 
 /** The one bundle schema. The skill and the app both speak this. */
 export const PACK_BUNDLE_SCHEMA = "flashcards.pack/v1";
@@ -79,7 +91,29 @@ export const bundlePackSchema = z.object({
   sourceLanguage: z.string().optional(),
   studyInstruction: z.string().optional(),
   prompts: packPromptsSchema.optional(),
+  /** The pack asks every card page to be read before an answer counts. */
+  requirePageRead: z.boolean().optional(),
 });
+
+/**
+ * One Dictionary page inside a bundle. The pack header names the pack, so a
+ * page only names its deck or card; reading traces never travel in a pack.
+ */
+export const bundlePageSchema = z
+  .object({
+    level: z.enum(["pack", "deck", "card"]),
+    deckId: z.string().min(1).optional(),
+    cardId: z.string().min(1).optional(),
+    title: z.string().optional(),
+    lead: z.string().optional(),
+    cover: teachingPartSchema.optional(),
+    parts: z.array(teachingPartSchema).default([]),
+  })
+  .superRefine((page, ctx) => {
+    for (const problem of pageRuleProblems(page)) {
+      ctx.addIssue({ code: "custom", path: [problem.path], message: problem.message });
+    }
+  });
 
 /** A whole pack bundle. It creates a pack, or updates one when its version is newer. */
 export const packBundleSchema = z.object({
@@ -87,6 +121,7 @@ export const packBundleSchema = z.object({
   pack: bundlePackSchema,
   decks: z.array(deckSchema),
   cards: z.array(bundleCardSchema),
+  pages: z.array(bundlePageSchema).default([]),
 });
 
 /** A deck fragment adds one or more decks to an existing pack. */
@@ -110,6 +145,7 @@ export type PackBundle = z.infer<typeof packBundleSchema>;
 export type DeckBundle = z.infer<typeof deckBundleSchema>;
 export type CardsBundle = z.infer<typeof cardsBundleSchema>;
 export type BundleCard = z.infer<typeof bundleCardSchema>;
+export type BundlePage = z.infer<typeof bundlePageSchema>;
 
 /** Where an import is allowed to put its content. */
 export type ImportTarget =
@@ -156,7 +192,7 @@ function issue(field: string, message: string, index = 0): ValidationIssue {
 function schemaIssues(error: z.ZodError): ValidationIssue[] {
   return error.issues.map((problem) => {
     const parts = problem.path.map((part) => String(part));
-    if ((parts[0] === "cards" || parts[0] === "decks") && /^\d+$/.test(parts[1] ?? "")) {
+    if ((parts[0] === "cards" || parts[0] === "decks" || parts[0] === "pages") && /^\d+$/.test(parts[1] ?? "")) {
       return {
         index: Number(parts[1]),
         field: parts.slice(2).join(".") || parts[0],
@@ -297,6 +333,48 @@ function cardFromBundle(
   card.packName = pack.name;
   card.deckId = deck.id;
   return { card };
+}
+
+/** Turn one bundle page into the stored row, or name what it points at wrongly. */
+function pageFromBundle(
+  bundlePage: BundlePage,
+  index: number,
+  packName: string,
+  decks: Map<string, Deck>,
+  cards: Map<string, Card>,
+  now: string,
+): { page: DictionaryPage } | { issues: ValidationIssue[] } {
+  const issues: ValidationIssue[] = [];
+  let deckId = bundlePage.level === "deck" ? bundlePage.deckId : undefined;
+  if (bundlePage.level === "deck" && deckId && !decks.has(deckId)) {
+    issues.push(issue("pages.deckId", `there is no deck "${deckId}" in this pack`, index));
+  }
+  let cardId: string | undefined;
+  if (bundlePage.level === "card" && bundlePage.cardId) {
+    const card = cards.get(bundlePage.cardId);
+    if (!card) {
+      issues.push(issue("pages.cardId", `there is no card "${bundlePage.cardId}" in this pack`, index));
+    } else {
+      cardId = card.id;
+      deckId = card.deckId;
+    }
+  }
+  if (issues.length > 0) return { issues };
+  return {
+    page: {
+      id: pageIdFor(bundlePage.level, packName, deckId, cardId),
+      level: bundlePage.level,
+      packName,
+      ...(deckId ? { deckId } : {}),
+      ...(cardId ? { cardId } : {}),
+      ...(bundlePage.title !== undefined ? { title: bundlePage.title } : {}),
+      ...(bundlePage.lead !== undefined ? { lead: bundlePage.lead } : {}),
+      ...(bundlePage.cover && bundlePage.cover.type === "image" ? { cover: bundlePage.cover } : {}),
+      parts: bundlePage.parts,
+      createdAt: now,
+      updatedAt: now,
+    },
+  };
 }
 
 /** Keep only cards the learner does not already have. */
@@ -473,6 +551,21 @@ async function importPack(text: string, options: ImportOptions): Promise<ImportR
     else cards.push(built.card);
   }
 
+  // WHY: A page names a deck or a card that this import is about to write, so
+  // the page is checked against the same two sets the cards were checked
+  // against. A page pointing nowhere refuses the whole file, like a bad card.
+  const knownCards = new Map<string, Card>();
+  for (const card of await readCards()) {
+    if (card.packName === bundle.pack.name) knownCards.set(card.id, card);
+  }
+  for (const card of cards) knownCards.set(card.id, card);
+  const pages: DictionaryPage[] = [];
+  for (const [index, bundlePage] of bundle.pages.entries()) {
+    const built = pageFromBundle(bundlePage, index, bundle.pack.name, decks, knownCards, now);
+    if ("issues" in built) issues.push(...built.issues);
+    else pages.push(built.page);
+  }
+
   if (issues.length > 0) return { ok: false, issues };
 
   // WHY: A seed must not bring back a card the learner deliberately deleted.
@@ -495,12 +588,14 @@ async function importPack(text: string, options: ImportOptions): Promise<ImportR
     studyInstruction: bundle.pack.studyInstruction ?? installed?.studyInstruction,
     decks: [...decks.values()],
     prompts: bundle.pack.prompts ?? installed?.prompts ?? null,
+    requirePageRead: bundle.pack.requirePageRead ?? installed?.requirePageRead,
     createdAt: installed?.createdAt ?? now,
     updatedAt: now,
   };
   await writePack(pack);
   const writes = [...reconciled.added, ...reconciled.updated, ...reconciled.retired];
   if (writes.length > 0) await upsertCards(writes);
+  for (const page of pages) await writeShippedPage(page);
 
   return {
     ok: true,
@@ -685,11 +780,48 @@ function cardToBundleCard(card: Card): BundleCard {
   };
 }
 
-/** Export one pack as a shareable bundle: content only, never evidence. */
+/**
+ * A page as it may leave this device in a shared pack. A learner's overlay of a
+ * shipped page is private, so the pack carries the shipped copy kept beside it;
+ * a page the learner wrote stays as it is.
+ */
+export function shareablePage(page: DictionaryPage): DictionaryPage {
+  if (!page.editedFromShipped || !page.shippedCopy) return page;
+  const copy = page.shippedCopy;
+  return {
+    id: page.id,
+    level: page.level,
+    packName: page.packName,
+    ...(page.deckId !== undefined ? { deckId: page.deckId } : {}),
+    ...(page.cardId !== undefined ? { cardId: page.cardId } : {}),
+    ...(copy.title !== undefined ? { title: copy.title } : {}),
+    ...(copy.lead !== undefined ? { lead: copy.lead } : {}),
+    ...(copy.cover ? { cover: copy.cover } : {}),
+    parts: copy.parts,
+    createdAt: page.createdAt,
+    updatedAt: page.updatedAt,
+  };
+}
+
+/** A page as it appears inside an exported bundle: content, never traces. */
+function pageToBundlePage(page: DictionaryPage): BundlePage {
+  return {
+    level: page.level,
+    ...(page.deckId ? { deckId: page.deckId } : {}),
+    ...(page.cardId ? { cardId: page.cardId } : {}),
+    ...(page.title !== undefined ? { title: page.title } : {}),
+    ...(page.lead !== undefined ? { lead: page.lead } : {}),
+    ...(page.cover ? { cover: page.cover } : {}),
+    parts: page.parts,
+  };
+}
+
+/** Export one pack as a shareable bundle: content only, never evidence or traces. */
 export async function exportPackBundle(name: string): Promise<{ ok: true; json: string } | { ok: false; message: string }> {
   const pack = await readPack(name);
   if (!pack) return { ok: false, message: `There is no pack "${name}" here.` };
   const cards = (await readCards()).filter((card) => card.packName === name && !card.retired);
+  const pages = await readPages(name);
   const bundle: PackBundle = {
     schema: PACK_BUNDLE_SCHEMA,
     pack: {
@@ -700,9 +832,11 @@ export async function exportPackBundle(name: string): Promise<{ ok: true; json: 
       sourceLanguage: pack.sourceLanguage,
       studyInstruction: pack.studyInstruction,
       prompts: pack.prompts ?? undefined,
+      ...(pack.requirePageRead !== undefined ? { requirePageRead: pack.requirePageRead } : {}),
     },
     decks: pack.decks,
     cards: cards.map(cardToBundleCard),
+    pages: pages.map(shareablePage).map(pageToBundlePage),
   };
   return { ok: true, json: JSON.stringify(bundle, null, 2) };
 }
@@ -722,6 +856,7 @@ export const backupSchema = z.object({
       studyInstruction: z.string().optional(),
       decks: z.array(deckSchema),
       prompts: packPromptsSchema.nullable(),
+      requirePageRead: z.boolean().optional(),
       createdAt: z.string(),
       updatedAt: z.string(),
     }),
@@ -772,6 +907,47 @@ export const backupSchema = z.object({
       deck: z.string().optional(),
     }),
   ),
+  // WHY: Dictionary pages are library content, so a full backup carries them.
+  // Reading traces are device-local proof, so a backup carries those too and a
+  // shared pack never does (GRILL entry 29). Both default empty so an older
+  // backup still restores.
+  pages: z
+    .array(
+      z.object({
+        id: z.string(),
+        level: z.enum(["pack", "deck", "card"]),
+        packName: z.string(),
+        deckId: z.string().optional(),
+        cardId: z.string().optional(),
+        title: z.string().optional(),
+        lead: z.string().optional(),
+        cover: teachingPartSchema.optional(),
+        parts: z.array(teachingPartSchema),
+        createdAt: z.string(),
+        updatedAt: z.string(),
+        learnerEdited: z.boolean().optional(),
+        editedFromShipped: z.boolean().optional(),
+        shippedCopy: z
+          .object({
+            title: z.string().optional(),
+            lead: z.string().optional(),
+            cover: teachingPartSchema.optional(),
+            parts: z.array(teachingPartSchema),
+          })
+          .optional(),
+      }),
+    )
+    .default([]),
+  pageTraces: z
+    .array(
+      z.object({
+        id: z.string(),
+        traced: z.array(z.number().int().min(0)),
+        readAt: z.string().optional(),
+        updatedAt: z.string(),
+      }),
+    )
+    .default([]),
   settings: z.unknown(),
   prompts: z.array(
     z.object({
@@ -804,17 +980,20 @@ export interface BackupContent {
 
 /** Export everything the learner owns, but never the key. */
 export async function buildBackup(): Promise<BackupContent> {
-  const [packs, cards, evidence, sessions, settings, prompts, tombstones, allMedia] = await Promise.all([
-    readPacks(),
-    readCards(),
-    readEvidence(),
-    readSessions(),
-    readSettings(),
-    readPromptLog(500),
-    readTombstones(),
-    readAllMedia(),
-  ]);
-  const wanted = referencedMediaIds(cards);
+  const [packs, cards, evidence, sessions, settings, prompts, tombstones, allMedia, pages, pageTraces] =
+    await Promise.all([
+      readPacks(),
+      readCards(),
+      readEvidence(),
+      readSessions(),
+      readSettings(),
+      readPromptLog(500),
+      readTombstones(),
+      readAllMedia(),
+      readPages(),
+      readTraces(),
+    ]);
+  const wanted = referencedMediaIds(cards, pages);
   const media = allMedia.filter((record) => wanted.has(record.id));
   const json = JSON.stringify(
     {
@@ -824,6 +1003,8 @@ export async function buildBackup(): Promise<BackupContent> {
       cards,
       evidence,
       sessions,
+      pages,
+      pageTraces,
       settings,
       prompts,
       tombstones,
@@ -890,6 +1071,23 @@ export async function applyBackup(
       built.editedFrom = card.editedFrom;
       await upsertCards([built]);
     }
+    for (const page of backup.pages) {
+      const { cover, shippedCopy, ...rest } = page;
+      let copy: PageContent | undefined;
+      if (shippedCopy) {
+        const { cover: copyCover, ...copyRest } = shippedCopy;
+        copy = {
+          ...copyRest,
+          ...(copyCover && copyCover.type === "image" ? { cover: copyCover } : {}),
+        };
+      }
+      await writePage({
+        ...rest,
+        ...(cover && cover.type === "image" ? { cover } : {}),
+        ...(copy ? { shippedCopy: copy } : {}),
+      });
+    }
+    for (const trace of backup.pageTraces) await writeTrace(trace);
     if (backup.evidence.length > 0) await appendEvidence(backup.evidence);
     for (const event of backup.sessions) await appendSession(event);
     for (const entry of backup.prompts) await appendPrompt(entry);

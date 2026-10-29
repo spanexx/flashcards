@@ -2135,6 +2135,59 @@ td {
   outline-offset: 1px;
 }
 
+/* WHY: The arrow opens a pack or deck page without choosing it, so it sits
+   outside the checkbox row. Hover and keyboard focus reveal it; a touch screen
+   keeps it faint, because hover never arrives there. */
+.study-scope-open {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  margin: 2px 2px 0 0;
+  border-radius: 6px;
+  color: var(--quiet);
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.study-scope-open svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.study-scope-pack-row:hover .study-scope-open,
+.study-scope-deck-row:hover .study-scope-open,
+.study-scope-open:focus-visible {
+  opacity: 1;
+}
+
+.study-scope-open:hover {
+  color: var(--ink);
+  background: var(--soft);
+}
+
+@media (hover: none) {
+  .study-scope-open {
+    opacity: 0.55;
+  }
+}
+
+.study-scope-deck-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.study-scope-deck-row .study-scope-choice {
+  flex: 1 1 auto;
+}
+
 .study-scope-decks {
   display: grid;
   gap: 1px;
@@ -3416,6 +3469,594 @@ body.full-stage {
   }
 }
 
+/* WHY: The Dictionary has three shapes: a card page that steps one part at a
+   time, a cover with a capped contents window, and a builder tree beside one
+   editor. These rules keep the reader calm — one part on screen, one height,
+   dots for traces, and a contents window that never becomes a wall. */
+/* PACK: course-dictionary */
+/* 2026-10-29 qoder: added reader, contents window and builder styles [pack: course-dictionary] */
+
+.eyebrow {
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--quiet);
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+.tag {
+  display: inline-block;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 1px 7px;
+  font-size: 0.76rem;
+  color: var(--quiet);
+  white-space: nowrap;
+}
+
+.chip.good {
+  color: var(--good);
+  border-color: color-mix(in srgb, var(--good) 45%, var(--line));
+}
+
+.btn.icon-only {
+  width: 32px;
+  min-width: 32px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+}
+
+.btn.icon-only svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The study card carries two framed tools and a reading chip that opens the
+   page; the words fold to icons on a narrow screen, and nothing gates an answer. */
+.study-card-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.study-tool {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 8px;
+}
+
+/* The reading chip shares the tools' corner and icon rule (GRILL entries 11-15). */
+.study-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 8px;
+}
+
+.study-tool svg,
+.study-chip svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+a.chip {
+  text-decoration: none;
+}
+
+.study-page-warning {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+
+/* A backup states the size it is about to build before it starts (GRILL 29). */
+.backup-ask {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 60;
+  display: grid;
+  gap: 8px;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+}
+
+@media (max-width: 700px) {
+  .study-tool-word,
+  .study-chip-word {
+    display: none;
+  }
+
+  .study-tool,
+  .study-chip {
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    padding: 0;
+    justify-content: center;
+  }
+}
+
+.chip.accent {
+  color: var(--accent);
+  border-color: var(--edge-accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.dict-crumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  font-size: 0.84rem;
+  color: var(--quiet);
+}
+
+.dict-crumb a {
+  color: var(--quiet);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--line);
+}
+
+.dict-crumb a:hover {
+  color: var(--ink);
+}
+
+.dict-crumb [aria-current="page"] {
+  color: var(--ink);
+}
+
+.dict-cover {
+  margin-top: 4px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--line) 40%, transparent);
+}
+
+.dict-cover .teaching-media {
+  display: block;
+  width: 100%;
+  height: clamp(160px, 30vh, 300px);
+  max-height: none;
+  object-fit: cover;
+  border-radius: 0;
+}
+
+.dict-page-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.dict-page-head h1 {
+  margin: 0;
+}
+
+.dict-step {
+  margin-top: 10px;
+}
+
+.dict-step-body {
+  display: grid;
+}
+
+/* Every part holds the same grid cell, so the panel keeps its tallest height. */
+.dict-step-stack {
+  display: grid;
+  align-items: start;
+}
+
+.dict-step-part {
+  grid-area: 1 / 1;
+  min-width: 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 160ms ease;
+}
+
+.dict-step-part.on {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.dict-dots {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.dict-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: transparent;
+}
+
+.dict-dots span.traced {
+  background: color-mix(in srgb, var(--good) 60%, transparent);
+  border-color: transparent;
+}
+
+.dict-dots span.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.dict-step-nav {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.dict-arrow {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.dict-arrow:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.dict-arrow:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.dict-arrow svg,
+.dict-chevron svg,
+.dict-speak svg,
+.dict-search-toggle svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.dict-part-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.dict-part-kind {
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--quiet);
+}
+
+.dict-speak {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--quiet);
+  cursor: pointer;
+}
+
+.dict-speak[aria-pressed="true"] {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.dict-speak:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.dict-text {
+  margin: 0;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.dict-zoom-open {
+  position: relative;
+  display: block;
+  max-width: 100%;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: zoom-in;
+}
+
+.dict-media-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.76rem;
+  color: var(--quiet);
+}
+
+.dict-zoom {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.78);
+}
+
+.dict-zoom-body {
+  width: min(1100px, 96vw);
+  max-height: 92vh;
+  display: grid;
+  gap: 8px;
+}
+
+.dict-zoom-body .teaching-media {
+  max-width: 100%;
+  max-height: 80vh;
+  width: auto;
+  margin: 0 auto;
+}
+
+.dict-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.dict-search {
+  width: 180px;
+  max-width: 40vw;
+  min-height: 30px;
+  padding: 2px 8px;
+  font-size: 0.86rem;
+}
+
+.dict-search-toggle {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--quiet);
+  cursor: pointer;
+}
+
+.dict-list.scroll {
+  max-height: min(46vh, 420px);
+  overflow-y: auto;
+  scrollbar-width: none;
+  border-top: 1px solid var(--line);
+}
+
+.dict-list.scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.dict-row {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr) auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 9px 6px;
+  border-bottom: 1px solid var(--line);
+  color: inherit;
+  text-decoration: none;
+}
+
+.dict-row:hover {
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+}
+
+.dict-row-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dict-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1px solid var(--quiet);
+  background: transparent;
+  display: inline-block;
+}
+
+.dict-dot.ok {
+  border-color: var(--good);
+  background: var(--good);
+}
+
+.dict-chevron {
+  display: grid;
+  place-items: center;
+  color: var(--quiet);
+}
+
+.dict-chevron svg {
+  width: 15px;
+  height: 15px;
+}
+
+.dict-meter-block {
+  display: grid;
+  gap: 4px;
+}
+
+.dict-meter {
+  height: 6px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--line) 70%, transparent);
+}
+
+.dict-meter span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.dict-prompt {
+  max-height: 260px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  background: color-mix(in srgb, var(--line) 30%, transparent);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 0;
+}
+
+.dict-preview {
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.card.dict-draft {
+  border-color: var(--edge-accent);
+}
+
+.builder {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  margin-top: 14px;
+}
+
+.builder-tree {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px;
+  background: var(--card);
+  max-height: min(70vh, 720px);
+  overflow: auto;
+}
+
+.builder-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 6px 8px;
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+}
+
+.builder-row:hover {
+  background: color-mix(in srgb, var(--line) 35%, transparent);
+}
+
+.builder-row.on {
+  border-color: var(--edge-accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.builder-row .dict-dot {
+  margin-top: 5px;
+}
+
+.builder-row-text {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.builder-row-text > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.builder-group {
+  margin-top: 4px;
+}
+
+.builder-cards {
+  margin-left: 14px;
+  padding-left: 6px;
+  border-left: 1px solid var(--line);
+}
+
+.builder-card-row {
+  font-size: 0.92rem;
+}
+
+.builder-editor {
+  min-width: 0;
+}
+
+@media (max-width: 860px) {
+  .builder {
+    grid-template-columns: 1fr;
+  }
+
+  .builder-tree {
+    max-height: 40vh;
+  }
+}
+
+@media (max-width: 620px) {
+  .dict-cover .teaching-media {
+    height: 180px;
+  }
+
+  .dict-search {
+    width: 140px;
+  }
+}
+
 /* WHY: Motion is a courtesy, not a requirement. Every animation and transition
    this pack adds is removed here, and the static colour cues stay, so the
    screen loses nothing but movement. */
@@ -3429,6 +4070,14 @@ body.full-stage {
   .study-pip,
   .study-card::before,
   .study-arrow {
+    transition: none;
+  }
+
+  .dict-step-part {
+    transition: none;
+  }
+
+  .study-scope-open {
     transition: none;
   }
 

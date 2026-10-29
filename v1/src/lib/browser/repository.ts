@@ -16,6 +16,7 @@ import type {
   Settings,
   Tombstone,
 } from "@/lib/shared/types";
+import { cardPageId, deckPageId, packPageId } from "@/lib/core/pages";
 import type { PackPrompts } from "@/lib/packs/types";
 import type { StoredSession } from "@/lib/core/session-resume";
 import { defaultSettings, mergeSettings, normalizeRelayHosts, normalizeSettings } from "@/lib/core/settings-shape";
@@ -33,6 +34,8 @@ export interface BrowserPack extends StoredValue {
   studyInstruction?: string;
   decks: Deck[];
   prompts: PackPrompts | null;
+  /** True when the pack wants every card page read before an answer counts. */
+  requirePageRead?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -116,6 +119,11 @@ export function upsertCards(cards: Card[], store: Store = browserStore()): Promi
 export function deleteCard(cardId: string, store: Store = browserStore()): Promise<void> {
   return serial(async () => {
     await store.delete("cards", cardId);
+    // WHY: A card page describes the card it belongs to. Once the card is gone
+    // the page has no card to open from, so it leaves with it (GRILL entry 4).
+    const pageId = cardPageId(cardId);
+    await store.delete("pages", pageId);
+    await store.delete("pageTraces", pageId);
     markChanged();
   });
 }
@@ -166,8 +174,16 @@ export function deletePack(name: string, store: Store = browserStore()): Promise
     const cardIds = new Set(doomedCards.map((card) => card.id));
     const evidence = await store.all<EvidenceRow>("evidence");
     const doomedEvidence = evidence.filter((row) => cardIds.has(row.cardId));
+    const pageIds = new Set<string>([packPageId(name)]);
+    for (const page of await store.all<{ id: string; packName?: string }>("pages")) {
+      if (page.packName === name) pageIds.add(page.id);
+    }
     for (const card of doomedCards) await store.delete("cards", card.id);
     for (const row of doomedEvidence) await store.delete("evidence", row.id);
+    for (const id of pageIds) {
+      await store.delete("pages", id);
+      await store.delete("pageTraces", id);
+    }
     await store.delete("packs", name);
     markChanged();
     return {
@@ -193,8 +209,16 @@ export function deleteDeck(packName: string, deckId: string, store: Store = brow
     const cardIds = new Set(doomedCards.map((card) => card.id));
     const evidence = await store.all<EvidenceRow>("evidence");
     const doomedEvidence = evidence.filter((row) => cardIds.has(row.cardId));
+    const pageIds = new Set<string>([deckPageId(packName, deckId)]);
+    for (const page of await store.all<{ id: string; packName?: string; deckId?: string }>("pages")) {
+      if (page.packName === packName && page.deckId === deckId) pageIds.add(page.id);
+    }
     for (const card of doomedCards) await store.delete("cards", card.id);
     for (const row of doomedEvidence) await store.delete("evidence", row.id);
+    for (const id of pageIds) {
+      await store.delete("pages", id);
+      await store.delete("pageTraces", id);
+    }
     await store.put<BrowserPack>("packs", {
       ...pack,
       decks: pack.decks.filter((deck) => deck.id !== deckId),
@@ -460,6 +484,7 @@ export function packStatus(pack: BrowserPack, cards: Card[]): PackStatus {
     topics: deckNames,
     topicLabels: {},
     cardCount: cards.filter((card) => card.packName === pack.name && !card.retired).length,
+    requirePageRead: pack.requirePageRead,
   };
 }
 
@@ -507,6 +532,8 @@ export function clearLibrary(store: Store = browserStore()): Promise<void> {
       "settings",
       "meta",
       "resume",
+      "pages",
+      "pageTraces",
     ] as const) {
       await store.clear(name);
     }

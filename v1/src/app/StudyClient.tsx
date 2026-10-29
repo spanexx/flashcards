@@ -49,7 +49,16 @@ import { toStoredSession, type QueueEntry, type StoredSession, type StoredSessio
 import type { PastSession } from "@/lib/core/past-sessions";
 import { encodePlanScope } from "@/lib/core/plan-scope";
 import { newId } from "@/lib/core/id";
-import type { AnswerResult, Outcome, PackStatus, Plan, PlanScope } from "@/lib/shared/types";
+import { cardPageId, pageIsRead } from "@/lib/core/pages";
+import type {
+  AnswerResult,
+  DictionaryPage,
+  Outcome,
+  PackStatus,
+  PageTrace,
+  Plan,
+  PlanScope,
+} from "@/lib/shared/types";
 import ScopePicker from "./study/ScopePicker";
 import StudyCard from "./study/StudyCard";
 import StudyPlan from "./study/StudyPlan";
@@ -93,6 +102,10 @@ export default function StudyClient() {
   const [planRefreshing, setPlanRefreshing] = useState(false);
   const [working, setWorking] = useState("");
   const [packs, setPacks] = useState<PackStatus[]>([]);
+  const [pageState, setPageState] = useState<{ written: Set<string>; read: Set<string> }>({
+    written: new Set(),
+    read: new Set(),
+  });
   const [scope, setScope] = useState<PlanScope>([]);
   const [hintSource, setHintSource] = useState<string | null>(null);
   const [fullStage, setFullStage] = useState(false);
@@ -358,6 +371,45 @@ export default function StudyClient() {
       });
     return () => {
       cancelled = true;
+    };
+  }, []);
+
+  // WHY: The reading chip and the warning are hints, never gates, so a failed
+  // read leaves them home. Reading happens on the Dictionary screen, so a
+  // return to this tab refreshes the map instead of trusting a stale one.
+  useEffect(() => {
+    let active = true;
+    const load = () => {
+      void apiGet<{ pages: DictionaryPage[]; traces: PageTrace[] }>("/api/pages")
+        .then((answer) => {
+          if (!active) return;
+          const traces = new Map(answer.traces.map((trace) => [trace.id, trace]));
+          const written = new Set(
+            answer.pages
+              .filter((page) => page.level === "card" && page.parts.length > 0)
+              .map((page) => page.id),
+          );
+          const read = new Set(
+            answer.pages
+              .filter((page) => pageIsRead(page, traces.get(page.id) ?? null))
+              .map((page) => page.id),
+          );
+          setPageState({ written, read });
+        })
+        .catch(() => {
+          // The card and its answer never depend on this read.
+        });
+    };
+    load();
+    const onVisible = () => {
+      if (document.visibilityState === "visible") load();
+    };
+    window.addEventListener("focus", load);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      active = false;
+      window.removeEventListener("focus", load);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, []);
 
@@ -791,6 +843,12 @@ export default function StudyClient() {
     const cardPack = packs.find((pack) => pack.name === card.packName) ?? null;
     const instruction = studyCardInstruction(card, cardPack);
     const packLanguage = cardPack?.language;
+    const cardPage = cardPageId(card.id);
+    const hasPage = pageState.written.has(cardPage);
+    const pageRead = pageState.read.has(cardPage);
+    const dictionaryHref = card.packName
+      ? `/dictionary?pack=${encodeURIComponent(card.packName)}&card=${encodeURIComponent(card.id)}`
+      : `/dictionary?card=${encodeURIComponent(card.id)}`;
     const layerBar =
       layerBarAvailable && !layerOpen ? (
         <div className="layer-bar">
@@ -815,6 +873,7 @@ export default function StudyClient() {
           level={level}
           answered={Boolean(result)}
           autoOpen={autoOpen}
+          dictionaryHref={dictionaryHref}
           onCollapse={closeTeaching}
           onDismissAutoOpen={dismissAutoOpen}
         />
@@ -858,6 +917,10 @@ export default function StudyClient() {
           instruction={instruction}
           isLast={index + 1 >= queue.length}
           onHint={askHint}
+          dictionaryHref={dictionaryHref}
+          askPageRead={Boolean(cardPack?.requirePageRead)}
+          hasPage={hasPage}
+          pageRead={pageRead}
           onSubmit={(override) => void submitAnswer(override)}
           onNext={nextCard}
           onCorrect={(region, outcome) => void correct(region, outcome)}

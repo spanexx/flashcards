@@ -10,13 +10,17 @@ import { referencedMediaIds } from "@/lib/core/media";
 import {
   IMAGE_MAX_BYTES,
   IMAGE_TOO_LARGE,
+  MOBILE_VIDEO_LINK_ONLY,
   fitImage,
   imageTypeProblem,
+  isTouchFirstMobile,
+  mediaCapProblem,
   videoBytesProblem,
   videoTypeProblem,
 } from "@/lib/core/media-rules";
 import { markChanged } from "@/lib/browser/changes";
 import { readCards } from "@/lib/browser/repository";
+import { readPages } from "@/lib/browser/pages";
 import { browserStore, type Store } from "@/lib/browser/store";
 
 /** The refusal a corrupt or unreadable picture gets. */
@@ -144,11 +148,33 @@ async function resizeImage(file: File): Promise<{ blob: Blob; mime: string; widt
   }
 }
 
-/** Resize and store a chosen image; the record keeps the size actually stored. */
-export async function storeImageFile(file: File, store: Store = browserStore()): Promise<MediaRecord> {
-  const problem = imageTypeProblem(file.type);
-  if (problem) throw new Error(problem);
+/** Every kept byte on this device, across every pack and deck. */
+export async function totalMediaBytes(store: Store = browserStore()): Promise<number> {
+  const records = await readAllMedia(store);
+  return records.reduce((sum, record) => sum + (record.bytes ?? record.blob.size), 0);
+}
+
+/** True when this browser runs on a phone or tablet, where video must be linked. */
+export function deviceIsTouchFirstMobile(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return isTouchFirstMobile(navigator.userAgent, navigator.maxTouchPoints ?? 0);
+}
+
+/**
+ * Resize and store a chosen image; the record keeps the size actually stored.
+ * `replacingBytes` is what the file this one replaces already holds, so a
+ * replacement is judged by the net total, not by counting both files.
+ */
+export async function storeImageFile(
+  file: File,
+  store: Store = browserStore(),
+  replacingBytes = 0,
+): Promise<MediaRecord> {
+  const typeProblem = imageTypeProblem(file.type);
+  if (typeProblem) throw new Error(typeProblem);
   const resized = await resizeImage(file);
+  const capProblem = mediaCapProblem(await totalMediaBytes(store), resized.blob.size, replacingBytes);
+  if (capProblem) throw new Error(capProblem);
   return putMedia(
     {
       blob: resized.blob,
@@ -161,9 +187,21 @@ export async function storeImageFile(file: File, store: Store = browserStore()):
   );
 }
 
-/** Store a chosen video as it is, refusing one over 20 MB with plain words. */
-export async function storeVideoFile(file: File, store: Store = browserStore()): Promise<MediaRecord> {
-  const problem = videoTypeProblem(file.type) ?? videoBytesProblem(file.size);
+/**
+ * Store a chosen video as it is, refusing one over 20 MB with plain words.
+ * A touch-first mobile browser may not keep a video at all: the file path is
+ * closed there, and the screen offers a link instead.
+ */
+export async function storeVideoFile(
+  file: File,
+  store: Store = browserStore(),
+  replacingBytes = 0,
+): Promise<MediaRecord> {
+  const problem =
+    (deviceIsTouchFirstMobile() ? MOBILE_VIDEO_LINK_ONLY : null) ??
+    videoTypeProblem(file.type) ??
+    videoBytesProblem(file.size) ??
+    mediaCapProblem(await totalMediaBytes(store), file.size, replacingBytes);
   if (problem) throw new Error(problem);
   return putMedia({ blob: file, mime: file.type, kind: "video" }, store);
 }
@@ -184,10 +222,21 @@ export async function deleteMedia(id: string, store: Store = browserStore()): Pr
   markChanged();
 }
 
-/** Remove local media no card still points at, retired cards included. */
+/**
+ * Remove one kept file when no card or page points at it any more. Replacing
+ * or removing a file frees its room at once instead of waiting for a sweep.
+ */
+export async function deleteMediaIfUnreferenced(id: string, store: Store = browserStore()): Promise<boolean> {
+  const [cards, pages] = await Promise.all([readCards(store), readPages(undefined, store)]);
+  if (referencedMediaIds(cards, pages).has(id)) return false;
+  await deleteMedia(id, store);
+  return true;
+}
+
+/** Remove local media nothing points at: cards, retired cards and pages all count. */
 export async function deleteUnreferenced(store: Store = browserStore()): Promise<string[]> {
-  const [cards, media] = await Promise.all([readCards(store), readAllMedia(store)]);
-  const referenced = referencedMediaIds(cards);
+  const [cards, pages, media] = await Promise.all([readCards(store), readPages(undefined, store), readAllMedia(store)]);
+  const referenced = referencedMediaIds(cards, pages);
   const orphans = media.filter((record) => !referenced.has(record.id));
   for (const record of orphans) await store.delete("media", record.id);
   if (orphans.length > 0) markChanged();

@@ -1,9 +1,9 @@
 # Drift Log
-**Last updated:** 2026-10-27  **Open:** 0  **Awaiting:** 0  **Resolved:** 31  **Critical/High:** 0
+**Last updated:** 2026-10-29  **Open:** 0  **Awaiting:** 0  **Resolved:** 40  **Critical/High:** 0
 
 ## Open
 
-_None. The 2026-10-27 gap D-31 was fixed and verified the same day; see Resolved._
+_None. The 2026-10-29 course-dictionary review found eight gaps (D-32–D-39); all were fixed and verified the same day. A later audit of the locked GRILL's source lines added D-40, also fixed the same day. See Resolved._
 
 ## Awaiting decision
 
@@ -17,6 +17,87 @@ the IMPL reconcile section, is in progress._
 ---
 
 ## Resolved
+
+- **D-40** (Low, 2026-10-29, reporter: the drift-fix audit of course-dictionary) — Two source lines in the locked GRILL pointed at code that no longer says what the entry cites: one is the no-key refusal, the other a page mapper this pack added.
+  - Doc claim: entry 29 names "code archive.ts:114, bundle.ts:806" for media travelling by id (`docs/features/course-dictionary/GRILL-course-dictionary.txt:733-734`); entry 31 names "provider.ts:59" for the provider screen's disclosure (`docs/features/course-dictionary/GRILL-course-dictionary.txt:791`).
+  - Code reality: the no-key refusal sits at `v1/src/lib/browser/provider.ts:59` (`providerConfig`); the promise the entry leans on is the key-transit sentence (`v1/src/app/settings/SettingsClient.tsx:583`) and the send-what-you-see rule (`v1/src/app/progress/ProgressClient.tsx:329-330`). The page mapper sits at `v1/src/lib/browser/bundle.ts:806` (`pageToBundlePage`); the media reference set is `v1/src/lib/browser/bundle.ts:996`, and the pack archive's is `v1/src/lib/browser/archive.ts:203`. The backup export that packs media by the ids named in its JSON is `v1/src/lib/browser/archive.ts:114-121`.
+  - Why matters: the GRILL is the contract a later agent checks first, so a pointer that lands on an unrelated function reads as proof a decision still holds when it proves nothing.
+  - Owner: course-dictionary
+  - To fix: fix docs — one appended block carries dated source corrections for entries 29 and 31 (`docs/features/course-dictionary/GRILL-course-dictionary.txt:815-830`); no answer and no earlier line moved, so every existing citation still resolves.
+  - Verified by: read of each named line; the draft prompt's boundary built at `v1/src/lib/core/page-draft.ts:31-52` and `v1/src/lib/core/page-draft.ts:70`; "scenario 8: a draft is reviewed, never saved" (`v1/tests/simulate-course-dictionary.test.ts:506`); `npm run check:drift` resolves every citation in this entry.
+  - Related: D-39.
+
+- **D-32** (High, 2026-10-29, reporter: fresh-eyes drift review of course-dictionary) — A full backup built and downloaded without stating its size, though the PRD promises the Settings screen states it first and waits for a confirmation.
+  - Doc claim: "Before a full backup starts, the Settings screen states the size of the kept media it will build and waits for a confirmation" (`docs/features/course-dictionary/PRD-TRD-course-dictionary.md:145-147`); "The background autosave never asks." (`docs/features/course-dictionary/PRD-TRD-course-dictionary.md:148`)
+  - Code reality: the export button called `exportBackupZip` directly with no size read, and `archive.ts` had no counting helper (`v1/src/lib/browser/archive.ts:179-189` now counts the kept bytes a backup would carry); Settings reads it on click (`v1/src/app/settings/SettingsClient.tsx:300-307`) and states it before building (`v1/src/app/settings/SettingsClient.tsx:832-836`).
+  - Why matters: with kept video the zip can run to hundreds of megabytes, so an unannounced build can wedge a phone tab the learner did not mean to fill.
+  - Owner: course-dictionary
+  - To fix: fix code — Settings states the size, adds the touch-first suggestion, and builds only after the learner confirms; the counting stays out of `archive.ts`, which keeps the background autosave silent.
+  - Verified by: "scenario 10: pages travel, traces stay the learner's" (`v1/tests/simulate-course-dictionary.test.ts:630`, size statement at `:693-703`).
+  - Related: D-38.
+
+- **D-33** (High, 2026-10-29, reporter: fresh-eyes drift review of course-dictionary) — "Revert to shipped page" removed the learner's overlay but left the page empty until the next seed, though the locked decision promises the shipped page returns at once.
+  - Doc claim: "the shipped page returns at once, offline, with no reseed, and the trace of the learner's body goes with it" (`docs/features/course-dictionary/PRD-TRD-course-dictionary.md:132-134`); the dated amendment "the shipped page returns at once, not on the next seed" (`docs/features/course-dictionary/GRILL-course-dictionary.txt:757-765`).
+  - Code reality: an overlay wrote a single row over the shipped one, so DELETE had nothing to restore (`v1/src/lib/browser/pages.ts:52` now keeps the shipped snapshot at write time and `v1/src/lib/browser/pages.ts:78-103` restores it and deletes the trace; the router calls it at `v1/src/lib/browser/router.ts:959`).
+  - Why matters: a learner who tried an edit and changed their mind saw a blank page until the app reseeded, and the trace of the removed body still counted as read.
+  - Owner: course-dictionary
+  - To fix: code plus a dated decision note — the overlay keeps `shippedCopy`, DELETE restores it at once, offline, and drops the trace; a later seed or course update refreshes the snapshot and leaves the learner's words alone. The GRILL amendment records the stronger timing; the locked intent is unchanged.
+  - Verified by: "scenario 9: a built-in course stays one course" (`v1/tests/simulate-course-dictionary.test.ts:554`; overlay and snapshot at `:569-575`, refresh at `:585-589`, revert at `:603-616`).
+  - Related: D-38.
+
+- **D-34** (High, 2026-10-29, reporter: fresh-eyes drift review of course-dictionary) — A linked YouTube part could never be traced, because the progress probe returned before the player was ready and nothing re-ran it.
+  - Doc claim: "a linked YouTube video reports its position through its player, which may only be listened to once the player is ready" (`docs/features/course-dictionary/PRD-TRD-course-dictionary.md:39-41`); "plays a video to eighty percent" (`docs/features/course-dictionary/PRD-TRD-course-dictionary.md:37-39`).
+  - Code reality: the message listener was attached once and bailed out while the player was not ready, so a player that became ready later never re-attached (`v1/src/app/TeachingMedia.tsx:226` now runs the probe only in the ready state; the listener at `v1/src/app/TeachingMedia.tsx:253`; the effect depends on the ready state at `v1/src/app/TeachingMedia.tsx:258`).
+  - Why matters: a page whose only video was linked stayed unread forever, so reading could never be earned for it.
+  - Owner: course-dictionary
+  - To fix: fix code — the effect re-runs when the player turns ready, so the probe starts from the first ready render and reports position to the eighty-percent mark.
+  - Verified by: "scenario 2: reading is earned by traces" (`v1/tests/simulate-course-dictionary.test.ts:223`, probe wiring at `:250-262`).
+  - Related: none.
+
+- **D-35** (Medium, 2026-10-29, reporter: fresh-eyes drift review of course-dictionary) — The contents search opened and filtered but could not be closed by Escape or a press outside, so the filter had no obvious way back.
+  - Doc claim: "Escape or a press outside closes the field and clears the filter" (`docs/features/course-dictionary/PRD-TRD-course-dictionary.md:91-92`).
+  - Code reality: the field opened, filtered and had no close path (`v1/src/app/dictionary/EntityPage.tsx:58-80` now closes on Escape and on a pointerdown outside and clears the query).
+  - Why matters: the search icon sits on a phone-sized contents window; without a close, a filtered list reads like a shortened course.
+  - Owner: course-dictionary
+  - To fix: fix code — one close path clears the query and the filter, used by both Escape and an outside press, with the listeners cleaned up on unmount.
+  - Verified by: "scenario 6: pack and deck pages are covers, not dashboards" (`v1/tests/simulate-course-dictionary.test.ts:388`, search assertions at `:417-432`).
+  - Related: none.
+
+- **D-36** (Medium, 2026-10-29, reporter: fresh-eyes drift review of course-dictionary) — The reading chip and the two study tools shipped as plain text buttons: no icon, no accessible name beyond the words, no tooltip, and no icon-only 34×34 shape on a narrow screen.
+  - Doc claim: "The chip and the two tools take a book or check icon, keep the words as the accessible name and the tooltip, and shrink to icon-only 34×34 buttons with an 8px corner on a narrow screen." (`docs/features/course-dictionary/PRD-TRD-course-dictionary.md:73-77`)
+  - Code reality: the chip and tools rendered a word span only (`v1/src/app/study/StudyCard.tsx:248-258` and `v1/src/app/study/StudyCard.tsx:265-286` now carry the icon, `aria-label` and `title`); the shape lives in `v1/src/app/globals.css:3531-3555`, with the 700px block at `v1/src/app/globals.css:3585-3595`.
+  - Why matters: on a narrow screen the words squeezed the answer area, and a screen reader had no name for the icon buttons the sighted learner sees.
+  - Owner: course-dictionary
+  - To fix: fix code — both keep an icon plus the words as name and tooltip, and become 34×34 with an 8px corner below 700px.
+  - Verified by: "scenario 5: a course rule warns, never blocks" (`v1/tests/simulate-course-dictionary.test.ts:337`, chip and shape assertions at `:360-384`).
+  - Related: none.
+
+- **D-37** (Medium, 2026-10-29, reporter: fresh-eyes drift review of course-dictionary) — Replacing or removing a kept file could be refused at the 300 MB cap, because the save counted the new file without the room the old one frees, and a removed part left its file behind.
+  - Doc claim: "Replacing or removing a kept file frees its room at once, so the cap is judged by the net total." (`docs/features/course-dictionary/PRD-TRD-course-dictionary.md:106-107`)
+  - Code reality: the cap compared the whole kept total plus the new file (`v1/src/lib/core/media-rules.ts:45-47` now takes `replacingBytes`; the editor reads the replaced file's bytes at `v1/src/app/dictionary/PageEditor.tsx:193-201` and passes them at `v1/src/app/dictionary/PageEditor.tsx:251-252` and `v1/src/app/dictionary/PageEditor.tsx:275`); a part leaving the page left its file unowned (`v1/src/lib/browser/media.ts:229-234` now deletes it only when no card or page still names it).
+  - Why matters: swapping a 20 MB video for a smaller one could be refused at the cap, and every removed part leaked room; at 300 MB that is the difference between saving and not.
+  - Owner: course-dictionary
+  - To fix: fix code — the cap judges the net total, and text parts, removals and a replaced file drop their media through `deleteMediaIfUnreferenced`, so a referenced file is never deleted.
+  - Verified by: "scenario 7: authoring keeps or links media" (`v1/tests/simulate-course-dictionary.test.ts:437`, net cap and unreferenced-file assertions at `:465-501`).
+  - Related: none.
+
+- **D-38** (Medium, 2026-10-29, reporter: fresh-eyes drift review of course-dictionary) — Exporting a pack after the learner edited a built-in page sent the learner's private words to whoever received the pack.
+  - Doc claim: "A shared pack carries the shipped copy, never the learner's overlay." (`docs/features/course-dictionary/PRD-TRD-course-dictionary.md:134-135`); "the edit is a private overlay in that browser" (`docs/features/course-dictionary/PRD-TRD-course-dictionary.md:129-130`).
+  - Code reality: the export read the stored page rows as they were, overlay included (`v1/src/lib/browser/bundle.ts:788-792` now swaps an `editedFromShipped` row for its snapshot; used by the JSON export at `v1/src/lib/browser/bundle.ts:820` and by the zip at `v1/src/lib/browser/archive.ts:202`).
+  - Why matters: the overlay exists so a learner can correct a course for themselves; sharing the pack is the common next step, and it would have published their words and the media ids they point at.
+  - Owner: course-dictionary
+  - To fix: fix code — every pack export path reads pages through `shareablePage`; the learner's row and its trace stay in the browser.
+  - Verified by: "scenario 9: a built-in course stays one course" (`v1/tests/simulate-course-dictionary.test.ts:554`, export assertions at `:591-598`).
+  - Related: D-33.
+
+- **D-39** (Low, 2026-10-29, reporter: fresh-eyes drift review of course-dictionary) — The PRD-TRD and IMPL described names, request shapes and file paths the code never used (the D1–D13 doc gaps), so an agent following them would wire calls the router rejects.
+  - Doc claim: the page trace and draft calls as first written, `POST /api/pages/<id>/traced` with `{ part }` and `POST /api/pages/draft` returning `{ requestId, prompt }` (`docs/features/course-dictionary/PRD-TRD-course-dictionary.md:239-241` now shows `{ index }` and the flattened draft); pure core names `tracedSecondsForText` and `pageSchema` before fix, now `tracedTextMs`, `savedPageSchema` and `pageRuleProblems`.
+  - Code reality: the router and core use the shipped names and shapes (`v1/src/lib/browser/router.ts:81` imports the page calls; the page routes sit at `v1/src/lib/browser/router.ts:954-961`).
+  - Why matters: the doc is the contract the next agent reads; a stale request shape sends it into code that answers with a refusal.
+  - Owner: course-dictionary
+  - To fix: fix docs — PRD-TRD and IMPL now name the shipped symbols, shapes, file paths and screens; scenario text states the stronger behaviour where the code went further than the first draft (revert timing, backup size statement, YouTube ready probe, search close, net cap, chip shape); GRILL keeps its locked text plus a dated amendment.
+  - Verified by: read of each updated line; "the built screens carry the dictionary" (`v1/tests/simulate-course-dictionary.test.ts:744`); full suite and both drift gates green.
+  - Related: D-33, D-36.
 
 - **D-28** (High, 2026-10-27, reporter: the learner, who noticed Generate still used the old prompting) — Adding cards into an existing deck through Generate never asked for teaching layers whenever the pack shipped its own prompt template, so the learner's main writing path made layerless cards while pack and deck generation taught.
   - Doc claim: "each card may carry a short teaching layer with optional media" (`docs/features/teaching-layers/PRD-TRD-teaching-layers.md:155-158`); "The prompt asks for a short explanation and an optional image or video only when it helps" (`docs/features/teaching-layers/GRILL-teaching-layers.txt:311-316`).

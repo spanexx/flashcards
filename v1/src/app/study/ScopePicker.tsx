@@ -14,6 +14,7 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { allDecksItem, scopeSummary } from "@/lib/core/plan-scope";
 import type { PackStatus, PlanScope } from "@/lib/shared/types";
 
@@ -62,6 +63,25 @@ function Dot({ state }: { state: "off" | "on" | "partial" }) {
       className={`study-scope-dot${state === "off" ? " off" : state === "partial" ? " partial" : ""}`}
       aria-hidden="true"
     />
+  );
+}
+
+/** The up-right arrow that opens a pack or deck page without choosing it. */
+function OpenPage({ href, label }: { href: string; label: string }) {
+  return (
+    <Link
+      className="study-scope-open"
+      href={href}
+      prefetch={false}
+      aria-label={label}
+      title={label}
+      onClick={(event) => event.stopPropagation()}
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M7 17 17 7" />
+        <path d="M8 7h9v9" />
+      </svg>
+    </Link>
   );
 }
 
@@ -239,13 +259,17 @@ export default function ScopePicker({ packs, scope, onChange }: ScopePickerProps
                             <Chevron open={showDecks} />
                           </button>
                         ) : null}
+                        <OpenPage
+                          href={`/dictionary?pack=${encodeURIComponent(pack.name)}`}
+                          label={`Open the ${pack.name} page`}
+                        />
                       </div>
                       {showDecks && decks.length > 0 ? (
                         <ul className="study-scope-decks" id={`${baseId}-decks-${index}`}>
                           {decks.map((deck) => {
                             const deckChosen = selected?.has(deck.id) ?? false;
                             return (
-                              <li key={deck.id}>
+                              <li key={deck.id} className="study-scope-deck-row">
                                 <button
                                   className="study-scope-choice"
                                   type="button"
@@ -258,6 +282,10 @@ export default function ScopePicker({ packs, scope, onChange }: ScopePickerProps
                                     <strong>{deck.name}</strong>
                                   </span>
                                 </button>
+                                <OpenPage
+                                  href={`/dictionary?pack=${encodeURIComponent(pack.name)}&deck=${encodeURIComponent(deck.id)}`}
+                                  label={`Open the ${deck.name} page`}
+                                />
                               </li>
                             );
                           })}

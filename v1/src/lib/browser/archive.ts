@@ -15,11 +15,13 @@ import {
   importBundle,
   parseBackup,
   restoreBackup,
+  shareablePage,
   type ImportOptions,
   type ImportResult,
   type ImportTarget,
 } from "@/lib/browser/bundle";
 import { getMedia, putMedia, readAllMedia } from "@/lib/browser/media";
+import { readPages } from "@/lib/browser/pages";
 import { readCards } from "@/lib/browser/repository";
 import { browserStore, type Store } from "@/lib/browser/store";
 import type { ValidationIssue } from "@/lib/core/schema";
@@ -173,6 +175,19 @@ export async function restoreBackupFile(
   return applyBackup(read.backup, options);
 }
 
+/** The kept bytes a full backup would carry, read before the learner commits. */
+export async function backupMediaBytes(): Promise<number> {
+  const [cards, pages, media] = await Promise.all([
+    readCards(),
+    readPages(),
+    readAllMedia(),
+  ]);
+  const wanted = referencedMediaIds(cards, pages);
+  return media
+    .filter((record) => wanted.has(record.id))
+    .reduce((sum, record) => sum + (record.bytes ?? record.blob.size), 0);
+}
+
 /** One shared pack: JSON when it has no local media, a zip when it does. */
 export async function exportPackArchive(
   name: string,
@@ -181,7 +196,11 @@ export async function exportPackArchive(
   if (!exported.ok) return exported;
   const stamp = new Date().toISOString().slice(0, 10);
   const cards = (await readCards()).filter((card) => card.packName === name && !card.retired);
-  const wanted = referencedMediaIds(cards);
+  // WHY: a shared pack carries the shipped page, never the learner's private
+  // overlay; the same copies are read here and in the bundle so the media ids
+  // packed below are exactly the ones those pages name.
+  const pages = (await readPages(name)).map(shareablePage);
+  const wanted = referencedMediaIds(cards, pages);
   const media = (await readAllMedia()).filter((record) => wanted.has(record.id));
 
   if (media.length === 0) {

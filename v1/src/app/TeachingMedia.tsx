@@ -6,7 +6,7 @@
 // PACK: teaching-layers
 // 2026-10-25 opencode: created for the teaching-layers pack [pack: teaching-layers]
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { withBasePath } from "@/lib/shared/paths";
 import { getMedia, mediaUrl } from "@/lib/browser/media";
 import {
@@ -17,6 +17,11 @@ import {
   youtubeWatchUrl,
 } from "@/lib/client/layer";
 import type { TeachingPart } from "@/lib/shared/types";
+
+/** WHY: The Dictionary earns a video's trace at eighty percent played, so the
+ * one media renderer reports playback instead of each screen watching its own
+ * player. [pack: course-dictionary] */
+export type MediaProgress = (share: number) => void;
 
 /** A picture part, whatever its source. */
 export type TeachingImagePart = Extract<TeachingPart, { type: "image" }>;
@@ -30,6 +35,14 @@ interface TeachingMediaProps {
   part: MediaPart;
   /** Offered by the missing-file fallback; the editor owns the picker. */
   onChooseAgain?: () => void;
+  /** Video parts only: how much has played, from 0 to 1. */
+  onProgress?: MediaProgress;
+}
+
+/** Report a plain video's played share on every time update. */
+function sharePlayed(video: HTMLVideoElement): number | null {
+  if (!Number.isFinite(video.duration) || video.duration <= 0) return null;
+  return Math.min(1, video.currentTime / video.duration);
 }
 
 type LocalState =
@@ -106,7 +119,15 @@ function Failure({
 }
 
 /** A picture or video kept in this browser. */
-function LocalMedia({ part, onChooseAgain }: { part: MediaPart; onChooseAgain?: () => void }) {
+function LocalMedia({
+  part,
+  onChooseAgain,
+  onProgress,
+}: {
+  part: MediaPart;
+  onChooseAgain?: () => void;
+  onProgress?: MediaProgress;
+}) {
   const [broken, setBroken] = useState(false);
   const state = useLocalMedia(part.src, part.type);
 
@@ -139,6 +160,14 @@ function LocalMedia({ part, onChooseAgain }: { part: MediaPart; onChooseAgain?: 
       controls
       preload="metadata"
       onError={() => setBroken(true)}
+      onTimeUpdate={
+        onProgress
+          ? (event) => {
+              const share = sharePlayed(event.currentTarget);
+              if (share !== null) onProgress(share);
+            }
+          : undefined
+      }
     />
   );
 }
@@ -162,16 +191,71 @@ function RemoteImage({ part }: { part: TeachingImagePart }) {
 }
 
 /** A web video, with the same plain fallback as a web picture. */
-function RemoteVideo({ part }: { part: TeachingVideoPart }) {
+function RemoteVideo({ part, onProgress }: { part: TeachingVideoPart; onProgress?: MediaProgress }) {
   const [failed, setFailed] = useState(false);
   if (failed) return <Failure message="This video could not load." href={part.src} linkText="Open the video" />;
-  return <video className="teaching-video" src={part.src} controls preload="metadata" onError={() => setFailed(true)} />;
+  return (
+    <video
+      className="teaching-video"
+      src={part.src}
+      controls
+      preload="metadata"
+      onError={() => setFailed(true)}
+      onTimeUpdate={
+        onProgress
+          ? (event) => {
+              const share = sharePlayed(event.currentTarget);
+              if (share !== null) onProgress(share);
+            }
+          : undefined
+      }
+    />
+  );
 }
 
 /** A YouTube video is checked by its still before any player is shown. */
-function YouTubeVideo({ part }: { part: TeachingVideoPart }) {
+function YouTubeVideo({ part, onProgress }: { part: TeachingVideoPart; onProgress?: MediaProgress }) {
   const [probe, setProbe] = useState<{ id: string; state: "ready" | "dead" } | null>(null);
   const state = probe?.id === part.src ? probe.state : "checking";
+  const frameRef = useRef<HTMLIFrameElement | null>(null);
+
+  // WHY: The player reports its own position over the IFrame API. That is the
+  // only honest way to know a linked video reached eighty percent. The effect
+  // waits for the ready probe: before it, no iframe exists to listen to.
+  useEffect(() => {
+    if (!onProgress || state !== "ready") return;
+    const frame = frameRef.current;
+    if (!frame) return;
+    const listen = () => {
+      frame.contentWindow?.postMessage(
+        JSON.stringify({ event: "listening", id: "dictionary", channel: "widget" }),
+        "*",
+      );
+    };
+    const timer = setInterval(listen, 1000);
+    listen();
+    const onMessage = (event: MessageEvent) => {
+      if (event.source !== frame.contentWindow) return;
+      let data: unknown = event.data;
+      if (typeof data === "string") {
+        try {
+          data = JSON.parse(data);
+        } catch {
+          return;
+        }
+      }
+      const record = data as { event?: string; info?: { currentTime?: number; duration?: number } };
+      if (record.event !== "infoDelivery") return;
+      const duration = record.info?.duration ?? 0;
+      const current = record.info?.currentTime ?? 0;
+      if (duration > 0) onProgress(Math.min(1, current / duration));
+    };
+    window.addEventListener("message", onMessage);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener("message", onMessage);
+    };
+  }, [onProgress, state]);
   useEffect(() => {
     let active = true;
     const timer = setTimeout(() => {
@@ -205,10 +289,12 @@ function YouTubeVideo({ part }: { part: TeachingVideoPart }) {
       />
     );
   }
+  const embed = youtubeEmbedUrl(part.src, part.start, part.end);
   return (
     <iframe
+      ref={frameRef}
       className="teaching-video"
-      src={youtubeEmbedUrl(part.src, part.start, part.end)}
+      src={onProgress ? `${embed}&enablejsapi=1` : embed}
       title={part.alt ?? part.search ?? "Teaching video"}
       allow="encrypted-media; picture-in-picture; fullscreen"
       allowFullScreen
@@ -218,9 +304,11 @@ function YouTubeVideo({ part }: { part: TeachingVideoPart }) {
 }
 
 /** Render one teaching image or video, whatever its source. */
-export default function TeachingMedia({ part, onChooseAgain }: TeachingMediaProps) {
-  if (part.source === "local") return <LocalMedia part={part} onChooseAgain={onChooseAgain} />;
+export default function TeachingMedia({ part, onChooseAgain, onProgress }: TeachingMediaProps) {
+  if (part.source === "local") {
+    return <LocalMedia part={part} onChooseAgain={onChooseAgain} onProgress={onProgress} />;
+  }
   if (part.type === "image") return <RemoteImage part={part} />;
-  if (part.source === "youtube") return <YouTubeVideo part={part} />;
-  return <RemoteVideo part={part} />;
+  if (part.source === "youtube") return <YouTubeVideo part={part} onProgress={onProgress} />;
+  return <RemoteVideo part={part} onProgress={onProgress} />;
 }

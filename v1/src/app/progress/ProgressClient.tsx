@@ -9,6 +9,9 @@
 // 2026-10-19 opencode: tabbed layout and side-panel record [pack: v1-prototype]
 // 2026-10-27 opencode: added the preview-first, never-stored summary tab.
 // [pack: progress-summary]
+// 2026-10-29 qoder: a separate line counts card pages read; reading is
+// coverage, never a score, so it stays apart from the answer counts.
+// [pack: course-dictionary]
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -45,6 +48,7 @@ function problemText(problem: unknown): string {
 
 export default function ProgressClient() {
   const [progress, setProgress] = useState<ProgressView | null>(null);
+  const [pages, setPages] = useState<{ read: number; total: number } | null>(null);
   const [evidence, setEvidence] = useState<EvidenceAnswer | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -57,8 +61,11 @@ export default function ProgressClient() {
 
   const loadProgress = useCallback(async () => {
     try {
-      const data = await apiGet<{ progress: ProgressView }>("/api/progress");
+      const data = await apiGet<{ progress: ProgressView; pages: { read: number; total: number } }>(
+        "/api/progress",
+      );
       setProgress(data.progress);
+      setPages(data.pages);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Progress could not be read.");
     }
@@ -169,6 +176,12 @@ export default function ProgressClient() {
 
       {tab === "overview" ? (
         <div>
+          {pages ? (
+            <p className="muted">
+              Pages read {pages.read} of {pages.total}. Reading is coverage of the course
+              material, not a score.
+            </p>
+          ) : null}
           <h2>Cards you now handle</h2>
           {progress.improvements.length === 0 ? (
             <p className="muted">Nothing has turned the corner yet — that is normal early on.</p>

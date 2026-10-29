@@ -20,7 +20,8 @@ import type { StudyLevel } from "@/lib/shared/types";
 /** A prompt held for approval. It is one-time use and expires quickly. */
 export interface PreparedRequest {
   id: string;
-  kind: "generation" | "hint";
+  /** A page draft is held like a generation, but its answer is never saved. */
+  kind: "generation" | "hint" | "page";
   display: string;
   messages: ChatMessage[];
   /** Older held requests did not carry a target; they behave like cards. */

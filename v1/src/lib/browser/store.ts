@@ -8,6 +8,8 @@
 // version 4 upgrade; no existing store changes shape. [pack: teaching-layers]
 // 2026-10-26 qoder: the running-session snapshot is an additive version 5
 // store, so a reload can pick the lesson back up. [pack: study-resilience]
+// 2026-10-29 qoder: dictionary pages and their reading traces are an additive
+// version 6 upgrade; no existing store changes shape. [pack: course-dictionary]
 
 /** The object stores that hold the library, the record and the settings. */
 export const STORE_NAMES = [
@@ -23,6 +25,8 @@ export const STORE_NAMES = [
   "media",
   "tombstones",
   "resume",
+  "pages",
+  "pageTraces",
 ] as const;
 
 export type StoreName = (typeof STORE_NAMES)[number];
@@ -106,7 +110,7 @@ let database: Promise<IDBDatabase> | null = null;
 function openDatabase(): Promise<IDBDatabase> {
   if (!database) {
     database = new Promise((resolve, reject) => {
-      const request = indexedDB.open("flashcards", 5);
+      const request = indexedDB.open("flashcards", 6);
       request.onupgradeneeded = () => {
         const db = request.result;
         for (const name of STORE_NAMES) {
