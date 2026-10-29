@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-labelledby="t d">
+  <title id="t">Retry, back off, then stop</title>
+  <desc id="d">Three attempts appear at widening intervals, the circuit breaker opens, and a single probe later tests the dependency again.</desc>
+  <style>
+    .paper{fill:#fbf8f1}.ink{fill:#1f2933}.muted{fill:#6b7280}
+    .box{fill:#ffffff;stroke:#1f2933;stroke-width:1.5}
+    .line{stroke:#1f2933;stroke-width:1.5}
+    .attempt{fill:#a23b3b}
+    .probe{fill:#2f6f8f}
+    .a1{animation:pop 9s ease-out infinite}
+    .a2{animation:pop 9s ease-out infinite;animation-delay:1.2s}
+    .a3{animation:pop 9s ease-out infinite;animation-delay:3.2s}
+    .a4{animation:pop 9s ease-out infinite;animation-delay:6.5s}
+    .breaker{animation:breaker 9s ease-in-out infinite}
+    @keyframes pop{0%{opacity:0}8%{opacity:1}85%{opacity:1}100%{opacity:0}}
+    @keyframes breaker{0%,45%{opacity:.25}55%,100%{opacity:1}}
+    @media (prefers-reduced-motion: reduce){*{animation:none!important}}
+  </style>
+  <rect class="paper" width="800" height="450"/>
+  <text x="40" y="44" font-family="system-ui, sans-serif" font-size="21" font-weight="650" class="ink">Retry, back off, then stop</text>
+  <text x="40" y="70" font-family="system-ui, sans-serif" font-size="14" class="muted">Retries without a limit turn one slow dependency into an outage.</text>
+
+  <line x1="70" y1="265" x2="740" y2="265" class="line"/>
+  <text x="70" y="292" font-family="system-ui, sans-serif" font-size="12" class="muted">time</text>
+
+  <circle cx="140" cy="265" r="9" class="attempt a1"/>
+  <text x="140" y="240" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="ink">try 1</text>
+  <text x="140" y="318" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" class="muted">now</text>
+
+  <circle cx="265" cy="265" r="9" class="attempt a2"/>
+  <text x="265" y="240" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="ink">try 2</text>
+  <text x="265" y="318" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" class="muted">+1s</text>
+
+  <circle cx="430" cy="265" r="9" class="attempt a3"/>
+  <text x="430" y="240" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="ink">try 3</text>
+  <text x="430" y="318" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" class="muted">+2s</text>
+
+  <rect x="520" y="200" width="150" height="80" rx="10" class="box breaker"/>
+  <text x="595" y="232" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="600" class="ink">circuit open</text>
+  <text x="595" y="256" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="muted">fail fast, no calls</text>
+
+  <circle cx="715" cy="265" r="9" class="probe a4"/>
+  <text x="715" y="240" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="ink">probe</text>
+  <text x="715" y="318" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" class="muted">much later</text>
+
+  <path d="M 150 178 Q 400 120 700 178" fill="none" stroke="#6b7280" stroke-width="1.4" stroke-dasharray="5 5"/>
+  <text x="400" y="132" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="muted">each wait is longer, plus jitter so retries do not synchronise</text>
+
+  <text x="40" y="410" font-family="system-ui, sans-serif" font-size="13" class="muted">Retry only safe or idempotent calls, at one layer of the stack.</text>
+</svg>

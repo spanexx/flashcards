@@ -1,0 +1,199 @@
+{
+  "cards": [
+    {
+      "key": "ai-architecture-dependency",
+      "summary": "Treat the model as a dependency",
+      "topics": ["ai-architecture"],
+      "tags": ["llm", "design"],
+      "prompt": [{ "type": "text", "text": "What should an LLM call be treated as in a design?" }],
+      "answer": [{ "type": "text", "text": "A dependency with latency, cost and failure modes." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "A dependency with latency, cost and failure modes",
+          "A local function with no cost",
+          "A source of guaranteed truth",
+          "A replacement for testing"
+        ],
+        "correct": ["A dependency with latency, cost and failure modes"]
+      },
+      "hints": ["It can be slow, expensive or unavailable."],
+      "teaching": [
+        { "type": "text", "text": "The model is a remote dependency like any other: it has latency, rate limits, cost and outages. Give it a timeout, a fallback and a budget just as you would a database.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/system-design/images/server-rack.webp", "alt": "Rows of drive bays in a rack-mounted server" }
+      ]
+    },
+    {
+      "key": "ai-architecture-rag",
+      "summary": "RAG grounds answers in retrieved text",
+      "topics": ["ai-architecture"],
+      "tags": ["rag", "retrieval"],
+      "prompt": [
+        { "type": "text", "text": "RAG retrieves relevant documents and puts them in the prompt as " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " for the model's answer." }
+      ],
+      "answer": [{ "type": "text", "text": "RAG retrieves relevant documents and puts them in the prompt as context for the model's answer." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["context", "grounding"] }] },
+      "hints": ["The model reads the passage before answering."],
+      "fullLine": "RAG retrieves relevant documents and puts them in the prompt as context for the model's answer.",
+      "teaching": [
+        { "type": "text", "text": "Retrieval-augmented generation adds fresh, private knowledge without retraining the model. The quality of the answer depends on the quality of retrieval.", "lang": "en" },
+        { "type": "video", "source": "youtube", "src": "T-D1OfcDW1M", "search": "What is Retrieval-Augmented Generation RAG IBM Technology", "alt": "An explanation of retrieval-augmented generation and why it improves model answers" }
+      ]
+    },
+    {
+      "key": "ai-architecture-retriever",
+      "summary": "The retriever finds the passages",
+      "topics": ["ai-architecture"],
+      "tags": ["rag", "retrieval"],
+      "prompt": [{ "type": "text", "text": "What does the retriever do in a RAG pipeline?" }],
+      "answer": [{ "type": "text", "text": "Finds passages relevant to the question." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": ["Finds passages relevant to the question", "Trains the model", "Stores the final answer forever", "Deletes old documents"],
+        "correct": ["Finds passages relevant to the question"]
+      },
+      "hints": ["It searches before the model speaks."],
+      "teaching": [
+        { "type": "text", "text": "A retriever ranks chunks of text by similarity to the question. Bad chunking, stale documents or a weak ranking all produce a confident but unsupported answer.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/system-design/images/rag-loop-anim.svg", "alt": "A question flowing through retrieval into a prompt and back as a grounded answer" }
+      ]
+    },
+    {
+      "key": "ai-architecture-embeddings",
+      "summary": "Embeddings place meaning in space",
+      "topics": ["ai-architecture"],
+      "tags": ["embeddings", "vector"],
+      "prompt": [
+        { "type": "text", "text": "An embedding turns text into a " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " so similar meanings sit close together." }
+      ],
+      "answer": [{ "type": "text", "text": "An embedding turns text into a vector so similar meanings sit close together." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["vector", "list of numbers", "numeric vector"] }] },
+      "hints": ["A list of numbers."],
+      "fullLine": "An embedding turns text into a vector so similar meanings sit close together.",
+      "teaching": [
+        { "type": "text", "text": "Embeddings let search work by meaning rather than exact words. A vector database stores them and finds the nearest ones, which is the retrieval half of RAG.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "ai-architecture-context",
+      "summary": "The context window is finite",
+      "topics": ["ai-architecture"],
+      "tags": ["context-window"],
+      "prompt": [
+        { "type": "text", "text": "The context window is the amount of text a model can consider in a single " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": "." }
+      ],
+      "answer": [{ "type": "text", "text": "The context window is the amount of text a model can consider in a single request." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["request", "call", "prompt"] }] },
+      "hints": ["Everything the model sees at once."],
+      "fullLine": "The context window is the amount of text a model can consider in a single request.",
+      "teaching": [
+        { "type": "text", "text": "A larger window lets you send more evidence, but it costs more and long prompts can bury the important part. Retrieve less, but retrieve better.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "ai-architecture-evals",
+      "summary": "Evals measure quality against cases",
+      "topics": ["ai-architecture"],
+      "tags": ["evals"],
+      "prompt": [{ "type": "text", "text": "Why run evals before shipping an LLM feature?" }],
+      "answer": [{ "type": "text", "text": "They measure quality against a fixed set of cases." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "They measure quality against a fixed set of cases",
+          "They make the model cheaper",
+          "They remove the need for logs",
+          "They guarantee no hallucinations"
+        ],
+        "correct": ["They measure quality against a fixed set of cases"]
+      },
+      "hints": ["They are regression tests for behaviour that has no single right string."],
+      "teaching": [
+        { "type": "text", "text": "An eval set holds prompts and the properties a good answer must have. Run it on every prompt, model or retrieval change; otherwise quality drifts silently.", "lang": "en" },
+        { "type": "video", "source": "youtube", "src": "a3SMraZWNNs", "search": "How to Systematically Setup LLM Evals Metrics Unit Tests LLM-as-a-Judge", "alt": "A practical walkthrough of setting up LLM evals with metrics and judges" }
+      ]
+    },
+    {
+      "key": "ai-architecture-eval-loop",
+      "summary": "Evals grow from real failures",
+      "topics": ["ai-architecture"],
+      "tags": ["evals", "quality"],
+      "prompt": [
+        { "type": "text", "text": "An eval set is only useful if it grows when a new failure is " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": "." }
+      ],
+      "answer": [{ "type": "text", "text": "An eval set is only useful if it grows when a new failure is found." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["found", "discovered", "reported"] }] },
+      "hints": ["Every incident becomes a test case."],
+      "fullLine": "An eval set is only useful if it grows when a new failure is found.",
+      "teaching": [
+        { "type": "text", "text": "Treat a production miss like a bug report: add it to the eval set, fix the prompt or retrieval, and confirm the score improves without regressing the old cases.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/system-design/images/eval-loop.svg", "alt": "A loop of prompt, model, evaluation and failure cases feeding back into the prompt" }
+      ]
+    },
+    {
+      "key": "ai-architecture-grounding",
+      "summary": "Grounding ties answers to evidence",
+      "topics": ["ai-architecture"],
+      "tags": ["grounding", "citations"],
+      "prompt": [{ "type": "text", "text": "What does grounding require?" }],
+      "answer": [{ "type": "text", "text": "Answers tied to retrieved evidence." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": ["Answers tied to retrieved evidence", "A longer system prompt", "A bigger model", "A human typing every answer"],
+        "correct": ["Answers tied to retrieved evidence"]
+      },
+      "hints": ["The answer should point at its source."],
+      "teaching": [
+        { "type": "text", "text": "A grounded answer cites the passage it used. Citations let a reader check the claim and expose when the model answered from memory instead of evidence.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "ai-architecture-cost",
+      "summary": "Tokens drive cost and latency",
+      "topics": ["ai-architecture"],
+      "tags": ["cost", "latency"],
+      "prompt": [
+        { "type": "text", "text": "Token cost and latency usually grow with the length of the " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " and the answer." }
+      ],
+      "answer": [{ "type": "text", "text": "Token cost and latency usually grow with the length of the prompt and the answer." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["prompt", "input", "context"] }] },
+      "hints": ["Everything you send costs tokens."],
+      "fullLine": "Token cost and latency usually grow with the length of the prompt and the answer.",
+      "teaching": [
+        { "type": "text", "text": "Budget tokens per request, cache repeated prefixes where the provider supports it, and send short retrieved passages instead of whole documents.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "ai-architecture-injection",
+      "summary": "Retrieved text can carry instructions",
+      "topics": ["ai-architecture"],
+      "tags": ["prompt-injection", "security"],
+      "prompt": [{ "type": "text", "text": "What is prompt injection?" }],
+      "answer": [{ "type": "text", "text": "Untrusted text that changes the model's instructions." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Untrusted text that changes the model's instructions",
+          "A faster API request",
+          "A compressed embedding",
+          "A database index"
+        ],
+        "correct": ["Untrusted text that changes the model's instructions"]
+      },
+      "hints": ["A document can contain orders, not just facts."],
+      "teaching": [
+        { "type": "text", "text": "Any text the model reads can try to redirect it. Keep untrusted content labelled as data, never give the model more authority than the user, and require human approval for risky actions.", "lang": "en" }
+      ]
+    }
+  ]
+}

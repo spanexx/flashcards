@@ -1,0 +1,44 @@
+{
+  "name": "system-design",
+  "version": "1.0.0",
+  "author": "flashcards v1 prototype",
+  "description": "System architecture and system design for the AI era: requirements, styles, data, reliability, security, AI systems, AI-assisted engineering, delivery and CI/CD.",
+  "language": "en",
+  "coreRange": "*",
+  "topics": [
+    "foundations",
+    "requirements",
+    "styles",
+    "data",
+    "reliability",
+    "security",
+    "ai-architecture",
+    "ai-engineering",
+    "delivery",
+    "ci-cd"
+  ],
+  "topicLabels": {
+    "foundations": "Foundations",
+    "requirements": "Requirements and constraints",
+    "styles": "Architecture styles",
+    "data": "Data and state",
+    "reliability": "Reliability and operations",
+    "security": "Security and trust",
+    "ai-architecture": "Designing AI systems",
+    "ai-engineering": "AI-assisted engineering",
+    "delivery": "Delivery and DevOps",
+    "ci-cd": "CI/CD in practice"
+  },
+  "topicLevels": {
+    "foundations": "beginner",
+    "requirements": "beginner",
+    "styles": "intermediate",
+    "data": "intermediate",
+    "reliability": "advanced",
+    "security": "advanced",
+    "ai-architecture": "intermediate",
+    "ai-engineering": "intermediate",
+    "delivery": "intermediate",
+    "ci-cd": "advanced"
+  }
+}

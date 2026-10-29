@@ -1,0 +1,205 @@
+{
+  "cards": [
+    {
+      "key": "requirements-nonfunctional",
+      "summary": "Non-functional requirements describe how well",
+      "topics": ["requirements"],
+      "tags": ["requirements", "quality"],
+      "prompt": [{ "type": "text", "text": "Which requirement is non-functional?" }],
+      "answer": [{ "type": "text", "text": "The page must respond within 200 ms." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "The page must respond within 200 ms",
+          "Users can reset a password",
+          "Admins can export a report",
+          "A user can create a folder"
+        ],
+        "correct": ["The page must respond within 200 ms"]
+      },
+      "hints": ["It describes a quality, not a feature."],
+      "teaching": [
+        { "type": "text", "text": "Functional requirements name what the system does. Non-functional requirements name how well it does it: speed, availability, security, cost and usability.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "requirements-quality-attribute",
+      "summary": "Quality attributes are non-functional requirements",
+      "topics": ["requirements"],
+      "tags": ["quality"],
+      "prompt": [
+        { "type": "text", "text": "Requirements that describe how well a system must behave are called " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " requirements." }
+      ],
+      "answer": [{ "type": "text", "text": "Requirements that describe how well a system must behave are called non-functional requirements." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["non-functional", "nonfunctional"] }] },
+      "hints": ["The opposite of functional."],
+      "fullLine": "Requirements that describe how well a system must behave are called non-functional requirements.",
+      "teaching": [
+        { "type": "text", "text": "Availability, latency, throughput, security and modifiability are quality attributes. They are the requirements that most often shape the architecture.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "requirements-latency-budget",
+      "summary": "A latency budget is spent in parts",
+      "topics": ["requirements"],
+      "tags": ["latency", "budget"],
+      "prompt": [
+        { "type": "text", "text": "If the page budget is 1,000 ms and the server takes 600 ms, the browser has " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " ms left." }
+      ],
+      "answer": [{ "type": "text", "text": "If the page budget is 1,000 ms and the server takes 600 ms, the browser has 400 ms left." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["400", "400 ms"] }] },
+      "hints": ["Subtract the server time from the whole budget."],
+      "fullLine": "If the page budget is 1,000 ms and the server takes 600 ms, the browser has 400 ms left.",
+      "teaching": [
+        { "type": "text", "text": "A latency budget divides one target across every step: network, server, database, browser. When one step spends too much, another step has to give some back.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/system-design/images/latency-budget.svg", "alt": "A one-second budget split across DNS, connection, server, download and render" }
+      ]
+    },
+    {
+      "key": "requirements-nines",
+      "summary": "Each nine costs more availability",
+      "topics": ["requirements"],
+      "tags": ["availability"],
+      "prompt": [
+        { "type": "text", "text": "A 99.9% monthly availability target allows roughly " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " minutes of downtime." }
+      ],
+      "answer": [{ "type": "text", "text": "A 99.9% monthly availability target allows roughly 43 minutes of downtime." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["43", "43.2", "44"] }] },
+      "hints": ["A month has about 43,800 minutes, and 0.1% of that is about 43."],
+      "fullLine": "A 99.9% monthly availability target allows roughly 43 minutes of downtime.",
+      "teaching": [
+        { "type": "text", "text": "Availability targets are counted in nines. 99.9% allows about 43 minutes a month; 99.99% allows about 4 minutes. Each extra nine demands more redundancy and more cost.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "requirements-throughput-latency",
+      "summary": "Throughput and latency measure different things",
+      "topics": ["requirements"],
+      "tags": ["throughput", "latency"],
+      "prompt": [
+        { "type": "text", "text": "Throughput measures requests per second; latency measures " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " per request." }
+      ],
+      "answer": [{ "type": "text", "text": "Throughput measures requests per second; latency measures time per request." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["time", "delay"] }] },
+      "hints": ["How long one request waits."],
+      "fullLine": "Throughput measures requests per second; latency measures time per request.",
+      "teaching": [
+        { "type": "text", "text": "A system can handle many requests per second and still be slow for each one. A queue raises throughput while adding latency, which is why both need a target.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "requirements-envelope",
+      "summary": "Estimate before you design",
+      "topics": ["requirements"],
+      "tags": ["estimation"],
+      "prompt": [
+        { "type": "text", "text": "A quick capacity estimate made with rounded numbers is called a back-of-the-" },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " estimate." }
+      ],
+      "answer": [{ "type": "text", "text": "A quick capacity estimate made with rounded numbers is called a back-of-the-envelope estimate." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["envelope"] }] },
+      "hints": ["It is also a saying about rough maths."],
+      "fullLine": "A quick capacity estimate made with rounded numbers is called a back-of-the-envelope estimate.",
+      "teaching": [
+        { "type": "text", "text": "Estimate users, requests per second, storage and growth before choosing tools. A rough estimate that is one order of magnitude right prevents most over-engineering.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "requirements-constraints",
+      "summary": "Constraints bound the design",
+      "topics": ["requirements"],
+      "tags": ["constraints"],
+      "prompt": [
+        { "type": "text", "text": "A fixed budget, a deadline and a compliance rule are examples of design " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": "." }
+      ],
+      "answer": [{ "type": "text", "text": "A fixed budget, a deadline and a compliance rule are examples of design constraints." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["constraints", "limits"] }] },
+      "hints": ["They limit the options you may choose."],
+      "fullLine": "A fixed budget, a deadline and a compliance rule are examples of design constraints.",
+      "teaching": [
+        { "type": "text", "text": "Constraints are not obstacles to the design; they are part of it. Two teams with the same features but different constraints should build different systems.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/system-design/images/tradeoffs-anim.svg", "alt": "A design choice sliding between speed, cost and safety as constraints pull on it" }
+      ]
+    },
+    {
+      "key": "requirements-adr",
+      "summary": "An ADR keeps the why",
+      "topics": ["requirements"],
+      "tags": ["adr", "decisions"],
+      "prompt": [{ "type": "text", "text": "What does an architecture decision record keep?" }],
+      "answer": [{ "type": "text", "text": "A decision, its context and its consequences." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "A decision, its context and its consequences",
+          "Every line of code that changed",
+          "The team's meeting calendar",
+          "Only the final architecture diagram"
+        ],
+        "correct": ["A decision, its context and its consequences"]
+      },
+      "hints": ["It explains why, not just what."],
+      "teaching": [
+        { "type": "text", "text": "An ADR is short: the decision, the situation that forced it, the options rejected and the cost accepted. Later readers learn why the system looks this way.", "lang": "en" },
+        { "type": "video", "source": "youtube", "src": "GhB7vz3sg-0", "search": "Architectural Decision Records ADR what they are", "alt": "An explanation of architecture decision records and how teams use them" }
+      ]
+    },
+    {
+      "key": "requirements-tradeoff-analysis",
+      "summary": "Trade-off analysis names the cost",
+      "topics": ["requirements"],
+      "tags": ["trade-offs", "analysis"],
+      "prompt": [{ "type": "text", "text": "What does a good trade-off analysis produce?" }],
+      "answer": [{ "type": "text", "text": "A defensible choice with named costs." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "A defensible choice with named costs",
+          "A guarantee of no failures",
+          "A list of every tool on the market",
+          "A decision that never changes"
+        ],
+        "correct": ["A defensible choice with named costs"]
+      },
+      "hints": ["It should say what you give up."],
+      "teaching": [
+        { "type": "text", "text": "Compare options against the qualities the system must protect, then write down what each option costs. The rejected options are evidence, not waste.", "lang": "en" },
+        { "type": "video", "source": "youtube", "src": "s4LI1jDn6IY", "search": "Understanding Modern Trade-off Analysis in Software Architecture Neal Ford", "alt": "Neal Ford explaining how architects analyse trade-offs between competing qualities" }
+      ]
+    },
+    {
+      "key": "requirements-problem-first",
+      "summary": "State the problem before the solution",
+      "topics": ["requirements"],
+      "tags": ["problem", "design"],
+      "prompt": [{ "type": "text", "text": "What is the first deliverable of system design?" }],
+      "answer": [{ "type": "text", "text": "A clear statement of the problem and its constraints." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "A clear statement of the problem and its constraints",
+          "A deployed production system",
+          "A finished API",
+          "A vendor contract"
+        ],
+        "correct": ["A clear statement of the problem and its constraints"]
+      },
+      "hints": ["You cannot judge a design against a problem you never named."],
+      "teaching": [
+        { "type": "text", "text": "Most bad architectures answer the wrong question well. Write the problem, the users, the scale and the constraints first; every later decision is judged against them.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/system-design/images/golden-gate-bridge.webp", "alt": "The Golden Gate Bridge lit at night, with traffic crossing the span" }
+      ]
+    }
+  ]
+}

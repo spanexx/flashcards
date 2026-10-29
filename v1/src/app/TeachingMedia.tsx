@@ -212,7 +212,12 @@ function YouTubeVideo({ part }: { part: TeachingVideoPart }) {
       title={part.alt ?? part.search ?? "Teaching video"}
       allow="encrypted-media; picture-in-picture; fullscreen"
       allowFullScreen
-      referrerPolicy="no-referrer"
+      // WHY: YouTube rejects an embed whose request carries no Referer with
+      // player error 153, so the page sends its origin instead; the origin
+      // alone still hides the page path from the video host.
+      // PACK: D-41
+      // 2026-10-29 qoder: replaced no-referrer after every embed failed. [pack: teaching-layers]
+      referrerPolicy="strict-origin-when-cross-origin"
     />
   );
 }

@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-labelledby="t d">
+  <title id="t">Three styles, three cost profiles</title>
+  <desc id="d">Layered, modular monolith and services each trade simplicity for independence in a different way.</desc>
+  <style>
+    .paper{fill:#fbf8f1}.ink{fill:#1f2933}.muted{fill:#6b7280}
+    .col{fill:#ffffff;stroke:#1f2933;stroke-width:1.4}
+    .head1{fill:#e6eff1}.head2{fill:#e5efe8}.head3{fill:#f3e8d7}
+    .li{fill:#6b7280}
+  </style>
+  <rect class="paper" width="800" height="450"/>
+  <text x="40" y="44" font-family="system-ui, sans-serif" font-size="21" font-weight="650" class="ink">Three styles, three cost profiles</text>
+  <text x="40" y="70" font-family="system-ui, sans-serif" font-size="14" class="muted">The right style is the cheapest one that meets the constraints you actually have.</text>
+
+  <rect x="40" y="105" width="230" height="270" rx="10" class="col"/>
+  <rect x="40" y="105" width="230" height="46" rx="10" class="head1"/>
+  <text x="155" y="134" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="600" class="ink">layered</text>
+  <text x="60" y="180" font-family="system-ui, sans-serif" font-size="12" class="ink">• UI → logic → data</text>
+  <text x="60" y="205" font-family="system-ui, sans-serif" font-size="12" class="ink">• one deployable</text>
+  <text x="60" y="230" font-family="system-ui, sans-serif" font-size="12" class="ink">• simple to start</text>
+  <text x="60" y="255" font-family="system-ui, sans-serif" font-size="12" class="ink">• layers can leak</text>
+  <text x="60" y="280" font-family="system-ui, sans-serif" font-size="12" class="ink">• shared database</text>
+  <text x="60" y="325" font-family="system-ui, sans-serif" font-size="12" fill="#3f7d5a">best for a small team</text>
+  <text x="60" y="347" font-family="system-ui, sans-serif" font-size="12" class="muted">and one release train</text>
+
+  <rect x="285" y="105" width="230" height="270" rx="10" class="col"/>
+  <rect x="285" y="105" width="230" height="46" rx="10" class="head2"/>
+  <text x="400" y="134" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="600" class="ink">modular monolith</text>
+  <text x="305" y="180" font-family="system-ui, sans-serif" font-size="12" class="ink">• modules, one process</text>
+  <text x="305" y="205" font-family="system-ui, sans-serif" font-size="12" class="ink">• clear boundaries</text>
+  <text x="305" y="230" font-family="system-ui, sans-serif" font-size="12" class="ink">• no network calls</text>
+  <text x="305" y="255" font-family="system-ui, sans-serif" font-size="12" class="ink">• one deployable</text>
+  <text x="305" y="280" font-family="system-ui, sans-serif" font-size="12" class="ink">• discipline needed</text>
+  <text x="305" y="325" font-family="system-ui, sans-serif" font-size="12" fill="#3f7d5a">best default for</text>
+  <text x="305" y="347" font-family="system-ui, sans-serif" font-size="12" class="muted">most growing products</text>
+
+  <rect x="530" y="105" width="230" height="270" rx="10" class="col"/>
+  <rect x="530" y="105" width="230" height="46" rx="10" class="head3"/>
+  <text x="645" y="134" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="600" class="ink">services</text>
+  <text x="550" y="180" font-family="system-ui, sans-serif" font-size="12" class="ink">• independent deploy</text>
+  <text x="550" y="205" font-family="system-ui, sans-serif" font-size="12" class="ink">• independent scale</text>
+  <text x="550" y="230" font-family="system-ui, sans-serif" font-size="12" class="ink">• own data</text>
+  <text x="550" y="255" font-family="system-ui, sans-serif" font-size="12" class="ink">• network failure</text>
+  <text x="550" y="280" font-family="system-ui, sans-serif" font-size="12" class="ink">• operational load</text>
+  <text x="550" y="325" font-family="system-ui, sans-serif" font-size="12" fill="#b7791f">worth it when the</text>
+  <text x="550" y="347" font-family="system-ui, sans-serif" font-size="12" class="muted">pain is measured</text>
+
+  <text x="40" y="430" font-family="system-ui, sans-serif" font-size="13" class="muted">Split when independent change or scaling is a real constraint, not a fashion.</text>
+</svg>

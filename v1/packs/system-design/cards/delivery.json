@@ -1,0 +1,200 @@
+{
+  "cards": [
+    {
+      "key": "delivery-trunk",
+      "summary": "Trunk-based development merges often",
+      "topics": ["delivery"],
+      "tags": ["trunk", "git"],
+      "prompt": [{ "type": "text", "text": "What is trunk-based development?" }],
+      "answer": [{ "type": "text", "text": "Short-lived branches merged often into one shared trunk." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Short-lived branches merged often into one shared trunk",
+          "One long release branch per quarter",
+          "No version control",
+          "Each developer keeps a private fork forever"
+        ],
+        "correct": ["Short-lived branches merged often into one shared trunk"]
+      },
+      "hints": ["The integration pain is paid in small amounts."],
+      "teaching": [
+        { "type": "text", "text": "Small, frequent merges keep the trunk releasable and make integration problems small. Long-lived branches turn integration into a risky event.", "lang": "en" },
+        { "type": "video", "source": "youtube", "src": "a_iq0ZMU9Co", "search": "Trunk-Based Development Explained Modern Git Workflow", "alt": "An explanation of trunk-based development and how it differs from long-lived branches" }
+      ]
+    },
+    {
+      "key": "delivery-dora",
+      "summary": "DORA measures delivery performance",
+      "topics": ["delivery"],
+      "tags": ["dora", "metrics"],
+      "prompt": [{ "type": "text", "text": "Which is a DORA delivery metric?" }],
+      "answer": [{ "type": "text", "text": "Change failure rate." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": ["Change failure rate", "Lines of code", "Number of meetings", "Story points"],
+        "correct": ["Change failure rate"]
+      },
+      "hints": ["It measures how often a release breaks something."],
+      "teaching": [
+        { "type": "text", "text": "DORA measures throughput and stability together. Optimising one alone, such as deploying more often without a rollback path, usually damages the other.", "lang": "en" },
+        { "type": "video", "source": "youtube", "src": "lqsENcje41w", "search": "DORA Metrics Explained Four Key Measures DevOps Performance", "alt": "An explanation of the DORA metrics for software delivery performance" }
+      ]
+    },
+    {
+      "key": "delivery-five-metrics",
+      "summary": "DORA has five measures now",
+      "topics": ["delivery"],
+      "tags": ["dora", "metrics"],
+      "prompt": [
+        { "type": "text", "text": "DORA's failed deployment recovery time replaced the older metric called " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": "." }
+      ],
+      "answer": [{ "type": "text", "text": "DORA's failed deployment recovery time replaced the older metric called MTTR." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["MTTR", "mean time to recovery", "mean time to restore"] }] },
+      "hints": ["Four letters about average repair time."],
+      "fullLine": "DORA's failed deployment recovery time replaced the older metric called MTTR.",
+      "teaching": [
+        { "type": "text", "text": "The current five measures are lead time, deployment frequency, failed deployment recovery time, change failure rate and deployment rework rate. The set separates speed from stability.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/system-design/images/dora-metrics.svg", "alt": "The five DORA measures grouped into throughput and stability" }
+      ]
+    },
+    {
+      "key": "delivery-iac",
+      "summary": "Infrastructure is defined in files",
+      "topics": ["delivery"],
+      "tags": ["iac", "infrastructure"],
+      "prompt": [
+        { "type": "text", "text": "Infrastructure as code stores servers and networks as " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " files." }
+      ],
+      "answer": [{ "type": "text", "text": "Infrastructure as code stores servers and networks as versioned files." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["versioned", "text", "configuration", "config"] }] },
+      "hints": ["They live in git like application code."],
+      "fullLine": "Infrastructure as code stores servers and networks as versioned files.",
+      "teaching": [
+        { "type": "text", "text": "When infrastructure is code, changes are reviewed, reproducible and reversible. Drift between environments becomes visible instead of tribal knowledge.", "lang": "en" },
+        { "type": "video", "source": "youtube", "src": "zWw2wuiKd5o", "search": "What is Infrastructure as Code IBM Technology", "alt": "An explanation of infrastructure as code and its benefits" }
+      ]
+    },
+    {
+      "key": "delivery-feature-flag",
+      "summary": "Flags separate deploy from release",
+      "topics": ["delivery"],
+      "tags": ["feature-flags"],
+      "prompt": [{ "type": "text", "text": "What is a feature flag for?" }],
+      "answer": [{ "type": "text", "text": "Turning behaviour on or off without redeploying." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": ["Turning behaviour on or off without redeploying", "Storing passwords", "Replacing tests", "Compressing images"],
+        "correct": ["Turning behaviour on or off without redeploying"]
+      },
+      "hints": ["Deploy is not the same as release."],
+      "teaching": [
+        { "type": "text", "text": "A flag lets code reach production dark and be released later. Delete flags once they are permanent decisions, or the combinations become untestable.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/system-design/images/feature-flag-anim.svg", "alt": "One deployment reaching users through a flag that can switch a feature on or off" }
+      ]
+    },
+    {
+      "key": "delivery-small-batches",
+      "summary": "Small batches reduce risk",
+      "topics": ["delivery"],
+      "tags": ["batches", "risk"],
+      "prompt": [
+        { "type": "text", "text": "Small batches reduce risk because less change ships between each " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": "." }
+      ],
+      "answer": [{ "type": "text", "text": "Small batches reduce risk because less change ships between each deployment." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["deployment", "release", "change"] }] },
+      "hints": ["The moment code reaches users."],
+      "fullLine": "Small batches reduce risk because less change ships between each deployment.",
+      "teaching": [
+        { "type": "text", "text": "When a release contains one change, a failure points at one suspect. When it contains fifty, diagnosis and rollback both become slow.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "delivery-cdcd",
+      "summary": "Delivery is on demand; deployment is automatic",
+      "topics": ["delivery"],
+      "tags": ["continuous-delivery"],
+      "prompt": [{ "type": "text", "text": "What is the difference between continuous delivery and continuous deployment?" }],
+      "answer": [{ "type": "text", "text": "Delivery ships on demand; deployment ships automatically." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Delivery ships on demand; deployment ships automatically",
+          "Delivery is faster",
+          "Deployment skips tests",
+          "They are the same thing"
+        ],
+        "correct": ["Delivery ships on demand; deployment ships automatically"]
+      },
+      "hints": ["One still has a human release button."],
+      "teaching": [
+        { "type": "text", "text": "Continuous delivery keeps every change releasable and leaves the release decision to a person. Continuous deployment removes that button and releases every passing change.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "delivery-environments",
+      "summary": "Staging should mirror production",
+      "topics": ["delivery"],
+      "tags": ["environments"],
+      "prompt": [
+        { "type": "text", "text": "A staging environment should look like production but hold " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " data." }
+      ],
+      "answer": [{ "type": "text", "text": "A staging environment should look like production but hold test data." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["test", "fake", "synthetic"] }] },
+      "hints": ["Never real customer data."],
+      "fullLine": "A staging environment should look like production but hold test data.",
+      "teaching": [
+        { "type": "text", "text": "Staging is only useful if it resembles production in configuration and scale. Real customer data must not be copied there without a privacy process.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "delivery-rollback",
+      "summary": "Every release needs a way back",
+      "topics": ["delivery"],
+      "tags": ["rollback"],
+      "prompt": [
+        { "type": "text", "text": "A release needs a way back, so every deployment should have a " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " plan." }
+      ],
+      "answer": [{ "type": "text", "text": "A release needs a way back, so every deployment should have a rollback plan." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["rollback", "recovery", "revert"] }] },
+      "hints": ["How you undo it."],
+      "fullLine": "A release needs a way back, so every deployment should have a rollback plan.",
+      "teaching": [
+        { "type": "text", "text": "Rollback may mean redeploying the previous artifact, flipping a flag or reversing a migration. Decide which before the release, not during the incident.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "delivery-pipeline-value",
+      "summary": "The pipeline shortens the path to users",
+      "topics": ["delivery"],
+      "tags": ["pipeline"],
+      "prompt": [{ "type": "text", "text": "What does a delivery pipeline mostly reduce?" }],
+      "answer": [{ "type": "text", "text": "The time and risk between a commit and a user." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "The time and risk between a commit and a user",
+          "The number of developers needed",
+          "The need for monitoring",
+          "The cost of hardware"
+        ],
+        "correct": ["The time and risk between a commit and a user"]
+      },
+      "hints": ["It shortens the feedback loop."],
+      "teaching": [
+        { "type": "text", "text": "Automating build, test and deploy replaces manual steps that are slow and inconsistent. The gain is a shorter, safer path from idea to user feedback.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/system-design/images/container-ship.webp", "alt": "A container ship carrying stacked freight containers across the water" }
+      ]
+    }
+  ]
+}

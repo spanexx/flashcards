@@ -1,0 +1,189 @@
+{
+  "cards": [
+    {
+      "key": "ai-engineering-role",
+      "summary": "AI drafts; humans own the change",
+      "topics": ["ai-engineering"],
+      "tags": ["ai", "review"],
+      "prompt": [{ "type": "text", "text": "What is the safest role for an AI coding assistant?" }],
+      "answer": [{ "type": "text", "text": "Drafting work that a human reviews and tests." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Drafting work that a human reviews and tests",
+          "Owning production releases",
+          "Approving its own pull requests",
+          "Disabling the test suite"
+        ],
+        "correct": ["Drafting work that a human reviews and tests"]
+      },
+      "hints": ["It is a fast assistant, not the accountable owner."],
+      "teaching": [
+        { "type": "text", "text": "AI lowers the cost of producing code, not the cost of owning it. The fastest safe pattern is draft, review, test, then merge like any other change.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/system-design/images/code-on-screen.webp", "alt": "Colourful lines of source code on a dark screen" }
+      ]
+    },
+    {
+      "key": "ai-engineering-same-gate",
+      "summary": "AI code passes the same gate",
+      "topics": ["ai-engineering"],
+      "tags": ["review", "quality"],
+      "prompt": [
+        { "type": "text", "text": "AI-generated code should pass the same " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " gate as human code." }
+      ],
+      "answer": [{ "type": "text", "text": "AI-generated code should pass the same review gate as human code." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["review", "quality", "merge"] }] },
+      "hints": ["Who wrote the code should not change the rules."],
+      "fullLine": "AI-generated code should pass the same review gate as human code.",
+      "teaching": [
+        { "type": "text", "text": "The origin of a diff is not a reason to skip checks. Tests, lint, security scanning and human review apply exactly as before.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/system-design/images/review-gate-anim.svg", "alt": "A change opening a gate only after review checks pass" }
+      ]
+    },
+    {
+      "key": "ai-engineering-copilot-review",
+      "summary": "Copilot review leaves comments",
+      "topics": ["ai-engineering"],
+      "tags": ["copilot", "review"],
+      "prompt": [{ "type": "text", "text": "What does GitHub Copilot code review produce by default?" }],
+      "answer": [{ "type": "text", "text": "Review comments, not an approval." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": ["Review comments, not an approval", "An automatic merge", "A signed release", "A new repository"],
+        "correct": ["Review comments, not an approval"]
+      },
+      "hints": ["It advises; a person still approves."],
+      "teaching": [
+        { "type": "text", "text": "Automated review catches patterns such as missing checks or unclear code. It does not take responsibility, so a human approval remains required.", "lang": "en" },
+        { "type": "video", "source": "youtube", "src": "HDEGFNAUkX8", "search": "How to automate code reviews and testing with GitHub Copilot", "alt": "GitHub showing how Copilot can automate parts of code review and testing" }
+      ]
+    },
+    {
+      "key": "ai-engineering-secure-generated",
+      "summary": "Generated code needs security review",
+      "topics": ["ai-engineering"],
+      "tags": ["security", "ai"],
+      "prompt": [
+        { "type": "text", "text": "AI often suggests dependencies that look plausible but are " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": "." }
+      ],
+      "answer": [{ "type": "text", "text": "AI often suggests dependencies that look plausible but are unvetted." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["unvetted", "fake", "unsafe"] }] },
+      "hints": ["Nobody checked that the package exists or is safe."],
+      "fullLine": "AI often suggests dependencies that look plausible but are unvetted.",
+      "teaching": [
+        { "type": "text", "text": "A model can invent a package name. Verify every new dependency exists, is maintained and is the one you meant before it enters the lockfile.", "lang": "en" },
+        { "type": "video", "source": "youtube", "src": "X0UI0O8YzJM", "search": "How Developers Secure AI-Generated Code 5 Security Best Practices IBM", "alt": "Five practices for securing code generated with AI assistance" }
+      ]
+    },
+    {
+      "key": "ai-engineering-tests",
+      "summary": "Tests are the safety net",
+      "topics": ["ai-engineering"],
+      "tags": ["tests", "ai"],
+      "prompt": [{ "type": "text", "text": "What is the best safety net for fast AI-assisted changes?" }],
+      "answer": [{ "type": "text", "text": "A test suite that fails when behaviour breaks." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": ["A test suite that fails when behaviour breaks", "Longer prompts", "Fewer commits", "Manual clicking only"],
+        "correct": ["A test suite that fails when behaviour breaks"]
+      },
+      "hints": ["It must fail for the right reason."],
+      "teaching": [
+        { "type": "text", "text": "AI can change more code per minute than a person can read. Tests turn that speed into a safe loop only if they genuinely fail when behaviour breaks.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "ai-engineering-spec-first",
+      "summary": "Write the spec before the code",
+      "topics": ["ai-engineering"],
+      "tags": ["spec", "prompting"],
+      "prompt": [
+        { "type": "text", "text": "A spec-first workflow writes the intended " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " before asking the model for code." }
+      ],
+      "answer": [{ "type": "text", "text": "A spec-first workflow writes the intended behaviour before asking the model for code." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["behaviour", "behavior", "spec", "contract"] }] },
+      "hints": ["What the code must do, not how."],
+      "fullLine": "A spec-first workflow writes the intended behaviour before asking the model for code.",
+      "teaching": [
+        { "type": "text", "text": "A short spec with examples gives the model a target and gives the reviewer a way to judge the result. Without it, both sides guess.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "ai-engineering-small-diffs",
+      "summary": "Small diffs stay reviewable",
+      "topics": ["ai-engineering"],
+      "tags": ["review", "diffs"],
+      "prompt": [
+        { "type": "text", "text": "Small diffs are easier to review because each change has one clear " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": "." }
+      ],
+      "answer": [{ "type": "text", "text": "Small diffs are easier to review because each change has one clear purpose." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["purpose", "intent", "reason"] }] },
+      "hints": ["Why the change exists."],
+      "fullLine": "Small diffs are easier to review because each change has one clear purpose.",
+      "teaching": [
+        { "type": "text", "text": "A generated change can be correct and still too large to review. Split it by intent so each diff can be understood, tested and reverted on its own.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "ai-engineering-leakage",
+      "summary": "Private data stays out of prompts",
+      "topics": ["ai-engineering"],
+      "tags": ["privacy", "ai"],
+      "prompt": [{ "type": "text", "text": "What should never be pasted into a hosted AI tool without approval?" }],
+      "answer": [{ "type": "text", "text": "Secrets and private customer data." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": ["Secrets and private customer data", "Public documentation", "Open-source examples", "Your own test names"],
+        "correct": ["Secrets and private customer data"]
+      },
+      "hints": ["Assume the prompt leaves your machine."],
+      "teaching": [
+        { "type": "text", "text": "Prompts may be logged or used under a provider's terms. Keep secrets and personal data out unless the tool and the contract explicitly allow them.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "ai-engineering-licence",
+      "summary": "Check generated code provenance",
+      "topics": ["ai-engineering"],
+      "tags": ["licence", "legal"],
+      "prompt": [
+        { "type": "text", "text": "Before shipping generated code, check its " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " and provenance." }
+      ],
+      "answer": [{ "type": "text", "text": "Before shipping generated code, check its licence and provenance." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["licence", "license"] }] },
+      "hints": ["The legal permission attached to it."],
+      "fullLine": "Before shipping generated code, check its licence and provenance.",
+      "teaching": [
+        { "type": "text", "text": "A model may reproduce code from its training data. Know your organisation's policy, keep generated snippets small and record where third-party code came from.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "ai-engineering-accountable",
+      "summary": "A human stays accountable",
+      "topics": ["ai-engineering"],
+      "tags": ["accountability"],
+      "prompt": [
+        { "type": "text", "text": "The human who merges the change remains " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " for it." }
+      ],
+      "answer": [{ "type": "text", "text": "The human who merges the change remains accountable for it." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["accountable", "responsible"] }] },
+      "hints": ["You cannot hand responsibility to a model."],
+      "fullLine": "The human who merges the change remains accountable for it.",
+      "teaching": [
+        { "type": "text", "text": "Tools change who types the code, not who answers for the outage. Review, tests and ownership stay with the people who ship.", "lang": "en" }
+      ]
+    }
+  ]
+}

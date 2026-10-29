@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-labelledby="t d">
+  <title id="t">A latency budget is spent hop by hop</title>
+  <desc id="d">A two hundred millisecond budget is divided into network, API, cache, database and rendering time.</desc>
+  <style>
+    .paper{fill:#fbf8f1}.ink{fill:#1f2933}.muted{fill:#6b7280}
+    .box{fill:#ffffff;stroke:#1f2933;stroke-width:1.5}
+    .seg1{fill:#2f6f8f}.seg2{fill:#3f7d5a}.seg3{fill:#b7791f}.seg4{fill:#8b6f9e}.seg5{fill:#a23b3b}
+  </style>
+  <rect class="paper" width="800" height="450"/>
+  <text x="40" y="44" font-family="system-ui, sans-serif" font-size="21" font-weight="650" class="ink">A latency budget is spent hop by hop</text>
+  <text x="40" y="70" font-family="system-ui, sans-serif" font-size="14" class="muted">Every remote call takes a slice. The slice adds up before the page appears.</text>
+
+  <rect x="60" y="180" width="110" height="60" rx="8" class="box"/>
+  <rect x="200" y="180" width="110" height="60" rx="8" class="box"/>
+  <rect x="340" y="180" width="110" height="60" rx="8" class="box"/>
+  <rect x="480" y="180" width="110" height="60" rx="8" class="box"/>
+  <rect x="620" y="180" width="110" height="60" rx="8" class="box"/>
+  <text x="115" y="215" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="ink">network</text>
+  <text x="255" y="215" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="ink">API</text>
+  <text x="395" y="215" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="ink">cache</text>
+  <text x="535" y="215" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="ink">database</text>
+  <text x="675" y="215" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="ink">render</text>
+
+  <text x="115" y="265" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="muted">20 ms</text>
+  <text x="255" y="265" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="muted">15 ms</text>
+  <text x="395" y="265" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="muted">5 ms</text>
+  <text x="535" y="265" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="muted">40 ms</text>
+  <text x="675" y="265" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="muted">60 ms</text>
+
+  <text x="60" y="330" font-family="system-ui, sans-serif" font-size="13" class="ink">budget 200 ms at p95</text>
+  <rect x="60" y="345" width="660" height="26" rx="13" fill="#eceae3"/>
+  <rect x="60" y="345" width="66" height="26" rx="13" class="seg1"/>
+  <rect x="126" y="345" width="50" height="26" class="seg2"/>
+  <rect x="176" y="345" width="16" height="26" class="seg3"/>
+  <rect x="192" y="345" width="132" height="26" class="seg4"/>
+  <rect x="324" y="345" width="198" height="26" class="seg5"/>
+  <text x="423" y="395" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="muted">140 ms used, 60 ms left for the unexpected</text>
+
+  <text x="40" y="430" font-family="system-ui, sans-serif" font-size="13" class="muted">Averages hide the slow tail; design the budget against p95 or p99.</text>
+</svg>

@@ -10,6 +10,11 @@
       "name": "polish-from-scratch",
       "version": "1.0.0",
       "file": "/packs/polish-from-scratch.json"
+    },
+    {
+      "name": "system-design",
+      "version": "1.0.0",
+      "file": "/packs/system-design.json"
     }
   ]
 }

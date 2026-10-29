@@ -15,7 +15,7 @@ const packsRoot = path.join(root, "packs");
 const targetRoot = path.join(root, "public", "packs");
 
 /** Only these folders are seeded. A stray folder never reaches a learner. */
-const seedPacks = ["browser-dev", "polish-from-scratch"];
+const seedPacks = ["browser-dev", "polish-from-scratch", "system-design"];
 
 /** Read one JSON file, or null when an optional file is absent. */
 async function readJson(file, optional = false) {

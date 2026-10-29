@@ -114,7 +114,9 @@ pack export that has local media.
 **Then** YouTube uses an 11-character id with optional whole-second `start` and
 `end` (`end > start`) and plays through a privacy-friendly embed; a web video
 uses a URL; a local video is a file of at most 20 MB stored as a Blob. No
-playlists, channels or downloads.
+playlists, channels or downloads. The player sends only the page origin as its
+referrer, because YouTube rejects an embed whose request carries none (player
+error 153); the origin alone still hides the page path from the video host.
 ### Scenario 16: Video failures
 **Given** a dead, private or blocked YouTube id
 **When** the layer is opened
