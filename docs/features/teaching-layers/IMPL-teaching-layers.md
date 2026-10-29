@@ -247,3 +247,10 @@ npm run lint
   `tests/browser-router.test.ts` and `tests/simulate-create-flow.test.ts` pin
   them. Full suite 60 files / 678 tests, typecheck and `npx eslint src tests`
   clean, both drift gates green.
+
+- 2026-10-29: D-41 fixed. The YouTube player iframe sent no referrer, so
+  every embed arrived without one and YouTube answered with player error 153;
+  the app now sends the page origin only, which plays and still hides the page
+  path. Scenario 15 states the rule; "sends the page origin and never a missing
+  referrer" in tests/teaching-layer.test.ts pins it, and the built export shows
+  the player instead of the error in the study layer.

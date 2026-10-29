@@ -1,0 +1,186 @@
+{
+  "cards": [
+    {
+      "key": "security-stride",
+      "summary": "STRIDE is a threat checklist",
+      "topics": ["security"],
+      "tags": ["stride", "threat-model"],
+      "prompt": [
+        { "type": "text", "text": "STRIDE is a threat-modelling checklist; the S stands for " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": "." }
+      ],
+      "answer": [{ "type": "text", "text": "STRIDE is a threat-modelling checklist; the S stands for spoofing." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["spoofing"] }] },
+      "hints": ["Pretending to be someone else."],
+      "fullLine": "STRIDE is a threat-modelling checklist; the S stands for spoofing.",
+      "teaching": [
+        { "type": "text", "text": "STRIDE covers spoofing, tampering, repudiation, information disclosure, denial of service and elevation of privilege. Walking the list makes missing threats easier to spot.", "lang": "en" },
+        { "type": "video", "source": "youtube", "src": "rEnJYNkUde0", "search": "STRIDE Threat Modeling for Beginners", "alt": "A beginner walkthrough of STRIDE threat modelling" }
+      ]
+    },
+    {
+      "key": "security-trust-boundary",
+      "summary": "Trust must change at a boundary",
+      "topics": ["security"],
+      "tags": ["trust-boundary"],
+      "prompt": [
+        { "type": "text", "text": "A trust boundary is where data crosses between zones with different " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " levels." }
+      ],
+      "answer": [{ "type": "text", "text": "A trust boundary is where data crosses between zones with different trust levels." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["trust", "security"] }] },
+      "hints": ["The browser and the server sit on different sides."],
+      "fullLine": "A trust boundary is where data crosses between zones with different trust levels.",
+      "teaching": [
+        { "type": "text", "text": "Every input crossing a trust boundary must be validated on the side that trusts it. A browser check protects the user; a server check protects the system.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/system-design/images/trust-boundaries.svg", "alt": "A diagram of browser, service and database zones separated by trust boundaries" }
+      ]
+    },
+    {
+      "key": "security-least-privilege",
+      "summary": "Least privilege gives only what is needed",
+      "topics": ["security"],
+      "tags": ["permissions"],
+      "prompt": [
+        { "type": "text", "text": "Least privilege gives each component only the " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " it needs." }
+      ],
+      "answer": [{ "type": "text", "text": "Least privilege gives each component only the permissions it needs." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["permissions", "access", "rights"] }] },
+      "hints": ["Not the maximum it could use."],
+      "fullLine": "Least privilege gives each component only the permissions it needs.",
+      "teaching": [
+        { "type": "text", "text": "A reporting job should read, not delete. A service account should reach one bucket, not the whole account. Small permissions turn a breach into a smaller incident.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "security-authn-authz",
+      "summary": "Authentication is not authorization",
+      "topics": ["security"],
+      "tags": ["authentication", "authorization"],
+      "prompt": [{ "type": "text", "text": "Authentication answers which question?" }],
+      "answer": [{ "type": "text", "text": "Who are you?" }],
+      "answerDef": {
+        "mode": "picks",
+        "options": ["Who are you?", "What may you do?", "How fast are you?", "Where is your data?"],
+        "correct": ["Who are you?"]
+      },
+      "hints": ["Authorization answers the other question."],
+      "teaching": [
+        { "type": "text", "text": "Authentication proves identity. Authorization decides what that identity may do. A user can log in correctly and still have no right to open an admin page.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/system-design/images/padlock.webp", "alt": "A brass padlock hanging on a dark metal fence" }
+      ]
+    },
+    {
+      "key": "security-secrets",
+      "summary": "Secrets do not belong in code",
+      "topics": ["security"],
+      "tags": ["secrets"],
+      "prompt": [{ "type": "text", "text": "Where should an API key live?" }],
+      "answer": [{ "type": "text", "text": "A secret manager or CI secret store." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": ["A secret manager or CI secret store", "A source file in git", "A public README", "A screenshot in the issue tracker"],
+        "correct": ["A secret manager or CI secret store"]
+      },
+      "hints": ["Git keeps history forever."],
+      "teaching": [
+        { "type": "text", "text": "Once a secret is committed, assume it is leaked. Store secrets outside the repository, inject them at run time and rotate them on a schedule.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "security-defense-depth",
+      "summary": "Defense in depth layers controls",
+      "topics": ["security"],
+      "tags": ["defense"],
+      "prompt": [
+        { "type": "text", "text": "Defense in depth uses several " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " controls so one failure does not expose everything." }
+      ],
+      "answer": [{ "type": "text", "text": "Defense in depth uses several independent controls so one failure does not expose everything." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["independent", "layered"] }] },
+      "hints": ["The word means they do not depend on each other."],
+      "fullLine": "Defense in depth uses several independent controls so one failure does not expose everything.",
+      "teaching": [
+        { "type": "text", "text": "Validate input, enforce permissions, encrypt data and monitor for abuse. If one control fails, the next still stands. All four should not rely on the same assumption.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "security-owasp",
+      "summary": "OWASP lists common web risks",
+      "topics": ["security"],
+      "tags": ["owasp"],
+      "prompt": [
+        { "type": "text", "text": "The OWASP Top 10 is a list of common web application " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": "." }
+      ],
+      "answer": [{ "type": "text", "text": "The OWASP Top 10 is a list of common web application risks." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["risks", "vulnerabilities", "security risks"] }] },
+      "hints": ["Broken access control sits at number one in 2021."],
+      "fullLine": "The OWASP Top 10 is a list of common web application risks.",
+      "teaching": [
+        { "type": "text", "text": "The 2021 list starts with broken access control, then cryptographic failures and injection. It is a starting checklist, not a complete security programme.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "security-slsa",
+      "summary": "SLSA grades the build supply chain",
+      "topics": ["security"],
+      "tags": ["supply-chain", "slsa"],
+      "prompt": [{ "type": "text", "text": "What does SLSA describe?" }],
+      "answer": [{ "type": "text", "text": "Levels of supply-chain integrity for build artifacts." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": ["Levels of supply-chain integrity for build artifacts", "A password manager", "A database engine", "A programming language"],
+        "correct": ["Levels of supply-chain integrity for build artifacts"]
+      },
+      "hints": ["It is about proving how an artifact was built."],
+      "teaching": [
+        { "type": "text", "text": "SLSA levels rise with the evidence behind a build: documented build, hosted build service, and hardened provenance. Higher levels make tampering harder and detectable.", "lang": "en" },
+        { "type": "video", "source": "youtube", "src": "K_G10zywoTs", "search": "What Is SLSA Supply Chain Levels for Software Artifacts", "alt": "An explanation of SLSA and its levels for software supply-chain security" }
+      ]
+    },
+    {
+      "key": "security-sbom",
+      "summary": "An SBOM lists what went in",
+      "topics": ["security"],
+      "tags": ["sbom", "supply-chain"],
+      "prompt": [
+        { "type": "text", "text": "An SBOM lists the " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " that went into a build." }
+      ],
+      "answer": [{ "type": "text", "text": "An SBOM lists the dependencies that went into a build." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["dependencies", "components", "packages"] }] },
+      "hints": ["It is the ingredient list."],
+      "fullLine": "An SBOM lists the dependencies that went into a build.",
+      "teaching": [
+        { "type": "text", "text": "A software bill of materials names every component and version in an artifact. When a library gets a CVE, the SBOM answers within minutes which products are affected.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/system-design/images/supply-chain-anim.svg", "alt": "A source package moving through build, test and signing steps to become a verified artifact" }
+      ]
+    },
+    {
+      "key": "security-encryption",
+      "summary": "Encrypt data in transit and at rest",
+      "topics": ["security"],
+      "tags": ["encryption"],
+      "prompt": [
+        { "type": "text", "text": "Encryption in transit protects data while it travels; encryption at rest protects data when it is " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": "." }
+      ],
+      "answer": [{ "type": "text", "text": "Encryption in transit protects data while it travels; encryption at rest protects data when it is stored." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["stored", "at rest", "saved"] }] },
+      "hints": ["The opposite of moving."],
+      "fullLine": "Encryption in transit protects data while it travels; encryption at rest protects data when it is stored.",
+      "teaching": [
+        { "type": "text", "text": "TLS covers the wire; disk and database encryption cover the stored copy. Neither helps if the application hands the data to the wrong user, so access control still matters.", "lang": "en" }
+      ]
+    }
+  ]
+}

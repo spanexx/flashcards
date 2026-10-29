@@ -5,6 +5,7 @@
 // 2026-10-25 opencode: created for the teaching-layers pack [pack: teaching-layers]
 
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 import type { TeachingPart } from "@/lib/shared/types";
 import {
   deckLevelFor,
@@ -246,5 +247,21 @@ describe("layerSpeech", () => {
       { text: "hello", lang: "en-US" },
       { text: "cześć", lang: "" },
     ]);
+  });
+});
+
+describe("YouTube player", () => {
+  // WHY: YouTube refuses an embed whose request carries no Referer (player
+  // error 153), and no-referrer is exactly that; the origin alone hides the
+  // page path. The policy lives in an iframe attribute, out of reach of the
+  // pure helpers above, so the component source is the contract.
+  // PACK: D-41
+  // 2026-10-29 qoder: created after every embed failed with error 153. [pack: teaching-layers]
+  it("sends the page origin and never a missing referrer", () => {
+    const source = readFileSync(new URL("../src/app/TeachingMedia.tsx", import.meta.url), "utf8");
+    const start = source.indexOf("<iframe");
+    const block = source.slice(start, source.indexOf("/>", start));
+    expect(block).toContain('referrerPolicy="strict-origin-when-cross-origin"');
+    expect(block).not.toContain('referrerPolicy="no-referrer"');
   });
 });

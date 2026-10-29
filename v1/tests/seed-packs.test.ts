@@ -14,7 +14,7 @@ import { SEED_INDEX_SCHEMA } from "@/lib/browser/seed";
 
 const projectRoot = fileURLToPath(new URL("..", import.meta.url));
 
-const PACK_NAMES = ["browser-dev", "polish-from-scratch"] as const;
+const PACK_NAMES = ["browser-dev", "polish-from-scratch", "system-design"] as const;
 const CARDS_PER_DECK = 10;
 
 /** A YouTube video is named by its 11-character id, never by a page address. */
@@ -45,7 +45,7 @@ async function readSeed(name: string) {
 }
 
 describe("seed manifest", () => {
-  it("lists exactly the two built-in packs at their authored versions", async () => {
+  it("lists exactly the built-in packs at their authored versions", async () => {
     const index = (await readJson("public/packs/index.json")) as {
       schema: string;
       packs: { name: string; version: string; file: string }[];
@@ -132,6 +132,44 @@ describe("polish-from-scratch pack", () => {
     for (const card of bundle.cards) {
       expect(card.answerDef.mode, `card ${card.key}`).toBe("type");
       expect(card.teaching, `card ${card.key}`).toBeTruthy();
+    }
+  });
+});
+
+describe("system-design pack", () => {
+  it("teaches every card and ships every built-in image", async () => {
+    const bundle = await readSeed("system-design");
+    for (const card of bundle.cards) {
+      expect(card.teaching, `card ${card.key}`).toBeTruthy();
+    }
+
+    const images = bundle.cards.flatMap((card) =>
+      (card.teaching ?? []).filter((part) => part.type === "image"),
+    );
+    for (const image of images) {
+      expect(image.source).toBe("builtin");
+      expect(image.src.startsWith("/packs/system-design/images/")).toBe(true);
+      const file = path.join(projectRoot, "public", image.src);
+      await expect(stat(file), image.src).resolves.toBeTruthy();
+    }
+  });
+
+  it("gives every deck two images including a still, and a video", async () => {
+    const bundle = await readSeed("system-design");
+    for (const deck of bundle.decks) {
+      const parts = bundle.cards
+        .filter((card) => card.deckId === deck.id)
+        .flatMap((card) => card.teaching ?? []);
+      const images = parts.filter((part) => part.type === "image");
+      const videos = parts.filter((part) => part.type === "video");
+      expect(images.length, `deck ${deck.id} images`).toBeGreaterThanOrEqual(2);
+      expect(videos.length, `deck ${deck.id} videos`).toBeGreaterThanOrEqual(1);
+      // WHY: Scenario 4 asks for a photograph or a static diagram, so two
+      // animations must not pass as visual teaching.
+      const still = images.some(
+        (image) => image.src.endsWith(".webp") || !image.src.endsWith("-anim.svg"),
+      );
+      expect(still, `deck ${deck.id} has a photograph or a static diagram`).toBe(true);
     }
   });
 });

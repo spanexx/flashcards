@@ -1,0 +1,5174 @@
+{
+  "schema": "flashcards.pack/v1",
+  "pack": {
+    "name": "system-design",
+    "version": "1.0.0",
+    "description": "System architecture and system design for the AI era: requirements, styles, data, reliability, security, AI systems, AI-assisted engineering, delivery and CI/CD.",
+    "language": "en"
+  },
+  "decks": [
+    {
+      "id": "foundations",
+      "name": "Foundations",
+      "level": "beginner"
+    },
+    {
+      "id": "requirements",
+      "name": "Requirements and constraints",
+      "level": "beginner"
+    },
+    {
+      "id": "styles",
+      "name": "Architecture styles",
+      "level": "intermediate"
+    },
+    {
+      "id": "data",
+      "name": "Data and state",
+      "level": "intermediate"
+    },
+    {
+      "id": "reliability",
+      "name": "Reliability and operations",
+      "level": "advanced"
+    },
+    {
+      "id": "security",
+      "name": "Security and trust",
+      "level": "advanced"
+    },
+    {
+      "id": "ai-architecture",
+      "name": "Designing AI systems",
+      "level": "intermediate"
+    },
+    {
+      "id": "ai-engineering",
+      "name": "AI-assisted engineering",
+      "level": "intermediate"
+    },
+    {
+      "id": "delivery",
+      "name": "Delivery and DevOps",
+      "level": "intermediate"
+    },
+    {
+      "id": "ci-cd",
+      "name": "CI/CD in practice",
+      "level": "advanced"
+    }
+  ],
+  "cards": [
+    {
+      "key": "ai-architecture-dependency",
+      "summary": "Treat the model as a dependency",
+      "tags": [
+        "llm",
+        "design"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What should an LLM call be treated as in a design?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A dependency with latency, cost and failure modes."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "A dependency with latency, cost and failure modes",
+          "A local function with no cost",
+          "A source of guaranteed truth",
+          "A replacement for testing"
+        ],
+        "correct": [
+          "A dependency with latency, cost and failure modes"
+        ]
+      },
+      "hints": [
+        "It can be slow, expensive or unavailable."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The model is a remote dependency like any other: it has latency, rate limits, cost and outages. Give it a timeout, a fallback and a budget just as you would a database.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/server-rack.webp",
+          "alt": "Rows of drive bays in a rack-mounted server"
+        }
+      ],
+      "deckId": "ai-architecture"
+    },
+    {
+      "key": "ai-architecture-rag",
+      "summary": "RAG grounds answers in retrieved text",
+      "tags": [
+        "rag",
+        "retrieval"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "RAG retrieves relevant documents and puts them in the prompt as "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " for the model's answer."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "RAG retrieves relevant documents and puts them in the prompt as context for the model's answer."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "context",
+              "grounding"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "The model reads the passage before answering."
+      ],
+      "fullLine": "RAG retrieves relevant documents and puts them in the prompt as context for the model's answer.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Retrieval-augmented generation adds fresh, private knowledge without retraining the model. The quality of the answer depends on the quality of retrieval.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "T-D1OfcDW1M",
+          "search": "What is Retrieval-Augmented Generation RAG IBM Technology",
+          "alt": "An explanation of retrieval-augmented generation and why it improves model answers"
+        }
+      ],
+      "deckId": "ai-architecture"
+    },
+    {
+      "key": "ai-architecture-retriever",
+      "summary": "The retriever finds the passages",
+      "tags": [
+        "rag",
+        "retrieval"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What does the retriever do in a RAG pipeline?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Finds passages relevant to the question."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Finds passages relevant to the question",
+          "Trains the model",
+          "Stores the final answer forever",
+          "Deletes old documents"
+        ],
+        "correct": [
+          "Finds passages relevant to the question"
+        ]
+      },
+      "hints": [
+        "It searches before the model speaks."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A retriever ranks chunks of text by similarity to the question. Bad chunking, stale documents or a weak ranking all produce a confident but unsupported answer.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/rag-loop-anim.svg",
+          "alt": "A question flowing through retrieval into a prompt and back as a grounded answer"
+        }
+      ],
+      "deckId": "ai-architecture"
+    },
+    {
+      "key": "ai-architecture-embeddings",
+      "summary": "Embeddings place meaning in space",
+      "tags": [
+        "embeddings",
+        "vector"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "An embedding turns text into a "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " so similar meanings sit close together."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "An embedding turns text into a vector so similar meanings sit close together."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "vector",
+              "list of numbers",
+              "numeric vector"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "A list of numbers."
+      ],
+      "fullLine": "An embedding turns text into a vector so similar meanings sit close together.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Embeddings let search work by meaning rather than exact words. A vector database stores them and finds the nearest ones, which is the retrieval half of RAG.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "ai-architecture"
+    },
+    {
+      "key": "ai-architecture-context",
+      "summary": "The context window is finite",
+      "tags": [
+        "context-window"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "The context window is the amount of text a model can consider in a single "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "The context window is the amount of text a model can consider in a single request."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "request",
+              "call",
+              "prompt"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Everything the model sees at once."
+      ],
+      "fullLine": "The context window is the amount of text a model can consider in a single request.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A larger window lets you send more evidence, but it costs more and long prompts can bury the important part. Retrieve less, but retrieve better.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "ai-architecture"
+    },
+    {
+      "key": "ai-architecture-evals",
+      "summary": "Evals measure quality against cases",
+      "tags": [
+        "evals"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Why run evals before shipping an LLM feature?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "They measure quality against a fixed set of cases."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "They measure quality against a fixed set of cases",
+          "They make the model cheaper",
+          "They remove the need for logs",
+          "They guarantee no hallucinations"
+        ],
+        "correct": [
+          "They measure quality against a fixed set of cases"
+        ]
+      },
+      "hints": [
+        "They are regression tests for behaviour that has no single right string."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "An eval set holds prompts and the properties a good answer must have. Run it on every prompt, model or retrieval change; otherwise quality drifts silently.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "a3SMraZWNNs",
+          "search": "How to Systematically Setup LLM Evals Metrics Unit Tests LLM-as-a-Judge",
+          "alt": "A practical walkthrough of setting up LLM evals with metrics and judges"
+        }
+      ],
+      "deckId": "ai-architecture"
+    },
+    {
+      "key": "ai-architecture-eval-loop",
+      "summary": "Evals grow from real failures",
+      "tags": [
+        "evals",
+        "quality"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "An eval set is only useful if it grows when a new failure is "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "An eval set is only useful if it grows when a new failure is found."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "found",
+              "discovered",
+              "reported"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Every incident becomes a test case."
+      ],
+      "fullLine": "An eval set is only useful if it grows when a new failure is found.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Treat a production miss like a bug report: add it to the eval set, fix the prompt or retrieval, and confirm the score improves without regressing the old cases.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/eval-loop.svg",
+          "alt": "A loop of prompt, model, evaluation and failure cases feeding back into the prompt"
+        }
+      ],
+      "deckId": "ai-architecture"
+    },
+    {
+      "key": "ai-architecture-grounding",
+      "summary": "Grounding ties answers to evidence",
+      "tags": [
+        "grounding",
+        "citations"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What does grounding require?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Answers tied to retrieved evidence."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Answers tied to retrieved evidence",
+          "A longer system prompt",
+          "A bigger model",
+          "A human typing every answer"
+        ],
+        "correct": [
+          "Answers tied to retrieved evidence"
+        ]
+      },
+      "hints": [
+        "The answer should point at its source."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A grounded answer cites the passage it used. Citations let a reader check the claim and expose when the model answered from memory instead of evidence.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "ai-architecture"
+    },
+    {
+      "key": "ai-architecture-cost",
+      "summary": "Tokens drive cost and latency",
+      "tags": [
+        "cost",
+        "latency"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Token cost and latency usually grow with the length of the "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " and the answer."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Token cost and latency usually grow with the length of the prompt and the answer."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "prompt",
+              "input",
+              "context"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Everything you send costs tokens."
+      ],
+      "fullLine": "Token cost and latency usually grow with the length of the prompt and the answer.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Budget tokens per request, cache repeated prefixes where the provider supports it, and send short retrieved passages instead of whole documents.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "ai-architecture"
+    },
+    {
+      "key": "ai-architecture-injection",
+      "summary": "Retrieved text can carry instructions",
+      "tags": [
+        "prompt-injection",
+        "security"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What is prompt injection?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Untrusted text that changes the model's instructions."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Untrusted text that changes the model's instructions",
+          "A faster API request",
+          "A compressed embedding",
+          "A database index"
+        ],
+        "correct": [
+          "Untrusted text that changes the model's instructions"
+        ]
+      },
+      "hints": [
+        "A document can contain orders, not just facts."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Any text the model reads can try to redirect it. Keep untrusted content labelled as data, never give the model more authority than the user, and require human approval for risky actions.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "ai-architecture"
+    },
+    {
+      "key": "ai-engineering-role",
+      "summary": "AI drafts; humans own the change",
+      "tags": [
+        "ai",
+        "review"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What is the safest role for an AI coding assistant?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Drafting work that a human reviews and tests."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Drafting work that a human reviews and tests",
+          "Owning production releases",
+          "Approving its own pull requests",
+          "Disabling the test suite"
+        ],
+        "correct": [
+          "Drafting work that a human reviews and tests"
+        ]
+      },
+      "hints": [
+        "It is a fast assistant, not the accountable owner."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "AI lowers the cost of producing code, not the cost of owning it. The fastest safe pattern is draft, review, test, then merge like any other change.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/code-on-screen.webp",
+          "alt": "Colourful lines of source code on a dark screen"
+        }
+      ],
+      "deckId": "ai-engineering"
+    },
+    {
+      "key": "ai-engineering-same-gate",
+      "summary": "AI code passes the same gate",
+      "tags": [
+        "review",
+        "quality"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "AI-generated code should pass the same "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " gate as human code."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "AI-generated code should pass the same review gate as human code."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "review",
+              "quality",
+              "merge"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Who wrote the code should not change the rules."
+      ],
+      "fullLine": "AI-generated code should pass the same review gate as human code.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The origin of a diff is not a reason to skip checks. Tests, lint, security scanning and human review apply exactly as before.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/review-gate-anim.svg",
+          "alt": "A change opening a gate only after review checks pass"
+        }
+      ],
+      "deckId": "ai-engineering"
+    },
+    {
+      "key": "ai-engineering-copilot-review",
+      "summary": "Copilot review leaves comments",
+      "tags": [
+        "copilot",
+        "review"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What does GitHub Copilot code review produce by default?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Review comments, not an approval."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Review comments, not an approval",
+          "An automatic merge",
+          "A signed release",
+          "A new repository"
+        ],
+        "correct": [
+          "Review comments, not an approval"
+        ]
+      },
+      "hints": [
+        "It advises; a person still approves."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Automated review catches patterns such as missing checks or unclear code. It does not take responsibility, so a human approval remains required.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "HDEGFNAUkX8",
+          "search": "How to automate code reviews and testing with GitHub Copilot",
+          "alt": "GitHub showing how Copilot can automate parts of code review and testing"
+        }
+      ],
+      "deckId": "ai-engineering"
+    },
+    {
+      "key": "ai-engineering-secure-generated",
+      "summary": "Generated code needs security review",
+      "tags": [
+        "security",
+        "ai"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "AI often suggests dependencies that look plausible but are "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "AI often suggests dependencies that look plausible but are unvetted."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "unvetted",
+              "fake",
+              "unsafe"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Nobody checked that the package exists or is safe."
+      ],
+      "fullLine": "AI often suggests dependencies that look plausible but are unvetted.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A model can invent a package name. Verify every new dependency exists, is maintained and is the one you meant before it enters the lockfile.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "X0UI0O8YzJM",
+          "search": "How Developers Secure AI-Generated Code 5 Security Best Practices IBM",
+          "alt": "Five practices for securing code generated with AI assistance"
+        }
+      ],
+      "deckId": "ai-engineering"
+    },
+    {
+      "key": "ai-engineering-tests",
+      "summary": "Tests are the safety net",
+      "tags": [
+        "tests",
+        "ai"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What is the best safety net for fast AI-assisted changes?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A test suite that fails when behaviour breaks."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "A test suite that fails when behaviour breaks",
+          "Longer prompts",
+          "Fewer commits",
+          "Manual clicking only"
+        ],
+        "correct": [
+          "A test suite that fails when behaviour breaks"
+        ]
+      },
+      "hints": [
+        "It must fail for the right reason."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "AI can change more code per minute than a person can read. Tests turn that speed into a safe loop only if they genuinely fail when behaviour breaks.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "ai-engineering"
+    },
+    {
+      "key": "ai-engineering-spec-first",
+      "summary": "Write the spec before the code",
+      "tags": [
+        "spec",
+        "prompting"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A spec-first workflow writes the intended "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " before asking the model for code."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A spec-first workflow writes the intended behaviour before asking the model for code."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "behaviour",
+              "behavior",
+              "spec",
+              "contract"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "What the code must do, not how."
+      ],
+      "fullLine": "A spec-first workflow writes the intended behaviour before asking the model for code.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A short spec with examples gives the model a target and gives the reviewer a way to judge the result. Without it, both sides guess.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "ai-engineering"
+    },
+    {
+      "key": "ai-engineering-small-diffs",
+      "summary": "Small diffs stay reviewable",
+      "tags": [
+        "review",
+        "diffs"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Small diffs are easier to review because each change has one clear "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Small diffs are easier to review because each change has one clear purpose."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "purpose",
+              "intent",
+              "reason"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Why the change exists."
+      ],
+      "fullLine": "Small diffs are easier to review because each change has one clear purpose.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A generated change can be correct and still too large to review. Split it by intent so each diff can be understood, tested and reverted on its own.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "ai-engineering"
+    },
+    {
+      "key": "ai-engineering-leakage",
+      "summary": "Private data stays out of prompts",
+      "tags": [
+        "privacy",
+        "ai"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What should never be pasted into a hosted AI tool without approval?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Secrets and private customer data."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Secrets and private customer data",
+          "Public documentation",
+          "Open-source examples",
+          "Your own test names"
+        ],
+        "correct": [
+          "Secrets and private customer data"
+        ]
+      },
+      "hints": [
+        "Assume the prompt leaves your machine."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Prompts may be logged or used under a provider's terms. Keep secrets and personal data out unless the tool and the contract explicitly allow them.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "ai-engineering"
+    },
+    {
+      "key": "ai-engineering-licence",
+      "summary": "Check generated code provenance",
+      "tags": [
+        "licence",
+        "legal"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Before shipping generated code, check its "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " and provenance."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Before shipping generated code, check its licence and provenance."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "licence",
+              "license"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "The legal permission attached to it."
+      ],
+      "fullLine": "Before shipping generated code, check its licence and provenance.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A model may reproduce code from its training data. Know your organisation's policy, keep generated snippets small and record where third-party code came from.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "ai-engineering"
+    },
+    {
+      "key": "ai-engineering-accountable",
+      "summary": "A human stays accountable",
+      "tags": [
+        "accountability"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "The human who merges the change remains "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " for it."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "The human who merges the change remains accountable for it."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "accountable",
+              "responsible"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "You cannot hand responsibility to a model."
+      ],
+      "fullLine": "The human who merges the change remains accountable for it.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Tools change who types the code, not who answers for the outage. Review, tests and ownership stay with the people who ship.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "ai-engineering"
+    },
+    {
+      "key": "ci-cd-stages",
+      "summary": "A pipeline runs stages in order",
+      "tags": [
+        "pipeline",
+        "ci"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A CI pipeline usually runs install, lint, test and "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " before an artifact is deployed."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A CI pipeline usually runs install, lint, test and build before an artifact is deployed."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "build"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Compiling or bundling the application."
+      ],
+      "fullLine": "A CI pipeline usually runs install, lint, test and build before an artifact is deployed.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Stages run cheapest and fastest first, so a typo fails in seconds. The build step produces the artifact that later stages promote unchanged.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/pipeline-stages.svg",
+          "alt": "A CI/CD pipeline moving from checkout through test and build to staging and production"
+        }
+      ],
+      "deckId": "ci-cd"
+    },
+    {
+      "key": "ci-cd-workflow",
+      "summary": "A workflow is a YAML file on events",
+      "tags": [
+        "github-actions",
+        "workflow"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "In GitHub Actions, what is a workflow?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A YAML file that runs jobs on events."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "A YAML file that runs jobs on events",
+          "A branch protection rule",
+          "A container image",
+          "A test framework"
+        ],
+        "correct": [
+          "A YAML file that runs jobs on events"
+        ]
+      },
+      "hints": [
+        "It lives in .github/workflows."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A workflow has a trigger, jobs and steps. Jobs run on runners; steps call actions or shell commands. Reusable workflows and actions keep repetition down.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "Lj9SennFygM",
+          "search": "How to build a complete CI pipeline with GitHub actions",
+          "alt": "A walkthrough of building a complete continuous integration pipeline with GitHub Actions"
+        }
+      ],
+      "deckId": "ci-cd"
+    },
+    {
+      "key": "ci-cd-build-once",
+      "summary": "Build once and promote the artifact",
+      "tags": [
+        "artifacts",
+        "promotion"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Build the artifact once and "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " the same artifact to every environment."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Build the artifact once and deploy the same artifact to every environment."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "deploy",
+              "promote",
+              "ship"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Do not rebuild for staging."
+      ],
+      "fullLine": "Build the artifact once and deploy the same artifact to every environment.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Rebuilding per environment means the tested bytes are not the shipped bytes. Promote one immutable artifact and let configuration change between environments.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/data-center.webp",
+          "alt": "Rows of servers in a data centre with blue status lights"
+        }
+      ],
+      "deckId": "ci-cd"
+    },
+    {
+      "key": "ci-cd-trigger",
+      "summary": "Events start the pipeline",
+      "tags": [
+        "github-actions",
+        "events"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What triggers a GitHub Actions workflow?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "An event such as a push or pull request."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "An event such as a push or pull request",
+          "Only a manual phone call",
+          "The phase of the moon",
+          "A database migration"
+        ],
+        "correct": [
+          "An event such as a push or pull request"
+        ]
+      },
+      "hints": [
+        "Something happens in the repository."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Common triggers are push, pull_request, schedule and workflow_dispatch. Choosing the trigger decides how fast feedback arrives and how often the pipeline runs.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "qoalS5ae7fk",
+          "search": "CI CD Made Easy with GitHub Actions Hello World Demo",
+          "alt": "A short hands-on demonstration of a GitHub Actions CI/CD workflow"
+        }
+      ],
+      "deckId": "ci-cd"
+    },
+    {
+      "key": "ci-cd-test-pyramid",
+      "summary": "Many fast tests, few slow ones",
+      "tags": [
+        "tests",
+        "pyramid"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "The test pyramid puts many fast unit tests at the bottom and few end-to-end tests at the "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "The test pyramid puts many fast unit tests at the bottom and few end-to-end tests at the top."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "top",
+              "peak"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "The slow, brittle ones."
+      ],
+      "fullLine": "The test pyramid puts many fast unit tests at the bottom and few end-to-end tests at the top.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Unit tests give fast, precise feedback. End-to-end tests prove the whole path but are slow and flaky, so use them for the few journeys that must not break.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "ci-cd"
+    },
+    {
+      "key": "ci-cd-immutable",
+      "summary": "Artifacts must not change",
+      "tags": [
+        "artifacts"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Why should a build artifact be immutable?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "So every environment runs exactly what was tested."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "So every environment runs exactly what was tested",
+          "So it can be edited by hand",
+          "So it never needs a version",
+          "So tests can be skipped"
+        ],
+        "correct": [
+          "So every environment runs exactly what was tested"
+        ]
+      },
+      "hints": [
+        "The tested bytes must be the shipped bytes."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "An artifact is identified by a version or digest and never overwritten. If something must change, build a new artifact; that keeps the audit trail honest.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "ci-cd"
+    },
+    {
+      "key": "ci-cd-secrets",
+      "summary": "CI secrets are injected, not committed",
+      "tags": [
+        "secrets",
+        "ci"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "CI secrets must be injected at run time, never committed to the "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "CI secrets must be injected at run time, never committed to the repository."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "repository",
+              "repo",
+              "codebase"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Where the code lives."
+      ],
+      "fullLine": "CI secrets must be injected at run time, never committed to the repository.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Store secrets in the CI secret store, scope them to the environment that needs them and mask them in logs. Rotate any secret that was ever committed.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "ci-cd"
+    },
+    {
+      "key": "ci-cd-canary",
+      "summary": "A canary gets a small share first",
+      "tags": [
+        "canary",
+        "release"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A canary release sends a small share of "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " to the new version first."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A canary release sends a small share of traffic to the new version first."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "traffic",
+              "requests",
+              "users"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "What arrives at the servers."
+      ],
+      "fullLine": "A canary release sends a small share of traffic to the new version first.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The canary proves the new version on a few real requests. Watch error rate and latency against the old version, then widen or roll back.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/canary-anim.svg",
+          "alt": "Most traffic going to the stable version while a small share goes to a canary"
+        }
+      ],
+      "deckId": "ci-cd"
+    },
+    {
+      "key": "ci-cd-progressive",
+      "summary": "Progressive delivery widens gradually",
+      "tags": [
+        "progressive-delivery"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which is a progressive delivery technique?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Blue-green deployment."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Blue-green deployment",
+          "Editing production by hand",
+          "Skipping reviews",
+          "Deleting the pipeline"
+        ],
+        "correct": [
+          "Blue-green deployment"
+        ]
+      },
+      "hints": [
+        "Two environments swap traffic."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Progressive delivery releases to a subset first and widens as confidence grows. Canary, blue-green and ring deployments are all ways to limit the blast radius.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "HKkhD6nokC8",
+          "search": "Progressive Delivery Explained Big Bang Blue-Green Rolling Updates Canaries",
+          "alt": "An explanation of progressive delivery techniques including blue-green and canary releases"
+        }
+      ],
+      "deckId": "ci-cd"
+    },
+    {
+      "key": "ci-cd-testing-production",
+      "summary": "Production testing needs observability",
+      "tags": [
+        "production",
+        "monitoring"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What does testing in production require?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Strong observability and a fast rollback."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Strong observability and a fast rollback",
+          "No monitoring",
+          "A bigger team",
+          "Ignoring errors"
+        ],
+        "correct": [
+          "Strong observability and a fast rollback"
+        ]
+      },
+      "hints": [
+        "You must see the problem and undo it quickly."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Some failures only appear with real traffic. Testing in production is safe only when you can measure the effect, limit who sees it and roll back within minutes.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "sFzKrGSaIr8",
+          "search": "Testing in Production Progressive Delivery Canary Deployments",
+          "alt": "An explanation of testing in production with canary deployments and progressive delivery"
+        }
+      ],
+      "deckId": "ci-cd"
+    },
+    {
+      "key": "data-ownership",
+      "summary": "Each service owns its data",
+      "tags": [
+        "ownership",
+        "microservices"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "In microservices, each service owns its data and exposes it through an "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": ", not a shared table."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "In microservices, each service owns its data and exposes it through an API, not a shared table."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "API",
+              "interface"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "The boundary is the contract."
+      ],
+      "fullLine": "In microservices, each service owns its data and exposes it through an API, not a shared table.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Shared tables create hidden coupling: any team can change the schema and break another. Data ownership keeps each schema behind one team's contract.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/data-ownership.svg",
+          "alt": "Three services each holding their own database behind a contract"
+        }
+      ],
+      "deckId": "data"
+    },
+    {
+      "key": "data-cache-aside",
+      "summary": "Cache-aside checks the cache first",
+      "tags": [
+        "cache"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "In cache-aside, the application checks the cache first, then the "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " on a miss."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "In cache-aside, the application checks the cache first, then the database on a miss."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "database",
+              "source",
+              "store"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Where the authoritative data lives."
+      ],
+      "fullLine": "In cache-aside, the application checks the cache first, then the database on a miss.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "On a hit the cache answers. On a miss the application reads the database, stores the result in the cache and returns it. The cache never owns the truth.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/cache-path-anim.svg",
+          "alt": "A request checking a cache, falling through to a database and filling the cache"
+        }
+      ],
+      "deckId": "data"
+    },
+    {
+      "key": "data-cache-invalidation",
+      "summary": "Stale cache is the hard part",
+      "tags": [
+        "cache",
+        "consistency"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Why is cache invalidation hard?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "The cache can serve stale data when the source changes."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "The cache can serve stale data when the source changes",
+          "Caches never expire",
+          "Databases cannot be updated",
+          "Requests are always unique"
+        ],
+        "correct": [
+          "The cache can serve stale data when the source changes"
+        ]
+      },
+      "hints": [
+        "The copy and the original can disagree."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Every cache rule answers two questions: how long may a copy live, and what happens when the original changes? A time-to-live is simple but still allows staleness.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "5qk4p1jnSgg",
+          "search": "Cache Invalidation Explained Strategies Consistency Challenges",
+          "alt": "An explanation of cache invalidation strategies and the consistency problems they create"
+        }
+      ],
+      "deckId": "data"
+    },
+    {
+      "key": "data-idempotency",
+      "summary": "Idempotent means safe to repeat",
+      "tags": [
+        "idempotency",
+        "retries"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "An operation is "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " when repeating it has the same effect as doing it once."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "An operation is idempotent when repeating it has the same effect as doing it once."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "idempotent"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "The property that makes retries safe."
+      ],
+      "fullLine": "An operation is idempotent when repeating it has the same effect as doing it once.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Networks fail after the server may have processed a request. An idempotency key lets the server recognise a repeat and return the first result instead of charging twice.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "I08syTslan8",
+          "search": "What is API Idempotency and Why Is It Important",
+          "alt": "An explanation of API idempotency and why retries need it"
+        }
+      ],
+      "deckId": "data"
+    },
+    {
+      "key": "data-index",
+      "summary": "An index speeds reads and slows writes",
+      "tags": [
+        "index",
+        "database"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What does a database index trade for faster reads?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Extra storage and slower writes."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Extra storage and slower writes",
+          "Data safety",
+          "Network bandwidth only",
+          "The primary key"
+        ],
+        "correct": [
+          "Extra storage and slower writes"
+        ]
+      },
+      "hints": [
+        "Every insert has to update the index too."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "An index is a sorted shortcut, like a card catalogue in a library. It saves a full scan on reads but every write must maintain it, so unused indexes are pure cost.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/card-catalog.webp",
+          "alt": "A wooden library card catalogue with rows of labelled drawers"
+        }
+      ],
+      "deckId": "data"
+    },
+    {
+      "key": "data-cap",
+      "summary": "CAP forces a choice during a partition",
+      "tags": [
+        "cap",
+        "distributed"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "CAP says a distributed system facing a network partition must choose between consistency and "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "CAP says a distributed system facing a network partition must choose between consistency and availability."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "availability"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Can the system keep answering?"
+      ],
+      "fullLine": "CAP says a distributed system facing a network partition must choose between consistency and availability.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Partitions happen. During one, a system can refuse some requests to stay consistent, or answer with possibly stale data to stay available. The choice is a product decision.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "data"
+    },
+    {
+      "key": "data-eventual",
+      "summary": "Eventual consistency converges later",
+      "tags": [
+        "consistency"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What does eventual consistency promise?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Replicas converge after a short delay."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Replicas converge after a short delay",
+          "Every read is instantly current",
+          "Data is never replicated",
+          "Writes never conflict"
+        ],
+        "correct": [
+          "Replicas converge after a short delay"
+        ]
+      },
+      "hints": [
+        "Eventually, not immediately."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Eventual consistency accepts a window where readers see different values. It is fine for feeds and counts, and dangerous for balances or inventory unless the flow compensates.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "data"
+    },
+    {
+      "key": "data-sharding",
+      "summary": "Sharding splits data for scale",
+      "tags": [
+        "sharding",
+        "replication"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Replication copies data for availability; sharding splits data across "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " for scale."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Replication copies data for availability; sharding splits data across machines for scale."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "machines",
+              "nodes",
+              "servers",
+              "shards"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Each piece lives somewhere else."
+      ],
+      "fullLine": "Replication copies data for availability; sharding splits data across machines for scale.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Replication answers what happens when a machine dies. Sharding answers what happens when one machine cannot hold or serve the data. Sharding adds routing and cross-shard query costs.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "data"
+    },
+    {
+      "key": "data-backup",
+      "summary": "Replication is not a backup",
+      "tags": [
+        "backup",
+        "replication"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Why is replication not a backup?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "It copies mistakes and deletions too."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "It copies mistakes and deletions too",
+          "It is always slower",
+          "It uses too much disk",
+          "It only works in one region"
+        ],
+        "correct": [
+          "It copies mistakes and deletions too"
+        ]
+      },
+      "hints": [
+        "A delete propagates as fast as an insert."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Replication protects against a dead disk, not against a bad migration or a mistaken delete. A backup must be separate, restorable and tested.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "data"
+    },
+    {
+      "key": "data-schema-evolution",
+      "summary": "Schema changes must be backward compatible",
+      "tags": [
+        "schema",
+        "migration"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A schema change that old and new code can both read is called backwards-"
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A schema change that old and new code can both read is called backwards-compatible."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "compatible"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Old code must keep working during the rollout."
+      ],
+      "fullLine": "A schema change that old and new code can both read is called backwards-compatible.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "During a rolling deploy, old and new code run together. Add fields before using them, stop using fields before removing them, and keep migrations reversible.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "data"
+    },
+    {
+      "key": "delivery-trunk",
+      "summary": "Trunk-based development merges often",
+      "tags": [
+        "trunk",
+        "git"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What is trunk-based development?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Short-lived branches merged often into one shared trunk."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Short-lived branches merged often into one shared trunk",
+          "One long release branch per quarter",
+          "No version control",
+          "Each developer keeps a private fork forever"
+        ],
+        "correct": [
+          "Short-lived branches merged often into one shared trunk"
+        ]
+      },
+      "hints": [
+        "The integration pain is paid in small amounts."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Small, frequent merges keep the trunk releasable and make integration problems small. Long-lived branches turn integration into a risky event.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "a_iq0ZMU9Co",
+          "search": "Trunk-Based Development Explained Modern Git Workflow",
+          "alt": "An explanation of trunk-based development and how it differs from long-lived branches"
+        }
+      ],
+      "deckId": "delivery"
+    },
+    {
+      "key": "delivery-dora",
+      "summary": "DORA measures delivery performance",
+      "tags": [
+        "dora",
+        "metrics"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which is a DORA delivery metric?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Change failure rate."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Change failure rate",
+          "Lines of code",
+          "Number of meetings",
+          "Story points"
+        ],
+        "correct": [
+          "Change failure rate"
+        ]
+      },
+      "hints": [
+        "It measures how often a release breaks something."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "DORA measures throughput and stability together. Optimising one alone, such as deploying more often without a rollback path, usually damages the other.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "lqsENcje41w",
+          "search": "DORA Metrics Explained Four Key Measures DevOps Performance",
+          "alt": "An explanation of the DORA metrics for software delivery performance"
+        }
+      ],
+      "deckId": "delivery"
+    },
+    {
+      "key": "delivery-five-metrics",
+      "summary": "DORA has five measures now",
+      "tags": [
+        "dora",
+        "metrics"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "DORA's failed deployment recovery time replaced the older metric called "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "DORA's failed deployment recovery time replaced the older metric called MTTR."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "MTTR",
+              "mean time to recovery",
+              "mean time to restore"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Four letters about average repair time."
+      ],
+      "fullLine": "DORA's failed deployment recovery time replaced the older metric called MTTR.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The current five measures are lead time, deployment frequency, failed deployment recovery time, change failure rate and deployment rework rate. The set separates speed from stability.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/dora-metrics.svg",
+          "alt": "The five DORA measures grouped into throughput and stability"
+        }
+      ],
+      "deckId": "delivery"
+    },
+    {
+      "key": "delivery-iac",
+      "summary": "Infrastructure is defined in files",
+      "tags": [
+        "iac",
+        "infrastructure"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Infrastructure as code stores servers and networks as "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " files."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Infrastructure as code stores servers and networks as versioned files."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "versioned",
+              "text",
+              "configuration",
+              "config"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "They live in git like application code."
+      ],
+      "fullLine": "Infrastructure as code stores servers and networks as versioned files.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "When infrastructure is code, changes are reviewed, reproducible and reversible. Drift between environments becomes visible instead of tribal knowledge.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "zWw2wuiKd5o",
+          "search": "What is Infrastructure as Code IBM Technology",
+          "alt": "An explanation of infrastructure as code and its benefits"
+        }
+      ],
+      "deckId": "delivery"
+    },
+    {
+      "key": "delivery-feature-flag",
+      "summary": "Flags separate deploy from release",
+      "tags": [
+        "feature-flags"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What is a feature flag for?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Turning behaviour on or off without redeploying."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Turning behaviour on or off without redeploying",
+          "Storing passwords",
+          "Replacing tests",
+          "Compressing images"
+        ],
+        "correct": [
+          "Turning behaviour on or off without redeploying"
+        ]
+      },
+      "hints": [
+        "Deploy is not the same as release."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A flag lets code reach production dark and be released later. Delete flags once they are permanent decisions, or the combinations become untestable.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/feature-flag-anim.svg",
+          "alt": "One deployment reaching users through a flag that can switch a feature on or off"
+        }
+      ],
+      "deckId": "delivery"
+    },
+    {
+      "key": "delivery-small-batches",
+      "summary": "Small batches reduce risk",
+      "tags": [
+        "batches",
+        "risk"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Small batches reduce risk because less change ships between each "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Small batches reduce risk because less change ships between each deployment."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "deployment",
+              "release",
+              "change"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "The moment code reaches users."
+      ],
+      "fullLine": "Small batches reduce risk because less change ships between each deployment.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "When a release contains one change, a failure points at one suspect. When it contains fifty, diagnosis and rollback both become slow.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "delivery"
+    },
+    {
+      "key": "delivery-cdcd",
+      "summary": "Delivery is on demand; deployment is automatic",
+      "tags": [
+        "continuous-delivery"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What is the difference between continuous delivery and continuous deployment?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Delivery ships on demand; deployment ships automatically."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Delivery ships on demand; deployment ships automatically",
+          "Delivery is faster",
+          "Deployment skips tests",
+          "They are the same thing"
+        ],
+        "correct": [
+          "Delivery ships on demand; deployment ships automatically"
+        ]
+      },
+      "hints": [
+        "One still has a human release button."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Continuous delivery keeps every change releasable and leaves the release decision to a person. Continuous deployment removes that button and releases every passing change.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "delivery"
+    },
+    {
+      "key": "delivery-environments",
+      "summary": "Staging should mirror production",
+      "tags": [
+        "environments"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A staging environment should look like production but hold "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " data."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A staging environment should look like production but hold test data."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "test",
+              "fake",
+              "synthetic"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Never real customer data."
+      ],
+      "fullLine": "A staging environment should look like production but hold test data.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Staging is only useful if it resembles production in configuration and scale. Real customer data must not be copied there without a privacy process.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "delivery"
+    },
+    {
+      "key": "delivery-rollback",
+      "summary": "Every release needs a way back",
+      "tags": [
+        "rollback"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A release needs a way back, so every deployment should have a "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " plan."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A release needs a way back, so every deployment should have a rollback plan."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "rollback",
+              "recovery",
+              "revert"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "How you undo it."
+      ],
+      "fullLine": "A release needs a way back, so every deployment should have a rollback plan.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Rollback may mean redeploying the previous artifact, flipping a flag or reversing a migration. Decide which before the release, not during the incident.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "delivery"
+    },
+    {
+      "key": "delivery-pipeline-value",
+      "summary": "The pipeline shortens the path to users",
+      "tags": [
+        "pipeline"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What does a delivery pipeline mostly reduce?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "The time and risk between a commit and a user."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "The time and risk between a commit and a user",
+          "The number of developers needed",
+          "The need for monitoring",
+          "The cost of hardware"
+        ],
+        "correct": [
+          "The time and risk between a commit and a user"
+        ]
+      },
+      "hints": [
+        "It shortens the feedback loop."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Automating build, test and deploy replaces manual steps that are slow and inconsistent. The gain is a shorter, safer path from idea to user feedback.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/container-ship.webp",
+          "alt": "A container ship carrying stacked freight containers across the water"
+        }
+      ],
+      "deckId": "delivery"
+    },
+    {
+      "key": "foundations-costly-decisions",
+      "summary": "Architecture is the costly-to-change decisions",
+      "tags": [
+        "architecture",
+        "decisions"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which choice is an architecture decision rather than a coding detail?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Whether services share one database."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Whether services share one database",
+          "How a button is named",
+          "Which loop style a function uses",
+          "The order of import statements"
+        ],
+        "correct": [
+          "Whether services share one database"
+        ]
+      },
+      "hints": [
+        "Pick the choice that is hard to undo after launch."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Architecture is the set of decisions that are expensive to reverse later: boundaries, data ownership, communication and deployment. Naming and loop style are coding details because they are cheap to change.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/telephone-exchange-1918.webp",
+          "alt": "Telephone operators at a switchboard in 1918, connecting calls by hand"
+        }
+      ],
+      "deckId": "foundations"
+    },
+    {
+      "key": "foundations-evolving",
+      "summary": "An architecture keeps changing",
+      "tags": [
+        "architecture",
+        "change"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "An architecture is never finished; it keeps "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " as the system and its constraints change."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "An architecture is never finished; it keeps evolving as the system and its constraints change."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "evolving",
+              "changing"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Another word for changing over time."
+      ],
+      "fullLine": "An architecture is never finished; it keeps evolving as the system and its constraints change.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Architects do not produce a final diagram. They keep making and revising decisions as the product, the team and the load change.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "K7RkjKTIQbo",
+          "search": "Mark Richards Neal Ford software architecture fundamentals",
+          "alt": "A conversation about the fundamentals of software architecture and how architects work"
+        }
+      ],
+      "deckId": "foundations"
+    },
+    {
+      "key": "foundations-boundaries",
+      "summary": "A boundary is a clear interface",
+      "tags": [
+        "boundaries",
+        "interfaces"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A boundary is useful when each side can change without breaking the other, so components should talk through a clear "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A boundary is useful when each side can change without breaking the other, so components should talk through a clear interface."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "interface"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "The agreed contract between two parts."
+      ],
+      "fullLine": "A boundary is useful when each side can change without breaking the other, so components should talk through a clear interface.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A boundary hides an implementation behind a contract. The caller depends on the contract, not on the internals, so either side can be replaced.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/boundaries-anim.svg",
+          "alt": "Two modules exchanging a message through a narrow interface while their insides change"
+        }
+      ],
+      "deckId": "foundations"
+    },
+    {
+      "key": "foundations-tradeoff",
+      "summary": "A trade-off buys one quality with another",
+      "tags": [
+        "trade-offs"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What does a design trade-off mean?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Making one quality better by accepting less of another."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Making one quality better by accepting less of another",
+          "Finding a design with no downsides",
+          "Choosing the newest tool available",
+          "Adding every useful feature"
+        ],
+        "correct": [
+          "Making one quality better by accepting less of another"
+        ]
+      },
+      "hints": [
+        "Every real design gives something up."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Caching improves latency but adds staleness. Strong consistency improves correctness but costs availability during a partition. Naming the cost is part of the decision.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "foundations"
+    },
+    {
+      "key": "foundations-coupling",
+      "summary": "Coupling means changing together",
+      "tags": [
+        "coupling"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Two modules that must change together are tightly "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Two modules that must change together are tightly coupled."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "coupled"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "The opposite of loosely joined."
+      ],
+      "fullLine": "Two modules that must change together are tightly coupled.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Coupling is not automatically bad. Some parts must coordinate. The problem is hidden coupling: a change in one place breaks a distant part with no clear contract.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "foundations"
+    },
+    {
+      "key": "foundations-cohesion",
+      "summary": "Cohesion is one job done well",
+      "tags": [
+        "cohesion"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What is high cohesion?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "One module does one related job well."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "One module does one related job well",
+          "One module touches every part of the app",
+          "Two modules share one database",
+          "Every module uses the same framework"
+        ],
+        "correct": [
+          "One module does one related job well"
+        ]
+      },
+      "hints": [
+        "Cohesion is about what belongs together."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "High cohesion keeps related rules in one place. Low cohesion scatters one job across many modules, so every change touches several files.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "foundations"
+    },
+    {
+      "key": "foundations-stateless",
+      "summary": "A stateless service keeps no session",
+      "tags": [
+        "stateless",
+        "scaling"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A stateless service keeps no session "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " between requests, so any instance can serve the next one."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A stateless service keeps no session state between requests, so any instance can serve the next one."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "state",
+              "data"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "What a session holds."
+      ],
+      "fullLine": "A stateless service keeps no session state between requests, so any instance can serve the next one.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Stateless services are easy to scale because the load balancer can send each request anywhere. Shared state moves to a database, cache or token.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "foundations"
+    },
+    {
+      "key": "foundations-horizontal",
+      "summary": "Horizontal scaling adds machines",
+      "tags": [
+        "scaling"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Adding more machines to share the load is called scaling..."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "horizontally"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "horizontally",
+          "vertically",
+          "diagonally",
+          "recursively"
+        ],
+        "correct": [
+          "horizontally"
+        ]
+      },
+      "hints": [
+        "Think of a row of servers side by side."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Vertical scaling makes one machine bigger. Horizontal scaling adds more machines. Horizontal scaling needs stateless services and a way to balance traffic.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "foundations"
+    },
+    {
+      "key": "foundations-evolvable",
+      "summary": "Evolvable means cheap to change",
+      "tags": [
+        "change",
+        "design"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What one word describes a design that stays cheap to change over time?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "evolvable"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "evolvable",
+          "maintainable",
+          "flexible"
+        ],
+        "judge": "loose"
+      },
+      "hints": [
+        "It starts with an e and rhymes with solvable."
+      ],
+      "fullLine": "A design that stays cheap to change over time is evolvable.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Evolvability is not about predicting the future. It is about keeping decisions reversible and boundaries clear enough that the next change stays small.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "foundations"
+    },
+    {
+      "key": "foundations-context",
+      "summary": "The same architecture can fit one team and fail another",
+      "tags": [
+        "context",
+        "constraints"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Why can two teams copy the same architecture and get different results?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Architecture must fit each team's constraints."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Architecture must fit each team's constraints",
+          "One team used the wrong editor",
+          "Architecture only works in the cloud",
+          "Results depend on the diagram tool"
+        ],
+        "correct": [
+          "Architecture must fit each team's constraints"
+        ]
+      },
+      "hints": [
+        "Team size, skills and budget matter as much as the pattern."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A pattern is advice, not a guarantee. The team's size, skills, budget and domain decide whether the same shape helps or hurts.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "vGlxwcyrVd8",
+          "search": "Mark Richards Neal Ford Software Architecture The Hard Parts",
+          "alt": "Architects discussing why architecture decisions depend on context and trade-offs"
+        }
+      ],
+      "deckId": "foundations"
+    },
+    {
+      "key": "reliability-slo",
+      "summary": "An SLO sets a target for an indicator",
+      "tags": [
+        "slo",
+        "sre"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What is a service level objective?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A target for a service level indicator."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "A target for a service level indicator",
+          "A legal contract with penalties",
+          "A dashboard colour",
+          "A type of database"
+        ],
+        "correct": [
+          "A target for a service level indicator"
+        ]
+      },
+      "hints": [
+        "Indicator measures; objective sets the target."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "An SLI is the measurement, such as successful requests divided by total requests. An SLO is the target for that measurement, such as 99.9% over 30 days.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "Akri1BlGp10",
+          "search": "SLO vs SLI vs SLA vs Error Budget Google SRE",
+          "alt": "A plain-English explanation of SLI, SLO, SLA and the error budget"
+        }
+      ],
+      "deckId": "reliability"
+    },
+    {
+      "key": "reliability-error-budget",
+      "summary": "The error budget is what may fail",
+      "tags": [
+        "slo",
+        "error-budget"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "If an SLO allows 99.9% success, the remaining 0.1% is the error "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "If an SLO allows 99.9% success, the remaining 0.1% is the error budget."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "budget"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "It is a spending allowance for failure."
+      ],
+      "fullLine": "If an SLO allows 99.9% success, the remaining 0.1% is the error budget.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The error budget turns reliability into a shared number. While budget remains, teams may ship faster. When it is spent, feature work pauses until reliability recovers.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/slo-budget.svg",
+          "alt": "A monthly reliability target with a small error budget shown as a spending allowance"
+        }
+      ],
+      "deckId": "reliability"
+    },
+    {
+      "key": "reliability-timeout",
+      "summary": "A timeout bounds a wait",
+      "tags": [
+        "timeouts"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A timeout stops a caller from waiting forever when a dependency is "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A timeout stops a caller from waiting forever when a dependency is slow."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "slow",
+              "unresponsive",
+              "down"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "The dependency may never answer."
+      ],
+      "fullLine": "A timeout stops a caller from waiting forever when a dependency is slow.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Without timeouts, threads and connections pile up behind one stuck dependency. Set each timeout from the latency budget, and make it shorter than the caller's own patience.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "reliability"
+    },
+    {
+      "key": "reliability-backoff",
+      "summary": "Retries need backoff",
+      "tags": [
+        "retries",
+        "backoff"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Retries should wait longer after each failure, a pattern called exponential "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Retries should wait longer after each failure, a pattern called exponential backoff."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "backoff",
+              "back-off"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "The delay grows each time."
+      ],
+      "fullLine": "Retries should wait longer after each failure, a pattern called exponential backoff.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Backoff gives a recovering dependency room. Add jitter, a small random delay, so many clients do not retry at the same instant and create a second spike.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/retry-backoff-anim.svg",
+          "alt": "A failed call retrying after growing, randomised delays until it succeeds"
+        }
+      ],
+      "deckId": "reliability"
+    },
+    {
+      "key": "reliability-circuit-breaker",
+      "summary": "A circuit breaker stops the calls",
+      "tags": [
+        "circuit-breaker",
+        "failure"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What does a circuit breaker do after repeated failures?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Stops calling the failing dependency for a while."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Stops calling the failing dependency for a while",
+          "Restarts the database",
+          "Deletes failed requests",
+          "Increases the timeout forever"
+        ],
+        "correct": [
+          "Stops calling the failing dependency for a while"
+        ]
+      },
+      "hints": [
+        "It protects the caller and gives the dependency time to recover."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The breaker opens after a failure threshold, fails fast while open, then allows a probe request after a cool-down. It prevents a slow dependency from consuming every caller thread.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "reliability"
+    },
+    {
+      "key": "reliability-observability",
+      "summary": "Observability explains the inside",
+      "tags": [
+        "observability"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What is observability?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "The ability to understand internal state from outside signals."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "The ability to understand internal state from outside signals",
+          "A list of servers",
+          "A test suite",
+          "A backup schedule"
+        ],
+        "correct": [
+          "The ability to understand internal state from outside signals"
+        ]
+      },
+      "hints": [
+        "You ask new questions without shipping new code."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Monitoring answers known questions. Observability lets you ask new ones from logs, metrics and traces, which is what an incident actually demands.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "35N2buePMsg",
+          "search": "Monitoring vs Observability Logs Metrics Traces APM RUM",
+          "alt": "A comparison of monitoring and observability and the signals each uses"
+        }
+      ],
+      "deckId": "reliability"
+    },
+    {
+      "key": "reliability-signals",
+      "summary": "Logs, metrics and traces are the signals",
+      "tags": [
+        "observability",
+        "signals"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Logs, metrics and traces are the three main "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " of observability."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Logs, metrics and traces are the three main signals of observability."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "signals",
+              "pillars"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "The word used for the data types in OpenTelemetry."
+      ],
+      "fullLine": "Logs, metrics and traces are the three main signals of observability.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A metric says something changed, a trace shows where the time went, and a log explains the detail. Correlating all three is what shortens an incident.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/power-grid.webp",
+          "alt": "High-voltage power lines and pylons against a clear sky"
+        }
+      ],
+      "deckId": "reliability"
+    },
+    {
+      "key": "reliability-chaos",
+      "summary": "Chaos engineering tests failure on purpose",
+      "tags": [
+        "chaos"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What is chaos engineering?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Deliberately injecting failures to test resilience."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Deliberately injecting failures to test resilience",
+          "Randomly deleting production data",
+          "Running tests without assertions",
+          "Hiring more on-call staff"
+        ],
+        "correct": [
+          "Deliberately injecting failures to test resilience"
+        ]
+      },
+      "hints": [
+        "It is a controlled experiment, not an accident."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Start with a hypothesis, inject a bounded failure in a controlled environment, and measure whether the system degrades as intended. Netflix turned this into a discipline.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "Xbn65E-BQhA",
+          "search": "AWS reInvent 2022 evolution of chaos engineering at Netflix",
+          "alt": "Netflix engineers describing how chaos engineering evolved inside their platform"
+        }
+      ],
+      "deckId": "reliability"
+    },
+    {
+      "key": "reliability-degrade",
+      "summary": "Degrade the small features first",
+      "tags": [
+        "degradation"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Graceful degradation keeps the most important features working when part of the system "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Graceful degradation keeps the most important features working when part of the system fails."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "fails",
+              "breaks",
+              "goes down"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "A recommendations panel may disappear; checkout should not."
+      ],
+      "fullLine": "Graceful degradation keeps the most important features working when part of the system fails.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Rank features by importance and decide what turns off first. A page that loads without recommendations is better than a page that never loads.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "reliability"
+    },
+    {
+      "key": "reliability-health-checks",
+      "summary": "Health checks separate alive from ready",
+      "tags": [
+        "health",
+        "platform"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A liveness check tells the platform whether a process is still "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A liveness check tells the platform whether a process is still alive."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "alive",
+              "running"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "A readiness check asks a different question."
+      ],
+      "fullLine": "A liveness check tells the platform whether a process is still alive.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Liveness asks whether to restart the process. Readiness asks whether it should receive traffic. Mixing them up restarts healthy pods that are merely warming up.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "reliability"
+    },
+    {
+      "key": "requirements-nonfunctional",
+      "summary": "Non-functional requirements describe how well",
+      "tags": [
+        "requirements",
+        "quality"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which requirement is non-functional?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "The page must respond within 200 ms."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "The page must respond within 200 ms",
+          "Users can reset a password",
+          "Admins can export a report",
+          "A user can create a folder"
+        ],
+        "correct": [
+          "The page must respond within 200 ms"
+        ]
+      },
+      "hints": [
+        "It describes a quality, not a feature."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Functional requirements name what the system does. Non-functional requirements name how well it does it: speed, availability, security, cost and usability.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "requirements"
+    },
+    {
+      "key": "requirements-quality-attribute",
+      "summary": "Quality attributes are non-functional requirements",
+      "tags": [
+        "quality"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Requirements that describe how well a system must behave are called "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " requirements."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Requirements that describe how well a system must behave are called non-functional requirements."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "non-functional",
+              "nonfunctional"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "The opposite of functional."
+      ],
+      "fullLine": "Requirements that describe how well a system must behave are called non-functional requirements.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Availability, latency, throughput, security and modifiability are quality attributes. They are the requirements that most often shape the architecture.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "requirements"
+    },
+    {
+      "key": "requirements-latency-budget",
+      "summary": "A latency budget is spent in parts",
+      "tags": [
+        "latency",
+        "budget"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "If the page budget is 1,000 ms and the server takes 600 ms, the browser has "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " ms left."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "If the page budget is 1,000 ms and the server takes 600 ms, the browser has 400 ms left."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "400",
+              "400 ms"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Subtract the server time from the whole budget."
+      ],
+      "fullLine": "If the page budget is 1,000 ms and the server takes 600 ms, the browser has 400 ms left.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A latency budget divides one target across every step: network, server, database, browser. When one step spends too much, another step has to give some back.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/latency-budget.svg",
+          "alt": "A one-second budget split across DNS, connection, server, download and render"
+        }
+      ],
+      "deckId": "requirements"
+    },
+    {
+      "key": "requirements-nines",
+      "summary": "Each nine costs more availability",
+      "tags": [
+        "availability"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A 99.9% monthly availability target allows roughly "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " minutes of downtime."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A 99.9% monthly availability target allows roughly 43 minutes of downtime."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "43",
+              "43.2",
+              "44"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "A month has about 43,800 minutes, and 0.1% of that is about 43."
+      ],
+      "fullLine": "A 99.9% monthly availability target allows roughly 43 minutes of downtime.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Availability targets are counted in nines. 99.9% allows about 43 minutes a month; 99.99% allows about 4 minutes. Each extra nine demands more redundancy and more cost.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "requirements"
+    },
+    {
+      "key": "requirements-throughput-latency",
+      "summary": "Throughput and latency measure different things",
+      "tags": [
+        "throughput",
+        "latency"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Throughput measures requests per second; latency measures "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " per request."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Throughput measures requests per second; latency measures time per request."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "time",
+              "delay"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "How long one request waits."
+      ],
+      "fullLine": "Throughput measures requests per second; latency measures time per request.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A system can handle many requests per second and still be slow for each one. A queue raises throughput while adding latency, which is why both need a target.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "requirements"
+    },
+    {
+      "key": "requirements-envelope",
+      "summary": "Estimate before you design",
+      "tags": [
+        "estimation"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A quick capacity estimate made with rounded numbers is called a back-of-the-"
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " estimate."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A quick capacity estimate made with rounded numbers is called a back-of-the-envelope estimate."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "envelope"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "It is also a saying about rough maths."
+      ],
+      "fullLine": "A quick capacity estimate made with rounded numbers is called a back-of-the-envelope estimate.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Estimate users, requests per second, storage and growth before choosing tools. A rough estimate that is one order of magnitude right prevents most over-engineering.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "requirements"
+    },
+    {
+      "key": "requirements-constraints",
+      "summary": "Constraints bound the design",
+      "tags": [
+        "constraints"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A fixed budget, a deadline and a compliance rule are examples of design "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A fixed budget, a deadline and a compliance rule are examples of design constraints."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "constraints",
+              "limits"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "They limit the options you may choose."
+      ],
+      "fullLine": "A fixed budget, a deadline and a compliance rule are examples of design constraints.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Constraints are not obstacles to the design; they are part of it. Two teams with the same features but different constraints should build different systems.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/tradeoffs-anim.svg",
+          "alt": "A design choice sliding between speed, cost and safety as constraints pull on it"
+        }
+      ],
+      "deckId": "requirements"
+    },
+    {
+      "key": "requirements-adr",
+      "summary": "An ADR keeps the why",
+      "tags": [
+        "adr",
+        "decisions"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What does an architecture decision record keep?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A decision, its context and its consequences."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "A decision, its context and its consequences",
+          "Every line of code that changed",
+          "The team's meeting calendar",
+          "Only the final architecture diagram"
+        ],
+        "correct": [
+          "A decision, its context and its consequences"
+        ]
+      },
+      "hints": [
+        "It explains why, not just what."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "An ADR is short: the decision, the situation that forced it, the options rejected and the cost accepted. Later readers learn why the system looks this way.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "GhB7vz3sg-0",
+          "search": "Architectural Decision Records ADR what they are",
+          "alt": "An explanation of architecture decision records and how teams use them"
+        }
+      ],
+      "deckId": "requirements"
+    },
+    {
+      "key": "requirements-tradeoff-analysis",
+      "summary": "Trade-off analysis names the cost",
+      "tags": [
+        "trade-offs",
+        "analysis"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What does a good trade-off analysis produce?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A defensible choice with named costs."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "A defensible choice with named costs",
+          "A guarantee of no failures",
+          "A list of every tool on the market",
+          "A decision that never changes"
+        ],
+        "correct": [
+          "A defensible choice with named costs"
+        ]
+      },
+      "hints": [
+        "It should say what you give up."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Compare options against the qualities the system must protect, then write down what each option costs. The rejected options are evidence, not waste.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "s4LI1jDn6IY",
+          "search": "Understanding Modern Trade-off Analysis in Software Architecture Neal Ford",
+          "alt": "Neal Ford explaining how architects analyse trade-offs between competing qualities"
+        }
+      ],
+      "deckId": "requirements"
+    },
+    {
+      "key": "requirements-problem-first",
+      "summary": "State the problem before the solution",
+      "tags": [
+        "problem",
+        "design"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What is the first deliverable of system design?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A clear statement of the problem and its constraints."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "A clear statement of the problem and its constraints",
+          "A deployed production system",
+          "A finished API",
+          "A vendor contract"
+        ],
+        "correct": [
+          "A clear statement of the problem and its constraints"
+        ]
+      },
+      "hints": [
+        "You cannot judge a design against a problem you never named."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Most bad architectures answer the wrong question well. Write the problem, the users, the scale and the constraints first; every later decision is judged against them.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/golden-gate-bridge.webp",
+          "alt": "The Golden Gate Bridge lit at night, with traffic crossing the span"
+        }
+      ],
+      "deckId": "requirements"
+    },
+    {
+      "key": "security-stride",
+      "summary": "STRIDE is a threat checklist",
+      "tags": [
+        "stride",
+        "threat-model"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "STRIDE is a threat-modelling checklist; the S stands for "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "STRIDE is a threat-modelling checklist; the S stands for spoofing."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "spoofing"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Pretending to be someone else."
+      ],
+      "fullLine": "STRIDE is a threat-modelling checklist; the S stands for spoofing.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "STRIDE covers spoofing, tampering, repudiation, information disclosure, denial of service and elevation of privilege. Walking the list makes missing threats easier to spot.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "rEnJYNkUde0",
+          "search": "STRIDE Threat Modeling for Beginners",
+          "alt": "A beginner walkthrough of STRIDE threat modelling"
+        }
+      ],
+      "deckId": "security"
+    },
+    {
+      "key": "security-trust-boundary",
+      "summary": "Trust must change at a boundary",
+      "tags": [
+        "trust-boundary"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A trust boundary is where data crosses between zones with different "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " levels."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A trust boundary is where data crosses between zones with different trust levels."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "trust",
+              "security"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "The browser and the server sit on different sides."
+      ],
+      "fullLine": "A trust boundary is where data crosses between zones with different trust levels.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Every input crossing a trust boundary must be validated on the side that trusts it. A browser check protects the user; a server check protects the system.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/trust-boundaries.svg",
+          "alt": "A diagram of browser, service and database zones separated by trust boundaries"
+        }
+      ],
+      "deckId": "security"
+    },
+    {
+      "key": "security-least-privilege",
+      "summary": "Least privilege gives only what is needed",
+      "tags": [
+        "permissions"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Least privilege gives each component only the "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " it needs."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Least privilege gives each component only the permissions it needs."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "permissions",
+              "access",
+              "rights"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Not the maximum it could use."
+      ],
+      "fullLine": "Least privilege gives each component only the permissions it needs.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A reporting job should read, not delete. A service account should reach one bucket, not the whole account. Small permissions turn a breach into a smaller incident.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "security"
+    },
+    {
+      "key": "security-authn-authz",
+      "summary": "Authentication is not authorization",
+      "tags": [
+        "authentication",
+        "authorization"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Authentication answers which question?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Who are you?"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Who are you?",
+          "What may you do?",
+          "How fast are you?",
+          "Where is your data?"
+        ],
+        "correct": [
+          "Who are you?"
+        ]
+      },
+      "hints": [
+        "Authorization answers the other question."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Authentication proves identity. Authorization decides what that identity may do. A user can log in correctly and still have no right to open an admin page.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/padlock.webp",
+          "alt": "A brass padlock hanging on a dark metal fence"
+        }
+      ],
+      "deckId": "security"
+    },
+    {
+      "key": "security-secrets",
+      "summary": "Secrets do not belong in code",
+      "tags": [
+        "secrets"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Where should an API key live?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A secret manager or CI secret store."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "A secret manager or CI secret store",
+          "A source file in git",
+          "A public README",
+          "A screenshot in the issue tracker"
+        ],
+        "correct": [
+          "A secret manager or CI secret store"
+        ]
+      },
+      "hints": [
+        "Git keeps history forever."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Once a secret is committed, assume it is leaked. Store secrets outside the repository, inject them at run time and rotate them on a schedule.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "security"
+    },
+    {
+      "key": "security-defense-depth",
+      "summary": "Defense in depth layers controls",
+      "tags": [
+        "defense"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Defense in depth uses several "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " controls so one failure does not expose everything."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Defense in depth uses several independent controls so one failure does not expose everything."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "independent",
+              "layered"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "The word means they do not depend on each other."
+      ],
+      "fullLine": "Defense in depth uses several independent controls so one failure does not expose everything.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Validate input, enforce permissions, encrypt data and monitor for abuse. If one control fails, the next still stands. All four should not rely on the same assumption.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "security"
+    },
+    {
+      "key": "security-owasp",
+      "summary": "OWASP lists common web risks",
+      "tags": [
+        "owasp"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "The OWASP Top 10 is a list of common web application "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "The OWASP Top 10 is a list of common web application risks."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "risks",
+              "vulnerabilities",
+              "security risks"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Broken access control sits at number one in 2021."
+      ],
+      "fullLine": "The OWASP Top 10 is a list of common web application risks.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The 2021 list starts with broken access control, then cryptographic failures and injection. It is a starting checklist, not a complete security programme.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "security"
+    },
+    {
+      "key": "security-slsa",
+      "summary": "SLSA grades the build supply chain",
+      "tags": [
+        "supply-chain",
+        "slsa"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What does SLSA describe?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Levels of supply-chain integrity for build artifacts."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Levels of supply-chain integrity for build artifacts",
+          "A password manager",
+          "A database engine",
+          "A programming language"
+        ],
+        "correct": [
+          "Levels of supply-chain integrity for build artifacts"
+        ]
+      },
+      "hints": [
+        "It is about proving how an artifact was built."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "SLSA levels rise with the evidence behind a build: documented build, hosted build service, and hardened provenance. Higher levels make tampering harder and detectable.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "K_G10zywoTs",
+          "search": "What Is SLSA Supply Chain Levels for Software Artifacts",
+          "alt": "An explanation of SLSA and its levels for software supply-chain security"
+        }
+      ],
+      "deckId": "security"
+    },
+    {
+      "key": "security-sbom",
+      "summary": "An SBOM lists what went in",
+      "tags": [
+        "sbom",
+        "supply-chain"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "An SBOM lists the "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " that went into a build."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "An SBOM lists the dependencies that went into a build."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "dependencies",
+              "components",
+              "packages"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "It is the ingredient list."
+      ],
+      "fullLine": "An SBOM lists the dependencies that went into a build.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A software bill of materials names every component and version in an artifact. When a library gets a CVE, the SBOM answers within minutes which products are affected.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/supply-chain-anim.svg",
+          "alt": "A source package moving through build, test and signing steps to become a verified artifact"
+        }
+      ],
+      "deckId": "security"
+    },
+    {
+      "key": "security-encryption",
+      "summary": "Encrypt data in transit and at rest",
+      "tags": [
+        "encryption"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Encryption in transit protects data while it travels; encryption at rest protects data when it is "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Encryption in transit protects data while it travels; encryption at rest protects data when it is stored."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "stored",
+              "at rest",
+              "saved"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "The opposite of moving."
+      ],
+      "fullLine": "Encryption in transit protects data while it travels; encryption at rest protects data when it is stored.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "TLS covers the wire; disk and database encryption cover the stored copy. Neither helps if the application hands the data to the wrong user, so access control still matters.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "security"
+    },
+    {
+      "key": "styles-monolith",
+      "summary": "A monolith is one deployable application",
+      "tags": [
+        "monolith"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A single deployable application that contains all of its features is a "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A single deployable application that contains all of its features is a monolith."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "monolith",
+              "monolithic application"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "From the Greek for one stone."
+      ],
+      "fullLine": "A single deployable application that contains all of its features is a monolith.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A monolith is not a failure. It has one deploy, one database and one codebase, which is often the cheapest way to find product-market fit.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/circuit-board.webp",
+          "alt": "Close-up of a circuit board with many connected components on one board"
+        }
+      ],
+      "deckId": "styles"
+    },
+    {
+      "key": "styles-modular-monolith",
+      "summary": "A modular monolith keeps clear seams",
+      "tags": [
+        "monolith",
+        "modularity"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What makes a monolith modular?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Clear internal boundaries between features."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Clear internal boundaries between features",
+          "Keeping everything in one giant file",
+          "A separate database per screen",
+          "Deploying each function separately"
+        ],
+        "correct": [
+          "Clear internal boundaries between features"
+        ]
+      },
+      "hints": [
+        "The seams matter, not the number of deploys."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A modular monolith organises features into modules with explicit interfaces. You keep one deployment while making a later split into services cheaper.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "Xo3rsiZYsJQ",
+          "search": "Modular Monoliths How To Build One Lessons Learned Milan Jovanovic",
+          "alt": "A practical explanation of building a modular monolith and the lessons learned"
+        }
+      ],
+      "deckId": "styles"
+    },
+    {
+      "key": "styles-microservice",
+      "summary": "A microservice deploys on its own",
+      "tags": [
+        "microservices"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "A microservice is independently "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": ", so its team can ship without rebuilding the whole system."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "A microservice is independently deployable, so its team can ship without rebuilding the whole system."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "deployable",
+              "deployed"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "The key word is about releasing, not coding."
+      ],
+      "fullLine": "A microservice is independently deployable, so its team can ship without rebuilding the whole system.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The defining trait is independent deployment. Each service owns its data and talks to others over a network contract, which buys autonomy at the cost of coordination.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/services-anim.svg",
+          "alt": "A request moving through several small services that deploy independently"
+        }
+      ],
+      "deckId": "styles"
+    },
+    {
+      "key": "styles-microservice-cost",
+      "summary": "Microservices trade autonomy for operations",
+      "tags": [
+        "microservices",
+        "trade-offs"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What is the main cost of microservices?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Operational complexity across many services."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Operational complexity across many services",
+          "Language lock-in",
+          "No ability to scale",
+          "Slower local editing"
+        ],
+        "correct": [
+          "Operational complexity across many services"
+        ]
+      },
+      "hints": [
+        "More moving parts to deploy, observe and secure."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Every service adds deployment, networking, tracing and failure handling. A small team often spends more time on plumbing than on the product.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "6giotJL8bzc",
+          "search": "Monolithic vs Microservices Architecture Java Guides",
+          "alt": "A comparison of monolithic and microservice architectures"
+        }
+      ],
+      "deckId": "styles"
+    },
+    {
+      "key": "styles-layered",
+      "summary": "Layers point downward",
+      "tags": [
+        "layers"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "In a layered architecture, each layer may call the layer "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " it, not the other way around."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "In a layered architecture, each layer may call the layer below it, not the other way around."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "below",
+              "beneath"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Presentation sits on top of business logic."
+      ],
+      "fullLine": "In a layered architecture, each layer may call the layer below it, not the other way around.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Layers separate presentation, business rules and data access. The rule that dependencies point one way keeps the core from depending on the UI or the database.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "styles"
+    },
+    {
+      "key": "styles-event-driven",
+      "summary": "Events decouple producers from consumers",
+      "tags": [
+        "events"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What does an event-driven system use to connect producers and consumers?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Events on a broker."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Events on a broker",
+          "Direct database reads",
+          "Shared global variables",
+          "A single cron job"
+        ],
+        "correct": [
+          "Events on a broker"
+        ]
+      },
+      "hints": [
+        "Producers publish; consumers subscribe."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "A producer publishes an event such as order-placed. Consumers react without the producer knowing who they are. This decouples teams but makes the flow harder to trace.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "styles"
+    },
+    {
+      "key": "styles-serverless",
+      "summary": "Serverless runs code on events",
+      "tags": [
+        "serverless"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Serverless removes the need to manage "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " while still charging per request."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Serverless removes the need to manage servers while still charging per request."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "servers",
+              "machines"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "The cloud provider runs the code when an event arrives."
+      ],
+      "fullLine": "Serverless removes the need to manage servers while still charging per request.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Serverless platforms start code on demand and scale to zero. Cold starts, time limits and per-request pricing are the trade-offs to check against the workload.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "styles"
+    },
+    {
+      "key": "styles-cqrs",
+      "summary": "CQRS separates reads from writes",
+      "tags": [
+        "cqrs"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "CQRS separates the write model from the "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " model."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "CQRS separates the write model from the read model."
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "read",
+              "query"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "The Q stands for query."
+      ],
+      "fullLine": "CQRS separates the write model from the read model.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Command Query Responsibility Segregation lets each side use the shape it needs: a normalised write model and a denormalised read model. The cost is keeping the two in sync.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "styles"
+    },
+    {
+      "key": "styles-event-sourcing",
+      "summary": "Event sourcing stores the history",
+      "tags": [
+        "event-sourcing"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What does event sourcing store?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "The ordered history of events that changed the state."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "The ordered history of events that changed the state",
+          "Only the latest row",
+          "A snapshot every second",
+          "A copy of the user interface"
+        ],
+        "correct": [
+          "The ordered history of events that changed the state"
+        ]
+      },
+      "hints": [
+        "The log is the source of truth."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Event sourcing appends events instead of overwriting rows. Current state is rebuilt by replaying them. The history is valuable, but schema changes and replay cost real effort.",
+          "lang": "en"
+        }
+      ],
+      "deckId": "styles"
+    },
+    {
+      "key": "styles-choose-simplest",
+      "summary": "Choose the simplest style that fits",
+      "tags": [
+        "decisions",
+        "microservices"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "When should a team adopt microservices?"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "When independent deployment is worth the operational cost."
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "When independent deployment is worth the operational cost",
+          "As soon as they have more than one developer",
+          "Whenever a conference talk recommends it",
+          "Before they understand their domain"
+        ],
+        "correct": [
+          "When independent deployment is worth the operational cost"
+        ]
+      },
+      "hints": [
+        "Start simple, split when a real force pushes you."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Start with a modular monolith. Split out a service when a team needs to deploy independently, a part needs different scaling, or a boundary is stable enough to become a contract.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/styles-compare.svg",
+          "alt": "A side-by-side comparison of monolith, modular monolith and microservices traits"
+        }
+      ],
+      "deckId": "styles"
+    }
+  ]
+}

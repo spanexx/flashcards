@@ -1,0 +1,190 @@
+{
+  "cards": [
+    {
+      "key": "data-ownership",
+      "summary": "Each service owns its data",
+      "topics": ["data"],
+      "tags": ["ownership", "microservices"],
+      "prompt": [
+        { "type": "text", "text": "In microservices, each service owns its data and exposes it through an " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": ", not a shared table." }
+      ],
+      "answer": [{ "type": "text", "text": "In microservices, each service owns its data and exposes it through an API, not a shared table." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["API", "interface"] }] },
+      "hints": ["The boundary is the contract."],
+      "fullLine": "In microservices, each service owns its data and exposes it through an API, not a shared table.",
+      "teaching": [
+        { "type": "text", "text": "Shared tables create hidden coupling: any team can change the schema and break another. Data ownership keeps each schema behind one team's contract.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/system-design/images/data-ownership.svg", "alt": "Three services each holding their own database behind a contract" }
+      ]
+    },
+    {
+      "key": "data-cache-aside",
+      "summary": "Cache-aside checks the cache first",
+      "topics": ["data"],
+      "tags": ["cache"],
+      "prompt": [
+        { "type": "text", "text": "In cache-aside, the application checks the cache first, then the " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " on a miss." }
+      ],
+      "answer": [{ "type": "text", "text": "In cache-aside, the application checks the cache first, then the database on a miss." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["database", "source", "store"] }] },
+      "hints": ["Where the authoritative data lives."],
+      "fullLine": "In cache-aside, the application checks the cache first, then the database on a miss.",
+      "teaching": [
+        { "type": "text", "text": "On a hit the cache answers. On a miss the application reads the database, stores the result in the cache and returns it. The cache never owns the truth.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/system-design/images/cache-path-anim.svg", "alt": "A request checking a cache, falling through to a database and filling the cache" }
+      ]
+    },
+    {
+      "key": "data-cache-invalidation",
+      "summary": "Stale cache is the hard part",
+      "topics": ["data"],
+      "tags": ["cache", "consistency"],
+      "prompt": [{ "type": "text", "text": "Why is cache invalidation hard?" }],
+      "answer": [{ "type": "text", "text": "The cache can serve stale data when the source changes." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "The cache can serve stale data when the source changes",
+          "Caches never expire",
+          "Databases cannot be updated",
+          "Requests are always unique"
+        ],
+        "correct": ["The cache can serve stale data when the source changes"]
+      },
+      "hints": ["The copy and the original can disagree."],
+      "teaching": [
+        { "type": "text", "text": "Every cache rule answers two questions: how long may a copy live, and what happens when the original changes? A time-to-live is simple but still allows staleness.", "lang": "en" },
+        { "type": "video", "source": "youtube", "src": "5qk4p1jnSgg", "search": "Cache Invalidation Explained Strategies Consistency Challenges", "alt": "An explanation of cache invalidation strategies and the consistency problems they create" }
+      ]
+    },
+    {
+      "key": "data-idempotency",
+      "summary": "Idempotent means safe to repeat",
+      "topics": ["data"],
+      "tags": ["idempotency", "retries"],
+      "prompt": [
+        { "type": "text", "text": "An operation is " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " when repeating it has the same effect as doing it once." }
+      ],
+      "answer": [{ "type": "text", "text": "An operation is idempotent when repeating it has the same effect as doing it once." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["idempotent"] }] },
+      "hints": ["The property that makes retries safe."],
+      "fullLine": "An operation is idempotent when repeating it has the same effect as doing it once.",
+      "teaching": [
+        { "type": "text", "text": "Networks fail after the server may have processed a request. An idempotency key lets the server recognise a repeat and return the first result instead of charging twice.", "lang": "en" },
+        { "type": "video", "source": "youtube", "src": "I08syTslan8", "search": "What is API Idempotency and Why Is It Important", "alt": "An explanation of API idempotency and why retries need it" }
+      ]
+    },
+    {
+      "key": "data-index",
+      "summary": "An index speeds reads and slows writes",
+      "topics": ["data"],
+      "tags": ["index", "database"],
+      "prompt": [{ "type": "text", "text": "What does a database index trade for faster reads?" }],
+      "answer": [{ "type": "text", "text": "Extra storage and slower writes." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": ["Extra storage and slower writes", "Data safety", "Network bandwidth only", "The primary key"],
+        "correct": ["Extra storage and slower writes"]
+      },
+      "hints": ["Every insert has to update the index too."],
+      "teaching": [
+        { "type": "text", "text": "An index is a sorted shortcut, like a card catalogue in a library. It saves a full scan on reads but every write must maintain it, so unused indexes are pure cost.", "lang": "en" },
+        { "type": "image", "source": "builtin", "src": "/packs/system-design/images/card-catalog.webp", "alt": "A wooden library card catalogue with rows of labelled drawers" }
+      ]
+    },
+    {
+      "key": "data-cap",
+      "summary": "CAP forces a choice during a partition",
+      "topics": ["data"],
+      "tags": ["cap", "distributed"],
+      "prompt": [
+        { "type": "text", "text": "CAP says a distributed system facing a network partition must choose between consistency and " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": "." }
+      ],
+      "answer": [{ "type": "text", "text": "CAP says a distributed system facing a network partition must choose between consistency and availability." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["availability"] }] },
+      "hints": ["Can the system keep answering?"],
+      "fullLine": "CAP says a distributed system facing a network partition must choose between consistency and availability.",
+      "teaching": [
+        { "type": "text", "text": "Partitions happen. During one, a system can refuse some requests to stay consistent, or answer with possibly stale data to stay available. The choice is a product decision.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "data-eventual",
+      "summary": "Eventual consistency converges later",
+      "topics": ["data"],
+      "tags": ["consistency"],
+      "prompt": [{ "type": "text", "text": "What does eventual consistency promise?" }],
+      "answer": [{ "type": "text", "text": "Replicas converge after a short delay." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": ["Replicas converge after a short delay", "Every read is instantly current", "Data is never replicated", "Writes never conflict"],
+        "correct": ["Replicas converge after a short delay"]
+      },
+      "hints": ["Eventually, not immediately."],
+      "teaching": [
+        { "type": "text", "text": "Eventual consistency accepts a window where readers see different values. It is fine for feeds and counts, and dangerous for balances or inventory unless the flow compensates.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "data-sharding",
+      "summary": "Sharding splits data for scale",
+      "topics": ["data"],
+      "tags": ["sharding", "replication"],
+      "prompt": [
+        { "type": "text", "text": "Replication copies data for availability; sharding splits data across " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": " for scale." }
+      ],
+      "answer": [{ "type": "text", "text": "Replication copies data for availability; sharding splits data across machines for scale." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["machines", "nodes", "servers", "shards"] }] },
+      "hints": ["Each piece lives somewhere else."],
+      "fullLine": "Replication copies data for availability; sharding splits data across machines for scale.",
+      "teaching": [
+        { "type": "text", "text": "Replication answers what happens when a machine dies. Sharding answers what happens when one machine cannot hold or serve the data. Sharding adds routing and cross-shard query costs.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "data-backup",
+      "summary": "Replication is not a backup",
+      "topics": ["data"],
+      "tags": ["backup", "replication"],
+      "prompt": [{ "type": "text", "text": "Why is replication not a backup?" }],
+      "answer": [{ "type": "text", "text": "It copies mistakes and deletions too." }],
+      "answerDef": {
+        "mode": "picks",
+        "options": ["It copies mistakes and deletions too", "It is always slower", "It uses too much disk", "It only works in one region"],
+        "correct": ["It copies mistakes and deletions too"]
+      },
+      "hints": ["A delete propagates as fast as an insert."],
+      "teaching": [
+        { "type": "text", "text": "Replication protects against a dead disk, not against a bad migration or a mistaken delete. A backup must be separate, restorable and tested.", "lang": "en" }
+      ]
+    },
+    {
+      "key": "data-schema-evolution",
+      "summary": "Schema changes must be backward compatible",
+      "topics": ["data"],
+      "tags": ["schema", "migration"],
+      "prompt": [
+        { "type": "text", "text": "A schema change that old and new code can both read is called backwards-" },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": "." }
+      ],
+      "answer": [{ "type": "text", "text": "A schema change that old and new code can both read is called backwards-compatible." }],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["compatible"] }] },
+      "hints": ["Old code must keep working during the rollout."],
+      "fullLine": "A schema change that old and new code can both read is called backwards-compatible.",
+      "teaching": [
+        { "type": "text", "text": "During a rolling deploy, old and new code run together. Add fields before using them, stop using fields before removing them, and keep migrations reversible.", "lang": "en" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-labelledby="t d">
+  <title id="t">A draft passes through gates</title>
+  <desc id="d">An AI draft faces automated tests and a human review before merge; a failing test sends the draft back.</desc>
+  <style>
+    .paper{fill:#fbf8f1}.ink{fill:#1f2933}.muted{fill:#6b7280}
+    .box{fill:#ffffff;stroke:#1f2933;stroke-width:1.5}
+    .draft{fill:#f3e8d7;stroke:#b7791f;stroke-width:1.3}
+    .test{fill:#e6eff1;stroke:#2f6f8f;stroke-width:1.3}
+    .human{fill:#e5efe8;stroke:#3f7d5a;stroke-width:1.4}
+    .merge{fill:#dbe7dc;stroke:#3f7d5a;stroke-width:1.6}
+    .back{stroke:#a23b3b;stroke-width:1.6;stroke-dasharray:6 5;fill:none}
+    .stamp{animation:stamp 9s ease-in-out infinite}
+    .fail{animation:fail 9s ease-in-out infinite}
+    @keyframes stamp{0%,45%{opacity:.15}58%,100%{opacity:1}}
+    @keyframes fail{0%,45%{opacity:.15}58%,85%{opacity:1}100%{opacity:.15}}
+    @media (prefers-reduced-motion: reduce){*{animation:none!important}}
+  </style>
+  <rect class="paper" width="800" height="450"/>
+  <text x="40" y="44" font-family="system-ui, sans-serif" font-size="21" font-weight="650" class="ink">A draft passes through gates</text>
+  <text x="40" y="70" font-family="system-ui, sans-serif" font-size="14" class="muted">The chat is not the evidence. The diff and the checks are.</text>
+
+  <rect x="40" y="130" width="150" height="120" rx="9" class="draft"/>
+  <text x="115" y="158" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="600" class="ink">AI draft</text>
+  <line x1="58" y1="178" x2="172" y2="178" stroke="#6b7280" stroke-width="1.2"/>
+  <line x1="58" y1="196" x2="150" y2="196" stroke="#6b7280" stroke-width="1.2"/>
+  <line x1="58" y1="214" x2="165" y2="214" stroke="#6b7280" stroke-width="1.2"/>
+  <line x1="58" y1="232" x2="130" y2="232" stroke="#6b7280" stroke-width="1.2"/>
+
+  <rect x="240" y="130" width="150" height="120" rx="9" class="test"/>
+  <text x="315" y="158" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="600" class="ink">tests</text>
+  <text x="315" y="184" text-anchor="middle" class="fail" font-family="system-ui, sans-serif" font-size="12" fill="#a23b3b">one check fails</text>
+  <text x="315" y="208" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="ink">build + unit + e2e</text>
+  <text x="315" y="230" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" class="muted">same rules for humans and agents</text>
+
+  <rect x="440" y="130" width="150" height="120" rx="9" class="human"/>
+  <text x="515" y="158" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="600" class="ink">human review</text>
+  <text x="515" y="184" text-anchor="middle" class="stamp" font-family="system-ui, sans-serif" font-size="12" fill="#3f7d5a">intent + risk checked</text>
+  <text x="515" y="208" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="ink">small, understandable diff</text>
+
+  <rect x="640" y="130" width="110" height="120" rx="9" class="merge"/>
+  <text x="695" y="176" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="600" class="ink">merge</text>
+  <text x="695" y="200" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" class="muted">to trunk</text>
+
+  <path d="M 190 190 L 235 190" stroke="#1f2933" stroke-width="1.6" fill="none"/>
+  <path d="M 390 190 L 435 190" stroke="#1f2933" stroke-width="1.6" fill="none"/>
+  <path d="M 590 190 L 635 190" stroke="#1f2933" stroke-width="1.6" fill="none"/>
+  <path d="M 240 270 Q 180 320 115 255" class="back fail"/>
+  <text x="200" y="330" class="fail" font-family="system-ui, sans-serif" font-size="11" fill="#a23b3b">fix the draft, not the test</text>
+
+  <circle r="5" fill="#3f7d5a">
+    <animateMotion dur="8s" repeatCount="indefinite" path="M 115 190 L 315 190 L 515 190 L 695 190"/>
+  </circle>
+
+  <text x="40" y="410" font-family="system-ui, sans-serif" font-size="13" class="muted">An agent may write the code; a person still owns the decision to ship it.</text>
+</svg>

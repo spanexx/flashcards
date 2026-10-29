@@ -1,9 +1,9 @@
 # Drift Log
-**Last updated:** 2026-10-29  **Open:** 0  **Awaiting:** 0  **Resolved:** 40  **Critical/High:** 0
+**Last updated:** 2026-10-29  **Open:** 0  **Awaiting:** 0  **Resolved:** 41  **Critical/High:** 0
 
 ## Open
 
-_None. The 2026-10-29 course-dictionary review found eight gaps (D-32–D-39); all were fixed and verified the same day. A later audit of the locked GRILL's source lines added D-40, also fixed the same day. See Resolved._
+_None. The 2026-10-29 course-dictionary review found eight gaps (D-32–D-39); all were fixed and verified the same day. A later audit of the locked GRILL's source lines added D-40, also fixed the same day. The system-design review found D-41, a YouTube embed fault shared by every pack; it was fixed and verified the same day. See Resolved._
 
 ## Awaiting decision
 
@@ -17,6 +17,15 @@ the IMPL reconcile section, is in progress._
 ---
 
 ## Resolved
+
+- **D-41** (High, 2026-10-29, reporter: the learner, who asked why the course videos did not appear) — Every YouTube teaching part rendered a player that YouTube refused, so a curated video showed "Video player configuration error" instead of the lesson.
+  - Doc claim: "plays through a privacy-friendly embed" (`docs/features/teaching-layers/PRD-TRD-teaching-layers.md:115`); "The player sends only the page origin as its referrer" (`docs/features/teaching-layers/PRD-TRD-teaching-layers.md:117-119`).
+  - Code reality: the player iframe set `referrerPolicy="no-referrer"` before the fix, so the embed request arrived with no Referer and YouTube answered with player error 153; the merged file's iframe now sends the page origin (`v1/src/app/TeachingMedia.tsx:294-307`).
+  - Why matters: no YouTube part could play in the app, on any pack; the system-design course ships 24 curated videos and its teaching contract depends on them.
+  - Owner: teaching-layers
+  - To fix: fix code — the embed sends only the page origin, which YouTube accepts and which still hides the page path (`v1/src/app/TeachingMedia.tsx:306`).
+  - Verified by: "sends the page origin and never a missing referrer" (`v1/tests/teaching-layer.test.ts:253-267`); the built export (localhost:4173/flashcards, service worker removed) played the Foundations card's video instead of error 153; `npm run build` passed `check-pwa: passed (base path: /flashcards, files: 107)`; typecheck and `npx eslint src/app/TeachingMedia.tsx tests/teaching-layer.test.ts` clean; full suite 84 files / 970 tests; `npm run check:drift` green.
+  - Related: system-design-course.
 
 - **D-40** (Low, 2026-10-29, reporter: the drift-fix audit of course-dictionary) — Two source lines in the locked GRILL pointed at code that no longer says what the entry cites: one is the no-key refusal, the other a page mapper this pack added.
   - Doc claim: entry 29 names "code archive.ts:114, bundle.ts:806" for media travelling by id (`docs/features/course-dictionary/GRILL-course-dictionary.txt:733-734`); entry 31 names "provider.ts:59" for the provider screen's disclosure (`docs/features/course-dictionary/GRILL-course-dictionary.txt:791`).

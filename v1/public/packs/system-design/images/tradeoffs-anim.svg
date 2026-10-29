@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-labelledby="t d">
+  <title id="t">Trade-offs move together</title>
+  <desc id="d">A dot moves along the edges of a triangle labelled speed, safety and cost: moving toward one corner moves away from the others.</desc>
+  <style>
+    .paper{fill:#fbf8f1}.ink{fill:#1f2933}.muted{fill:#6b7280}
+    .edge{fill:none;stroke:#1f2933;stroke-width:1.8}
+    .zone{fill:#eef2f4;stroke:#2f6f8f;stroke-width:1.2}
+    .warm{fill:#f3e8d7;stroke:#b7791f;stroke-width:1.2}
+    .green{fill:#e5efe8;stroke:#3f7d5a;stroke-width:1.2}
+    .point{fill:#a23b3b}
+    @media (prefers-reduced-motion: reduce){*{animation:none!important}}
+  </style>
+  <rect class="paper" width="800" height="450"/>
+  <text x="40" y="44" font-family="system-ui, sans-serif" font-size="21" font-weight="650" class="ink">Trade-offs move together</text>
+  <text x="40" y="70" font-family="system-ui, sans-serif" font-size="14" class="muted">There is no design that wins every corner at once.</text>
+
+  <polygon points="400,120 230,330 570,330" fill="#f4f1e8" stroke="#1f2933" stroke-width="2"/>
+  <polygon points="400,158 268,310 532,310" class="zone"/>
+  <polygon points="400,196 306,290 494,290" class="green"/>
+
+  <text x="400" y="105" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" font-weight="600" class="ink">fast</text>
+  <text x="205" y="352" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" font-weight="600" class="ink">safe</text>
+  <text x="595" y="352" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" font-weight="600" class="ink">cheap</text>
+
+  <text x="400" y="250" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" class="muted">possible designs</text>
+  <text x="400" y="270" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="muted">inside the budget</text>
+
+  <circle r="8" class="point">
+    <animateMotion dur="12s" repeatCount="indefinite"
+      path="M 400 158 L 532 310 L 268 310 Z M 400 158 L 532 310 L 268 310 Z"/>
+  </circle>
+
+  <rect x="60" y="150" width="150" height="92" rx="9" class="warm"/>
+  <text x="135" y="180" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" class="ink">faster release</text>
+  <text x="135" y="202" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" class="ink">more risk later</text>
+  <text x="135" y="224" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" class="muted">pay for it somewhere</text>
+
+  <text x="40" y="410" font-family="system-ui, sans-serif" font-size="13" class="muted">Name the two qualities you refuse to lose; let the third move.</text>
+</svg>
