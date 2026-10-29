@@ -1,9 +1,9 @@
 # Drift Log
-**Last updated:** 2026-10-29  **Open:** 0  **Awaiting:** 0  **Resolved:** 41  **Critical/High:** 0
+**Last updated:** 2026-10-29  **Open:** 0  **Awaiting:** 0  **Resolved:** 42  **Critical/High:** 0
 
 ## Open
 
-_None. The 2026-10-29 course-dictionary review found eight gaps (D-32–D-39); all were fixed and verified the same day. A later audit of the locked GRILL's source lines added D-40, also fixed the same day. The system-design review found D-41, a YouTube embed fault shared by every pack; it was fixed and verified the same day. See Resolved._
+_None. The 2026-10-29 course-dictionary review found eight gaps (D-32–D-39); all were fixed and verified the same day. A later audit of the locked GRILL's source lines added D-40, also fixed the same day. The system-design review found D-41, a YouTube embed fault shared by every pack; it was fixed and verified the same day. The learner then found the system-design Dictionary pages empty, logged as D-42 and fixed the same day. See Resolved._
 
 ## Awaiting decision
 
@@ -17,6 +17,15 @@ the IMPL reconcile section, is in progress._
 ---
 
 ## Resolved
+
+- **D-42** (High, 2026-10-29, reporter: the learner, who opened the system-design course in the Dictionary and found every page empty) — The built-in system-design course shipped cards but no Dictionary pages, so its 28 images and 24 videos could only be reached inside a study session and every Dictionary page for the pack was blank.
+  - Doc claim: "a shipped page arrives through the same pack bundle import and is written by `writeShippedPage`" (`docs/features/course-dictionary/PRD-TRD-course-dictionary.md:272-274`), so a built-in course was expected to bring its pages with its bundle.
+  - Code reality: the app side was ready — `v1/src/lib/browser/bundle.ts` parses `pages` and writes each one — but `make-seed.mjs` never read a `pages.json` and `v1/packs/system-design/` had none, so the bundle carried cards only and the Dictionary had nothing to render.
+  - Why matters: the Dictionary is the course's reading surface; an empty page reads as a broken course, and none of the curated teaching media could be seen outside Study.
+  - Owner: system-design-course
+  - To fix: fix code and ship data — `make-seed.mjs` reads `packs/<slug>/pages.json`, derives each card page's `cardId` with the same content hash as the app's `deckCardId` (`v1/scripts/make-seed.mjs:100`), refuses a built-in page image that is missing (`v1/scripts/make-seed.mjs:145-155`), and puts `pages` in the bundle (`v1/scripts/make-seed.mjs:168`). `v1/packs/system-design/pages.json` adds 111 pages: one for the course, one for each deck and one for each card. The 11 cover pages ship only what the locked cover shape renders (a photo, a promise and the path onward); boxed bodies on cover pages would never be shown. Every card page carries the card's teaching layer, so the pictures, animations and videos are readable in the Dictionary. The pack version rises to 1.1.0 so an installed browser takes the update.
+  - Verified by: "ships a Dictionary page for the course, every deck and every card" (`v1/tests/seed-packs.test.ts:177`), which recomputes every card page's id with the app's own `deckCardId`, refuses a body on a cover page, and stats every page image; `node scripts/make-seed.mjs` writes `100 cards in 10 decks ... with 111 page(s) and 28 image(s)`; `bash docs/features/system-design-course/simulate.sh` prints `Dictionary pages: 1 pack, 10 deck, 100 card` and `PASS: 0 problem(s)`; full suite 87 files / 1026 tests; `next build --webpack` plus `check-pwa: passed (base path: /flashcards, files: 121, precache entries: 119)`. Browser, built export at `http://localhost:4173/flashcards/`: the Library listed `system-design v1.1.0`; the pack page laid out its `data-center.webp` cover band (699×220) with the ten-deck path; a deck page laid out its cover band and promise above the ten card rows; a card page reached step 2 of 2 with `telephone-exchange-1918.webp` at 642×440 (natural 1600), and a video card built `youtube-nocookie.com/embed/K7RkjKTIQbo` with the player API; IndexedDB held 111 pages — 100 card pages with 1–2 parts, ten deck pages and one pack page.
+  - Related: D-32, system-design-course.
 
 - **D-41** (High, 2026-10-29, reporter: the learner, who asked why the course videos did not appear) — Every YouTube teaching part rendered a player that YouTube refused, so a curated video showed "Video player configuration error" instead of the lesson.
   - Doc claim: "plays through a privacy-friendly embed" (`docs/features/teaching-layers/PRD-TRD-teaching-layers.md:115`); "The player sends only the page origin as its referrer" (`docs/features/teaching-layers/PRD-TRD-teaching-layers.md:117-119`).

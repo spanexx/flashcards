@@ -1,0 +1,1571 @@
+{
+  "pages": [
+    {
+      "level": "pack",
+      "title": "System design for the AI era",
+      "lead": "A ten-deck course from first principles to CI/CD, using real systems as the examples.",
+      "cover": {
+        "type": "image",
+        "source": "builtin",
+        "src": "/packs/system-design/images/data-center.webp",
+        "alt": "Rows of servers in a data centre"
+      }
+    },
+    {
+      "level": "deck",
+      "deckId": "foundations",
+      "title": "Foundations",
+      "lead": "What architecture is, and the questions it answers.",
+      "cover": {
+        "type": "image",
+        "source": "builtin",
+        "src": "/packs/system-design/images/telephone-exchange-1918.webp",
+        "alt": "Operators at a telephone exchange in 1918"
+      }
+    },
+    {
+      "level": "deck",
+      "deckId": "requirements",
+      "title": "Requirements and constraints",
+      "lead": "Turn wishes into constraints you can build against.",
+      "cover": {
+        "type": "image",
+        "source": "builtin",
+        "src": "/packs/system-design/images/golden-gate-bridge.webp",
+        "alt": "The Golden Gate Bridge rising through fog"
+      }
+    },
+    {
+      "level": "deck",
+      "deckId": "styles",
+      "title": "Architecture styles",
+      "lead": "Pick a shape for the system and know what it costs.",
+      "cover": {
+        "type": "image",
+        "source": "builtin",
+        "src": "/packs/system-design/images/circuit-board.webp",
+        "alt": "A circuit board with routed traces"
+      }
+    },
+    {
+      "level": "deck",
+      "deckId": "data",
+      "title": "Data and state",
+      "lead": "Decide who owns each fact, and how it stays correct.",
+      "cover": {
+        "type": "image",
+        "source": "builtin",
+        "src": "/packs/system-design/images/card-catalog.webp",
+        "alt": "A wooden card catalogue with many drawers"
+      }
+    },
+    {
+      "level": "deck",
+      "deckId": "reliability",
+      "title": "Reliability and operations",
+      "lead": "Design for failure as the normal case.",
+      "cover": {
+        "type": "image",
+        "source": "builtin",
+        "src": "/packs/system-design/images/power-grid.webp",
+        "alt": "High-voltage power lines at dusk"
+      }
+    },
+    {
+      "level": "deck",
+      "deckId": "security",
+      "title": "Security and trust",
+      "lead": "Draw the trust boundaries before you draw the boxes.",
+      "cover": {
+        "type": "image",
+        "source": "builtin",
+        "src": "/packs/system-design/images/padlock.webp",
+        "alt": "A close-up of a steel padlock"
+      }
+    },
+    {
+      "level": "deck",
+      "deckId": "ai-architecture",
+      "title": "Designing AI systems",
+      "lead": "Design systems around a model you do not control.",
+      "cover": {
+        "type": "image",
+        "source": "builtin",
+        "src": "/packs/system-design/images/server-rack.webp",
+        "alt": "A server rack full of network cabling"
+      }
+    },
+    {
+      "level": "deck",
+      "deckId": "ai-engineering",
+      "title": "AI-assisted engineering",
+      "lead": "Let AI write code without losing the plot.",
+      "cover": {
+        "type": "image",
+        "source": "builtin",
+        "src": "/packs/system-design/images/code-on-screen.webp",
+        "alt": "Code filling a computer screen"
+      }
+    },
+    {
+      "level": "deck",
+      "deckId": "delivery",
+      "title": "Delivery and DevOps",
+      "lead": "Ship small, ship often, and make it reversible.",
+      "cover": {
+        "type": "image",
+        "source": "builtin",
+        "src": "/packs/system-design/images/container-ship.webp",
+        "alt": "A container ship loaded with containers"
+      }
+    },
+    {
+      "level": "deck",
+      "deckId": "ci-cd",
+      "title": "CI/CD in practice",
+      "lead": "Build once, verify every step, promote the same artifact.",
+      "cover": {
+        "type": "image",
+        "source": "builtin",
+        "src": "/packs/system-design/images/pipeline-stages.svg",
+        "alt": "A CI/CD pipeline running from checkout through test and build to production"
+      }
+    },
+    {
+      "level": "card",
+      "cardKey": "ai-architecture-dependency",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The model is a remote dependency like any other: it has latency, rate limits, cost and outages. Give it a timeout, a fallback and a budget just as you would a database.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/server-rack.webp",
+          "alt": "Rows of drive bays in a rack-mounted server"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "ai-architecture-rag",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Retrieval-augmented generation adds fresh, private knowledge without retraining the model. The quality of the answer depends on the quality of retrieval.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "T-D1OfcDW1M",
+          "search": "What is Retrieval-Augmented Generation RAG IBM Technology",
+          "alt": "An explanation of retrieval-augmented generation and why it improves model answers"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "ai-architecture-retriever",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A retriever ranks chunks of text by similarity to the question. Bad chunking, stale documents or a weak ranking all produce a confident but unsupported answer.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/rag-loop-anim.svg",
+          "alt": "A question flowing through retrieval into a prompt and back as a grounded answer"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "ai-architecture-embeddings",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Embeddings let search work by meaning rather than exact words. A vector database stores them and finds the nearest ones, which is the retrieval half of RAG.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "ai-architecture-context",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A larger window lets you send more evidence, but it costs more and long prompts can bury the important part. Retrieve less, but retrieve better.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "ai-architecture-evals",
+      "parts": [
+        {
+          "type": "text",
+          "text": "An eval set holds prompts and the properties a good answer must have. Run it on every prompt, model or retrieval change; otherwise quality drifts silently.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "a3SMraZWNNs",
+          "search": "How to Systematically Setup LLM Evals Metrics Unit Tests LLM-as-a-Judge",
+          "alt": "A practical walkthrough of setting up LLM evals with metrics and judges"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "ai-architecture-eval-loop",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Treat a production miss like a bug report: add it to the eval set, fix the prompt or retrieval, and confirm the score improves without regressing the old cases.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/eval-loop.svg",
+          "alt": "A loop of prompt, model, evaluation and failure cases feeding back into the prompt"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "ai-architecture-grounding",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A grounded answer cites the passage it used. Citations let a reader check the claim and expose when the model answered from memory instead of evidence.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "ai-architecture-cost",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Budget tokens per request, cache repeated prefixes where the provider supports it, and send short retrieved passages instead of whole documents.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "ai-architecture-injection",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Any text the model reads can try to redirect it. Keep untrusted content labelled as data, never give the model more authority than the user, and require human approval for risky actions.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "ai-engineering-role",
+      "parts": [
+        {
+          "type": "text",
+          "text": "AI lowers the cost of producing code, not the cost of owning it. The fastest safe pattern is draft, review, test, then merge like any other change.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/code-on-screen.webp",
+          "alt": "Colourful lines of source code on a dark screen"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "ai-engineering-same-gate",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The origin of a diff is not a reason to skip checks. Tests, lint, security scanning and human review apply exactly as before.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/review-gate-anim.svg",
+          "alt": "A change opening a gate only after review checks pass"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "ai-engineering-copilot-review",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Automated review catches patterns such as missing checks or unclear code. It does not take responsibility, so a human approval remains required.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "HDEGFNAUkX8",
+          "search": "How to automate code reviews and testing with GitHub Copilot",
+          "alt": "GitHub showing how Copilot can automate parts of code review and testing"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "ai-engineering-secure-generated",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A model can invent a package name. Verify every new dependency exists, is maintained and is the one you meant before it enters the lockfile.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "X0UI0O8YzJM",
+          "search": "How Developers Secure AI-Generated Code 5 Security Best Practices IBM",
+          "alt": "Five practices for securing code generated with AI assistance"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "ai-engineering-tests",
+      "parts": [
+        {
+          "type": "text",
+          "text": "AI can change more code per minute than a person can read. Tests turn that speed into a safe loop only if they genuinely fail when behaviour breaks.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "ai-engineering-spec-first",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A short spec with examples gives the model a target and gives the reviewer a way to judge the result. Without it, both sides guess.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "ai-engineering-small-diffs",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A generated change can be correct and still too large to review. Split it by intent so each diff can be understood, tested and reverted on its own.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "ai-engineering-leakage",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Prompts may be logged or used under a provider's terms. Keep secrets and personal data out unless the tool and the contract explicitly allow them.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "ai-engineering-licence",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A model may reproduce code from its training data. Know your organisation's policy, keep generated snippets small and record where third-party code came from.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "ai-engineering-accountable",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Tools change who types the code, not who answers for the outage. Review, tests and ownership stay with the people who ship.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "ci-cd-stages",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Stages run cheapest and fastest first, so a typo fails in seconds. The build step produces the artifact that later stages promote unchanged.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/pipeline-stages.svg",
+          "alt": "A CI/CD pipeline moving from checkout through test and build to staging and production"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "ci-cd-workflow",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A workflow has a trigger, jobs and steps. Jobs run on runners; steps call actions or shell commands. Reusable workflows and actions keep repetition down.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "Lj9SennFygM",
+          "search": "How to build a complete CI pipeline with GitHub actions",
+          "alt": "A walkthrough of building a complete continuous integration pipeline with GitHub Actions"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "ci-cd-build-once",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Rebuilding per environment means the tested bytes are not the shipped bytes. Promote one immutable artifact and let configuration change between environments.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/data-center.webp",
+          "alt": "Rows of servers in a data centre with blue status lights"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "ci-cd-trigger",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Common triggers are push, pull_request, schedule and workflow_dispatch. Choosing the trigger decides how fast feedback arrives and how often the pipeline runs.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "qoalS5ae7fk",
+          "search": "CI CD Made Easy with GitHub Actions Hello World Demo",
+          "alt": "A short hands-on demonstration of a GitHub Actions CI/CD workflow"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "ci-cd-test-pyramid",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Unit tests give fast, precise feedback. End-to-end tests prove the whole path but are slow and flaky, so use them for the few journeys that must not break.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "ci-cd-immutable",
+      "parts": [
+        {
+          "type": "text",
+          "text": "An artifact is identified by a version or digest and never overwritten. If something must change, build a new artifact; that keeps the audit trail honest.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "ci-cd-secrets",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Store secrets in the CI secret store, scope them to the environment that needs them and mask them in logs. Rotate any secret that was ever committed.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "ci-cd-canary",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The canary proves the new version on a few real requests. Watch error rate and latency against the old version, then widen or roll back.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/canary-anim.svg",
+          "alt": "Most traffic going to the stable version while a small share goes to a canary"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "ci-cd-progressive",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Progressive delivery releases to a subset first and widens as confidence grows. Canary, blue-green and ring deployments are all ways to limit the blast radius.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "HKkhD6nokC8",
+          "search": "Progressive Delivery Explained Big Bang Blue-Green Rolling Updates Canaries",
+          "alt": "An explanation of progressive delivery techniques including blue-green and canary releases"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "ci-cd-testing-production",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Some failures only appear with real traffic. Testing in production is safe only when you can measure the effect, limit who sees it and roll back within minutes.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "sFzKrGSaIr8",
+          "search": "Testing in Production Progressive Delivery Canary Deployments",
+          "alt": "An explanation of testing in production with canary deployments and progressive delivery"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "data-ownership",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Shared tables create hidden coupling: any team can change the schema and break another. Data ownership keeps each schema behind one team's contract.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/data-ownership.svg",
+          "alt": "Three services each holding their own database behind a contract"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "data-cache-aside",
+      "parts": [
+        {
+          "type": "text",
+          "text": "On a hit the cache answers. On a miss the application reads the database, stores the result in the cache and returns it. The cache never owns the truth.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/cache-path-anim.svg",
+          "alt": "A request checking a cache, falling through to a database and filling the cache"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "data-cache-invalidation",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Every cache rule answers two questions: how long may a copy live, and what happens when the original changes? A time-to-live is simple but still allows staleness.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "5qk4p1jnSgg",
+          "search": "Cache Invalidation Explained Strategies Consistency Challenges",
+          "alt": "An explanation of cache invalidation strategies and the consistency problems they create"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "data-idempotency",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Networks fail after the server may have processed a request. An idempotency key lets the server recognise a repeat and return the first result instead of charging twice.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "I08syTslan8",
+          "search": "What is API Idempotency and Why Is It Important",
+          "alt": "An explanation of API idempotency and why retries need it"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "data-index",
+      "parts": [
+        {
+          "type": "text",
+          "text": "An index is a sorted shortcut, like a card catalogue in a library. It saves a full scan on reads but every write must maintain it, so unused indexes are pure cost.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/card-catalog.webp",
+          "alt": "A wooden library card catalogue with rows of labelled drawers"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "data-cap",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Partitions happen. During one, a system can refuse some requests to stay consistent, or answer with possibly stale data to stay available. The choice is a product decision.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "data-eventual",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Eventual consistency accepts a window where readers see different values. It is fine for feeds and counts, and dangerous for balances or inventory unless the flow compensates.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "data-sharding",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Replication answers what happens when a machine dies. Sharding answers what happens when one machine cannot hold or serve the data. Sharding adds routing and cross-shard query costs.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "data-backup",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Replication protects against a dead disk, not against a bad migration or a mistaken delete. A backup must be separate, restorable and tested.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "data-schema-evolution",
+      "parts": [
+        {
+          "type": "text",
+          "text": "During a rolling deploy, old and new code run together. Add fields before using them, stop using fields before removing them, and keep migrations reversible.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "delivery-trunk",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Small, frequent merges keep the trunk releasable and make integration problems small. Long-lived branches turn integration into a risky event.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "a_iq0ZMU9Co",
+          "search": "Trunk-Based Development Explained Modern Git Workflow",
+          "alt": "An explanation of trunk-based development and how it differs from long-lived branches"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "delivery-dora",
+      "parts": [
+        {
+          "type": "text",
+          "text": "DORA measures throughput and stability together. Optimising one alone, such as deploying more often without a rollback path, usually damages the other.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "lqsENcje41w",
+          "search": "DORA Metrics Explained Four Key Measures DevOps Performance",
+          "alt": "An explanation of the DORA metrics for software delivery performance"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "delivery-five-metrics",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The current five measures are lead time, deployment frequency, failed deployment recovery time, change failure rate and deployment rework rate. The set separates speed from stability.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/dora-metrics.svg",
+          "alt": "The five DORA measures grouped into throughput and stability"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "delivery-iac",
+      "parts": [
+        {
+          "type": "text",
+          "text": "When infrastructure is code, changes are reviewed, reproducible and reversible. Drift between environments becomes visible instead of tribal knowledge.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "zWw2wuiKd5o",
+          "search": "What is Infrastructure as Code IBM Technology",
+          "alt": "An explanation of infrastructure as code and its benefits"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "delivery-feature-flag",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A flag lets code reach production dark and be released later. Delete flags once they are permanent decisions, or the combinations become untestable.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/feature-flag-anim.svg",
+          "alt": "One deployment reaching users through a flag that can switch a feature on or off"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "delivery-small-batches",
+      "parts": [
+        {
+          "type": "text",
+          "text": "When a release contains one change, a failure points at one suspect. When it contains fifty, diagnosis and rollback both become slow.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "delivery-cdcd",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Continuous delivery keeps every change releasable and leaves the release decision to a person. Continuous deployment removes that button and releases every passing change.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "delivery-environments",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Staging is only useful if it resembles production in configuration and scale. Real customer data must not be copied there without a privacy process.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "delivery-rollback",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Rollback may mean redeploying the previous artifact, flipping a flag or reversing a migration. Decide which before the release, not during the incident.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "delivery-pipeline-value",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Automating build, test and deploy replaces manual steps that are slow and inconsistent. The gain is a shorter, safer path from idea to user feedback.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/container-ship.webp",
+          "alt": "A container ship carrying stacked freight containers across the water"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "foundations-costly-decisions",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Architecture is the set of decisions that are expensive to reverse later: boundaries, data ownership, communication and deployment. Naming and loop style are coding details because they are cheap to change.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/telephone-exchange-1918.webp",
+          "alt": "Telephone operators at a switchboard in 1918, connecting calls by hand"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "foundations-evolving",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Architects do not produce a final diagram. They keep making and revising decisions as the product, the team and the load change.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "K7RkjKTIQbo",
+          "search": "Mark Richards Neal Ford software architecture fundamentals",
+          "alt": "A conversation about the fundamentals of software architecture and how architects work"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "foundations-boundaries",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A boundary hides an implementation behind a contract. The caller depends on the contract, not on the internals, so either side can be replaced.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/boundaries-anim.svg",
+          "alt": "Two modules exchanging a message through a narrow interface while their insides change"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "foundations-tradeoff",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Caching improves latency but adds staleness. Strong consistency improves correctness but costs availability during a partition. Naming the cost is part of the decision.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "foundations-coupling",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Coupling is not automatically bad. Some parts must coordinate. The problem is hidden coupling: a change in one place breaks a distant part with no clear contract.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "foundations-cohesion",
+      "parts": [
+        {
+          "type": "text",
+          "text": "High cohesion keeps related rules in one place. Low cohesion scatters one job across many modules, so every change touches several files.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "foundations-stateless",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Stateless services are easy to scale because the load balancer can send each request anywhere. Shared state moves to a database, cache or token.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "foundations-horizontal",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Vertical scaling makes one machine bigger. Horizontal scaling adds more machines. Horizontal scaling needs stateless services and a way to balance traffic.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "foundations-evolvable",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Evolvability is not about predicting the future. It is about keeping decisions reversible and boundaries clear enough that the next change stays small.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "foundations-context",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A pattern is advice, not a guarantee. The team's size, skills, budget and domain decide whether the same shape helps or hurts.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "vGlxwcyrVd8",
+          "search": "Mark Richards Neal Ford Software Architecture The Hard Parts",
+          "alt": "Architects discussing why architecture decisions depend on context and trade-offs"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "reliability-slo",
+      "parts": [
+        {
+          "type": "text",
+          "text": "An SLI is the measurement, such as successful requests divided by total requests. An SLO is the target for that measurement, such as 99.9% over 30 days.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "Akri1BlGp10",
+          "search": "SLO vs SLI vs SLA vs Error Budget Google SRE",
+          "alt": "A plain-English explanation of SLI, SLO, SLA and the error budget"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "reliability-error-budget",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The error budget turns reliability into a shared number. While budget remains, teams may ship faster. When it is spent, feature work pauses until reliability recovers.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/slo-budget.svg",
+          "alt": "A monthly reliability target with a small error budget shown as a spending allowance"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "reliability-timeout",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Without timeouts, threads and connections pile up behind one stuck dependency. Set each timeout from the latency budget, and make it shorter than the caller's own patience.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "reliability-backoff",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Backoff gives a recovering dependency room. Add jitter, a small random delay, so many clients do not retry at the same instant and create a second spike.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/retry-backoff-anim.svg",
+          "alt": "A failed call retrying after growing, randomised delays until it succeeds"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "reliability-circuit-breaker",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The breaker opens after a failure threshold, fails fast while open, then allows a probe request after a cool-down. It prevents a slow dependency from consuming every caller thread.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "reliability-observability",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Monitoring answers known questions. Observability lets you ask new ones from logs, metrics and traces, which is what an incident actually demands.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "35N2buePMsg",
+          "search": "Monitoring vs Observability Logs Metrics Traces APM RUM",
+          "alt": "A comparison of monitoring and observability and the signals each uses"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "reliability-signals",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A metric says something changed, a trace shows where the time went, and a log explains the detail. Correlating all three is what shortens an incident.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/power-grid.webp",
+          "alt": "High-voltage power lines and pylons against a clear sky"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "reliability-chaos",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Start with a hypothesis, inject a bounded failure in a controlled environment, and measure whether the system degrades as intended. Netflix turned this into a discipline.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "Xbn65E-BQhA",
+          "search": "AWS reInvent 2022 evolution of chaos engineering at Netflix",
+          "alt": "Netflix engineers describing how chaos engineering evolved inside their platform"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "reliability-degrade",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Rank features by importance and decide what turns off first. A page that loads without recommendations is better than a page that never loads.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "reliability-health-checks",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Liveness asks whether to restart the process. Readiness asks whether it should receive traffic. Mixing them up restarts healthy pods that are merely warming up.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "requirements-nonfunctional",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Functional requirements name what the system does. Non-functional requirements name how well it does it: speed, availability, security, cost and usability.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "requirements-quality-attribute",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Availability, latency, throughput, security and modifiability are quality attributes. They are the requirements that most often shape the architecture.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "requirements-latency-budget",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A latency budget divides one target across every step: network, server, database, browser. When one step spends too much, another step has to give some back.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/latency-budget.svg",
+          "alt": "A one-second budget split across DNS, connection, server, download and render"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "requirements-nines",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Availability targets are counted in nines. 99.9% allows about 43 minutes a month; 99.99% allows about 4 minutes. Each extra nine demands more redundancy and more cost.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "requirements-throughput-latency",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A system can handle many requests per second and still be slow for each one. A queue raises throughput while adding latency, which is why both need a target.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "requirements-envelope",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Estimate users, requests per second, storage and growth before choosing tools. A rough estimate that is one order of magnitude right prevents most over-engineering.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "requirements-constraints",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Constraints are not obstacles to the design; they are part of it. Two teams with the same features but different constraints should build different systems.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/tradeoffs-anim.svg",
+          "alt": "A design choice sliding between speed, cost and safety as constraints pull on it"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "requirements-adr",
+      "parts": [
+        {
+          "type": "text",
+          "text": "An ADR is short: the decision, the situation that forced it, the options rejected and the cost accepted. Later readers learn why the system looks this way.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "GhB7vz3sg-0",
+          "search": "Architectural Decision Records ADR what they are",
+          "alt": "An explanation of architecture decision records and how teams use them"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "requirements-tradeoff-analysis",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Compare options against the qualities the system must protect, then write down what each option costs. The rejected options are evidence, not waste.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "s4LI1jDn6IY",
+          "search": "Understanding Modern Trade-off Analysis in Software Architecture Neal Ford",
+          "alt": "Neal Ford explaining how architects analyse trade-offs between competing qualities"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "requirements-problem-first",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Most bad architectures answer the wrong question well. Write the problem, the users, the scale and the constraints first; every later decision is judged against them.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/golden-gate-bridge.webp",
+          "alt": "The Golden Gate Bridge lit at night, with traffic crossing the span"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "security-stride",
+      "parts": [
+        {
+          "type": "text",
+          "text": "STRIDE covers spoofing, tampering, repudiation, information disclosure, denial of service and elevation of privilege. Walking the list makes missing threats easier to spot.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "rEnJYNkUde0",
+          "search": "STRIDE Threat Modeling for Beginners",
+          "alt": "A beginner walkthrough of STRIDE threat modelling"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "security-trust-boundary",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Every input crossing a trust boundary must be validated on the side that trusts it. A browser check protects the user; a server check protects the system.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/trust-boundaries.svg",
+          "alt": "A diagram of browser, service and database zones separated by trust boundaries"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "security-least-privilege",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A reporting job should read, not delete. A service account should reach one bucket, not the whole account. Small permissions turn a breach into a smaller incident.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "security-authn-authz",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Authentication proves identity. Authorization decides what that identity may do. A user can log in correctly and still have no right to open an admin page.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/padlock.webp",
+          "alt": "A brass padlock hanging on a dark metal fence"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "security-secrets",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Once a secret is committed, assume it is leaked. Store secrets outside the repository, inject them at run time and rotate them on a schedule.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "security-defense-depth",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Validate input, enforce permissions, encrypt data and monitor for abuse. If one control fails, the next still stands. All four should not rely on the same assumption.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "security-owasp",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The 2021 list starts with broken access control, then cryptographic failures and injection. It is a starting checklist, not a complete security programme.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "security-slsa",
+      "parts": [
+        {
+          "type": "text",
+          "text": "SLSA levels rise with the evidence behind a build: documented build, hosted build service, and hardened provenance. Higher levels make tampering harder and detectable.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "K_G10zywoTs",
+          "search": "What Is SLSA Supply Chain Levels for Software Artifacts",
+          "alt": "An explanation of SLSA and its levels for software supply-chain security"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "security-sbom",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A software bill of materials names every component and version in an artifact. When a library gets a CVE, the SBOM answers within minutes which products are affected.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/supply-chain-anim.svg",
+          "alt": "A source package moving through build, test and signing steps to become a verified artifact"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "security-encryption",
+      "parts": [
+        {
+          "type": "text",
+          "text": "TLS covers the wire; disk and database encryption cover the stored copy. Neither helps if the application hands the data to the wrong user, so access control still matters.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "styles-monolith",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A monolith is not a failure. It has one deploy, one database and one codebase, which is often the cheapest way to find product-market fit.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/circuit-board.webp",
+          "alt": "Close-up of a circuit board with many connected components on one board"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "styles-modular-monolith",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A modular monolith organises features into modules with explicit interfaces. You keep one deployment while making a later split into services cheaper.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "Xo3rsiZYsJQ",
+          "search": "Modular Monoliths How To Build One Lessons Learned Milan Jovanovic",
+          "alt": "A practical explanation of building a modular monolith and the lessons learned"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "styles-microservice",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The defining trait is independent deployment. Each service owns its data and talks to others over a network contract, which buys autonomy at the cost of coordination.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/services-anim.svg",
+          "alt": "A request moving through several small services that deploy independently"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "styles-microservice-cost",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Every service adds deployment, networking, tracing and failure handling. A small team often spends more time on plumbing than on the product.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "6giotJL8bzc",
+          "search": "Monolithic vs Microservices Architecture Java Guides",
+          "alt": "A comparison of monolithic and microservice architectures"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "styles-layered",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Layers separate presentation, business rules and data access. The rule that dependencies point one way keeps the core from depending on the UI or the database.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "styles-event-driven",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A producer publishes an event such as order-placed. Consumers react without the producer knowing who they are. This decouples teams but makes the flow harder to trace.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "styles-serverless",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Serverless platforms start code on demand and scale to zero. Cold starts, time limits and per-request pricing are the trade-offs to check against the workload.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "styles-cqrs",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Command Query Responsibility Segregation lets each side use the shape it needs: a normalised write model and a denormalised read model. The cost is keeping the two in sync.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "styles-event-sourcing",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Event sourcing appends events instead of overwriting rows. Current state is rebuilt by replaying them. The history is valuable, but schema changes and replay cost real effort.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "styles-choose-simplest",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Start with a modular monolith. Split out a service when a team needs to deploy independently, a part needs different scaling, or a boundary is stable enough to become a contract.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/styles-compare.svg",
+          "alt": "A side-by-side comparison of monolith, modular monolith and microservices traits"
+        }
+      ]
+    }
+  ]
+}

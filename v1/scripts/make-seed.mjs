@@ -7,7 +7,7 @@
 // 2026-10-25 opencode: a deck's cards may live in cards/<deck>.json, and a pack's
 // built-in images are copied beside it, so large packs stay readable.
 
-import { readFile, writeFile, mkdir, readdir, copyFile, rm } from "node:fs/promises";
+import { readFile, writeFile, mkdir, readdir, copyFile, rm, stat } from "node:fs/promises";
 import path from "node:path";
 
 const root = path.resolve(import.meta.dirname, "..");
@@ -76,12 +76,48 @@ async function copyImages(source, slug) {
 
 await mkdir(targetRoot, { recursive: true });
 
+// WHY: A shipped Dictionary page names its card by the id the app derives from
+// the card's words, so the seed must derive the same id or the page would point
+// at nothing. These three helpers mirror `canonicalContent` and `deckCardId` in
+// `src/lib/core/card.ts`; the seed test recomputes every page's id with the app
+// code, so the two copies cannot drift apart silently.
+function stableStringify(value) {
+  if (value === null || typeof value !== "object") return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map((item) => stableStringify(item)).join(",")}]`;
+  const keys = Object.keys(value).sort();
+  return `{${keys.map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`).join(",")}}`;
+}
+
+function hashText(text) {
+  let hash = 0xcbf29ce484222325n;
+  for (let index = 0; index < text.length; index += 1) {
+    hash ^= BigInt(text.charCodeAt(index));
+    hash = BigInt.asUintN(64, hash * 0x100000001b3n);
+  }
+  return hash.toString(16).padStart(16, "0");
+}
+
+function deckCardId(packName, deckId, deckName, card) {
+  const content = stableStringify({
+    summary: card.summary.trim(),
+    topics: [deckName],
+    tags: [...new Set((card.tags ?? []).map((tag) => tag.trim()))].sort(),
+    prompt: card.prompt,
+    answer: card.answer,
+    answerDef: card.answerDef,
+    hints: card.hints ?? [],
+    fullLine: card.fullLine ?? null,
+  });
+  return `deck-${packName}-${deckId}:${hashText(content)}`;
+}
+
 const index = { schema: "flashcards.pack-index/v1", packs: [] };
 
 for (const slug of seedPacks) {
   const source = path.join(packsRoot, slug);
   const manifest = await readJson(path.join(source, "pack.json"));
   const prompts = await readJson(path.join(source, "prompts.json"), true);
+  const authoredPages = await readJson(path.join(source, "pages.json"), true);
 
   const decks = manifest.topics.map((topic) => ({
     id: topic,
@@ -94,6 +130,27 @@ for (const slug of seedPacks) {
     return { ...sourceCard, deckId: topics[0] };
   });
   const images = await copyImages(source, slug);
+
+  const deckNames = new Map(decks.map((deck) => [deck.id, deck.name]));
+  const cardIds = new Map(
+    cards.map((card) => [card.key, deckCardId(manifest.name, card.deckId, deckNames.get(card.deckId), card)]),
+  );
+  const pages = (authoredPages?.pages ?? []).map(({ cardKey, ...page }) => {
+    if (page.level !== "card") return page;
+    const cardId = cardIds.get(cardKey);
+    if (!cardId) throw new Error(`${slug} pages.json names unknown card "${cardKey}"`);
+    return { ...page, cardId };
+  });
+  for (const page of pages) {
+    for (const part of [page.cover, ...(page.parts ?? [])]) {
+      if (part?.type === "image" && part.source === "builtin") {
+        const file = path.join(source, "images", path.basename(part.src));
+        await stat(file).catch(() => {
+          throw new Error(`${slug} page ${page.level} names a missing image ${part.src}`);
+        });
+      }
+    }
+  }
 
   const bundle = {
     schema: "flashcards.pack/v1",
@@ -108,13 +165,15 @@ for (const slug of seedPacks) {
     },
     decks,
     cards,
+    ...(pages.length > 0 ? { pages } : {}),
   };
 
   await writeFile(path.join(targetRoot, `${slug}.json`), `${JSON.stringify(bundle, null, 2)}\n`, "utf8");
   index.packs.push({ name: manifest.name, version: manifest.version, file: `/packs/${slug}.json` });
   console.log(
     `Wrote ${cards.length} cards in ${decks.length} decks to public/packs/${slug}.json` +
-      (images > 0 ? ` with ${images} image(s)` : ""),
+      (pages.length > 0 ? ` with ${pages.length} page(s)` : "") +
+      (images > 0 ? ` and ${images} image(s)` : ""),
   );
 }
 

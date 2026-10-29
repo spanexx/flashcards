@@ -31,9 +31,18 @@ video clips.
 - Videos are YouTube ids verified with oEmbed. The teaching layer also offers a
   search fallback if a clip is removed.
 
+## Dictionary pages
+
+The course also ships as Dictionary pages: one for the pack, one per deck and
+one per card, so a learner can read it in order outside a study session. Those
+pages live in `pages.json`; a card page names its card by `cardKey`, and the
+seed builder derives the same content id the app uses. Page images are checked
+against `images/` while the seed is built.
+
 ## Editing the course
 
-Cards live in `cards/<deck>.json`. Edit those files, then rebuild the seed:
+Cards live in `cards/<deck>.json` and pages live in `pages.json`. Edit those
+files, then rebuild the seed:
 
 ```bash
 cd v1
@@ -42,8 +51,9 @@ node scripts/make-seed.mjs
 
 The script copies `images/` beside the bundle and rewrites
 `public/packs/index.json`. Run `npm test` afterwards: the seed tests check the
-deck count, ten cards per deck, teaching-layer limits, video id shape and that
-every built-in image exists.
+deck count, ten cards per deck, teaching-layer limits, video id shape, that
+every built-in image and page image exists, and that every card page names the
+id the app derives from the card's words.
 
 ## Sources
 

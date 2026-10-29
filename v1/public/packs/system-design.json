@@ -2,7 +2,7 @@
   "schema": "flashcards.pack/v1",
   "pack": {
     "name": "system-design",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "System architecture and system design for the AI era: requirements, styles, data, reliability, security, AI systems, AI-assisted engineering, delivery and CI/CD.",
     "language": "en"
   },
@@ -5169,6 +5169,1575 @@
         }
       ],
       "deckId": "styles"
+    }
+  ],
+  "pages": [
+    {
+      "level": "pack",
+      "title": "System design for the AI era",
+      "lead": "A ten-deck course from first principles to CI/CD, using real systems as the examples.",
+      "cover": {
+        "type": "image",
+        "source": "builtin",
+        "src": "/packs/system-design/images/data-center.webp",
+        "alt": "Rows of servers in a data centre"
+      }
+    },
+    {
+      "level": "deck",
+      "deckId": "foundations",
+      "title": "Foundations",
+      "lead": "What architecture is, and the questions it answers.",
+      "cover": {
+        "type": "image",
+        "source": "builtin",
+        "src": "/packs/system-design/images/telephone-exchange-1918.webp",
+        "alt": "Operators at a telephone exchange in 1918"
+      }
+    },
+    {
+      "level": "deck",
+      "deckId": "requirements",
+      "title": "Requirements and constraints",
+      "lead": "Turn wishes into constraints you can build against.",
+      "cover": {
+        "type": "image",
+        "source": "builtin",
+        "src": "/packs/system-design/images/golden-gate-bridge.webp",
+        "alt": "The Golden Gate Bridge rising through fog"
+      }
+    },
+    {
+      "level": "deck",
+      "deckId": "styles",
+      "title": "Architecture styles",
+      "lead": "Pick a shape for the system and know what it costs.",
+      "cover": {
+        "type": "image",
+        "source": "builtin",
+        "src": "/packs/system-design/images/circuit-board.webp",
+        "alt": "A circuit board with routed traces"
+      }
+    },
+    {
+      "level": "deck",
+      "deckId": "data",
+      "title": "Data and state",
+      "lead": "Decide who owns each fact, and how it stays correct.",
+      "cover": {
+        "type": "image",
+        "source": "builtin",
+        "src": "/packs/system-design/images/card-catalog.webp",
+        "alt": "A wooden card catalogue with many drawers"
+      }
+    },
+    {
+      "level": "deck",
+      "deckId": "reliability",
+      "title": "Reliability and operations",
+      "lead": "Design for failure as the normal case.",
+      "cover": {
+        "type": "image",
+        "source": "builtin",
+        "src": "/packs/system-design/images/power-grid.webp",
+        "alt": "High-voltage power lines at dusk"
+      }
+    },
+    {
+      "level": "deck",
+      "deckId": "security",
+      "title": "Security and trust",
+      "lead": "Draw the trust boundaries before you draw the boxes.",
+      "cover": {
+        "type": "image",
+        "source": "builtin",
+        "src": "/packs/system-design/images/padlock.webp",
+        "alt": "A close-up of a steel padlock"
+      }
+    },
+    {
+      "level": "deck",
+      "deckId": "ai-architecture",
+      "title": "Designing AI systems",
+      "lead": "Design systems around a model you do not control.",
+      "cover": {
+        "type": "image",
+        "source": "builtin",
+        "src": "/packs/system-design/images/server-rack.webp",
+        "alt": "A server rack full of network cabling"
+      }
+    },
+    {
+      "level": "deck",
+      "deckId": "ai-engineering",
+      "title": "AI-assisted engineering",
+      "lead": "Let AI write code without losing the plot.",
+      "cover": {
+        "type": "image",
+        "source": "builtin",
+        "src": "/packs/system-design/images/code-on-screen.webp",
+        "alt": "Code filling a computer screen"
+      }
+    },
+    {
+      "level": "deck",
+      "deckId": "delivery",
+      "title": "Delivery and DevOps",
+      "lead": "Ship small, ship often, and make it reversible.",
+      "cover": {
+        "type": "image",
+        "source": "builtin",
+        "src": "/packs/system-design/images/container-ship.webp",
+        "alt": "A container ship loaded with containers"
+      }
+    },
+    {
+      "level": "deck",
+      "deckId": "ci-cd",
+      "title": "CI/CD in practice",
+      "lead": "Build once, verify every step, promote the same artifact.",
+      "cover": {
+        "type": "image",
+        "source": "builtin",
+        "src": "/packs/system-design/images/pipeline-stages.svg",
+        "alt": "A CI/CD pipeline running from checkout through test and build to production"
+      }
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The model is a remote dependency like any other: it has latency, rate limits, cost and outages. Give it a timeout, a fallback and a budget just as you would a database.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/server-rack.webp",
+          "alt": "Rows of drive bays in a rack-mounted server"
+        }
+      ],
+      "cardId": "deck-system-design-ai-architecture:3589beb532cdb88a"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Retrieval-augmented generation adds fresh, private knowledge without retraining the model. The quality of the answer depends on the quality of retrieval.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "T-D1OfcDW1M",
+          "search": "What is Retrieval-Augmented Generation RAG IBM Technology",
+          "alt": "An explanation of retrieval-augmented generation and why it improves model answers"
+        }
+      ],
+      "cardId": "deck-system-design-ai-architecture:443d06a09e3457e9"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A retriever ranks chunks of text by similarity to the question. Bad chunking, stale documents or a weak ranking all produce a confident but unsupported answer.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/rag-loop-anim.svg",
+          "alt": "A question flowing through retrieval into a prompt and back as a grounded answer"
+        }
+      ],
+      "cardId": "deck-system-design-ai-architecture:ed643f913d973c14"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Embeddings let search work by meaning rather than exact words. A vector database stores them and finds the nearest ones, which is the retrieval half of RAG.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-ai-architecture:e5d0c445cba388fe"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A larger window lets you send more evidence, but it costs more and long prompts can bury the important part. Retrieve less, but retrieve better.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-ai-architecture:0932e60e6ceb5baa"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "An eval set holds prompts and the properties a good answer must have. Run it on every prompt, model or retrieval change; otherwise quality drifts silently.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "a3SMraZWNNs",
+          "search": "How to Systematically Setup LLM Evals Metrics Unit Tests LLM-as-a-Judge",
+          "alt": "A practical walkthrough of setting up LLM evals with metrics and judges"
+        }
+      ],
+      "cardId": "deck-system-design-ai-architecture:bda384c0ff99df83"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Treat a production miss like a bug report: add it to the eval set, fix the prompt or retrieval, and confirm the score improves without regressing the old cases.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/eval-loop.svg",
+          "alt": "A loop of prompt, model, evaluation and failure cases feeding back into the prompt"
+        }
+      ],
+      "cardId": "deck-system-design-ai-architecture:9f9b809c5a55a809"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A grounded answer cites the passage it used. Citations let a reader check the claim and expose when the model answered from memory instead of evidence.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-ai-architecture:6d16b5e33c261a68"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Budget tokens per request, cache repeated prefixes where the provider supports it, and send short retrieved passages instead of whole documents.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-ai-architecture:bce4e74fc7ac7571"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Any text the model reads can try to redirect it. Keep untrusted content labelled as data, never give the model more authority than the user, and require human approval for risky actions.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-ai-architecture:ff36ea202d0ddcf2"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "AI lowers the cost of producing code, not the cost of owning it. The fastest safe pattern is draft, review, test, then merge like any other change.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/code-on-screen.webp",
+          "alt": "Colourful lines of source code on a dark screen"
+        }
+      ],
+      "cardId": "deck-system-design-ai-engineering:282fc2fb6b2488d0"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The origin of a diff is not a reason to skip checks. Tests, lint, security scanning and human review apply exactly as before.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/review-gate-anim.svg",
+          "alt": "A change opening a gate only after review checks pass"
+        }
+      ],
+      "cardId": "deck-system-design-ai-engineering:63c07e3a08dce8d3"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Automated review catches patterns such as missing checks or unclear code. It does not take responsibility, so a human approval remains required.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "HDEGFNAUkX8",
+          "search": "How to automate code reviews and testing with GitHub Copilot",
+          "alt": "GitHub showing how Copilot can automate parts of code review and testing"
+        }
+      ],
+      "cardId": "deck-system-design-ai-engineering:b2bb69e56c96dad9"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A model can invent a package name. Verify every new dependency exists, is maintained and is the one you meant before it enters the lockfile.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "X0UI0O8YzJM",
+          "search": "How Developers Secure AI-Generated Code 5 Security Best Practices IBM",
+          "alt": "Five practices for securing code generated with AI assistance"
+        }
+      ],
+      "cardId": "deck-system-design-ai-engineering:e2e924daccef4944"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "AI can change more code per minute than a person can read. Tests turn that speed into a safe loop only if they genuinely fail when behaviour breaks.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-ai-engineering:fbfee824d621a8b5"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A short spec with examples gives the model a target and gives the reviewer a way to judge the result. Without it, both sides guess.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-ai-engineering:b42a112dd684f08f"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A generated change can be correct and still too large to review. Split it by intent so each diff can be understood, tested and reverted on its own.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-ai-engineering:60da20d9f012a91b"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Prompts may be logged or used under a provider's terms. Keep secrets and personal data out unless the tool and the contract explicitly allow them.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-ai-engineering:3ebe40a263fbf527"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A model may reproduce code from its training data. Know your organisation's policy, keep generated snippets small and record where third-party code came from.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-ai-engineering:e9fe930c027fffc8"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Tools change who types the code, not who answers for the outage. Review, tests and ownership stay with the people who ship.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-ai-engineering:b00669dc0ab50b1b"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Stages run cheapest and fastest first, so a typo fails in seconds. The build step produces the artifact that later stages promote unchanged.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/pipeline-stages.svg",
+          "alt": "A CI/CD pipeline moving from checkout through test and build to staging and production"
+        }
+      ],
+      "cardId": "deck-system-design-ci-cd:21a3b8b2e0412aa4"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A workflow has a trigger, jobs and steps. Jobs run on runners; steps call actions or shell commands. Reusable workflows and actions keep repetition down.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "Lj9SennFygM",
+          "search": "How to build a complete CI pipeline with GitHub actions",
+          "alt": "A walkthrough of building a complete continuous integration pipeline with GitHub Actions"
+        }
+      ],
+      "cardId": "deck-system-design-ci-cd:f4941f9879149068"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Rebuilding per environment means the tested bytes are not the shipped bytes. Promote one immutable artifact and let configuration change between environments.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/data-center.webp",
+          "alt": "Rows of servers in a data centre with blue status lights"
+        }
+      ],
+      "cardId": "deck-system-design-ci-cd:f42b96f6a2045d6d"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Common triggers are push, pull_request, schedule and workflow_dispatch. Choosing the trigger decides how fast feedback arrives and how often the pipeline runs.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "qoalS5ae7fk",
+          "search": "CI CD Made Easy with GitHub Actions Hello World Demo",
+          "alt": "A short hands-on demonstration of a GitHub Actions CI/CD workflow"
+        }
+      ],
+      "cardId": "deck-system-design-ci-cd:e4de93d236b33d57"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Unit tests give fast, precise feedback. End-to-end tests prove the whole path but are slow and flaky, so use them for the few journeys that must not break.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-ci-cd:d2cf95fc6ff0e54e"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "An artifact is identified by a version or digest and never overwritten. If something must change, build a new artifact; that keeps the audit trail honest.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-ci-cd:0382acd69709d1f4"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Store secrets in the CI secret store, scope them to the environment that needs them and mask them in logs. Rotate any secret that was ever committed.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-ci-cd:ff48ffcace5a74ae"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The canary proves the new version on a few real requests. Watch error rate and latency against the old version, then widen or roll back.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/canary-anim.svg",
+          "alt": "Most traffic going to the stable version while a small share goes to a canary"
+        }
+      ],
+      "cardId": "deck-system-design-ci-cd:f4409cd9c213f0fd"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Progressive delivery releases to a subset first and widens as confidence grows. Canary, blue-green and ring deployments are all ways to limit the blast radius.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "HKkhD6nokC8",
+          "search": "Progressive Delivery Explained Big Bang Blue-Green Rolling Updates Canaries",
+          "alt": "An explanation of progressive delivery techniques including blue-green and canary releases"
+        }
+      ],
+      "cardId": "deck-system-design-ci-cd:f9d811aafa4ce367"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Some failures only appear with real traffic. Testing in production is safe only when you can measure the effect, limit who sees it and roll back within minutes.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "sFzKrGSaIr8",
+          "search": "Testing in Production Progressive Delivery Canary Deployments",
+          "alt": "An explanation of testing in production with canary deployments and progressive delivery"
+        }
+      ],
+      "cardId": "deck-system-design-ci-cd:5b45fd90e3f18875"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Shared tables create hidden coupling: any team can change the schema and break another. Data ownership keeps each schema behind one team's contract.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/data-ownership.svg",
+          "alt": "Three services each holding their own database behind a contract"
+        }
+      ],
+      "cardId": "deck-system-design-data:33a9deb76ac66cec"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "On a hit the cache answers. On a miss the application reads the database, stores the result in the cache and returns it. The cache never owns the truth.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/cache-path-anim.svg",
+          "alt": "A request checking a cache, falling through to a database and filling the cache"
+        }
+      ],
+      "cardId": "deck-system-design-data:b348a8c7677ba33c"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Every cache rule answers two questions: how long may a copy live, and what happens when the original changes? A time-to-live is simple but still allows staleness.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "5qk4p1jnSgg",
+          "search": "Cache Invalidation Explained Strategies Consistency Challenges",
+          "alt": "An explanation of cache invalidation strategies and the consistency problems they create"
+        }
+      ],
+      "cardId": "deck-system-design-data:fab7514f72507d64"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Networks fail after the server may have processed a request. An idempotency key lets the server recognise a repeat and return the first result instead of charging twice.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "I08syTslan8",
+          "search": "What is API Idempotency and Why Is It Important",
+          "alt": "An explanation of API idempotency and why retries need it"
+        }
+      ],
+      "cardId": "deck-system-design-data:04ee8de86bb8b59d"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "An index is a sorted shortcut, like a card catalogue in a library. It saves a full scan on reads but every write must maintain it, so unused indexes are pure cost.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/card-catalog.webp",
+          "alt": "A wooden library card catalogue with rows of labelled drawers"
+        }
+      ],
+      "cardId": "deck-system-design-data:d3a4986df32feed3"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Partitions happen. During one, a system can refuse some requests to stay consistent, or answer with possibly stale data to stay available. The choice is a product decision.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-data:14d14edaa1ced816"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Eventual consistency accepts a window where readers see different values. It is fine for feeds and counts, and dangerous for balances or inventory unless the flow compensates.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-data:347ac4ce1c36e138"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Replication answers what happens when a machine dies. Sharding answers what happens when one machine cannot hold or serve the data. Sharding adds routing and cross-shard query costs.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-data:a674e3c168ca9964"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Replication protects against a dead disk, not against a bad migration or a mistaken delete. A backup must be separate, restorable and tested.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-data:e343fc7df014ae65"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "During a rolling deploy, old and new code run together. Add fields before using them, stop using fields before removing them, and keep migrations reversible.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-data:5137dc1dbeb2f9ae"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Small, frequent merges keep the trunk releasable and make integration problems small. Long-lived branches turn integration into a risky event.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "a_iq0ZMU9Co",
+          "search": "Trunk-Based Development Explained Modern Git Workflow",
+          "alt": "An explanation of trunk-based development and how it differs from long-lived branches"
+        }
+      ],
+      "cardId": "deck-system-design-delivery:94d97eec0fdfa2b0"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "DORA measures throughput and stability together. Optimising one alone, such as deploying more often without a rollback path, usually damages the other.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "lqsENcje41w",
+          "search": "DORA Metrics Explained Four Key Measures DevOps Performance",
+          "alt": "An explanation of the DORA metrics for software delivery performance"
+        }
+      ],
+      "cardId": "deck-system-design-delivery:e00c4c764c6b64e6"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The current five measures are lead time, deployment frequency, failed deployment recovery time, change failure rate and deployment rework rate. The set separates speed from stability.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/dora-metrics.svg",
+          "alt": "The five DORA measures grouped into throughput and stability"
+        }
+      ],
+      "cardId": "deck-system-design-delivery:ea556e1ef92221be"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "When infrastructure is code, changes are reviewed, reproducible and reversible. Drift between environments becomes visible instead of tribal knowledge.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "zWw2wuiKd5o",
+          "search": "What is Infrastructure as Code IBM Technology",
+          "alt": "An explanation of infrastructure as code and its benefits"
+        }
+      ],
+      "cardId": "deck-system-design-delivery:1cb4faaaf5fe66d3"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A flag lets code reach production dark and be released later. Delete flags once they are permanent decisions, or the combinations become untestable.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/feature-flag-anim.svg",
+          "alt": "One deployment reaching users through a flag that can switch a feature on or off"
+        }
+      ],
+      "cardId": "deck-system-design-delivery:c3bd76edddae938c"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "When a release contains one change, a failure points at one suspect. When it contains fifty, diagnosis and rollback both become slow.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-delivery:78fd0ff2bd80cbde"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Continuous delivery keeps every change releasable and leaves the release decision to a person. Continuous deployment removes that button and releases every passing change.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-delivery:2d3425968344777e"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Staging is only useful if it resembles production in configuration and scale. Real customer data must not be copied there without a privacy process.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-delivery:4c3beeab52e3d506"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Rollback may mean redeploying the previous artifact, flipping a flag or reversing a migration. Decide which before the release, not during the incident.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-delivery:350a056877ee43ff"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Automating build, test and deploy replaces manual steps that are slow and inconsistent. The gain is a shorter, safer path from idea to user feedback.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/container-ship.webp",
+          "alt": "A container ship carrying stacked freight containers across the water"
+        }
+      ],
+      "cardId": "deck-system-design-delivery:172f69ec156aa0c1"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Architecture is the set of decisions that are expensive to reverse later: boundaries, data ownership, communication and deployment. Naming and loop style are coding details because they are cheap to change.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/telephone-exchange-1918.webp",
+          "alt": "Telephone operators at a switchboard in 1918, connecting calls by hand"
+        }
+      ],
+      "cardId": "deck-system-design-foundations:5a0ee31570eb5f36"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Architects do not produce a final diagram. They keep making and revising decisions as the product, the team and the load change.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "K7RkjKTIQbo",
+          "search": "Mark Richards Neal Ford software architecture fundamentals",
+          "alt": "A conversation about the fundamentals of software architecture and how architects work"
+        }
+      ],
+      "cardId": "deck-system-design-foundations:b0ef00bc8074fc0b"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A boundary hides an implementation behind a contract. The caller depends on the contract, not on the internals, so either side can be replaced.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/boundaries-anim.svg",
+          "alt": "Two modules exchanging a message through a narrow interface while their insides change"
+        }
+      ],
+      "cardId": "deck-system-design-foundations:496b086c50eeb0a2"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Caching improves latency but adds staleness. Strong consistency improves correctness but costs availability during a partition. Naming the cost is part of the decision.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-foundations:d1f898eab9f25974"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Coupling is not automatically bad. Some parts must coordinate. The problem is hidden coupling: a change in one place breaks a distant part with no clear contract.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-foundations:d2d6ea35c5ec7833"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "High cohesion keeps related rules in one place. Low cohesion scatters one job across many modules, so every change touches several files.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-foundations:a4ddc0f852da5385"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Stateless services are easy to scale because the load balancer can send each request anywhere. Shared state moves to a database, cache or token.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-foundations:2faac5c33a65a6a4"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Vertical scaling makes one machine bigger. Horizontal scaling adds more machines. Horizontal scaling needs stateless services and a way to balance traffic.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-foundations:738f510be50df48c"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Evolvability is not about predicting the future. It is about keeping decisions reversible and boundaries clear enough that the next change stays small.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-foundations:b8821afbf4698b1a"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A pattern is advice, not a guarantee. The team's size, skills, budget and domain decide whether the same shape helps or hurts.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "vGlxwcyrVd8",
+          "search": "Mark Richards Neal Ford Software Architecture The Hard Parts",
+          "alt": "Architects discussing why architecture decisions depend on context and trade-offs"
+        }
+      ],
+      "cardId": "deck-system-design-foundations:8da3402a39351daf"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "An SLI is the measurement, such as successful requests divided by total requests. An SLO is the target for that measurement, such as 99.9% over 30 days.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "Akri1BlGp10",
+          "search": "SLO vs SLI vs SLA vs Error Budget Google SRE",
+          "alt": "A plain-English explanation of SLI, SLO, SLA and the error budget"
+        }
+      ],
+      "cardId": "deck-system-design-reliability:676571212990749e"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The error budget turns reliability into a shared number. While budget remains, teams may ship faster. When it is spent, feature work pauses until reliability recovers.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/slo-budget.svg",
+          "alt": "A monthly reliability target with a small error budget shown as a spending allowance"
+        }
+      ],
+      "cardId": "deck-system-design-reliability:af1fa18c9f716044"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Without timeouts, threads and connections pile up behind one stuck dependency. Set each timeout from the latency budget, and make it shorter than the caller's own patience.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-reliability:7174e82aceb2ecbf"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Backoff gives a recovering dependency room. Add jitter, a small random delay, so many clients do not retry at the same instant and create a second spike.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/retry-backoff-anim.svg",
+          "alt": "A failed call retrying after growing, randomised delays until it succeeds"
+        }
+      ],
+      "cardId": "deck-system-design-reliability:7dbf9ad1a8f0a9a2"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The breaker opens after a failure threshold, fails fast while open, then allows a probe request after a cool-down. It prevents a slow dependency from consuming every caller thread.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-reliability:ee24f06285625c7f"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Monitoring answers known questions. Observability lets you ask new ones from logs, metrics and traces, which is what an incident actually demands.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "35N2buePMsg",
+          "search": "Monitoring vs Observability Logs Metrics Traces APM RUM",
+          "alt": "A comparison of monitoring and observability and the signals each uses"
+        }
+      ],
+      "cardId": "deck-system-design-reliability:45d4cba9ce3c6d23"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A metric says something changed, a trace shows where the time went, and a log explains the detail. Correlating all three is what shortens an incident.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/power-grid.webp",
+          "alt": "High-voltage power lines and pylons against a clear sky"
+        }
+      ],
+      "cardId": "deck-system-design-reliability:c98efbb20bff0aed"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Start with a hypothesis, inject a bounded failure in a controlled environment, and measure whether the system degrades as intended. Netflix turned this into a discipline.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "Xbn65E-BQhA",
+          "search": "AWS reInvent 2022 evolution of chaos engineering at Netflix",
+          "alt": "Netflix engineers describing how chaos engineering evolved inside their platform"
+        }
+      ],
+      "cardId": "deck-system-design-reliability:d5d3358b0f6f597a"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Rank features by importance and decide what turns off first. A page that loads without recommendations is better than a page that never loads.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-reliability:93fb6aa49a27c96b"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Liveness asks whether to restart the process. Readiness asks whether it should receive traffic. Mixing them up restarts healthy pods that are merely warming up.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-reliability:9c5295b8e07a79dd"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Functional requirements name what the system does. Non-functional requirements name how well it does it: speed, availability, security, cost and usability.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-requirements:5123d0c3b108ffa3"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Availability, latency, throughput, security and modifiability are quality attributes. They are the requirements that most often shape the architecture.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-requirements:d290149c22980c6c"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A latency budget divides one target across every step: network, server, database, browser. When one step spends too much, another step has to give some back.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/latency-budget.svg",
+          "alt": "A one-second budget split across DNS, connection, server, download and render"
+        }
+      ],
+      "cardId": "deck-system-design-requirements:24ba1eaa8e4eb232"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Availability targets are counted in nines. 99.9% allows about 43 minutes a month; 99.99% allows about 4 minutes. Each extra nine demands more redundancy and more cost.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-requirements:8d72e648f1eae24e"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A system can handle many requests per second and still be slow for each one. A queue raises throughput while adding latency, which is why both need a target.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-requirements:a43cbadac038d564"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Estimate users, requests per second, storage and growth before choosing tools. A rough estimate that is one order of magnitude right prevents most over-engineering.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-requirements:803e0f6638076770"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Constraints are not obstacles to the design; they are part of it. Two teams with the same features but different constraints should build different systems.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/tradeoffs-anim.svg",
+          "alt": "A design choice sliding between speed, cost and safety as constraints pull on it"
+        }
+      ],
+      "cardId": "deck-system-design-requirements:266280389a9ddc58"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "An ADR is short: the decision, the situation that forced it, the options rejected and the cost accepted. Later readers learn why the system looks this way.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "GhB7vz3sg-0",
+          "search": "Architectural Decision Records ADR what they are",
+          "alt": "An explanation of architecture decision records and how teams use them"
+        }
+      ],
+      "cardId": "deck-system-design-requirements:e0de5b9d95fba8f3"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Compare options against the qualities the system must protect, then write down what each option costs. The rejected options are evidence, not waste.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "s4LI1jDn6IY",
+          "search": "Understanding Modern Trade-off Analysis in Software Architecture Neal Ford",
+          "alt": "Neal Ford explaining how architects analyse trade-offs between competing qualities"
+        }
+      ],
+      "cardId": "deck-system-design-requirements:3db7fd2c3e862e52"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Most bad architectures answer the wrong question well. Write the problem, the users, the scale and the constraints first; every later decision is judged against them.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/golden-gate-bridge.webp",
+          "alt": "The Golden Gate Bridge lit at night, with traffic crossing the span"
+        }
+      ],
+      "cardId": "deck-system-design-requirements:99601a1ab1972f6e"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "STRIDE covers spoofing, tampering, repudiation, information disclosure, denial of service and elevation of privilege. Walking the list makes missing threats easier to spot.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "rEnJYNkUde0",
+          "search": "STRIDE Threat Modeling for Beginners",
+          "alt": "A beginner walkthrough of STRIDE threat modelling"
+        }
+      ],
+      "cardId": "deck-system-design-security:ddef8cd161f35866"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Every input crossing a trust boundary must be validated on the side that trusts it. A browser check protects the user; a server check protects the system.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/trust-boundaries.svg",
+          "alt": "A diagram of browser, service and database zones separated by trust boundaries"
+        }
+      ],
+      "cardId": "deck-system-design-security:03acb6fd87405d95"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A reporting job should read, not delete. A service account should reach one bucket, not the whole account. Small permissions turn a breach into a smaller incident.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-security:4d8ad1716999d814"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Authentication proves identity. Authorization decides what that identity may do. A user can log in correctly and still have no right to open an admin page.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/padlock.webp",
+          "alt": "A brass padlock hanging on a dark metal fence"
+        }
+      ],
+      "cardId": "deck-system-design-security:58c65c1e29698c23"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Once a secret is committed, assume it is leaked. Store secrets outside the repository, inject them at run time and rotate them on a schedule.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-security:0bfbdec716020995"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Validate input, enforce permissions, encrypt data and monitor for abuse. If one control fails, the next still stands. All four should not rely on the same assumption.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-security:477f304c416dc700"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The 2021 list starts with broken access control, then cryptographic failures and injection. It is a starting checklist, not a complete security programme.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-security:bdeb8543e7ea8c2f"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "SLSA levels rise with the evidence behind a build: documented build, hosted build service, and hardened provenance. Higher levels make tampering harder and detectable.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "K_G10zywoTs",
+          "search": "What Is SLSA Supply Chain Levels for Software Artifacts",
+          "alt": "An explanation of SLSA and its levels for software supply-chain security"
+        }
+      ],
+      "cardId": "deck-system-design-security:e8bb39d44b0d80ff"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A software bill of materials names every component and version in an artifact. When a library gets a CVE, the SBOM answers within minutes which products are affected.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/supply-chain-anim.svg",
+          "alt": "A source package moving through build, test and signing steps to become a verified artifact"
+        }
+      ],
+      "cardId": "deck-system-design-security:1abe34e29a954a07"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "TLS covers the wire; disk and database encryption cover the stored copy. Neither helps if the application hands the data to the wrong user, so access control still matters.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-security:dc0fa3efb1cdfd2e"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A monolith is not a failure. It has one deploy, one database and one codebase, which is often the cheapest way to find product-market fit.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/circuit-board.webp",
+          "alt": "Close-up of a circuit board with many connected components on one board"
+        }
+      ],
+      "cardId": "deck-system-design-styles:6b61ba35d6645663"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A modular monolith organises features into modules with explicit interfaces. You keep one deployment while making a later split into services cheaper.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "Xo3rsiZYsJQ",
+          "search": "Modular Monoliths How To Build One Lessons Learned Milan Jovanovic",
+          "alt": "A practical explanation of building a modular monolith and the lessons learned"
+        }
+      ],
+      "cardId": "deck-system-design-styles:76a699d37f9de96d"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The defining trait is independent deployment. Each service owns its data and talks to others over a network contract, which buys autonomy at the cost of coordination.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/services-anim.svg",
+          "alt": "A request moving through several small services that deploy independently"
+        }
+      ],
+      "cardId": "deck-system-design-styles:1a8ef3fc586d275e"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Every service adds deployment, networking, tracing and failure handling. A small team often spends more time on plumbing than on the product.",
+          "lang": "en"
+        },
+        {
+          "type": "video",
+          "source": "youtube",
+          "src": "6giotJL8bzc",
+          "search": "Monolithic vs Microservices Architecture Java Guides",
+          "alt": "A comparison of monolithic and microservice architectures"
+        }
+      ],
+      "cardId": "deck-system-design-styles:8bd72ec9b19b90e9"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Layers separate presentation, business rules and data access. The rule that dependencies point one way keeps the core from depending on the UI or the database.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-styles:ba63b69b1fe6f343"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "A producer publishes an event such as order-placed. Consumers react without the producer knowing who they are. This decouples teams but makes the flow harder to trace.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-styles:c58293448562afa4"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Serverless platforms start code on demand and scale to zero. Cold starts, time limits and per-request pricing are the trade-offs to check against the workload.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-styles:8690a4ff5daba543"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Command Query Responsibility Segregation lets each side use the shape it needs: a normalised write model and a denormalised read model. The cost is keeping the two in sync.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-styles:7b0996e8d348dc63"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Event sourcing appends events instead of overwriting rows. Current state is rebuilt by replaying them. The history is valuable, but schema changes and replay cost real effort.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-system-design-styles:e017f927e6db1d66"
+    },
+    {
+      "level": "card",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Start with a modular monolith. Split out a service when a team needs to deploy independently, a part needs different scaling, or a boundary is stable enough to become a contract.",
+          "lang": "en"
+        },
+        {
+          "type": "image",
+          "source": "builtin",
+          "src": "/packs/system-design/images/styles-compare.svg",
+          "alt": "A side-by-side comparison of monolith, modular monolith and microservices traits"
+        }
+      ],
+      "cardId": "deck-system-design-styles:595cac110f9c83f8"
     }
   ]
 }

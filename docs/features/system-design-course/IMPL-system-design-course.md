@@ -143,6 +143,21 @@ simulation; a review event for the learner.
 
 ## Delivery notes
 
+- 2026-10-29, follow-up: the learner found the system-design Dictionary pages
+  empty. The pack shipped cards but no pages, so the app had nothing to show
+  in the Dictionary even though Study had all the media. `packs/system-design/pages.json`
+  now carries 111 pages (1 pack, 10 deck, 100 card). The course page and every
+  deck page take the locked cover shape: a photo, a promise and the path
+  onward. Every card page carries the card's teaching layer, so the pictures,
+  animations and videos are readable in the Dictionary. `make-seed.mjs`
+  derives each card page's id with the app's content hash, checks every
+  built-in page image exists, and emits `pages` in the bundle. The pack
+  version rises to 1.1.0 so an installed browser takes the update. The seed
+  test recomputes every page id with the app's own `deckCardId`, asserts every
+  card page has a part, every cover page has a picture and a promise, and
+  every page image exists. `simulate.sh` now prints
+  `Dictionary pages: 1 pack, 10 deck, 100 card` and checks the same shape.
+  D-42 records the gap.
 - 2026-10-29: fresh-eyes drift review (`.reports/2026-10-29-drift-system-design-course.md`)
   returned Minor Drift with nine gaps; all nine are closed in this branch. The
   simulation now prints each sample card's prompt, answer and teaching parts,
