@@ -10,6 +10,7 @@ import { readFile, stat } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { parseBundle } from "@/lib/browser/bundle";
+import { deckCardId } from "@/lib/core/card";
 import { SEED_INDEX_SCHEMA } from "@/lib/browser/seed";
 
 const projectRoot = fileURLToPath(new URL("..", import.meta.url));
@@ -170,6 +171,58 @@ describe("system-design pack", () => {
         (image) => image.src.endsWith(".webp") || !image.src.endsWith("-anim.svg"),
       );
       expect(still, `deck ${deck.id} has a photograph or a static diagram`).toBe(true);
+    }
+  });
+
+  it("ships a Dictionary page for the course, every deck and every card", async () => {
+    const bundle = await readSeed("system-design");
+    const pages = bundle.pages;
+    expect(pages.filter((page) => page.level === "pack")).toHaveLength(1);
+    expect(
+      pages.filter((page) => page.level === "deck").map((page) => page.deckId).sort(),
+    ).toEqual(bundle.decks.map((deck) => deck.id).sort());
+
+    // WHY: a shipped card page names the id the app derives from the card's
+    // words; the seed builder computes it in plain JS, so this recomputes every
+    // one with the app's own function and refuses a near-miss.
+    const deckNames = new Map(bundle.decks.map((deck) => [deck.id, deck.name]));
+    const cardPages = new Map(
+      pages
+        .filter((page) => page.level === "card")
+        .map((page) => [page.cardId ?? "", page]),
+    );
+    expect(cardPages.size).toBe(bundle.cards.length);
+    for (const card of bundle.cards) {
+      const deckName = deckNames.get(card.deckId ?? "") ?? "";
+      const id = deckCardId("system-design", card.deckId ?? "", { ...card, topics: [deckName] });
+      const page = cardPages.get(id);
+      expect(page, `card ${card.key} has no page at ${id}`).toBeTruthy();
+      expect(page?.parts.length, `page ${id} is empty`).toBeGreaterThan(0);
+    }
+
+    // WHY: the Dictionary draws a pack page or a deck page as a cover — a
+    // picture, a promise and the path onward — and it never renders a body on
+    // them, so shipping parts there would be data no learner can reach.
+    for (const page of pages) {
+      const label = `${page.level} page ${page.deckId ?? page.cardId ?? ""}`;
+      if (page.level === "card") {
+        expect(page.parts.length, label).toBeGreaterThan(0);
+      } else {
+        expect(page.parts.length, `${label} carries an unrendered body`).toBe(0);
+        expect(page.cover?.type, `${label} cover`).toBe("image");
+        expect(page.cover?.type === "image" && page.cover.source, label).toBe("builtin");
+        expect((page.lead ?? "").trim().length, `${label} promise`).toBeGreaterThan(0);
+      }
+      for (const part of [page.cover, ...page.parts]) {
+        if (part?.type === "image") {
+          expect(part.source).toBe("builtin");
+          expect(part.src.startsWith("/packs/system-design/images/")).toBe(true);
+          await expect(stat(path.join(projectRoot, "public", part.src)), part.src).resolves.toBeTruthy();
+        }
+        if (part?.type === "video" && part.source === "youtube") {
+          expect(part.src, `video on a ${page.level} page`).toMatch(YOUTUBE_ID);
+        }
+      }
     }
   });
 });

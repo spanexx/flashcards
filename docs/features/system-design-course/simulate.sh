@@ -172,6 +172,64 @@ for (const { deck, cards } of deckRows) {
   }
 }
 
+const pages = bundle.pages ?? [];
+const packPages = pages.filter((page) => page.level === "pack");
+const deckPages = pages.filter((page) => page.level === "deck");
+const cardPages = pages.filter((page) => page.level === "card");
+const checkPageImage = (page, part, label) => {
+  if (part.type !== "image") return;
+  if (part.source !== "builtin") {
+    fail(`${label} uses a ${part.source} image, expected builtin`);
+    return;
+  }
+  if (!part.src.startsWith("/packs/system-design/images/")) {
+    fail(`${label} image ${part.src} is outside the pack`);
+    return;
+  }
+  const file = path.join(publicDir, part.src);
+  if (!fs.existsSync(file)) fail(`${label} names a missing image ${part.src}`);
+};
+
+if (packPages.length !== 1) fail(`bundle has ${packPages.length} pack pages, expected 1`);
+for (const page of packPages) {
+  if (!page.cover) fail("the pack page has no cover");
+  else checkPageImage(page, page.cover, "the pack page");
+  if (!(page.lead ?? "").trim()) fail("the pack page has no promise");
+}
+if (deckPages.length !== bundle.decks.length) {
+  fail(`bundle has ${deckPages.length} deck pages, expected ${bundle.decks.length}`);
+}
+for (const deck of bundle.decks) {
+  const page = deckPages.find((item) => item.deckId === deck.id);
+  if (!page) {
+    fail(`deck ${deck.id} has no page`);
+    continue;
+  }
+  // WHY: the Dictionary draws a deck page as a cover, never a body, so parts
+  // here would be data no learner can reach.
+  if ((page.parts ?? []).length > 0) fail(`deck ${deck.id} page carries an unrendered body`);
+  if (!page.cover) fail(`deck ${deck.id} page has no cover`);
+  else checkPageImage(page, page.cover, `deck ${deck.id} page`);
+  if (!(page.lead ?? "").trim()) fail(`deck ${deck.id} page has no promise`);
+}
+if (cardPages.length !== bundle.cards.length) {
+  fail(`bundle has ${cardPages.length} card pages, expected ${bundle.cards.length}`);
+}
+for (const page of cardPages) {
+  const label = `card page ${page.cardId}`;
+  if (!page.cardId) fail(`${label} has no card id`);
+  if ((page.parts ?? []).length === 0) fail(`${label} is empty`);
+  for (const part of page.parts ?? []) {
+    checkPageImage(page, part, label);
+    if (part.type === "video" && (part.source !== "youtube" || !/^[A-Za-z0-9_-]{11}$/.test(part.src))) {
+      fail(`${label} has a video that is not a YouTube id`);
+    }
+  }
+}
+console.log(
+  `\nDictionary pages: ${packPages.length} pack, ${deckPages.length} deck, ${cardPages.length} card`,
+);
+
 console.log(`\n${failures.length === 0 ? "PASS" : "FAIL"}: ${failures.length} problem(s)`);
 for (const message of failures) console.log(`  - ${message}`);
 process.exitCode = failures.length === 0 ? 0 : 1;
