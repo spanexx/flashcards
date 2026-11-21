@@ -15,7 +15,7 @@ const packsRoot = path.join(root, "packs");
 const targetRoot = path.join(root, "public", "packs");
 
 /** Only these folders are seeded. A stray folder never reaches a learner. */
-const seedPacks = ["browser-dev", "polish-from-scratch", "system-design"];
+const seedPacks = ["biuro", "browser-dev", "polish-from-scratch", "system-design"];
 
 /** Read one JSON file, or null when an optional file is absent. */
 async function readJson(file, optional = false) {
@@ -118,6 +118,10 @@ for (const slug of seedPacks) {
   const manifest = await readJson(path.join(source, "pack.json"));
   const prompts = await readJson(path.join(source, "prompts.json"), true);
   const authoredPages = await readJson(path.join(source, "pages.json"), true);
+  // WHY: A word lesson is authored beside the cards so one pack folder owns its
+  // whole lesson. A pack with no words keeps the exact bundle it had before.
+  const authoredWords = await readJson(path.join(source, "words.json"), true);
+  const words = authoredWords?.words ?? [];
 
   const decks = manifest.topics.map((topic) => ({
     id: topic,
@@ -165,6 +169,7 @@ for (const slug of seedPacks) {
     },
     decks,
     cards,
+    ...(words.length > 0 ? { words } : {}),
     ...(pages.length > 0 ? { pages } : {}),
   };
 

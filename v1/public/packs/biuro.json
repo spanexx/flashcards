@@ -1,0 +1,449 @@
+{
+  "schema": "flashcards.pack/v1",
+  "pack": {
+    "name": "biuro",
+    "version": "1.0.0",
+    "description": "One Polish word, biuro, taught as a complete worked word lesson: meaning, forms, reasons and use in a sentence.",
+    "language": "pl",
+    "sourceLanguage": "en",
+    "studyInstruction": "Read the English line, then use the Polish word in the sentence."
+  },
+  "decks": [
+    {
+      "id": "at-the-office",
+      "name": "At the office",
+      "level": "beginner"
+    }
+  ],
+  "cards": [
+    {
+      "key": "story-at-the-office",
+      "summary": "Pracuję w biurze",
+      "tags": [
+        "locative",
+        "place"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Pracuję w "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Pracuję w biurze.",
+          "lang": "pl"
+        },
+        {
+          "type": "text",
+          "text": "I work in the office.",
+          "role": "translation",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "biurze"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "The preposition w with a place asks for the locative case."
+      ],
+      "fullLine": "Pracuję w biurze.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The line says where someone works. After w, Polish uses a special ending on the place word.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "story",
+      "deckId": "at-the-office"
+    },
+    {
+      "key": "spelling-biuro",
+      "summary": "office",
+      "tags": [
+        "base form"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "office",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biuro",
+          "lang": "pl"
+        },
+        {
+          "type": "text",
+          "text": "office",
+          "role": "translation",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biuro"
+        ]
+      },
+      "hints": [
+        "A neuter noun ending in -o."
+      ],
+      "fullLine": "biuro",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Write the dictionary form of the word, the form you would look up.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "spelling",
+      "deckId": "at-the-office"
+    },
+    {
+      "key": "forms-biuro",
+      "summary": "biuro in the locative",
+      "tags": [
+        "locative"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "biuro → "
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biurze",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biurze"
+        ]
+      },
+      "hints": [
+        "The word's reason explains this change."
+      ],
+      "fullLine": "biuro → biurze",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Change the dictionary form to the one used after w. The word record explains why it changes.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "forms",
+      "deckId": "at-the-office"
+    },
+    {
+      "key": "dialogue-at-the-office",
+      "summary": "Gdzie pracujesz?",
+      "tags": [
+        "dialogue",
+        "locative"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Gdzie pracujesz?",
+          "lang": "pl"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "W biurze.",
+          "lang": "pl"
+        },
+        {
+          "type": "text",
+          "text": "In the office.",
+          "role": "translation",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "W biurze.",
+          "W biuro.",
+          "W biura."
+        ],
+        "correct": [
+          "W biurze."
+        ]
+      },
+      "hints": [
+        "The answer names a place after w."
+      ],
+      "fullLine": "W biurze.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Someone asks where you work. Pick the line that answers with the place word in its correct form.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "dialogue",
+      "deckId": "at-the-office"
+    },
+    {
+      "key": "matching-biuro",
+      "summary": "Match biuro",
+      "tags": [
+        "meaning",
+        "forms"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Match each form with its meaning.",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Every pair matches.",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "match"
+      },
+      "hints": [
+        "Meanings are in English."
+      ],
+      "fullLine": "Match each form with its meaning.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The left column holds Polish forms; the right column holds their exact English meanings.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "matching",
+      "deckId": "at-the-office"
+    }
+  ],
+  "words": [
+    {
+      "id": "biuro",
+      "lemma": "biuro",
+      "meaning": "office",
+      "lang": "pl",
+      "note": [
+        {
+          "type": "text",
+          "text": "biuro is a neuter noun. Its dictionary form is biuro; the ending changes with the case the sentence asks for.",
+          "lang": "en"
+        }
+      ],
+      "forms": [
+        {
+          "label": "genitive singular",
+          "to": "biura",
+          "meaning": "of the office",
+          "why": [
+            {
+              "type": "text",
+              "text": "The genitive replaces the final -o with -a. Use it after do (to) and after nie ma (there is no).",
+              "lang": "en"
+            }
+          ],
+          "use": "Nie ma ___ dziś."
+        },
+        {
+          "label": "dative singular",
+          "to": "biuru",
+          "meaning": "to the office",
+          "why": [
+            {
+              "type": "text",
+              "text": "The dative replaces -o with -u. It names the person or thing you help, give something to or speak to.",
+              "lang": "en"
+            }
+          ],
+          "use": "Pomagam ___."
+        },
+        {
+          "label": "locative singular",
+          "to": "biurze",
+          "meaning": "in the office",
+          "why": [
+            {
+              "type": "text",
+              "text": "After w meaning in, the final -o becomes -e and r softens to rz. This is the locative case.",
+              "lang": "en"
+            }
+          ],
+          "use": "Pracuję w ___."
+        },
+        {
+          "label": "instrumental singular",
+          "to": "biurem",
+          "meaning": "with the office",
+          "why": [
+            {
+              "type": "text",
+              "text": "The instrumental ending -em replaces -o. Use it for the means or the thing you are dealing with.",
+              "lang": "en"
+            }
+          ],
+          "use": "Zarządzam ___."
+        }
+      ],
+      "pairs": [
+        {
+          "target": "biuro",
+          "meaning": "office"
+        },
+        {
+          "target": "biura",
+          "meaning": "of the office"
+        },
+        {
+          "target": "biuru",
+          "meaning": "to the office"
+        },
+        {
+          "target": "biurze",
+          "meaning": "in the office"
+        },
+        {
+          "target": "biurem",
+          "meaning": "with the office"
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "level": "pack",
+      "title": "biuro — one Polish word, taught properly",
+      "lead": "biuro: the base word, four forms, why they change, and how to use it in a sentence.",
+      "parts": []
+    },
+    {
+      "level": "deck",
+      "deckId": "at-the-office",
+      "title": "At the office",
+      "lead": "Five short steps: story, spelling, forms, dialogue and matching.",
+      "parts": []
+    },
+    {
+      "level": "card",
+      "title": "The story card",
+      "lead": "biuro inside a real sentence",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Pracuję w biurze. means I work in the office. After w, the place word takes the locative ending: the -o of biuro becomes -e and r softens to rz.",
+          "lang": "en"
+        },
+        {
+          "type": "text",
+          "text": "Try the sentence with another place you know before you return to the card.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-biuro-at-the-office:521dca562a5f04c6"
+    },
+    {
+      "level": "card",
+      "title": "The spelling card",
+      "lead": "The dictionary form",
+      "parts": [
+        {
+          "type": "text",
+          "text": "biuro is written with one b, one u, one r and one o. It is neuter, so the article to match it is to, not ten or ta.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-biuro-at-the-office:50b64982b66e5e84"
+    },
+    {
+      "level": "card",
+      "title": "The forms card",
+      "lead": "How and why the ending changes",
+      "parts": [
+        {
+          "type": "text",
+          "text": "biura is the genitive: the -o becomes -a, and it follows do or nie ma. biuru is the dative: -o becomes -u when the office is the one you help or speak to.",
+          "lang": "en"
+        },
+        {
+          "type": "text",
+          "text": "biurze is the locative after w. biurem is the instrumental with -em, used for the thing you work with or manage.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-biuro-at-the-office:bf8e6896d8c5ba68"
+    },
+    {
+      "level": "card",
+      "title": "The dialogue card",
+      "lead": "Using the form in an answer",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Gdzie pracujesz? asks where you work. W biurze. is the natural short answer: the preposition w needs the locative form, not the dictionary form.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-biuro-at-the-office:752c2b3620104cfc"
+    },
+    {
+      "level": "card",
+      "title": "The matching card",
+      "lead": "Form and meaning, side by side",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The five pairs are biuro office, biura of the office, biuru to the office, biurze in the office and biurem with the office.",
+          "lang": "en"
+        },
+        {
+          "type": "text",
+          "text": "Knowing a form and knowing its meaning are two different things. This card checks both at once.",
+          "lang": "en"
+        }
+      ],
+      "cardId": "deck-biuro-at-the-office:0962f88656e3bc4f"
+    }
+  ]
+}

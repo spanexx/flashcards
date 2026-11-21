@@ -1,0 +1,88 @@
+biuro word pack - Grill Notes
+
+Status: Locked
+Date: 2026-11-21
+Source: the learner's correction after the UI-created pack, plus the word-lessons design pack
+
+What this feature is about
+
+- Ship a built-in pack that teaches one Polish word, biuro, as a complete worked example.
+- Keep it inside the locked word-lessons model: one word record, five stage cards, Dictionary pages.
+- Make the files a pattern another author can copy for a different word.
+- Do NOT add new word fields, new answer surfaces, new page levels or game mechanics.
+- Do NOT create the pack through the browser UI; it must be authored in v1/packs and seeded into the static export.
+
+Questions and answers locked so far
+
+1. "When I told you to create a pack, I wanted you to make it an inbuilt pack, not from the UI."
+Answer:
+- Author the pack in v1/packs/ and ship it through make-seed.mjs, not through the Create screen.
+- The UI-created pack was deleted from the browser; it was test residue with no cards.
+
+Why:
+- The learner wants a shipped example other authors can copy, not local browser data.
+- Source: learner correction, 2026-11-21.
+
+2. "Yes, delete it and I want you to add the dictionary, I want you to add the teaching word, I want you to add the full experience of learning a word, using it just check if you don't know about this, have to go online, find the full experience, I want it to be an example for writing other packs for other words."
+Answer:
+- Include a word record, its five stage cards, and pack/deck/card Dictionary pages.
+- Research the shape of a full word lesson before locking the content.
+- Treat the result as the exemplar for later single-word packs.
+
+Why:
+- The learner explicitly asked for research and for a reusable example.
+- Research used: Paul Nation's vocabulary principles (focus, accuracy, repetition, retrieval, elaboration) at https://tesolanz.org.nz/resources/paul-nation-the-principles-of-vocabulary-learning ; word-pair and sentence evidence at https://vocabularybuilding.org/single-words-or-sentences . Both support form + meaning + use with retrieval practice, which the five stages already provide.
+
+3. "New feature pack through the pipeline (Recommended)"
+Answer:
+- New branch and docs pack, GRILL -> pre-sim -> PRD-TRD -> IMPL -> implement -> post-sim -> drift review -> PR.
+
+Why:
+- Project ethics require every change to arrive through a feature pipeline or surgical change.
+- Source: docs/ethics/origin.md, feature-pipeline skill.
+
+4. "Research says a full word lesson covers form, meaning and use: the word's sound and shape, what it means, and how it behaves with other words (Nation, and the word-vs-sentence studies). Our locked word record only has lemma, meaning, forms with a why, and matching pairs. Should this exemplar pack stay inside that locked shape, or add new fields?"
+Answer:
+- Stay inside the locked shape.
+- Put all the richness into existing fields: the form labels and `why` text, the `use` sentences, the pairs, the card prompts and the Dictionary pages.
+
+Why:
+- Extending the schema would change the study screen, importer and Dictionary renderer, which is a different, larger pack.
+- The existing five stages already give recognition, production, form recall and matching.
+- Source: docs/features/word-lessons/PRD-TRD-word-lessons.md sections 2-5.
+
+5. "What should the built-in pack be called, and what should its one deck be called?"
+Answer:
+- Pack name: biuro. Folder: v1/packs/biuro/.
+- One deck: id at-the-office, label "At the office".
+
+Why:
+- The pack identity is the focus word, so later packs can be named the same way for other words.
+- Source: learner answer, 2026-11-21.
+
+6. "You asked for Dictionary pages too. Should the pack/deck/card pages use only text teaching parts, or also ship images or audio?"
+Answer:
+- Text only.
+- One pack page, one deck page and five card pages.
+
+Why:
+- No binary assets to keep in step; an author can copy the JSON for another word.
+- Source: learner answer, 2026-11-21.
+
+7. "How deep should the biuro lesson be?"
+Answer:
+- Focused: four forms (genitive biura, dative biuru, locative biurze, instrumental biurem), five pairs (the base word plus the four forms), five stage cards.
+
+Why:
+- Enough to show every stage and the form reasons without making the exemplar hard to copy.
+- Source: learner answer, 2026-11-21.
+
+8. "fast please and open pr when done"
+Answer:
+- Run the remaining pipeline phases without stopping for separate approvals; open the pull request at the end and send the human-review notification.
+
+Why:
+- The learner asked for speed and named the final action.
+- Source: learner message, 2026-11-21.
+
+No remaining open questions

@@ -1,0 +1,124 @@
+{
+  "cards": [
+    {
+      "key": "story-at-the-office",
+      "summary": "Pracuję w biurze",
+      "topics": ["at-the-office"],
+      "tags": ["locative", "place"],
+      "prompt": [
+        { "type": "text", "text": "Pracuję w " },
+        { "type": "blank", "id": "b1" },
+        { "type": "text", "text": "." }
+      ],
+      "answer": [
+        { "type": "text", "text": "Pracuję w biurze.", "lang": "pl" },
+        { "type": "text", "text": "I work in the office.", "role": "translation", "lang": "en" }
+      ],
+      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["biurze"] }] },
+      "hints": ["The preposition w with a place asks for the locative case."],
+      "fullLine": "Pracuję w biurze.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The line says where someone works. After w, Polish uses a special ending on the place word.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "story"
+    },
+    {
+      "key": "spelling-biuro",
+      "summary": "office",
+      "topics": ["at-the-office"],
+      "tags": ["base form"],
+      "prompt": [{ "type": "text", "text": "office", "lang": "en" }],
+      "answer": [
+        { "type": "text", "text": "biuro", "lang": "pl" },
+        { "type": "text", "text": "office", "role": "translation", "lang": "en" }
+      ],
+      "answerDef": { "mode": "type", "expected": ["biuro"] },
+      "hints": ["A neuter noun ending in -o."],
+      "fullLine": "biuro",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Write the dictionary form of the word, the form you would look up.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "spelling"
+    },
+    {
+      "key": "forms-biuro",
+      "summary": "biuro in the locative",
+      "topics": ["at-the-office"],
+      "tags": ["locative"],
+      "prompt": [
+        { "type": "text", "text": "biuro → " },
+        { "type": "blank", "id": "b1" }
+      ],
+      "answer": [{ "type": "text", "text": "biurze", "lang": "pl" }],
+      "answerDef": { "mode": "type", "expected": ["biurze"] },
+      "hints": ["The word's reason explains this change."],
+      "fullLine": "biuro → biurze",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Change the dictionary form to the one used after w. The word record explains why it changes.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "forms"
+    },
+    {
+      "key": "dialogue-at-the-office",
+      "summary": "Gdzie pracujesz?",
+      "topics": ["at-the-office"],
+      "tags": ["dialogue", "locative"],
+      "prompt": [{ "type": "text", "text": "Gdzie pracujesz?", "lang": "pl" }],
+      "answer": [
+        { "type": "text", "text": "W biurze.", "lang": "pl" },
+        { "type": "text", "text": "In the office.", "role": "translation", "lang": "en" }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": ["W biurze.", "W biuro.", "W biura."],
+        "correct": ["W biurze."]
+      },
+      "hints": ["The answer names a place after w."],
+      "fullLine": "W biurze.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Someone asks where you work. Pick the line that answers with the place word in its correct form.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "dialogue"
+    },
+    {
+      "key": "matching-biuro",
+      "summary": "Match biuro",
+      "topics": ["at-the-office"],
+      "tags": ["meaning", "forms"],
+      "prompt": [{ "type": "text", "text": "Match each form with its meaning.", "lang": "en" }],
+      "answer": [{ "type": "text", "text": "Every pair matches.", "lang": "en" }],
+      "answerDef": { "mode": "match" },
+      "hints": ["Meanings are in English."],
+      "fullLine": "Match each form with its meaning.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The left column holds Polish forms; the right column holds their exact English meanings.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "matching"
+    }
+  ]
+}

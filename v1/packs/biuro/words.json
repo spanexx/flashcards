@@ -1,0 +1,78 @@
+{
+  "words": [
+    {
+      "id": "biuro",
+      "lemma": "biuro",
+      "meaning": "office",
+      "lang": "pl",
+      "note": [
+        {
+          "type": "text",
+          "text": "biuro is a neuter noun. Its dictionary form is biuro; the ending changes with the case the sentence asks for.",
+          "lang": "en"
+        }
+      ],
+      "forms": [
+        {
+          "label": "genitive singular",
+          "to": "biura",
+          "meaning": "of the office",
+          "why": [
+            {
+              "type": "text",
+              "text": "The genitive replaces the final -o with -a. Use it after do (to) and after nie ma (there is no).",
+              "lang": "en"
+            }
+          ],
+          "use": "Nie ma ___ dziś."
+        },
+        {
+          "label": "dative singular",
+          "to": "biuru",
+          "meaning": "to the office",
+          "why": [
+            {
+              "type": "text",
+              "text": "The dative replaces -o with -u. It names the person or thing you help, give something to or speak to.",
+              "lang": "en"
+            }
+          ],
+          "use": "Pomagam ___."
+        },
+        {
+          "label": "locative singular",
+          "to": "biurze",
+          "meaning": "in the office",
+          "why": [
+            {
+              "type": "text",
+              "text": "After w meaning in, the final -o becomes -e and r softens to rz. This is the locative case.",
+              "lang": "en"
+            }
+          ],
+          "use": "Pracuję w ___."
+        },
+        {
+          "label": "instrumental singular",
+          "to": "biurem",
+          "meaning": "with the office",
+          "why": [
+            {
+              "type": "text",
+              "text": "The instrumental ending -em replaces -o. Use it for the means or the thing you are dealing with.",
+              "lang": "en"
+            }
+          ],
+          "use": "Zarządzam ___."
+        }
+      ],
+      "pairs": [
+        { "target": "biuro", "meaning": "office" },
+        { "target": "biura", "meaning": "of the office" },
+        { "target": "biuru", "meaning": "to the office" },
+        { "target": "biurze", "meaning": "in the office" },
+        { "target": "biurem", "meaning": "with the office" }
+      ]
+    }
+  ]
+}

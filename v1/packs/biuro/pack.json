@@ -1,0 +1,13 @@
+{
+  "name": "biuro",
+  "version": "1.0.0",
+  "author": "flashcards v1 prototype",
+  "description": "One Polish word, biuro, taught as a complete worked word lesson: meaning, forms, reasons and use in a sentence.",
+  "language": "pl",
+  "sourceLanguage": "en",
+  "coreRange": "*",
+  "studyInstruction": "Read the English line, then use the Polish word in the sentence.",
+  "topics": ["at-the-office"],
+  "topicLabels": { "at-the-office": "At the office" },
+  "topicLevels": { "at-the-office": "beginner" }
+}
