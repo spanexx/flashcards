@@ -106,11 +106,13 @@ A7. Yes. `AnswerMode` gains `match`. The pairs are not copied onto the card:
 Q8. Is Forms a new answer mode?
 A8. No. A Forms card is an ordinary `type` card whose prompt shows
     `base -> blank` and whose help is the form's `why`. The learner types the
-    changed form, often inside the form's fresh `use` sentence. This reuses the
-    existing judging, evidence and near-miss rules, and it keeps the only new
-    interaction surface in the app to Matching.
+    changed form in the card's own sentence. The form's `use` text stays in the
+    word record as authoring material and is not rendered as a second blank:
+    printing it would show the changed form before the learner has tried. This
+    reuses the existing judging, evidence and near-miss rules, and it keeps the
+    only new interaction surface in the app to Matching.
     [agent decision, from the spec's "apply the changed form in a fresh
-    sentence"]
+    sentence"; narrowed by the no-leak rule]
 
 Q9. How are the dictionary and the teaching layer used?
 A9. In one fixed order, in one resolver:

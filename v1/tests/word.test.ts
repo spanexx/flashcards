@@ -188,4 +188,22 @@ describe("wordSchema", () => {
     expect(parsed.forms).toEqual([]);
     expect(parsed.pairs).toEqual([]);
   });
+
+  it("refuses an empty lemma or meaning", () => {
+    expect(wordSchema.safeParse({ ...makeWord(), lemma: "" }).success).toBe(false);
+    expect(wordSchema.safeParse({ ...makeWord(), meaning: "" }).success).toBe(false);
+  });
+
+  it("refuses a form with an empty changed word, label or meaning", () => {
+    const form = makeWord().forms[0];
+    expect(wordSchema.safeParse({ ...makeWord(), forms: [{ ...form, to: "" }] }).success).toBe(false);
+    expect(wordSchema.safeParse({ ...makeWord(), forms: [{ ...form, label: "" }] }).success).toBe(false);
+    expect(wordSchema.safeParse({ ...makeWord(), forms: [{ ...form, meaning: "" }] }).success).toBe(false);
+  });
+
+  it("refuses a matching pair with an empty side", () => {
+    const pairs = makeWord().pairs;
+    expect(wordSchema.safeParse({ ...makeWord(), pairs: [{ ...pairs[0], target: "" }] }).success).toBe(false);
+    expect(wordSchema.safeParse({ ...makeWord(), pairs: [{ ...pairs[0], meaning: "" }] }).success).toBe(false);
+  });
 });

@@ -77,9 +77,12 @@ as `"got/total"`; the judge turns all pairs into `got_it`, some into `nearly`,
 none into `no`, and a malformed or impossible count into `unjudged`. After the
 answer the board freezes in place rather than unmounting, so the learner can
 still see what they matched. There is no typing input, no Enter-to-check hint
-and no I-don't-know or Complete aid on a matching card.
+and no Complete aid on a matching card. The I-don't-know control is present:
+it sends `0/total`, so a learner who gives up on an empty board gets `No`
+instead of being stuck behind a disabled Answer button.
 
 Evidence: `tests/judge.test.ts` (five matching cases including hint cap),
+`tests/study-experience.test.ts` (the give-up answer judges as No),
 `tests/word-check.test.ts` (matching needs at least two distinct pairs).
 
 ## 7. Help comes from one place, in one order
@@ -152,8 +155,10 @@ changing the card id or its evidence"), full suite green.
 ## Reconciliation
 
 The one substantive difference is scene 4: the `use` sentence is not a second
-rendered exercise. That is the no-leak rule the implementation chose, and the
-GRILL, PRD-TRD, IMPL and pre-impl script were all corrected to match. Everything
-else follows the design script. The word layer is optional at the pack and card
-level; it changes no existing answer surface except the new matching board, and
-it leaves every non-language pack as it was.
+rendered exercise. That is the no-leak rule. At the first review the pre-impl
+script and GRILL Q8 still described the old two-blank version; both have now
+been corrected, so the design script and the shipped behavior agree. A second
+gap from that review — the matching "No" outcome being unreachable — was fixed
+by adding the give-up control described in scene 6. The word layer is optional
+at the pack and card level; it changes no existing answer surface except the
+new matching board, and it leaves every non-language pack as it was.

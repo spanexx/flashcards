@@ -71,7 +71,11 @@ Work:
 Proof:
 - `npm test -- match plan`
 - `npm run typecheck`
-- Browser check at 390, 820 and 1416 wide: two columns readable, no drag needed.
+- Responsive rule: two tap columns stay at every width; the narrow rule only
+  reduces padding and font size. A real browser run at 390, 820 and 1416 has
+  **not** been performed in this lane, so the evidence here is the stylesheet
+  and the unit tests, not a viewport screenshot. This was recorded as missing
+  by the post-implementation review rather than claimed as done.
 
 ## Phase C — Creation brief and prompt lanes
 
@@ -134,3 +138,12 @@ Proof:
 
 One commit per phase. Each commit message names the phase and the pack. The
 docs land with Phase A so the code trail is never ahead of its decision.
+
+## Drift from the post-implementation review
+
+The fresh-eyes review of 2026-11-21 found five gaps; all were resolved the same
+day and are indexed in `docs/drift.md` as D-43 to D-47. D-43 restored the
+matching give-up path so "No" is reachable in the UI. D-44 corrected the
+pre-impl script and GRILL Q8 about the Forms `use` text. D-45 and D-46 closed
+the flat-import and schema-invariant proof gaps. D-47 records honestly that no
+390/820/1416 browser run was performed.

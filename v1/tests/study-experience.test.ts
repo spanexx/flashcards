@@ -8,10 +8,12 @@ import { describe, expect, it } from "vitest";
 import {
   LISTEN_INSTRUCTION,
   listenPrompt,
+  matchGiveUpAnswer,
   shouldAutoHint,
   studyCardInstruction,
   studyModeLabel,
 } from "@/lib/client/study-view";
+import { judgeCard } from "@/lib/core/judge";
 import type { Card } from "@/lib/shared/types";
 
 const listeningCard: Card = {
@@ -125,5 +127,18 @@ describe("study view decisions", () => {
     expect(shouldAutoHint({ approved: true, outcome: "got_it", alreadyAutoHinted: false })).toBe(false);
     expect(shouldAutoHint({ approved: false, outcome: "no", alreadyAutoHinted: false })).toBe(false);
     expect(shouldAutoHint({ approved: true, outcome: "no", alreadyAutoHinted: true })).toBe(false);
+  });
+
+  it("gives a matching board a real give-up path that judges as No", () => {
+    const answer = matchGiveUpAnswer(3);
+    expect(answer).toBe("0/3");
+    expect(judgeCard({ mode: "match" }, { answer }, 0, false).cardOutcome).toBe("no");
+  });
+
+  it("labels matching as its own mode", () => {
+    expect(studyModeLabel("match")).toBe("Match the pairs");
+    expect(studyCardInstruction({ answerDef: { mode: "match" } }, { language: "pl", sourceLanguage: "en" })).toBe(
+      "Match each Polish form with its English meaning.",
+    );
   });
 });

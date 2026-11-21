@@ -61,6 +61,15 @@ export function studyModeLabel(mode: AnswerMode): string {
   return "Choose the meaning";
 }
 
+/**
+ * What a learner who gives up on a matching board sends. The judge reads this
+ * count and records `no`; without it there is no way to answer a board with no
+ * locked pairs, which the lesson design promises.
+ */
+export function matchGiveUpAnswer(total: number): string {
+  return `0/${total}`;
+}
+
 /** What the listen control should say, in the pack language when it is known. */
 export function listenPrompt(card: Card): { text: string; lang?: string } {
   const spoken = card.prompt.find((part): part is Extract<typeof part, { type: "speak" }> => part.type === "speak");

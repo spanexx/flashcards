@@ -31,9 +31,9 @@ say "The learner types 'biurze'."
 say "Answer: correct. Evidence row written once, cardId is the story card."
 
 line "4. Forms stage"
-say "The card shows: 'biuro -> ___'"
-say "Then the why: 'After w, neuter -o becomes -e.'"
-say "Then the fresh sentence: 'Jestem w ___.'"
+say "The card shows: 'biuro -> ___' — the lemma and a blank, never the changed form."
+say "The why is shown by the teaching layer: 'After w, neuter -o becomes -e.'"
+say "The card's own sentence is the one exercise. The word's 'use' text is authoring material, not a second rendered blank: printing it would give the answer away."
 say "The learner types 'biurze'."
 say "The existing type judge runs. Mode is still 'type', not a new surface."
 

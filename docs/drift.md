@@ -1,5 +1,5 @@
 # Drift Log
-**Last updated:** 2026-10-29  **Open:** 0  **Awaiting:** 0  **Resolved:** 42  **Critical/High:** 0
+**Last updated:** 2026-11-21  **Open:** 0  **Awaiting:** 0  **Resolved:** 47  **Critical/High:** 0
 
 ## Open
 
@@ -17,6 +17,51 @@ the IMPL reconcile section, is in progress._
 ---
 
 ## Resolved
+
+- **D-43** (High, 2026-11-21, reporter: fresh-eyes feature-pipeline review of word-lessons) — The Matching card's "nothing matched before giving up is No" outcome existed in the judge and its unit test but had no path from the study screen, so a learner with an empty board could not answer the card at all.
+  - Doc claim: "nothing matched before the learner gives up is `no`" (`docs/features/word-lessons/GRILL-word-lessons.txt:56-59`); "Press Check with none matched: outcome no." (`docs/features/word-lessons/simulate-pre.sh:53`).
+  - Code reality: the Answer button was gated on `hasAnswerAttempt` and the aids block, including "I don't know", was hidden for match (`v1/src/app/study/StudyCard.tsx` before fix; give-up control now at `:443-456`), and the board only wrote a count after a pair locked (`v1/src/app/study/MatchBoard.tsx:64`).
+  - Why matters: a locked learner-facing outcome was unreachable, and the promise was only true in a unit test.
+  - Owner: word-lessons
+  - To fix: fix code — `matchGiveUpAnswer(total)` (`v1/src/lib/client/study-view.ts:69`) sends `0/total` from a give-up button on match cards; the judge already maps it to `no`. `simulate-post.md` scene 6 now records the reachable path.
+  - Verified by: "gives a matching board a real give-up path that judges as No" (`v1/tests/study-experience.test.ts:132-135`); full suite 89 files / 1088 tests; `npm run build` with `check-pwa: passed`; typecheck and lint clean.
+  - Related: D-44.
+
+- **D-44** (Medium, 2026-11-21, reporter: fresh-eyes feature-pipeline review of word-lessons) — The post-implementation simulation claimed every design doc had been reconciled with the no-leak Forms rule, but the pre-impl script and GRILL Q8 still described the word's `use` text as a second rendered exercise.
+  - Doc claim: "the GRILL, PRD-TRD, IMPL and pre-impl script were all corrected to match" (`docs/features/word-lessons/simulate-post.md:154-157` before fix); "Then the fresh sentence: 'Jestem w ___.'" (`docs/features/word-lessons/simulate-pre.sh:33-37` before fix); "often inside the form's fresh `use` sentence" (`docs/features/word-lessons/GRILL-word-lessons.txt:106-113` before fix).
+  - Code reality: `WordLine` never reads `form.use` and `StudyCard` shows one exercise (`v1/src/app/study/WordLine.tsx:19-37`; `v1/src/app/study/StudyCard.tsx:350-366`), which is the correct no-leak behavior. The PRD and IMPL already described it; only the two cited docs lagged.
+  - Why matters: the GRILL is the contract a later agent checks first, so a stale sentence there would authorize an answer-leaking second blank.
+  - Owner: word-lessons
+  - To fix: fix docs — scene 4 of the pre-impl script and GRILL Q8 now say the `use` text is authoring material and not rendered; the post-impl reconciliation now names exactly which two docs were corrected.
+  - Verified by: re-read of all four doc files; `npm run check:drift` green with no open entries.
+  - Related: D-43.
+
+- **D-45** (Medium, 2026-11-21, reporter: fresh-eyes feature-pipeline review of word-lessons) — The flat-import lesson guard was wired into `core/import.ts` but no test in `tests/import.test.ts` exercised it, so that lane's all-or-nothing promise rested on the other three lanes.
+  - Doc claim: "The ten invariants above, in the pack bundle path and the pack loader" (`docs/features/word-lessons/PRD-TRD-word-lessons.md:193-197`); IMPL Phase D lists `v1/tests/import.test.ts` (`docs/features/word-lessons/IMPL-word-lessons.md:102-112`).
+  - Code reality: `lessonIssues(sources, [])` ran in `v1/src/lib/core/import.ts` but `tests/import.test.ts` had no word lesson case.
+  - Why matters: a future refactor could drop the flat-lane guard without any test going red.
+  - Owner: word-lessons
+  - To fix: fix tests — two cases at `v1/tests/import.test.ts:107-142` prove a word link and a match card are refused in a flat batch, which cannot define words.
+  - Verified by: `npx vitest run tests/import.test.ts` (10 tests); full suite 89 files / 1088 tests.
+  - Related: D-46.
+
+- **D-46** (Medium, 2026-11-21, reporter: fresh-eyes feature-pipeline review of word-lessons) — PRD §10 promised one fixture with each of the ten defects refused with its named sentence, but schema-level invariants (empty lemma, meaning, form fields and pair sides) lacked direct tests and no single ten-defect fixture existed.
+  - Doc claim: "The same fixture with each of the ten defects is refused with the named sentence and nothing written." (`docs/features/word-lessons/PRD-TRD-word-lessons.md:218-225`).
+  - Code reality: `wordSchema` enforces every non-empty field (`v1/src/lib/core/schema.ts:164-191`), but `tests/word.test.ts` only tested a bad id and an empty `why`; `tests/word-check.test.ts` covered the link and stage invariants.
+  - Why matters: the strongest proof in the PRD was stronger than the evidence, so a regression in a schema message would not be caught.
+  - Owner: word-lessons
+  - To fix: fix tests — explicit schema cases for empty lemma/meaning, empty form label/to/meaning and empty pair sides (`v1/tests/word.test.ts:192-209`), alongside the existing ten `lessonIssues` cases.
+  - Verified by: `npx vitest run tests/word.test.ts` (19 tests) and `tests/word-check.test.ts` (16 tests); full suite 89 files / 1088 tests.
+  - Related: D-45.
+
+- **D-47** (Low, 2026-11-21, reporter: fresh-eyes feature-pipeline review of word-lessons) — IMPL Phase B claimed a browser check at 390, 820 and 1416 wide, but no viewport run was recorded; only CSS and unit tests existed.
+  - Doc claim: "Browser check at 390, 820 and 1416 wide: two columns readable, no drag needed." (`docs/features/word-lessons/IMPL-word-lessons.md:74` before fix).
+  - Code reality: the stylesheet keeps two columns and only reduces padding below 560px (`v1/src/app/globals.css` match-board rules), but no browser run or screenshot was produced.
+  - Why matters: claiming a check that did not happen makes the plan look proven when the proof is static.
+  - Owner: word-lessons
+  - To fix: fix docs — the IMPL proof now states the narrow rule and records that a real viewport run was not performed, rather than claiming one.
+  - Verified by: re-read of the IMPL proof; full suite and build green; no open entries in `docs/drift.md`.
+  - Related: none.
 
 - **D-42** (High, 2026-10-29, reporter: the learner, who opened the system-design course in the Dictionary and found every page empty) — The built-in system-design course shipped cards but no Dictionary pages, so its 28 images and 24 videos could only be reached inside a study session and every Dictionary page for the pack was blank.
   - Doc claim: "a shipped page arrives through the same pack bundle import and is written by `writeShippedPage`" (`docs/features/course-dictionary/PRD-TRD-course-dictionary.md:272-274`), so a built-in course was expected to bring its pages with its bundle.

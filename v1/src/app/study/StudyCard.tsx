@@ -24,7 +24,12 @@ import { playCue } from "@/lib/client/sound";
 import { answerCompletion } from "@/lib/core/answer-completion";
 import { hasAnswerAttempt } from "@/lib/core/answer-attempt";
 import { speak, speakLines, speechSupported } from "@/lib/client/speech";
-import { LISTEN_INSTRUCTION, listenPrompt, studyModeLabel } from "@/lib/client/study-view";
+import {
+  LISTEN_INSTRUCTION,
+  listenPrompt,
+  matchGiveUpAnswer,
+  studyModeLabel,
+} from "@/lib/client/study-view";
 import { OUTCOME_LABELS, OUTCOME_MEANINGS } from "@/lib/core/outcome";
 import type { AnswerResult, Card, CardPart, Outcome, StudyLevel, Word } from "@/lib/shared/types";
 import CardSide from "./CardSide";
@@ -426,6 +431,24 @@ export default function StudyCard({
                 className="study-link study-dont-know"
                 type="button"
                 onClick={() => onSubmit({})}
+                disabled={busy}
+                title="Reveals the answer and records this card as missed."
+              >
+                I don&apos;t know
+              </button>
+            </div>
+          ) : null}
+          {/* WHY: A matching board with no locked pairs is still an answer the
+              learner may choose to give. Sending 0/total lets the judge record
+              No, as the lesson design promises, instead of leaving the card
+              stuck with a disabled Answer button and no way out. */}
+          {mode === "match" && word ? (
+            <div className="study-answer-aids">
+              <span className="study-complete" />
+              <button
+                className="study-link study-dont-know"
+                type="button"
+                onClick={() => onSubmit({ answer: matchGiveUpAnswer(word.pairs.length) })}
                 disabled={busy}
                 title="Reveals the answer and records this card as missed."
               >
