@@ -89,6 +89,7 @@ export async function readPackFolder(folder: string): Promise<PackRecord> {
     };
 
     let cardSources: PackRecord["cards"] = [];
+    let words: PackRecord["words"] = [];
     const cardsRaw = await readOptionalJson(path.join(folder, "cards.json"));
     if (cardsRaw !== null) {
       const cardsFile = packCardsSchema.safeParse(cardsRaw);
@@ -100,6 +101,7 @@ export async function readPackFolder(folder: string): Promise<PackRecord> {
           `cards.json is wrong at ${first.path.join(".") || "the top"}: ${first.message}`,
         );
       }
+      words = cardsFile.data.words;
 
       const declaredTopics = new Set(data.topics);
       for (let index = 0; index < cardsFile.data.cards.length; index += 1) {
@@ -142,7 +144,7 @@ export async function readPackFolder(folder: string): Promise<PackRecord> {
       prompts = promptsFile.data;
     }
 
-    return { ...base, cards: cardSources, prompts };
+    return { ...base, cards: cardSources, words, prompts };
   } catch (error) {
     return broken(
       folder,

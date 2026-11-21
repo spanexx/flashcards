@@ -1,0 +1,182 @@
+GRILL: Word lessons
+Status: Locked
+Date: 2026-11-21
+Pack: word-lessons
+Authority: the learner supplied a full feature spec on 2026-11-21 and answered
+three blocking questions the same day. Every other rule below is an agent
+decision that follows from that spec and from the existing locked packs
+(teaching-layers, course-dictionary, creation-control, language-prompt-control).
+
+Source spec, quoted from the learner:
+- "We are upgrading our flashcard system specifically for language learning"
+- "We are not copying the Loopworks game mechanics (no drone, board, or puzzle
+  gates). Instead, we are adopting its pedagogical structure: teaching one focus
+  word in depth - showing how it inflects/changes across contexts, why it
+  changes, and testing it through progressive stages including matching."
+- "This word layer must remain optional at the pack/card level so non-language
+  decks (e.g., System Design, Browser Dev) continue working unchanged."
+- "Do not reinvent dictionary lookups or pedagogical explanations. Integrate
+  directly with our existing dictionary and teaching layer"
+- "Language packs can define structured Word entries containing: base word /
+  lemma and core meaning; inflected/changed forms; explicit explanation of what
+  changed and why; matching pairs"
+- "Extend the Card model with optional fields linking a card to a wordId and a
+  stage (story / cloze, spelling / type, forms, dialogue / picks, matching)"
+- "Forms Stage: Explicitly presents the transformation (base -> changed form),
+  explains why the change happens (using the teaching layer), and has the
+  learner apply the changed form in a fresh sentence. (Skip automatically if a
+  word has no inflections.)"
+- "Matching Mode: A dedicated flashcard interaction allowing learners to pair
+  target-language words/forms with their exact meanings."
+- "Add an optional focusWord field to the pack/lesson creation brief (and
+  pre-fill or validate against the dictionary where available)."
+- "Update both the provider generation prompt and the copy-paste chat prompt so
+  the LLM builds a cohesive single-word lesson rather than disconnected lines."
+- "Validate incoming word lessons strictly ... reject it cleanly with a plain,
+  human-readable error message instead of rendering a broken or empty card."
+
+Q1. Where does a Word record live?
+A1. Inside the pack bundle, as a `words` array beside `cards`. A word is
+    identified by `id`, scoped to its pack. Reasons: import is all-or-nothing,
+    so a lesson travels as one file; the loader already reads one bundle per
+    pack; a second file would need a second loader, a second error path and a
+    partial-state rule. A cards fragment may add cards that link to a word that
+    already exists in the target pack, but may not define words itself.
+    [learner answer, 2026-11-21]
+
+Q2. Do `wordId` and `stage` change a card's identity hash?
+A2. No. `canonicalContent` stays exactly as it is, so adding a word link to a
+    shipped card never resets that card's evidence. `wordId` and `stage` are
+    context, not content: they never change what the learner is asked or judged
+    on. The collision risk is nil in practice because a story card and a forms
+    card carry different prompt and answer text. The rule is written into the
+    WHY comment on `canonicalContent` so a later change cannot undo it silently.
+    [learner answer, 2026-11-21]
+
+Q3. Does a Matching card record one answer or one answer per pair?
+A3. One answer for the whole card. Every pair must be right for `got_it`; a
+    partly finished or partly wrong board is `nearly`; nothing matched before
+    the learner gives up is `no`. This keeps the evidence model unchanged, needs
+    no new table, and means progress per word is derived from the same rows as
+    every other card.
+    [learner answer, 2026-11-21]
+
+Q4. Is the word layer required for a pack?
+A4. No. `words` is optional and defaults to `[]`; `wordId` and `stage` are
+    optional on every card. A pack with no words behaves exactly as it does
+    today. A card with no `wordId` renders exactly as it does today. The
+    System Design and Browser Dev packs are untouched and are the regression
+    proof.
+    [spec: "must remain optional at the pack/card level"]
+
+Q5. What exactly is in a Word?
+A5. `id` (stable, lowercase, unique in the pack), `lemma` (the base form),
+    `meaning` (one plain line in the pack's source language), optional `lang`,
+    `forms` (each with `label`, `to`, `meaning`, `why`, optional `use`), `pairs`
+    (each with `target` and `meaning`), and optional `note`. Every meaning is in
+    the pack's source language, never hardcoded English: the learner may be a
+    Polish speaker learning English, and the model must serve that pair too.
+    `why` is a `TeachingPart[]`, not a string, so the existing teaching layer's
+    text, image and video parts work unchanged and the app does not grow a
+    second explanation format.
+    [agent decision, following the spec's four required pieces]
+    [learner clarification 2026-11-21: "by english word i meant the language user
+    is learning from not hard coded"]
+
+Q6. What is a `stage`, and what does each stage permit?
+A6. `stage` is one of `story`, `spelling`, `forms`, `dialogue`, `matching`. The
+    stage fixes the answer mode, so a mislabelled card is refused instead of
+    rendering something surprising:
+      story    -> cloze
+      spelling -> type
+      forms    -> type
+      dialogue -> picks
+      matching -> match
+    `wordId` and `stage` travel together: a card may have both or neither.
+    A stage without a word is a broken link and is refused.
+    [agent decision, from the spec's stage-to-mode list]
+
+Q7. Is `matching` a new answer mode?
+A7. Yes. `AnswerMode` gains `match`. The pairs are not copied onto the card:
+    they come from the linked Word at render time, so there is one source of
+    truth and a pack cannot drift. A `match` card without a `wordId` is refused.
+    [agent decision; the alternative, duplicating pairs per card, repeats the
+    same data five times and drifts]
+
+Q8. Is Forms a new answer mode?
+A8. No. A Forms card is an ordinary `type` card whose prompt shows
+    `base -> blank` and whose help is the form's `why`. The learner types the
+    changed form, often inside the form's fresh `use` sentence. This reuses the
+    existing judging, evidence and near-miss rules, and it keeps the only new
+    interaction surface in the app to Matching.
+    [agent decision, from the spec's "apply the changed form in a fresh
+    sentence"]
+
+Q9. How are the dictionary and the teaching layer used?
+A9. In one fixed order, in one resolver:
+      1. the card's own `teaching`, when the pack wrote it;
+      2. the Word's `note` and the relevant form's `why`;
+      3. the card's Dictionary page parts.
+    The first non-empty source wins for the pre-answer help, and the page stays
+    reachable as the deep material. No new `PageLevel` is added. The Dictionary
+    page id already names the card, and a word's material belongs in the Word
+    record because it must validate, travel in the bundle and reach the prompt.
+    Adding a `word` page level would touch the page store, router, backup, seed,
+    export and the Dictionary UI for no gain in this cut.
+    [agent decision; the spec asks for integration, not a new page level]
+
+Q10. How does the learner actually walk the five stages?
+A10. Cards of the same word stay together and run in stage order. The plan
+     orders them: `story, spelling, forms, dialogue, matching`, and a word's
+     cards are adjacent when more than one is selected. A stage the pack did not
+     write is simply absent. Forms is skipped automatically when the word has no
+     forms. The runner never invents a card that is not in the library, so the
+     offer count and the plan's promise stay true.
+     [agent decision, from the spec's "intentional sequence"]
+
+Q11. What does the learner see above a word card?
+A11. One compact word line: `lemma -> current form` with the form label, and
+     the form's `why` as help. It appears only when the card has a `wordId` and
+     the word has a form for that card, so a plain card is unchanged. On the
+     Matching card the same line names the word and the line count, never the
+     pairing.
+     [agent decision]
+
+Q12. What does `focusWord` do in the creation brief?
+A12. It is one optional text field on the brief, trimmed like every other text
+     field. It reaches both prompt lanes as a hard instruction: build one
+     lesson around this word. It also reaches the pack's `words` entry as the
+     expected `lemma`. Validation is against the learner's installed packs only,
+     because the app has no global lexicon: if an installed pack already has a
+     word with that lemma, the Create screen offers it as a suggestion and shows
+     its language. It never blocks a word the library has not seen.
+     [agent decision; the spec says "validate against the dictionary where
+     available", and the only dictionary the app owns is the learner's pages]
+
+Q13. What does a word-lesson prompt ask for?
+A13. Both lanes ask for one cohesive lesson, not five unrelated lines: the
+     lemma, its meaning, its forms with a plain reason for each change, the
+     matching pairs, and exactly the stage cards the word supports. The JSON
+     shape includes `words` beside `cards`, and every generated card names its
+     `wordId` and `stage`. The prompt states the stage-to-mode rule so the
+     provider cannot produce a `story` card with `picks`.
+     [spec: "cohesive single-word lesson rather than disconnected lines"]
+
+Q14. What makes an imported word lesson invalid?
+A14. Refused, all-or-nothing, with a plain sentence naming the card and the
+     field: a duplicate or malformed word id; a card naming a word the pack does
+     not define; `wordId` without `stage` or `stage` without `wordId`; a stage
+     whose answer mode is wrong; a `forms` card on a word with no forms; a
+     `matching` card on a word with fewer than two distinct pairs; a form with a
+     missing `to`, `meaning` or `why`; a pair with an empty side; two pairs with the
+     same target or the same meaning. The message reads like
+     `Card 3 ("Piję kawę"): stage "forms" needs at least one form on word
+     "kawa".`
+     [spec: "reject it cleanly with a plain, human-readable error message"]
+
+Q15. What is explicitly out of scope?
+A15. No drone, board, puzzle gate or level-solve mechanic. No global dictionary
+     service. No new page level. No per-pair evidence. No word-level progress
+     table; word progress is read from its cards' rows. No change to the
+     identity hash. No change to any non-language pack.
+     [spec: "We are not copying the Loopworks game mechanics"]
