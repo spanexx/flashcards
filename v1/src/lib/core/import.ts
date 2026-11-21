@@ -16,6 +16,7 @@ import {
   simpleCardToSource,
 } from "@/lib/core/card";
 import { cardSourceSchema, issuesFromZod, type ValidationIssue } from "@/lib/core/schema";
+import { lessonIssues } from "@/lib/core/word-check";
 import { parseJsonLoose } from "@/lib/core/json-repair";
 
 /** The import result: either the cards to add or every problem found. */
@@ -131,6 +132,11 @@ export function importCards(
   const read = parseCardSources(text);
   if (!read.ok) return { ok: false, issues: read.issues };
   const sources = read.sources;
+
+  // WHY: a flat batch cannot define words, so any word link in it points at
+  // nothing. The bundle lane is the one place a lesson can arrive whole.
+  const lesson = lessonIssues(sources, []);
+  if (lesson.length > 0) return { ok: false, issues: lesson };
 
   const known = new Set(existingIds);
   const cards: Card[] = [];

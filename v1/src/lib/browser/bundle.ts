@@ -20,6 +20,7 @@ import { buildCard, deckCardId, hardRuleIssues } from "@/lib/core/card";
 import { parseJsonLoose, type RepairKind } from "@/lib/core/json-repair";
 import { referencedMediaIds } from "@/lib/core/media";
 import { pageIdFor, pageRuleProblems } from "@/lib/core/pages";
+import { lessonIssues } from "@/lib/core/word-check";
 import {
   cardSourceSchema,
   packPromptsSchema,
@@ -565,6 +566,13 @@ async function importPack(text: string, options: ImportOptions): Promise<ImportR
     else cards.push(built.card);
   }
 
+  // WHY: A lesson is only whole when every link lands. The check runs on the
+  // cards this file will actually write, and it may resolve a link against a
+  // word the installed pack already has, so adding cards to a lesson works.
+  const definedWords = bundle.words;
+  const inheritedWords = definedWords.length > 0 ? [] : (installed?.words ?? []);
+  issues.push(...lessonIssues(cards, definedWords, inheritedWords));
+
   // WHY: A page names a deck or a card that this import is about to write, so
   // the page is checked against the same two sets the cards were checked
   // against. A page pointing nowhere refuses the whole file, like a bad card.
@@ -695,6 +703,9 @@ async function importDeck(text: string, packName: string, options: ImportOptions
     else cards.push(built.card);
   }
 
+  // A fragment defines no words, so every link must already exist here.
+  issues.push(...lessonIssues(cards, [], pack.words ?? []));
+
   if (issues.length > 0) return { ok: false, issues };
 
   const { fresh, duplicates } = await keepFreshCards(cards);
@@ -753,6 +764,8 @@ async function importCards(
     if ("issues" in built) issues.push(...built.issues);
     else cards.push(built.card);
   }
+  // A cards fragment defines no words, so every link must already exist here.
+  issues.push(...lessonIssues(cards, [], pack.words ?? []));
   if (issues.length > 0) return { ok: false, issues };
 
   const { fresh, duplicates } = await keepFreshCards(cards);
