@@ -19,6 +19,7 @@ import {
   tutorSlotNames,
 } from "@/lib/provider/prompt";
 import type { PackRecord } from "@/lib/packs/types";
+import { generatedPackBundle } from "@/lib/provider/generate";
 import type { ProfileSlots } from "@/lib/provider/prompt";
 import {
   defaultCreationBrief,
@@ -386,5 +387,80 @@ describe("tutorSlotNames", () => {
       "the card's question text",
       "your weak topic categories",
     ]);
+  });
+});
+
+describe("word lessons through the generation lane", () => {
+  it("asks for one word, its shape and the stage rule in a new pack", () => {
+    const built = buildPackGenerationPrompt(slots, 3, {
+      brief: defaultCreationBrief({
+        subject: "at the office",
+        targetLanguage: "pl",
+        sourceLanguage: "en",
+        focusWord: "biuro",
+      }),
+    });
+    const text = built.messages[1].content;
+    expect(text).toContain('lemma "biuro"');
+    expect(text).toContain('"words"');
+    expect(text).toContain('"stage"');
+    expect(text).toContain("story is cloze");
+    expect(text).toContain("must not write \"dialogue\" or \"matching\"");
+  });
+
+  it("keeps a fragment prompt from defining a word", () => {
+    const built = buildDeckGenerationPrompt(makePack(), slots, 3, {
+      brief: defaultCreationBrief({ subject: "cases", focusWord: "biuro" }),
+    });
+    expect(built.messages[1].content).toContain("cannot define a word");
+    expect(built.messages[1].content).not.toContain('"words"');
+  });
+
+  it("carries a generated word and its linked card into the bundle", () => {
+    const reply = JSON.stringify({
+      pack: { name: "starter", version: "1.0.0", language: "pl", sourceLanguage: "en" },
+      decks: [{ id: "basics", name: "Basics" }],
+      words: [
+        { id: "biuro", lemma: "biuro", meaning: "office", lang: "pl", forms: [], pairs: [] },
+      ],
+      lines: [
+        {
+          deckId: "basics",
+          style: "cloze",
+          fullLine: "Jestem w biurze.",
+          target: "biurze",
+          translation: "I am in the office.",
+          summary: "At the office",
+          wordId: "biuro",
+          stage: "story",
+        },
+      ],
+    });
+    const read = generatedPackBundle(reply, { language: "pl", sourceLanguage: "en" });
+    expect(read.ok).toBe(true);
+    if (!read.ok) return;
+    const bundle = read.bundle as { words: Array<{ lemma: string }>; cards: Array<{ wordId?: string; stage?: string }> };
+    expect(bundle.words[0].lemma).toBe("biuro");
+    expect(bundle.cards[0].wordId).toBe("biuro");
+    expect(bundle.cards[0].stage).toBe("story");
+  });
+
+  it("accepts an old reply with no words at all", () => {
+    const reply = JSON.stringify({
+      pack: { name: "starter", version: "1.0.0" },
+      decks: [{ id: "basics", name: "Basics" }],
+      lines: [
+        {
+          deckId: "basics",
+          fullLine: "Piję kawę.",
+          target: "kawę",
+          translation: "I drink coffee.",
+        },
+      ],
+    });
+    const read = generatedPackBundle(reply);
+    expect(read.ok).toBe(true);
+    if (!read.ok) return;
+    expect((read.bundle as { words: unknown[] }).words).toEqual([]);
   });
 });

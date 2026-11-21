@@ -80,6 +80,7 @@ Files:
 - `v1/src/app/library/CreationBriefFields.tsx`
 - `v1/src/app/library/CreatePanel.tsx`
 - `v1/src/lib/provider/prompt.ts`
+- `v1/src/lib/provider/generate.ts` (accept a generated word and its linked lines)
 - `v1/src/lib/browser/authoring.ts`
 - `v1/tests/creation-brief.test.ts`
 - `v1/tests/provider-prompt.test.ts`
@@ -97,7 +98,12 @@ Work:
 
 Proof:
 - `npm test -- creation-brief provider-prompt browser-authoring`
-- An empty `focusWord` leaves both prompts byte-identical to today.
+- An empty `focusWord` adds no lesson line from the brief. The word shape and
+  stage rule stay in both prompts, because a provider that can see the lesson
+  must also be able to write it.
+- The generation lane writes cloze and type lines, so it may link story,
+  spelling and forms cards. Only the chat lane writes the full five-stage
+  lesson: a deck or cards fragment cannot carry a `words` array.
 
 ## Phase D — Import guardrails
 

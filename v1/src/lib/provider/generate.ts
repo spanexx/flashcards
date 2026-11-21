@@ -17,7 +17,7 @@
 import { z } from "zod";
 import type { Card, CardPart, CardSource, StudyLevel } from "@/lib/shared/types";
 import { buildCard, deckCardId, generatedCardId } from "@/lib/core/card";
-import { teachingPartSchema } from "@/lib/core/schema";
+import { teachingPartSchema, wordSchema } from "@/lib/core/schema";
 import type { PackRecord } from "@/lib/packs/types";
 import { extractJson } from "@/lib/provider/client";
 import {
@@ -36,6 +36,13 @@ export const generatedLineSchema = z.object({
   tags: z.array(z.string()).optional(),
   summary: z.string().optional(),
   teaching: teachingPartSchema.array().min(1).optional(),
+  /**
+   * Word links are optional, and only the stages this lane can express: it
+   * writes cloze and type lines, never picks or a matching board. A link to a
+   * word the pack did not define is refused later by the one lesson check.
+   */
+  wordId: z.string().optional(),
+  stage: z.enum(["story", "spelling", "forms"]).optional(),
 });
 
 export const generatedLinesSchema = z.object({
@@ -54,6 +61,8 @@ export const generatedPackSchema = z
     }),
     decks: z.array(z.object({ id: z.string().min(1), name: z.string().min(1) })).min(1),
     lines: z.array(generatedLineSchema.extend({ deckId: z.string().min(1) })).min(1),
+    /** A new pack may define one word beside its lines; older replies never did. */
+    words: z.array(wordSchema).default([]),
   })
   .strict();
 
@@ -222,6 +231,8 @@ function sourceFromLine(
     answerDef: cardParts.answerDef,
     fullLine: line.fullLine,
     ...(line.teaching && line.teaching.length > 0 ? { teaching: line.teaching } : {}),
+    ...(line.wordId ? { wordId: line.wordId } : {}),
+    ...(line.stage ? { stage: line.stage } : {}),
   };
 }
 
@@ -277,6 +288,8 @@ function bundleCardFromLine(
     hints: source.hints,
     fullLine: source.fullLine,
     teaching: source.teaching,
+    ...(source.wordId ? { wordId: source.wordId } : {}),
+    ...(source.stage ? { stage: source.stage } : {}),
   };
 }
 
@@ -344,6 +357,9 @@ export function generatedPackBundle(
       },
       decks: parsed.data.decks.map((deck) => ({ ...deck, level: generatedDeckLevel(options) })),
       cards,
+      // A word-less reply keeps the empty default, so an old provider answer
+      // imports exactly as it did before word lessons existed.
+      words: parsed.data.words,
     },
   };
 }

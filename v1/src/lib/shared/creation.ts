@@ -34,6 +34,8 @@ export interface CreationBrief {
   targetLanguage: string;
   sourceLanguage: string;
   studyInstruction: string;
+  /** One optional word to build a focused lesson around. Empty means no lesson. */
+  focusWord: string;
 }
 
 /** A blank brief is a learner brief with no subject, ready for the screen to fill. */
@@ -47,6 +49,7 @@ export const DEFAULT_CREATION_BRIEF: CreationBrief = {
   targetLanguage: "",
   sourceLanguage: "en",
   studyInstruction: "",
+  focusWord: "",
 };
 
 /** True when a value is one of the four styles the screen may send. */
@@ -71,6 +74,7 @@ export function defaultCreationBrief(overrides: Partial<CreationBrief> = {}): Cr
     targetLanguage: overrides.targetLanguage ?? DEFAULT_CREATION_BRIEF.targetLanguage,
     sourceLanguage: overrides.sourceLanguage ?? DEFAULT_CREATION_BRIEF.sourceLanguage,
     studyInstruction: overrides.studyInstruction ?? DEFAULT_CREATION_BRIEF.studyInstruction,
+    focusWord: overrides.focusWord ?? DEFAULT_CREATION_BRIEF.focusWord,
   };
 }
 
@@ -113,6 +117,7 @@ export function validateCreationBrief(value: unknown): BriefValidation {
   const targetLanguage = optionalText(record.targetLanguage);
   const sourceLanguage = optionalText(record.sourceLanguage);
   const studyInstruction = optionalText(record.studyInstruction);
+  const focusWord = optionalText(record.focusWord);
   if (
     subject === null ||
     deckFocus === null ||
@@ -120,7 +125,8 @@ export function validateCreationBrief(value: unknown): BriefValidation {
     deckName === null ||
     targetLanguage === null ||
     sourceLanguage === null ||
-    studyInstruction === null
+    studyInstruction === null ||
+    focusWord === null
   ) {
     return { ok: false, message: "Every text field in a creation brief must be a string." };
   }
@@ -160,6 +166,7 @@ export function validateCreationBrief(value: unknown): BriefValidation {
       // An empty source stays unknown, so an old pack keeps neutral words.
       sourceLanguage: normalizeLanguage(sourceLanguage),
       studyInstruction,
+      focusWord,
     },
   };
 }
@@ -295,6 +302,15 @@ export function describeCreationBrief(
   // A provider-chosen subject may still have a deck focus the learner wrote.
   if (brief.subjectMode === "provider" && brief.deckFocus.length > 0) {
     lines.push(`Deck focus: ${brief.deckFocus}`);
+  }
+
+  // WHY: one named word turns a batch into a lesson. Both prompt lanes receive
+  // the exact lemma, so the word cannot drift from what the learner asked for.
+  if (brief.focusWord.length > 0) {
+    lines.push(`Teach one word in this batch: the lemma "${brief.focusWord}".`);
+    lines.push(
+      `Every card belongs to one lesson about "${brief.focusWord}", not five unrelated lines.`,
+    );
   }
 
   // The pair is a hard fact for every target, not a subject choice. The code is

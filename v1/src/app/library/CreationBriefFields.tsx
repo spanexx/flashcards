@@ -4,9 +4,10 @@
 // PACK: creation-control
 // 2026-10-22 opencode: created for the creation brief [pack: creation-control]
 
+import { useId } from "react";
 import type { PackStatus } from "@/lib/shared/types";
 import type { CardStyle, CreationBrief, SubjectMode } from "@/lib/shared/creation";
-import { languagePairLabel } from "@/lib/shared/language";
+import { languageName, languagePairLabel } from "@/lib/shared/language";
 import LanguageField from "./LanguageField";
 import type { CreateTarget } from "./library-utils";
 
@@ -59,6 +60,19 @@ export default function CreationBriefFields({
   const style = STYLE_OPTIONS.find((option) => option.value === brief.cardStyle) ?? STYLE_OPTIONS[0];
   const focusLabel = target === "cards" ? "Card focus" : "Deck focus";
   const pairLocked = target !== "pack";
+  const focusListId = useId();
+  // WHY: The app has no global dictionary, so the only words we can suggest are
+  // the ones the learner already installed. A word that is not here is still a
+  // valid request; the prompt simply has to write its own record.
+  const knownWords = packs
+    .filter((pack) => !pack.error)
+    .flatMap((pack) =>
+      (pack.words ?? [])
+        .filter((word) => word.lemma.trim().length > 0)
+        .map((word) => ({ lemma: word.lemma, lang: word.lang, pack: pack.name })),
+    );
+  const typedFocus = brief.focusWord.trim().toLowerCase();
+  const knownFocus = knownWords.find((word) => word.lemma.trim().toLowerCase() === typedFocus);
 
   return (
     <section className="brief-block">
@@ -147,6 +161,29 @@ export default function CreationBriefFields({
         <p className="brief-note brief-wide" style={{ margin: 0 }}>
           {style.note}
         </p>
+
+        <label className="field-label brief-wide">
+          Focus word (optional)
+          <input
+            className="field"
+            list={focusListId}
+            value={brief.focusWord}
+            onChange={(event) => onChange({ focusWord: event.target.value })}
+            placeholder="e.g. biuro — one word, one lesson"
+          />
+          <datalist id={focusListId}>
+            {knownWords.map((word) => (
+              <option key={`${word.pack}-${word.lemma}`} value={word.lemma} />
+            ))}
+          </datalist>
+        </label>
+
+        {knownFocus ? (
+          <p className="brief-note brief-wide" style={{ margin: 0 }}>
+            “{knownFocus.lemma}” is already in {knownFocus.pack} (
+            {languageName(knownFocus.lang) || knownFocus.lang || "language not set"}).
+          </p>
+        ) : null}
 
         <LanguageField
           label="Cards teach"

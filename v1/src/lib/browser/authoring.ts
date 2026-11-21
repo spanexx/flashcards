@@ -20,7 +20,7 @@ import {
 import { packLanguagePair, type PackLanguagePair } from "@/lib/shared/language";
 
 /** Bump when the prompt or the JSON shape it teaches changes. */
-export const AUTHORING_SKILL_VERSION = "5.0.0";
+export const AUTHORING_SKILL_VERSION = "6.0.0";
 
 /** Where the chat is allowed to write. No learner-written name field exists. */
 export type AuthoringTarget =
@@ -106,6 +106,98 @@ function exampleCard(deckId: string, pair: PackLanguagePair): string {
     }`;
 }
 
+/**
+ * One whole lesson for the pack example: a word, its changes, and exactly the
+ * five stage cards. The values name their job rather than a real language, so
+ * the example teaches the shape without claiming a false grammar rule.
+ */
+function wordLessonExample(deckId: string, pair: PackLanguagePair) {
+  const id = "the-word-id";
+  const lang = pair.target ? { lang: pair.target } : {};
+  const text = (value: string) => ({ type: "text", text: value, ...lang });
+  const word = {
+    id,
+    lemma: "the base word",
+    meaning: "its meaning in the question language",
+    ...lang,
+    forms: [
+      {
+        label: "the change, e.g. locative",
+        to: "the changed form",
+        meaning: "what the changed form means",
+        why: [{ type: "text", text: "why it changes, in the question language" }],
+        use: "A fresh sentence that uses the changed form.",
+      },
+    ],
+    pairs: [
+      { target: "the base word", meaning: "its meaning" },
+      { target: "the changed form", meaning: "the changed meaning" },
+    ],
+  };
+  const cards = [
+    {
+      deckId,
+      wordId: id,
+      stage: "story",
+      summary: "Story: the word in a line",
+      prompt: [text("A line with "), { type: "blank", id: "b1" }, text(".")],
+      answer: [text("A line with the changed form.")],
+      answerDef: { mode: "cloze", blanks: [{ id: "b1", expected: ["the changed form"] }] },
+      hints: ["Name the rule, not the form."],
+      fullLine: "A line with the changed form.",
+    },
+    {
+      deckId,
+      wordId: id,
+      stage: "spelling",
+      summary: "Spelling: the base word",
+      prompt: [text("Type the base word.")],
+      answer: [text("the base word")],
+      answerDef: { mode: "type", expected: ["the base word"] },
+      hints: ["Think of the dictionary form."],
+      fullLine: "the base word",
+    },
+    {
+      deckId,
+      wordId: id,
+      stage: "forms",
+      summary: "Forms: change the word",
+      prompt: [text("the base word -> ___")],
+      answer: [text("the changed form")],
+      answerDef: { mode: "type", expected: ["the changed form"] },
+      hints: ["The word's reason explains this change."],
+      fullLine: "the base word -> the changed form",
+    },
+    {
+      deckId,
+      wordId: id,
+      stage: "dialogue",
+      summary: "Dialogue: pick the right line",
+      prompt: [text("Which line is correct?")],
+      answer: [text("The right line.")],
+      answerDef: {
+        mode: "picks",
+        options: ["The right line.", "The wrong line."],
+        correct: ["The right line."],
+      },
+      hints: ["Listen for the changed form."],
+      fullLine: "The right line.",
+    },
+    {
+      deckId,
+      wordId: id,
+      stage: "matching",
+      summary: "Match the word",
+      prompt: [text("Match each form with its meaning.")],
+      answer: [text("Every pair matches.")],
+      answerDef: { mode: "match" },
+      hints: ["Meanings are in the question language."],
+      fullLine: "Match each form with its meaning.",
+    },
+  ];
+  return { word, cards };
+}
+
 function packHeader(pair: PackLanguagePair, studyInstruction = ""): Record<string, string> {
   const pack: Record<string, string> = { name: "study-pack", version: "1.0.0" };
   if (pair.target.length > 0) pack.language = pair.target;
@@ -120,14 +212,19 @@ function shapeForPack(
   pair: PackLanguagePair,
   studyInstruction = "",
 ): string {
+  const lesson = wordLessonExample(deckId, pair);
   return `{
   "schema": "flashcards.pack/v1",
   "pack": ${JSON.stringify(packHeader(pair, studyInstruction))},
   "decks": [
     { "id": ${JSON.stringify(deckId)}, "name": ${JSON.stringify(deckName)} }
   ],
+  "words": [
+    ${JSON.stringify(lesson.word, null, 2).replace(/\n/g, "\n    ")}
+  ],
   "cards": [
-    ${exampleCard(deckId, pair)}
+    ${exampleCard(deckId, pair)},
+    ${lesson.cards.map((card) => JSON.stringify(card, null, 2).replace(/\n/g, "\n    ")).join(",\n    ")}
   ]
 }`;
 }
@@ -266,6 +363,9 @@ Target: a new pack.
 ${nameRule}
 Make at least one deck. Deck ids use lowercase letters, numbers and dashes only. Every card names its deck with "deckId".
 
+A pack may carry one "words" array beside "cards". Write at most one word: "id" (lowercase slug), "lemma", "meaning", "lang" (the target code), "forms" and "pairs". A form has "label", "to", "meaning" and at least one "why"; a pair has "target" and "meaning". Every meaning is in the question language, never a hard-coded English word.
+Every word card sets "wordId" to that word's id and "stage" to one of story, spelling, forms, dialogue, matching. Stage fixes the answer mode: story is cloze, spelling and forms are type, dialogue is picks, matching is match. Skip forms when the word has no forms and matching when it has fewer than two pairs. Never print a changed form in a card prompt or teaching part: the learner must produce it.
+
 ${rules}
 
 Return JSON shaped like this:
@@ -291,7 +391,7 @@ Its decks are:
 ${deckList || "- (none yet)"}
 
 ${nameRule}
-Return only the new decks and their cards. Do not include a "pack" header, and do not reuse an existing deck id.
+Return only the new decks and their cards. Do not include a "pack" header, a "words" key, or an existing deck id. A fragment cannot define a word, so leave "wordId" and "stage" out.
 
 ${rules}
 
@@ -308,7 +408,7 @@ Target: add cards to the existing deck "${deck.name}" (id "${deck.id}") in the p
 The pack's decks are:
 ${deckList}
 
-Return only cards for the target deck. Do not include a "pack" header or a "decks" key. Every card must have "deckId": "${deck.id}".
+Return only cards for the target deck. Do not include a "pack" header, a "decks" key or a "words" key. Every card must have "deckId": "${deck.id}". A fragment cannot define a word, so leave "wordId" and "stage" out.
 
 ${rules}
 
