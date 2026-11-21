@@ -108,44 +108,67 @@ describe.each(PACK_NAMES)("%s seed bundle", (name) => {
   });
 });
 
-describe("biuro word pack", () => {
-  it("ships one whole word and five linked stage cards", async () => {
+describe("biuro full course", () => {
+  it("ships one word, its whole paradigm and a hundred linked cards", async () => {
     const bundle = await readSeed("biuro");
+    expect(bundle.pack.version).toBe("2.0.0");
     expect(bundle.pack.language).toBe("pl");
     expect(bundle.pack.sourceLanguage).toBe("en");
+    expect(bundle.decks).toHaveLength(5);
     expect(bundle.words).toHaveLength(1);
     const [word] = bundle.words;
     expect(word.id).toBe("biuro");
     expect(word.lemma).toBe("biuro");
     expect(word.meaning).toBe("office");
-    expect(word.forms.map((form) => form.to)).toEqual(["biura", "biuru", "biurze", "biurem"]);
-    expect(word.pairs).toHaveLength(5);
-    expect(bundle.cards).toHaveLength(5);
-    expect(bundle.cards.map((card) => card.stage)).toEqual([
-      "story",
-      "spelling",
-      "forms",
-      "dialogue",
-      "matching",
+    expect(word.forms.map((form) => form.to)).toEqual([
+      "biuro", "biura", "biuru", "biuro", "biurem", "biurze", "biuro",
+      "biura", "biur", "biurom", "biura", "biurami", "biurach", "biura",
     ]);
-    expect(bundle.cards.map((card) => card.answerDef.mode)).toEqual([
-      "cloze",
-      "type",
-      "type",
-      "picks",
-      "match",
-    ]);
+    expect(new Set(word.forms.map((form) => form.label)).size).toBe(14);
+    expect(word.forms.every((form) => form.why.length > 0)).toBe(true);
+    expect(word.pairs).toHaveLength(9);
+    expect(new Set(word.pairs.map((pair) => pair.target)).size).toBe(9);
+    expect(bundle.cards).toHaveLength(100);
     expect(bundle.cards.every((card) => card.wordId === "biuro")).toBe(true);
+    for (const deck of bundle.decks) {
+      expect(bundle.cards.filter((card) => card.deckId === deck.id).length).toBeGreaterThan(0);
+    }
     expect(lessonIssues(bundle.cards, bundle.words)).toEqual([]);
   });
 
-  it("ships a Dictionary page for the pack, the deck and every card", async () => {
+  it("fixes the answer mode for every stage and never prints the answer in the prompt", async () => {
+    const bundle = await readSeed("biuro");
+    const modes: Record<string, string> = {
+      story: "cloze",
+      spelling: "type",
+      forms: "type",
+      dialogue: "picks",
+      matching: "match",
+    };
+    for (const card of bundle.cards) {
+      expect(card.answerDef.mode, `card ${card.key}`).toBe(modes[card.stage ?? ""]);
+      const expected = [
+        ...(card.answerDef.expected ?? []),
+        ...(card.answerDef.blanks ?? []).flatMap((blank) => blank.expected),
+        ...(card.answerDef.correct ?? []),
+      ];
+      const promptText = card.prompt
+        .filter((part): part is { type: "text"; text: string } => part.type === "text")
+        .map((part) => part.text)
+        .join(" ");
+      for (const answer of expected) {
+        expect(promptText.includes(answer), `card ${card.key} prints ${answer}`).toBe(false);
+      }
+    }
+  });
+
+  it("ships a Dictionary page for the pack, every deck and every card", async () => {
     const bundle = await readSeed("biuro");
     const pages = bundle.pages;
     expect(pages.filter((page) => page.level === "pack")).toHaveLength(1);
-    expect(pages.filter((page) => page.level === "deck")).toHaveLength(1);
+    expect(pages.filter((page) => page.level === "deck")).toHaveLength(bundle.decks.length);
     const cardPages = pages.filter((page) => page.level === "card");
-    expect(cardPages).toHaveLength(5);
+    expect(cardPages).toHaveLength(bundle.cards.length);
     const deckNames = new Map(bundle.decks.map((deck) => [deck.id, deck.name]));
     const ids = new Set(
       bundle.cards.map((card) =>

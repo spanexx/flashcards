@@ -15,7 +15,8 @@ const modes = { story: 'cloze', spelling: 'type', forms: 'type', dialogue: 'pick
 
 console.log(`pack=${bundle.pack.name} version=${bundle.pack.version} language=${bundle.pack.language} source=${bundle.pack.sourceLanguage}`);
 console.log(`decks=${bundle.decks.length} words=${bundle.words.length} cards=${bundle.cards.length} pages=${bundle.pages.length}`);
-console.log(`index lists biuro: ${index.packs.some(p => p.name === 'biuro' && p.version === '1.0.0')}`);
+console.log(`full course: ${bundle.decks.length === 5 && bundle.cards.length >= 100 && bundle.pages.filter(p => p.level === 'card').length >= 100}`);
+console.log(`index lists biuro at the authored version: ${index.packs.some(p => p.name === 'biuro' && p.version === bundle.pack.version)}`);
 console.log(`word=${word.lemma} meaning=${word.meaning} forms=${word.forms.map(f => f.to).join(',')} pairs=${word.pairs.length}`);
 for (const card of bundle.cards) {
   const expected = modes[card.stage];
@@ -37,4 +38,5 @@ npx vitest run tests/seed-packs.test.ts 2>&1 | tail -8
 
 printf '\n== one folder to copy ==\n'
 printf '%s\n' 'v1/packs/biuro/pack.json, words.json, cards.json, pages.json'
-printf '%s\n' 'Change the word, its forms, the five cards and the five card pages; keep the stage-to-mode rule.'
+printf '%s\n' 'Five decks: Meet biuro, Every form, What triggers what, In a sentence, Fast recall.'
+printf '%s\n' 'Change the word, its paradigm, the hundred cards and their pages; keep the stage-to-mode rule.'

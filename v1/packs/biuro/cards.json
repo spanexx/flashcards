@@ -1,26 +1,61 @@
 {
   "cards": [
     {
-      "key": "story-at-the-office",
-      "summary": "Pracuję w biurze",
-      "topics": ["at-the-office"],
-      "tags": ["locative", "place"],
+      "key": "biuro-001",
+      "summary": "Meet: To jest biuro.",
+      "topics": [
+        "meet-biuro"
+      ],
+      "tags": [
+        "name"
+      ],
       "prompt": [
-        { "type": "text", "text": "Pracuję w " },
-        { "type": "blank", "id": "b1" },
-        { "type": "text", "text": "." }
+        {
+          "type": "text",
+          "text": "To jest ",
+          "lang": "pl"
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": ".",
+          "lang": "pl"
+        }
       ],
       "answer": [
-        { "type": "text", "text": "Pracuję w biurze.", "lang": "pl" },
-        { "type": "text", "text": "I work in the office.", "role": "translation", "lang": "en" }
+        {
+          "type": "text",
+          "text": "To jest biuro.",
+          "lang": "pl"
+        },
+        {
+          "type": "text",
+          "text": "This is an office.",
+          "role": "translation",
+          "lang": "en"
+        }
       ],
-      "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["biurze"] }] },
-      "hints": ["The preposition w with a place asks for the locative case."],
-      "fullLine": "Pracuję w biurze.",
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "biuro"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
       "teaching": [
         {
           "type": "text",
-          "text": "The line says where someone works. After w, Polish uses a special ending on the place word.",
+          "text": "Read the whole line first; the missing word is the one this course teaches.",
           "lang": "en"
         }
       ],
@@ -28,22 +63,289 @@
       "stage": "story"
     },
     {
-      "key": "spelling-biuro",
-      "summary": "office",
-      "topics": ["at-the-office"],
-      "tags": ["base form"],
-      "prompt": [{ "type": "text", "text": "office", "lang": "en" }],
-      "answer": [
-        { "type": "text", "text": "biuro", "lang": "pl" },
-        { "type": "text", "text": "office", "role": "translation", "lang": "en" }
+      "key": "biuro-002",
+      "summary": "Meet: Widzę biuro.",
+      "topics": [
+        "meet-biuro"
       ],
-      "answerDef": { "mode": "type", "expected": ["biuro"] },
-      "hints": ["A neuter noun ending in -o."],
-      "fullLine": "biuro",
+      "tags": [
+        "name"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Widzę ",
+          "lang": "pl"
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": ".",
+          "lang": "pl"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Widzę biuro.",
+          "lang": "pl"
+        },
+        {
+          "type": "text",
+          "text": "I see an office.",
+          "role": "translation",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "biuro"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
       "teaching": [
         {
           "type": "text",
-          "text": "Write the dictionary form of the word, the form you would look up.",
+          "text": "Read the whole line first; the missing word is the one this course teaches.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "story"
+    },
+    {
+      "key": "biuro-003",
+      "summary": "Meet: Mam biuro.",
+      "topics": [
+        "meet-biuro"
+      ],
+      "tags": [
+        "name"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Mam ",
+          "lang": "pl"
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": ".",
+          "lang": "pl"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Mam biuro.",
+          "lang": "pl"
+        },
+        {
+          "type": "text",
+          "text": "I have an office.",
+          "role": "translation",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "biuro"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Read the whole line first; the missing word is the one this course teaches.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "story"
+    },
+    {
+      "key": "biuro-004",
+      "summary": "Meet: Pracuję w biurze.",
+      "topics": [
+        "meet-biuro"
+      ],
+      "tags": [
+        "location"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Pracuję w ",
+          "lang": "pl"
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": ".",
+          "lang": "pl"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Pracuję w biurze.",
+          "lang": "pl"
+        },
+        {
+          "type": "text",
+          "text": "I work in the office.",
+          "role": "translation",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "biurze"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Read the whole line first; the missing word is the one this course teaches.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "story"
+    },
+    {
+      "key": "biuro-005",
+      "summary": "Meet: Jestem w biurze.",
+      "topics": [
+        "meet-biuro"
+      ],
+      "tags": [
+        "location"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Jestem w ",
+          "lang": "pl"
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": ".",
+          "lang": "pl"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Jestem w biurze.",
+          "lang": "pl"
+        },
+        {
+          "type": "text",
+          "text": "I am in the office.",
+          "role": "translation",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "biurze"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Read the whole line first; the missing word is the one this course teaches.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "story"
+    },
+    {
+      "key": "biuro-006",
+      "summary": "Say it: biuro",
+      "topics": [
+        "meet-biuro"
+      ],
+      "tags": [
+        "base"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "office",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biuro",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biuro"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Type the Polish form that matches the English meaning.",
           "lang": "en"
         }
       ],
@@ -51,49 +353,340 @@
       "stage": "spelling"
     },
     {
-      "key": "forms-biuro",
-      "summary": "biuro in the locative",
-      "topics": ["at-the-office"],
-      "tags": ["locative"],
-      "prompt": [
-        { "type": "text", "text": "biuro → " },
-        { "type": "blank", "id": "b1" }
+      "key": "biuro-007",
+      "summary": "Say it: biurze",
+      "topics": [
+        "meet-biuro"
       ],
-      "answer": [{ "type": "text", "text": "biurze", "lang": "pl" }],
-      "answerDef": { "mode": "type", "expected": ["biurze"] },
-      "hints": ["The word's reason explains this change."],
-      "fullLine": "biuro → biurze",
+      "tags": [
+        "locative"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "in the office",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biurze",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biurze"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
       "teaching": [
         {
           "type": "text",
-          "text": "Change the dictionary form to the one used after w. The word record explains why it changes.",
+          "text": "Type the Polish form that matches the English meaning.",
           "lang": "en"
         }
       ],
       "wordId": "biuro",
-      "stage": "forms"
+      "stage": "spelling"
     },
     {
-      "key": "dialogue-at-the-office",
-      "summary": "Gdzie pracujesz?",
-      "topics": ["at-the-office"],
-      "tags": ["dialogue", "locative"],
-      "prompt": [{ "type": "text", "text": "Gdzie pracujesz?", "lang": "pl" }],
+      "key": "biuro-008",
+      "summary": "Say it: biura",
+      "topics": [
+        "meet-biuro"
+      ],
+      "tags": [
+        "genitive"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "of the office",
+          "lang": "en"
+        }
+      ],
       "answer": [
-        { "type": "text", "text": "W biurze.", "lang": "pl" },
-        { "type": "text", "text": "In the office.", "role": "translation", "lang": "en" }
+        {
+          "type": "text",
+          "text": "biura",
+          "lang": "pl"
+        }
       ],
       "answerDef": {
-        "mode": "picks",
-        "options": ["W biurze.", "W biuro.", "W biura."],
-        "correct": ["W biurze."]
+        "mode": "type",
+        "expected": [
+          "biura"
+        ]
       },
-      "hints": ["The answer names a place after w."],
-      "fullLine": "W biurze.",
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
       "teaching": [
         {
           "type": "text",
-          "text": "Someone asks where you work. Pick the line that answers with the place word in its correct form.",
+          "text": "Type the Polish form that matches the English meaning.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "spelling"
+    },
+    {
+      "key": "biuro-009",
+      "summary": "Say it: biuru",
+      "topics": [
+        "meet-biuro"
+      ],
+      "tags": [
+        "dative"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "to the office",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biuru",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biuru"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Type the Polish form that matches the English meaning.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "spelling"
+    },
+    {
+      "key": "biuro-010",
+      "summary": "Say it: biurem",
+      "topics": [
+        "meet-biuro"
+      ],
+      "tags": [
+        "instrumental"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "with the office",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biurem",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biurem"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Type the Polish form that matches the English meaning.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "spelling"
+    },
+    {
+      "key": "biuro-011",
+      "summary": "Say it: biura",
+      "topics": [
+        "meet-biuro"
+      ],
+      "tags": [
+        "plural"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "offices",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biura",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biura"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Type the Polish form that matches the English meaning.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "spelling"
+    },
+    {
+      "key": "biuro-012",
+      "summary": "Say it: biur",
+      "topics": [
+        "meet-biuro"
+      ],
+      "tags": [
+        "plural"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "of the offices",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biur",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biur"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Type the Polish form that matches the English meaning.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "spelling"
+    },
+    {
+      "key": "biuro-013",
+      "summary": "Say it: biurach",
+      "topics": [
+        "meet-biuro"
+      ],
+      "tags": [
+        "plural"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "in the offices",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biurach",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biurach"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Type the Polish form that matches the English meaning.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "spelling"
+    },
+    {
+      "key": "biuro-014",
+      "summary": "Choose: biuro",
+      "topics": [
+        "meet-biuro"
+      ],
+      "tags": [
+        "biuro"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "What do you call a place where people work?",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biuro",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "biuro",
+          "biuru",
+          "biurze"
+        ],
+        "correct": [
+          "biuro"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Pick the line that uses the correct form for this meaning.",
           "lang": "en"
         }
       ],
@@ -101,24 +694,4100 @@
       "stage": "dialogue"
     },
     {
-      "key": "matching-biuro",
-      "summary": "Match biuro",
-      "topics": ["at-the-office"],
-      "tags": ["meaning", "forms"],
-      "prompt": [{ "type": "text", "text": "Match each form with its meaning.", "lang": "en" }],
-      "answer": [{ "type": "text", "text": "Every pair matches.", "lang": "en" }],
-      "answerDef": { "mode": "match" },
-      "hints": ["Meanings are in English."],
-      "fullLine": "Match each form with its meaning.",
+      "key": "biuro-015",
+      "summary": "Choose: biurze",
+      "topics": [
+        "meet-biuro"
+      ],
+      "tags": [
+        "biurze"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Where is the meeting?",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "W biurze.",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "W biurze.",
+          "W biuro.",
+          "W biura."
+        ],
+        "correct": [
+          "W biurze."
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
       "teaching": [
         {
           "type": "text",
-          "text": "The left column holds Polish forms; the right column holds their exact English meanings.",
+          "text": "Pick the line that uses the correct form for this meaning.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "dialogue"
+    },
+    {
+      "key": "biuro-016",
+      "summary": "Choose: biuro",
+      "topics": [
+        "meet-biuro"
+      ],
+      "tags": [
+        "biuro"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Do you have an office?",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Mam biuro.",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Mam biuro.",
+          "Mam biuru.",
+          "Mam biurem."
+        ],
+        "correct": [
+          "Mam biuro."
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Pick the line that uses the correct form for this meaning.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "dialogue"
+    },
+    {
+      "key": "biuro-017",
+      "summary": "Choose: biurze",
+      "topics": [
+        "meet-biuro"
+      ],
+      "tags": [
+        "biurze"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Where do you work?",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "W biurze.",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "W biurze.",
+          "Do biurze.",
+          "Z biurze."
+        ],
+        "correct": [
+          "W biurze."
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Pick the line that uses the correct form for this meaning.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "dialogue"
+    },
+    {
+      "key": "biuro-018",
+      "summary": "Choose: biur",
+      "topics": [
+        "meet-biuro"
+      ],
+      "tags": [
+        "biur"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "How many offices?",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Pięć biur.",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "Pięć biur.",
+          "Pięć biura.",
+          "Pięć biurom."
+        ],
+        "correct": [
+          "Pięć biur."
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Pick the line that uses the correct form for this meaning.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "dialogue"
+    },
+    {
+      "key": "biuro-019",
+      "summary": "Match the basic forms",
+      "topics": [
+        "meet-biuro"
+      ],
+      "tags": [
+        "meaning"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Match each base form with its English meaning.",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Every pair matches.",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "match"
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Tap one form on the left and its meaning on the right.",
           "lang": "en"
         }
       ],
       "wordId": "biuro",
       "stage": "matching"
+    },
+    {
+      "key": "biuro-020",
+      "summary": "Match the place forms",
+      "topics": [
+        "meet-biuro"
+      ],
+      "tags": [
+        "place"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Match each place form with its English meaning.",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Every pair matches.",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "match"
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Read both columns before you tap; each pair is exact.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "matching"
+    },
+    {
+      "key": "biuro-021",
+      "summary": "Form: nominative singular",
+      "topics": [
+        "every-form"
+      ],
+      "tags": [
+        "case"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "nominative singular: ___",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biuro",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biuro"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The label tells you which case to build. Cue: subject.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "forms"
+    },
+    {
+      "key": "biuro-022",
+      "summary": "Name: biuro (nominative singular)",
+      "topics": [
+        "every-form"
+      ],
+      "tags": [
+        "case"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which case is biuro in this use? (subject)",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "nominative singular",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "nominative singular"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Name the case from its job in the sentence.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "forms"
+    },
+    {
+      "key": "biuro-023",
+      "summary": "Form: genitive singular",
+      "topics": [
+        "every-form"
+      ],
+      "tags": [
+        "case"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "genitive singular: ___",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biura",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biura"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The label tells you which case to build. Cue: of, after do.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "forms"
+    },
+    {
+      "key": "biuro-024",
+      "summary": "Name: biura (genitive singular)",
+      "topics": [
+        "every-form"
+      ],
+      "tags": [
+        "case"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which case is biura in this use? (of, after do)",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "genitive singular",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "genitive singular"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Name the case from its job in the sentence.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "forms"
+    },
+    {
+      "key": "biuro-025",
+      "summary": "Form: dative singular",
+      "topics": [
+        "every-form"
+      ],
+      "tags": [
+        "case"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "dative singular: ___",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biuru",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biuru"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The label tells you which case to build. Cue: to, after pomagać.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "forms"
+    },
+    {
+      "key": "biuro-026",
+      "summary": "Name: biuru (dative singular)",
+      "topics": [
+        "every-form"
+      ],
+      "tags": [
+        "case"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which case is biuru in this use? (to, after pomagać)",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "dative singular",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "dative singular"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Name the case from its job in the sentence.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "forms"
+    },
+    {
+      "key": "biuro-027",
+      "summary": "Form: accusative singular",
+      "topics": [
+        "every-form"
+      ],
+      "tags": [
+        "case"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "accusative singular: ___",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biuro",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biuro"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The label tells you which case to build. Cue: object.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "forms"
+    },
+    {
+      "key": "biuro-028",
+      "summary": "Name: biuro (accusative singular)",
+      "topics": [
+        "every-form"
+      ],
+      "tags": [
+        "case"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which case is biuro in this use? (object)",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "accusative singular",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "accusative singular"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Name the case from its job in the sentence.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "forms"
+    },
+    {
+      "key": "biuro-029",
+      "summary": "Form: instrumental singular",
+      "topics": [
+        "every-form"
+      ],
+      "tags": [
+        "case"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "instrumental singular: ___",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biurem",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biurem"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The label tells you which case to build. Cue: with, after zarządzać.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "forms"
+    },
+    {
+      "key": "biuro-030",
+      "summary": "Name: biurem (instrumental singular)",
+      "topics": [
+        "every-form"
+      ],
+      "tags": [
+        "case"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which case is biurem in this use? (with, after zarządzać)",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "instrumental singular",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "instrumental singular"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Name the case from its job in the sentence.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "forms"
+    },
+    {
+      "key": "biuro-031",
+      "summary": "Form: locative singular",
+      "topics": [
+        "every-form"
+      ],
+      "tags": [
+        "case"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "locative singular: ___",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biurze",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biurze"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The label tells you which case to build. Cue: in, after w.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "forms"
+    },
+    {
+      "key": "biuro-032",
+      "summary": "Name: biurze (locative singular)",
+      "topics": [
+        "every-form"
+      ],
+      "tags": [
+        "case"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which case is biurze in this use? (in, after w)",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "locative singular",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "locative singular"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Name the case from its job in the sentence.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "forms"
+    },
+    {
+      "key": "biuro-033",
+      "summary": "Form: nominative plural",
+      "topics": [
+        "every-form"
+      ],
+      "tags": [
+        "case"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "nominative plural: ___",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biura",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biura"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The label tells you which case to build. Cue: subject.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "forms"
+    },
+    {
+      "key": "biuro-034",
+      "summary": "Name: biura (nominative plural)",
+      "topics": [
+        "every-form"
+      ],
+      "tags": [
+        "case"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which case is biura in this use? (subject)",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "nominative plural",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "nominative plural"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Name the case from its job in the sentence.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "forms"
+    },
+    {
+      "key": "biuro-035",
+      "summary": "Form: genitive plural",
+      "topics": [
+        "every-form"
+      ],
+      "tags": [
+        "case"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "genitive plural: ___",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biur",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biur"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The label tells you which case to build. Cue: of many, after five.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "forms"
+    },
+    {
+      "key": "biuro-036",
+      "summary": "Name: biur (genitive plural)",
+      "topics": [
+        "every-form"
+      ],
+      "tags": [
+        "case"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which case is biur in this use? (of many, after five)",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "genitive plural",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "genitive plural"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Name the case from its job in the sentence.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "forms"
+    },
+    {
+      "key": "biuro-037",
+      "summary": "Form: dative plural",
+      "topics": [
+        "every-form"
+      ],
+      "tags": [
+        "case"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "dative plural: ___",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biurom",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biurom"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The label tells you which case to build. Cue: to many.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "forms"
+    },
+    {
+      "key": "biuro-038",
+      "summary": "Name: biurom (dative plural)",
+      "topics": [
+        "every-form"
+      ],
+      "tags": [
+        "case"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which case is biurom in this use? (to many)",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "dative plural",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "dative plural"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Name the case from its job in the sentence.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "forms"
+    },
+    {
+      "key": "biuro-039",
+      "summary": "Form: accusative plural",
+      "topics": [
+        "every-form"
+      ],
+      "tags": [
+        "case"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "accusative plural: ___",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biura",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biura"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The label tells you which case to build. Cue: object.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "forms"
+    },
+    {
+      "key": "biuro-040",
+      "summary": "Name: biura (accusative plural)",
+      "topics": [
+        "every-form"
+      ],
+      "tags": [
+        "case"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which case is biura in this use? (object)",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "accusative plural",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "accusative plural"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Name the case from its job in the sentence.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "forms"
+    },
+    {
+      "key": "biuro-041",
+      "summary": "Label to form: locative singular",
+      "topics": [
+        "every-form"
+      ],
+      "tags": [
+        "case"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Write the locative singular form.",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biurze",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biurze"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Use the case label, not a translation, to choose the ending.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "forms"
+    },
+    {
+      "key": "biuro-042",
+      "summary": "Label to form: genitive singular",
+      "topics": [
+        "every-form"
+      ],
+      "tags": [
+        "case"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Write the genitive singular form.",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biura",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biura"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Use the case label, not a translation, to choose the ending.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "forms"
+    },
+    {
+      "key": "biuro-043",
+      "summary": "Label to form: dative singular",
+      "topics": [
+        "every-form"
+      ],
+      "tags": [
+        "case"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Write the dative singular form.",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biuru",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biuru"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Use the case label, not a translation, to choose the ending.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "forms"
+    },
+    {
+      "key": "biuro-044",
+      "summary": "Label to form: instrumental singular",
+      "topics": [
+        "every-form"
+      ],
+      "tags": [
+        "case"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Write the instrumental singular form.",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biurem",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biurem"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Use the case label, not a translation, to choose the ending.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "forms"
+    },
+    {
+      "key": "biuro-045",
+      "summary": "Label to form: genitive plural",
+      "topics": [
+        "every-form"
+      ],
+      "tags": [
+        "case"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Write the genitive plural form.",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biur",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biur"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Use the case label, not a translation, to choose the ending.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "forms"
+    },
+    {
+      "key": "biuro-046",
+      "summary": "Label to form: locative plural",
+      "topics": [
+        "every-form"
+      ],
+      "tags": [
+        "case"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Write the locative plural form.",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biurach",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biurach"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Use the case label, not a translation, to choose the ending.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "forms"
+    },
+    {
+      "key": "biuro-047",
+      "summary": "Label to form: dative plural",
+      "topics": [
+        "every-form"
+      ],
+      "tags": [
+        "case"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Write the dative plural form.",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biurom",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biurom"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Use the case label, not a translation, to choose the ending.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "forms"
+    },
+    {
+      "key": "biuro-048",
+      "summary": "Label to form: instrumental plural",
+      "topics": [
+        "every-form"
+      ],
+      "tags": [
+        "case"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Write the instrumental plural form.",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biurami",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biurami"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Use the case label, not a translation, to choose the ending.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "forms"
+    },
+    {
+      "key": "biuro-049",
+      "summary": "Label to form: nominative plural",
+      "topics": [
+        "every-form"
+      ],
+      "tags": [
+        "case"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Write the nominative plural form.",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biura",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biura"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Use the case label, not a translation, to choose the ending.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "forms"
+    },
+    {
+      "key": "biuro-050",
+      "summary": "Label to form: vocative singular",
+      "topics": [
+        "every-form"
+      ],
+      "tags": [
+        "case"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Write the vocative singular form.",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biuro",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biuro"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Use the case label, not a translation, to choose the ending.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "forms"
+    },
+    {
+      "key": "biuro-051",
+      "summary": "Trigger: biura",
+      "topics": [
+        "what-triggers-what"
+      ],
+      "tags": [
+        "trigger"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Idę do ___.",
+          "lang": "pl"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biura",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biura"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The trigger word before the blank decides the case. Do not translate the English word.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "spelling"
+    },
+    {
+      "key": "biuro-052",
+      "summary": "Trigger: biura",
+      "topics": [
+        "what-triggers-what"
+      ],
+      "tags": [
+        "trigger"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Wracam z ___.",
+          "lang": "pl"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biura",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biura"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The trigger word before the blank decides the case. Do not translate the English word.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "spelling"
+    },
+    {
+      "key": "biuro-053",
+      "summary": "Trigger: biura",
+      "topics": [
+        "what-triggers-what"
+      ],
+      "tags": [
+        "trigger"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Nie ma ___ dziś.",
+          "lang": "pl"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biura",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biura"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The trigger word before the blank decides the case. Do not translate the English word.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "spelling"
+    },
+    {
+      "key": "biuro-054",
+      "summary": "Trigger: biura",
+      "topics": [
+        "what-triggers-what"
+      ],
+      "tags": [
+        "trigger"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Szukam ___.",
+          "lang": "pl"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biura",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biura"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The trigger word before the blank decides the case. Do not translate the English word.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "spelling"
+    },
+    {
+      "key": "biuro-055",
+      "summary": "Trigger: biura",
+      "topics": [
+        "what-triggers-what"
+      ],
+      "tags": [
+        "trigger"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Bez ___ nie pracuję.",
+          "lang": "pl"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biura",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biura"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The trigger word before the blank decides the case. Do not translate the English word.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "spelling"
+    },
+    {
+      "key": "biuro-056",
+      "summary": "Trigger: biura",
+      "topics": [
+        "what-triggers-what"
+      ],
+      "tags": [
+        "trigger"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "To jest dla ___.",
+          "lang": "pl"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biura",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biura"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The trigger word before the blank decides the case. Do not translate the English word.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "spelling"
+    },
+    {
+      "key": "biuro-057",
+      "summary": "Trigger: biuru",
+      "topics": [
+        "what-triggers-what"
+      ],
+      "tags": [
+        "trigger"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Pomagam ___.",
+          "lang": "pl"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biuru",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biuru"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The trigger word before the blank decides the case. Do not translate the English word.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "spelling"
+    },
+    {
+      "key": "biuro-058",
+      "summary": "Trigger: biuru",
+      "topics": [
+        "what-triggers-what"
+      ],
+      "tags": [
+        "trigger"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Dziękuję ___.",
+          "lang": "pl"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biuru",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biuru"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The trigger word before the blank decides the case. Do not translate the English word.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "spelling"
+    },
+    {
+      "key": "biuro-059",
+      "summary": "Trigger: biuru",
+      "topics": [
+        "what-triggers-what"
+      ],
+      "tags": [
+        "trigger"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Daję ___ komputer.",
+          "lang": "pl"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biuru",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biuru"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The trigger word before the blank decides the case. Do not translate the English word.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "spelling"
+    },
+    {
+      "key": "biuro-060",
+      "summary": "Trigger: biuru",
+      "topics": [
+        "what-triggers-what"
+      ],
+      "tags": [
+        "trigger"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Ufam ___.",
+          "lang": "pl"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biuru",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biuru"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The trigger word before the blank decides the case. Do not translate the English word.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "spelling"
+    },
+    {
+      "key": "biuro-061",
+      "summary": "Pick the trigger: do",
+      "topics": [
+        "what-triggers-what"
+      ],
+      "tags": [
+        "trigger"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which case follows do?",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biura",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "biura",
+          "biuru",
+          "biurze",
+          "biurem"
+        ],
+        "correct": [
+          "biura"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Match the trigger word to the case it requires.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "dialogue"
+    },
+    {
+      "key": "biuro-062",
+      "summary": "Pick the trigger: w-location",
+      "topics": [
+        "what-triggers-what"
+      ],
+      "tags": [
+        "trigger"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which case follows w when you are inside a place?",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biurze",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "biurze",
+          "biura",
+          "biuru",
+          "biurem"
+        ],
+        "correct": [
+          "biurze"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Match the trigger word to the case it requires.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "dialogue"
+    },
+    {
+      "key": "biuro-063",
+      "summary": "Pick the trigger: pomagać",
+      "topics": [
+        "what-triggers-what"
+      ],
+      "tags": [
+        "trigger"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which case follows pomagać?",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biuru",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "biuru",
+          "biura",
+          "biurze",
+          "biurem"
+        ],
+        "correct": [
+          "biuru"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Match the trigger word to the case it requires.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "dialogue"
+    },
+    {
+      "key": "biuro-064",
+      "summary": "Pick the trigger: zarządzać",
+      "topics": [
+        "what-triggers-what"
+      ],
+      "tags": [
+        "trigger"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which case follows zarządzać?",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biurem",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "biurem",
+          "biura",
+          "biuru",
+          "biurze"
+        ],
+        "correct": [
+          "biurem"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Match the trigger word to the case it requires.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "dialogue"
+    },
+    {
+      "key": "biuro-065",
+      "summary": "Pick the trigger: z-with",
+      "topics": [
+        "what-triggers-what"
+      ],
+      "tags": [
+        "trigger"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which case follows z when it means with?",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biurem",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "biurem",
+          "biura",
+          "biuru",
+          "biurze"
+        ],
+        "correct": [
+          "biurem"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Match the trigger word to the case it requires.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "dialogue"
+    },
+    {
+      "key": "biuro-066",
+      "summary": "Pick the trigger: o-about",
+      "topics": [
+        "what-triggers-what"
+      ],
+      "tags": [
+        "trigger"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which case follows o when it means about?",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biurze",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "biurze",
+          "biura",
+          "biuru",
+          "biurem"
+        ],
+        "correct": [
+          "biurze"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Match the trigger word to the case it requires.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "dialogue"
+    },
+    {
+      "key": "biuro-067",
+      "summary": "Pick the trigger: number",
+      "topics": [
+        "what-triggers-what"
+      ],
+      "tags": [
+        "trigger"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which case follows five or more?",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biur",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "biur",
+          "biura",
+          "biurom",
+          "biurach"
+        ],
+        "correct": [
+          "biur"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Match the trigger word to the case it requires.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "dialogue"
+    },
+    {
+      "key": "biuro-068",
+      "summary": "Pick the trigger: przy",
+      "topics": [
+        "what-triggers-what"
+      ],
+      "tags": [
+        "trigger"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which case follows przy?",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biurze",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "biurze",
+          "biura",
+          "biuru",
+          "biurem"
+        ],
+        "correct": [
+          "biurze"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Match the trigger word to the case it requires.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "dialogue"
+    },
+    {
+      "key": "biuro-069",
+      "summary": "Pick the trigger: przeciwko",
+      "topics": [
+        "what-triggers-what"
+      ],
+      "tags": [
+        "trigger"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which case follows przeciwko?",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biuru",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "biuru",
+          "biura",
+          "biurze",
+          "biurem"
+        ],
+        "correct": [
+          "biuru"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Match the trigger word to the case it requires.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "dialogue"
+    },
+    {
+      "key": "biuro-070",
+      "summary": "Pick the trigger: interesować",
+      "topics": [
+        "what-triggers-what"
+      ],
+      "tags": [
+        "trigger"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Which case follows interesować się?",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biurem",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "biurem",
+          "biura",
+          "biuru",
+          "biurze"
+        ],
+        "correct": [
+          "biurem"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Match the trigger word to the case it requires.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "dialogue"
+    },
+    {
+      "key": "biuro-071",
+      "summary": "Sentence 1: Pracuję w",
+      "topics": [
+        "in-a-sentence"
+      ],
+      "tags": [
+        "context"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Pracuję w ",
+          "lang": "pl"
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": ".",
+          "lang": "pl"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Pracuję w biurze.",
+          "lang": "pl"
+        },
+        {
+          "type": "text",
+          "text": "I work in the office.",
+          "role": "translation",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "biurze"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The sentence around the blank tells you which form to use.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "story"
+    },
+    {
+      "key": "biuro-072",
+      "summary": "Sentence 2: Jestem w",
+      "topics": [
+        "in-a-sentence"
+      ],
+      "tags": [
+        "context"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Jestem w ",
+          "lang": "pl"
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": ".",
+          "lang": "pl"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Jestem w biurze.",
+          "lang": "pl"
+        },
+        {
+          "type": "text",
+          "text": "I am in the office.",
+          "role": "translation",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "biurze"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The sentence around the blank tells you which form to use.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "story"
+    },
+    {
+      "key": "biuro-073",
+      "summary": "Sentence 3: Idę do",
+      "topics": [
+        "in-a-sentence"
+      ],
+      "tags": [
+        "context"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Idę do ",
+          "lang": "pl"
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": ".",
+          "lang": "pl"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Idę do biura.",
+          "lang": "pl"
+        },
+        {
+          "type": "text",
+          "text": "I am going to the office.",
+          "role": "translation",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "biura"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The sentence around the blank tells you which form to use.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "story"
+    },
+    {
+      "key": "biuro-074",
+      "summary": "Sentence 4: Wracam z",
+      "topics": [
+        "in-a-sentence"
+      ],
+      "tags": [
+        "context"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Wracam z ",
+          "lang": "pl"
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": ".",
+          "lang": "pl"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Wracam z biura.",
+          "lang": "pl"
+        },
+        {
+          "type": "text",
+          "text": "I am coming back from the office.",
+          "role": "translation",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "biura"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The sentence around the blank tells you which form to use.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "story"
+    },
+    {
+      "key": "biuro-075",
+      "summary": "Sentence 5: Nie ma",
+      "topics": [
+        "in-a-sentence"
+      ],
+      "tags": [
+        "context"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Nie ma ",
+          "lang": "pl"
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " dziś.",
+          "lang": "pl"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Nie ma biura dziś.",
+          "lang": "pl"
+        },
+        {
+          "type": "text",
+          "text": "There is no office today.",
+          "role": "translation",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "biura"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The sentence around the blank tells you which form to use.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "story"
+    },
+    {
+      "key": "biuro-076",
+      "summary": "Sentence 6: Szukam",
+      "topics": [
+        "in-a-sentence"
+      ],
+      "tags": [
+        "context"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Szukam ",
+          "lang": "pl"
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": ".",
+          "lang": "pl"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Szukam biura.",
+          "lang": "pl"
+        },
+        {
+          "type": "text",
+          "text": "I am looking for the office.",
+          "role": "translation",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "biura"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The sentence around the blank tells you which form to use.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "story"
+    },
+    {
+      "key": "biuro-077",
+      "summary": "Sentence 7: Pomagam",
+      "topics": [
+        "in-a-sentence"
+      ],
+      "tags": [
+        "context"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Pomagam ",
+          "lang": "pl"
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": ".",
+          "lang": "pl"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Pomagam biuru.",
+          "lang": "pl"
+        },
+        {
+          "type": "text",
+          "text": "I help the office.",
+          "role": "translation",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "biuru"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The sentence around the blank tells you which form to use.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "story"
+    },
+    {
+      "key": "biuro-078",
+      "summary": "Sentence 8: Dziękuję",
+      "topics": [
+        "in-a-sentence"
+      ],
+      "tags": [
+        "context"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Dziękuję ",
+          "lang": "pl"
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": ".",
+          "lang": "pl"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Dziękuję biuru.",
+          "lang": "pl"
+        },
+        {
+          "type": "text",
+          "text": "I thank the office.",
+          "role": "translation",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "biuru"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The sentence around the blank tells you which form to use.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "story"
+    },
+    {
+      "key": "biuro-079",
+      "summary": "Sentence 9: Daję",
+      "topics": [
+        "in-a-sentence"
+      ],
+      "tags": [
+        "context"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Daję ",
+          "lang": "pl"
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": " komputer.",
+          "lang": "pl"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Daję biuru komputer.",
+          "lang": "pl"
+        },
+        {
+          "type": "text",
+          "text": "I give the office a computer.",
+          "role": "translation",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "biuru"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The sentence around the blank tells you which form to use.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "story"
+    },
+    {
+      "key": "biuro-080",
+      "summary": "Sentence 10: Ufam",
+      "topics": [
+        "in-a-sentence"
+      ],
+      "tags": [
+        "context"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Ufam ",
+          "lang": "pl"
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": ".",
+          "lang": "pl"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Ufam biuru.",
+          "lang": "pl"
+        },
+        {
+          "type": "text",
+          "text": "I trust the office.",
+          "role": "translation",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "biuru"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The sentence around the blank tells you which form to use.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "story"
+    },
+    {
+      "key": "biuro-081",
+      "summary": "Sentence 11: Zarządzam",
+      "topics": [
+        "in-a-sentence"
+      ],
+      "tags": [
+        "context"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Zarządzam ",
+          "lang": "pl"
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": ".",
+          "lang": "pl"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Zarządzam biurem.",
+          "lang": "pl"
+        },
+        {
+          "type": "text",
+          "text": "I manage the office.",
+          "role": "translation",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "biurem"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The sentence around the blank tells you which form to use.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "story"
+    },
+    {
+      "key": "biuro-082",
+      "summary": "Sentence 12: Kieruję",
+      "topics": [
+        "in-a-sentence"
+      ],
+      "tags": [
+        "context"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Kieruję ",
+          "lang": "pl"
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": ".",
+          "lang": "pl"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Kieruję biurem.",
+          "lang": "pl"
+        },
+        {
+          "type": "text",
+          "text": "I run the office.",
+          "role": "translation",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "biurem"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The sentence around the blank tells you which form to use.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "story"
+    },
+    {
+      "key": "biuro-083",
+      "summary": "Sentence 13: Interesuję się",
+      "topics": [
+        "in-a-sentence"
+      ],
+      "tags": [
+        "context"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Interesuję się ",
+          "lang": "pl"
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": ".",
+          "lang": "pl"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Interesuję się biurem.",
+          "lang": "pl"
+        },
+        {
+          "type": "text",
+          "text": "I am interested in the office.",
+          "role": "translation",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "biurem"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The sentence around the blank tells you which form to use.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "story"
+    },
+    {
+      "key": "biuro-084",
+      "summary": "Sentence 14: Mówimy o",
+      "topics": [
+        "in-a-sentence"
+      ],
+      "tags": [
+        "context"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Mówimy o ",
+          "lang": "pl"
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": ".",
+          "lang": "pl"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Mówimy o biurze.",
+          "lang": "pl"
+        },
+        {
+          "type": "text",
+          "text": "We are talking about the office.",
+          "role": "translation",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "biurze"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The sentence around the blank tells you which form to use.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "story"
+    },
+    {
+      "key": "biuro-085",
+      "summary": "Sentence 15: Czekam przy",
+      "topics": [
+        "in-a-sentence"
+      ],
+      "tags": [
+        "context"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Czekam przy ",
+          "lang": "pl"
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": ".",
+          "lang": "pl"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Czekam przy biurze.",
+          "lang": "pl"
+        },
+        {
+          "type": "text",
+          "text": "I am waiting by the office.",
+          "role": "translation",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "biurze"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The sentence around the blank tells you which form to use.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "story"
+    },
+    {
+      "key": "biuro-086",
+      "summary": "Sentence 16: Mam",
+      "topics": [
+        "in-a-sentence"
+      ],
+      "tags": [
+        "context"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Mam ",
+          "lang": "pl"
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": ".",
+          "lang": "pl"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Mam biuro.",
+          "lang": "pl"
+        },
+        {
+          "type": "text",
+          "text": "I have an office.",
+          "role": "translation",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "biuro"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The sentence around the blank tells you which form to use.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "story"
+    },
+    {
+      "key": "biuro-087",
+      "summary": "Sentence 17: Widzę",
+      "topics": [
+        "in-a-sentence"
+      ],
+      "tags": [
+        "context"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Widzę ",
+          "lang": "pl"
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": ".",
+          "lang": "pl"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Widzę biuro.",
+          "lang": "pl"
+        },
+        {
+          "type": "text",
+          "text": "I see the office.",
+          "role": "translation",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "biuro"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The sentence around the blank tells you which form to use.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "story"
+    },
+    {
+      "key": "biuro-088",
+      "summary": "Sentence 18: Kupuję",
+      "topics": [
+        "in-a-sentence"
+      ],
+      "tags": [
+        "context"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Kupuję ",
+          "lang": "pl"
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": ".",
+          "lang": "pl"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Kupuję biuro.",
+          "lang": "pl"
+        },
+        {
+          "type": "text",
+          "text": "I am buying an office.",
+          "role": "translation",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "biuro"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The sentence around the blank tells you which form to use.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "story"
+    },
+    {
+      "key": "biuro-089",
+      "summary": "Sentence 19: Pracujemy w",
+      "topics": [
+        "in-a-sentence"
+      ],
+      "tags": [
+        "context"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Pracujemy w ",
+          "lang": "pl"
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": ".",
+          "lang": "pl"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Pracujemy w biurach.",
+          "lang": "pl"
+        },
+        {
+          "type": "text",
+          "text": "We work in offices.",
+          "role": "translation",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "biurach"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The sentence around the blank tells you which form to use.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "story"
+    },
+    {
+      "key": "biuro-090",
+      "summary": "Sentence 20: Zarządzamy",
+      "topics": [
+        "in-a-sentence"
+      ],
+      "tags": [
+        "context"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Zarządzamy ",
+          "lang": "pl"
+        },
+        {
+          "type": "blank",
+          "id": "b1"
+        },
+        {
+          "type": "text",
+          "text": ".",
+          "lang": "pl"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Zarządzamy biurami.",
+          "lang": "pl"
+        },
+        {
+          "type": "text",
+          "text": "We manage offices.",
+          "role": "translation",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "cloze",
+        "blanks": [
+          {
+            "id": "b1",
+            "expected": [
+              "biurami"
+            ]
+          }
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The sentence around the blank tells you which form to use.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "story"
+    },
+    {
+      "key": "biuro-091",
+      "summary": "Fast match 1",
+      "topics": [
+        "fast-recall"
+      ],
+      "tags": [
+        "recall"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Pair every singular form with its meaning.",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Every pair matches.",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "match"
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Work quickly, but read each meaning before you tap.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "matching"
+    },
+    {
+      "key": "biuro-092",
+      "summary": "Fast match 2",
+      "topics": [
+        "fast-recall"
+      ],
+      "tags": [
+        "recall"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Pair every plural form with its meaning.",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Every pair matches.",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "match"
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Work quickly, but read each meaning before you tap.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "matching"
+    },
+    {
+      "key": "biuro-093",
+      "summary": "Fast match 3",
+      "topics": [
+        "fast-recall"
+      ],
+      "tags": [
+        "recall"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Pair each form with where it appears.",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Every pair matches.",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "match"
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Work quickly, but read each meaning before you tap.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "matching"
+    },
+    {
+      "key": "biuro-094",
+      "summary": "Fast match 4",
+      "topics": [
+        "fast-recall"
+      ],
+      "tags": [
+        "recall"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Pair each trigger with the form it asks for.",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Every pair matches.",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "match"
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Work quickly, but read each meaning before you tap.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "matching"
+    },
+    {
+      "key": "biuro-095",
+      "summary": "Fast match 5",
+      "topics": [
+        "fast-recall"
+      ],
+      "tags": [
+        "recall"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Pair the base word with its case names.",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Every pair matches.",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "match"
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Work quickly, but read each meaning before you tap.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "matching"
+    },
+    {
+      "key": "biuro-096",
+      "summary": "Recall: do",
+      "topics": [
+        "fast-recall"
+      ],
+      "tags": [
+        "recall"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Give me the form after do.",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biura",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "biura",
+          "biuru",
+          "biurze"
+        ],
+        "correct": [
+          "biura"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Answer from the trigger alone.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "dialogue"
+    },
+    {
+      "key": "biuro-097",
+      "summary": "Recall: w",
+      "topics": [
+        "fast-recall"
+      ],
+      "tags": [
+        "recall"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Give me the form after w.",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biurze",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "biurze",
+          "biura",
+          "biurem"
+        ],
+        "correct": [
+          "biurze"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Answer from the trigger alone.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "dialogue"
+    },
+    {
+      "key": "biuro-098",
+      "summary": "Recall: pomagać",
+      "topics": [
+        "fast-recall"
+      ],
+      "tags": [
+        "recall"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Give me the form after pomagać.",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biuru",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "biuru",
+          "biura",
+          "biurem"
+        ],
+        "correct": [
+          "biuru"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Answer from the trigger alone.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "dialogue"
+    },
+    {
+      "key": "biuro-099",
+      "summary": "Recall: zarządzać",
+      "topics": [
+        "fast-recall"
+      ],
+      "tags": [
+        "recall"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Give me the form after zarządzać.",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biurem",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "biurem",
+          "biura",
+          "biuru"
+        ],
+        "correct": [
+          "biurem"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Answer from the trigger alone.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "dialogue"
+    },
+    {
+      "key": "biuro-100",
+      "summary": "Recall: plural",
+      "topics": [
+        "fast-recall"
+      ],
+      "tags": [
+        "recall"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Give me the plural after numbers five and above.",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biur",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "picks",
+        "options": [
+          "biur",
+          "biura",
+          "biurom"
+        ],
+        "correct": [
+          "biur"
+        ]
+      },
+      "hints": [
+        "Look for the case the sentence asks for."
+      ],
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Answer from the trigger alone.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "dialogue"
     }
   ]
 }

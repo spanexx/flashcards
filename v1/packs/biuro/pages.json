@@ -2,93 +2,1341 @@
   "pages": [
     {
       "level": "pack",
-      "title": "biuro — one Polish word, taught properly",
-      "lead": "biuro: the base word, four forms, why they change, and how to use it in a sentence.",
+      "title": "biuro — a full course for one word",
+      "lead": "Meet biuro, learn every form, learn what triggers it, use it in sentences and recall it fast.",
       "parts": []
     },
     {
       "level": "deck",
-      "deckId": "at-the-office",
-      "title": "At the office",
-      "lead": "Five short steps: story, spelling, forms, dialogue and matching.",
+      "deckId": "meet-biuro",
+      "title": "Meet biuro",
+      "lead": "Meet the word and its meaning in several ways.",
+      "parts": []
+    },
+    {
+      "level": "deck",
+      "deckId": "every-form",
+      "title": "Every form",
+      "lead": "All fourteen forms of biuro, with the reason for each.",
+      "parts": []
+    },
+    {
+      "level": "deck",
+      "deckId": "what-triggers-what",
+      "title": "What triggers what",
+      "lead": "The prepositions and verbs that tell you which form to use.",
+      "parts": []
+    },
+    {
+      "level": "deck",
+      "deckId": "in-a-sentence",
+      "title": "In a sentence",
+      "lead": "The word inside real Polish sentences.",
+      "parts": []
+    },
+    {
+      "level": "deck",
+      "deckId": "fast-recall",
+      "title": "Fast recall",
+      "lead": "Mixed practice, with no meaning in front of you.",
       "parts": []
     },
     {
       "level": "card",
-      "cardKey": "story-at-the-office",
-      "title": "The story card",
-      "lead": "biuro inside a real sentence",
+      "cardKey": "biuro-001",
+      "title": "Meet: To jest biuro.",
+      "lead": "Meet: To jest biuro.",
       "parts": [
         {
           "type": "text",
-          "text": "Pracuję w biurze. means I work in the office. After w, the place word takes the locative ending: the -o of biuro becomes -e and r softens to rz.",
-          "lang": "en"
-        },
-        {
-          "type": "text",
-          "text": "Try the sentence with another place you know before you return to the card.",
+          "text": "The full line is To jest biuro.",
           "lang": "en"
         }
       ]
     },
     {
       "level": "card",
-      "cardKey": "spelling-biuro",
-      "title": "The spelling card",
-      "lead": "The dictionary form",
+      "cardKey": "biuro-002",
+      "title": "Meet: Widzę biuro.",
+      "lead": "Meet: Widzę biuro.",
       "parts": [
         {
           "type": "text",
-          "text": "biuro is written with one b, one u, one r and one o. It is neuter, so the article to match it is to, not ten or ta.",
+          "text": "The full line is Widzę biuro.",
           "lang": "en"
         }
       ]
     },
     {
       "level": "card",
-      "cardKey": "forms-biuro",
-      "title": "The forms card",
-      "lead": "How and why the ending changes",
+      "cardKey": "biuro-003",
+      "title": "Meet: Mam biuro.",
+      "lead": "Meet: Mam biuro.",
       "parts": [
         {
           "type": "text",
-          "text": "biura is the genitive: the -o becomes -a, and it follows do or nie ma. biuru is the dative: -o becomes -u when the office is the one you help or speak to.",
-          "lang": "en"
-        },
-        {
-          "type": "text",
-          "text": "biurze is the locative after w. biurem is the instrumental with -em, used for the thing you work with or manage.",
+          "text": "The full line is Mam biuro.",
           "lang": "en"
         }
       ]
     },
     {
       "level": "card",
-      "cardKey": "dialogue-at-the-office",
-      "title": "The dialogue card",
-      "lead": "Using the form in an answer",
+      "cardKey": "biuro-004",
+      "title": "Meet: Pracuję w biurze.",
+      "lead": "Meet: Pracuję w biurze.",
       "parts": [
         {
           "type": "text",
-          "text": "Gdzie pracujesz? asks where you work. W biurze. is the natural short answer: the preposition w needs the locative form, not the dictionary form.",
+          "text": "The full line is Pracuję w biurze.",
           "lang": "en"
         }
       ]
     },
     {
       "level": "card",
-      "cardKey": "matching-biuro",
-      "title": "The matching card",
-      "lead": "Form and meaning, side by side",
+      "cardKey": "biuro-005",
+      "title": "Meet: Jestem w biurze.",
+      "lead": "Meet: Jestem w biurze.",
       "parts": [
         {
           "type": "text",
-          "text": "The five pairs are biuro office, biura of the office, biuru to the office, biurze in the office and biurem with the office.",
+          "text": "The full line is Jestem w biurze.",
           "lang": "en"
-        },
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-006",
+      "title": "Say it: biuro",
+      "lead": "Say it: biuro",
+      "parts": [
         {
           "type": "text",
-          "text": "Knowing a form and knowing its meaning are two different things. This card checks both at once.",
+          "text": "The meaning “office” is expressed by biuro.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-007",
+      "title": "Say it: biurze",
+      "lead": "Say it: biurze",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The meaning “in the office” is expressed by biurze.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-008",
+      "title": "Say it: biura",
+      "lead": "Say it: biura",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The meaning “of the office” is expressed by biura.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-009",
+      "title": "Say it: biuru",
+      "lead": "Say it: biuru",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The meaning “to the office” is expressed by biuru.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-010",
+      "title": "Say it: biurem",
+      "lead": "Say it: biurem",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The meaning “with the office” is expressed by biurem.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-011",
+      "title": "Say it: biura",
+      "lead": "Say it: biura",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The meaning “offices” is expressed by biura.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-012",
+      "title": "Say it: biur",
+      "lead": "Say it: biur",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The meaning “of the offices” is expressed by biur.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-013",
+      "title": "Say it: biurach",
+      "lead": "Say it: biurach",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The meaning “in the offices” is expressed by biurach.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-014",
+      "title": "Choose: biuro",
+      "lead": "Choose: biuro",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The correct line is “biuro”.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-015",
+      "title": "Choose: biurze",
+      "lead": "Choose: biurze",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The correct line is “W biurze.”.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-016",
+      "title": "Choose: biuro",
+      "lead": "Choose: biuro",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The correct line is “Mam biuro.”.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-017",
+      "title": "Choose: biurze",
+      "lead": "Choose: biurze",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The correct line is “W biurze.”.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-018",
+      "title": "Choose: biur",
+      "lead": "Choose: biur",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The correct line is “Pięć biur.”.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-019",
+      "title": "Match the basic forms",
+      "lead": "Match the basic forms",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The base forms and their meanings are paired on the board.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-020",
+      "title": "Match the place forms",
+      "lead": "Match the place forms",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Place forms answer where, and each has one exact English meaning.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-021",
+      "title": "Form: nominative singular",
+      "lead": "Form: nominative singular",
+      "parts": [
+        {
+          "type": "text",
+          "text": "nominative singular of biuro is biuro. subject.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-022",
+      "title": "Name: biuro (nominative singular)",
+      "lead": "Name: biuro (nominative singular)",
+      "parts": [
+        {
+          "type": "text",
+          "text": "biuro here is nominative singular.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-023",
+      "title": "Form: genitive singular",
+      "lead": "Form: genitive singular",
+      "parts": [
+        {
+          "type": "text",
+          "text": "genitive singular of biuro is biura. of, after do.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-024",
+      "title": "Name: biura (genitive singular)",
+      "lead": "Name: biura (genitive singular)",
+      "parts": [
+        {
+          "type": "text",
+          "text": "biura here is genitive singular.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-025",
+      "title": "Form: dative singular",
+      "lead": "Form: dative singular",
+      "parts": [
+        {
+          "type": "text",
+          "text": "dative singular of biuro is biuru. to, after pomagać.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-026",
+      "title": "Name: biuru (dative singular)",
+      "lead": "Name: biuru (dative singular)",
+      "parts": [
+        {
+          "type": "text",
+          "text": "biuru here is dative singular.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-027",
+      "title": "Form: accusative singular",
+      "lead": "Form: accusative singular",
+      "parts": [
+        {
+          "type": "text",
+          "text": "accusative singular of biuro is biuro. object.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-028",
+      "title": "Name: biuro (accusative singular)",
+      "lead": "Name: biuro (accusative singular)",
+      "parts": [
+        {
+          "type": "text",
+          "text": "biuro here is accusative singular.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-029",
+      "title": "Form: instrumental singular",
+      "lead": "Form: instrumental singular",
+      "parts": [
+        {
+          "type": "text",
+          "text": "instrumental singular of biuro is biurem. with, after zarządzać.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-030",
+      "title": "Name: biurem (instrumental singular)",
+      "lead": "Name: biurem (instrumental singular)",
+      "parts": [
+        {
+          "type": "text",
+          "text": "biurem here is instrumental singular.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-031",
+      "title": "Form: locative singular",
+      "lead": "Form: locative singular",
+      "parts": [
+        {
+          "type": "text",
+          "text": "locative singular of biuro is biurze. in, after w.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-032",
+      "title": "Name: biurze (locative singular)",
+      "lead": "Name: biurze (locative singular)",
+      "parts": [
+        {
+          "type": "text",
+          "text": "biurze here is locative singular.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-033",
+      "title": "Form: nominative plural",
+      "lead": "Form: nominative plural",
+      "parts": [
+        {
+          "type": "text",
+          "text": "nominative plural of biuro is biura. subject.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-034",
+      "title": "Name: biura (nominative plural)",
+      "lead": "Name: biura (nominative plural)",
+      "parts": [
+        {
+          "type": "text",
+          "text": "biura here is nominative plural.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-035",
+      "title": "Form: genitive plural",
+      "lead": "Form: genitive plural",
+      "parts": [
+        {
+          "type": "text",
+          "text": "genitive plural of biuro is biur. of many, after five.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-036",
+      "title": "Name: biur (genitive plural)",
+      "lead": "Name: biur (genitive plural)",
+      "parts": [
+        {
+          "type": "text",
+          "text": "biur here is genitive plural.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-037",
+      "title": "Form: dative plural",
+      "lead": "Form: dative plural",
+      "parts": [
+        {
+          "type": "text",
+          "text": "dative plural of biuro is biurom. to many.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-038",
+      "title": "Name: biurom (dative plural)",
+      "lead": "Name: biurom (dative plural)",
+      "parts": [
+        {
+          "type": "text",
+          "text": "biurom here is dative plural.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-039",
+      "title": "Form: accusative plural",
+      "lead": "Form: accusative plural",
+      "parts": [
+        {
+          "type": "text",
+          "text": "accusative plural of biuro is biura. object.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-040",
+      "title": "Name: biura (accusative plural)",
+      "lead": "Name: biura (accusative plural)",
+      "parts": [
+        {
+          "type": "text",
+          "text": "biura here is accusative plural.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-041",
+      "title": "Label to form: locative singular",
+      "lead": "Label to form: locative singular",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The locative singular form is biurze.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-042",
+      "title": "Label to form: genitive singular",
+      "lead": "Label to form: genitive singular",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The genitive singular form is biura.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-043",
+      "title": "Label to form: dative singular",
+      "lead": "Label to form: dative singular",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The dative singular form is biuru.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-044",
+      "title": "Label to form: instrumental singular",
+      "lead": "Label to form: instrumental singular",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The instrumental singular form is biurem.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-045",
+      "title": "Label to form: genitive plural",
+      "lead": "Label to form: genitive plural",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The genitive plural form is biur.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-046",
+      "title": "Label to form: locative plural",
+      "lead": "Label to form: locative plural",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The locative plural form is biurach.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-047",
+      "title": "Label to form: dative plural",
+      "lead": "Label to form: dative plural",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The dative plural form is biurom.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-048",
+      "title": "Label to form: instrumental plural",
+      "lead": "Label to form: instrumental plural",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The instrumental plural form is biurami.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-049",
+      "title": "Label to form: nominative plural",
+      "lead": "Label to form: nominative plural",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The nominative plural form is biura.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-050",
+      "title": "Label to form: vocative singular",
+      "lead": "Label to form: vocative singular",
+      "parts": [
+        {
+          "type": "text",
+          "text": "The vocative singular form is biuro.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-051",
+      "title": "Trigger: biura",
+      "lead": "Trigger: biura",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Idę do biura. do means to; it takes the genitive.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-052",
+      "title": "Trigger: biura",
+      "lead": "Trigger: biura",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Wracam z biura. z meaning from takes the genitive.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-053",
+      "title": "Trigger: biura",
+      "lead": "Trigger: biura",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Nie ma biura dziś. Negation turns the object into the genitive.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-054",
+      "title": "Trigger: biura",
+      "lead": "Trigger: biura",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Szukam biura. szukać takes the genitive.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-055",
+      "title": "Trigger: biura",
+      "lead": "Trigger: biura",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Bez biura nie pracuję. bez means without and takes the genitive.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-056",
+      "title": "Trigger: biura",
+      "lead": "Trigger: biura",
+      "parts": [
+        {
+          "type": "text",
+          "text": "To jest dla biura. dla means for and takes the genitive.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-057",
+      "title": "Trigger: biuru",
+      "lead": "Trigger: biuru",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Pomagam biuru. pomagać takes the dative.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-058",
+      "title": "Trigger: biuru",
+      "lead": "Trigger: biuru",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Dziękuję biuru. dziękować takes the dative.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-059",
+      "title": "Trigger: biuru",
+      "lead": "Trigger: biuru",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Daję biuru komputer. dawać gives to someone in the dative.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-060",
+      "title": "Trigger: biuru",
+      "lead": "Trigger: biuru",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Ufam biuru. ufać takes the dative.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-061",
+      "title": "Pick the trigger: do",
+      "lead": "Pick the trigger: do",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Which case follows do? Answer: biura.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-062",
+      "title": "Pick the trigger: w-location",
+      "lead": "Pick the trigger: w-location",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Which case follows w when you are inside a place? Answer: biurze.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-063",
+      "title": "Pick the trigger: pomagać",
+      "lead": "Pick the trigger: pomagać",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Which case follows pomagać? Answer: biuru.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-064",
+      "title": "Pick the trigger: zarządzać",
+      "lead": "Pick the trigger: zarządzać",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Which case follows zarządzać? Answer: biurem.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-065",
+      "title": "Pick the trigger: z-with",
+      "lead": "Pick the trigger: z-with",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Which case follows z when it means with? Answer: biurem.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-066",
+      "title": "Pick the trigger: o-about",
+      "lead": "Pick the trigger: o-about",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Which case follows o when it means about? Answer: biurze.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-067",
+      "title": "Pick the trigger: number",
+      "lead": "Pick the trigger: number",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Which case follows five or more? Answer: biur.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-068",
+      "title": "Pick the trigger: przy",
+      "lead": "Pick the trigger: przy",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Which case follows przy? Answer: biurze.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-069",
+      "title": "Pick the trigger: przeciwko",
+      "lead": "Pick the trigger: przeciwko",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Which case follows przeciwko? Answer: biuru.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-070",
+      "title": "Pick the trigger: interesować",
+      "lead": "Pick the trigger: interesować",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Which case follows interesować się? Answer: biurem.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-071",
+      "title": "Sentence 1: Pracuję w",
+      "lead": "Sentence 1: Pracuję w",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Pracuję w biurze. means I work in the office.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-072",
+      "title": "Sentence 2: Jestem w",
+      "lead": "Sentence 2: Jestem w",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Jestem w biurze. means I am in the office.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-073",
+      "title": "Sentence 3: Idę do",
+      "lead": "Sentence 3: Idę do",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Idę do biura. means I am going to the office.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-074",
+      "title": "Sentence 4: Wracam z",
+      "lead": "Sentence 4: Wracam z",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Wracam z biura. means I am coming back from the office.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-075",
+      "title": "Sentence 5: Nie ma",
+      "lead": "Sentence 5: Nie ma",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Nie ma biura dziś. means There is no office today.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-076",
+      "title": "Sentence 6: Szukam",
+      "lead": "Sentence 6: Szukam",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Szukam biura. means I am looking for the office.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-077",
+      "title": "Sentence 7: Pomagam",
+      "lead": "Sentence 7: Pomagam",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Pomagam biuru. means I help the office.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-078",
+      "title": "Sentence 8: Dziękuję",
+      "lead": "Sentence 8: Dziękuję",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Dziękuję biuru. means I thank the office.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-079",
+      "title": "Sentence 9: Daję",
+      "lead": "Sentence 9: Daję",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Daję biuru komputer. means I give the office a computer.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-080",
+      "title": "Sentence 10: Ufam",
+      "lead": "Sentence 10: Ufam",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Ufam biuru. means I trust the office.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-081",
+      "title": "Sentence 11: Zarządzam",
+      "lead": "Sentence 11: Zarządzam",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Zarządzam biurem. means I manage the office.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-082",
+      "title": "Sentence 12: Kieruję",
+      "lead": "Sentence 12: Kieruję",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Kieruję biurem. means I run the office.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-083",
+      "title": "Sentence 13: Interesuję się",
+      "lead": "Sentence 13: Interesuję się",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Interesuję się biurem. means I am interested in the office.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-084",
+      "title": "Sentence 14: Mówimy o",
+      "lead": "Sentence 14: Mówimy o",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Mówimy o biurze. means We are talking about the office.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-085",
+      "title": "Sentence 15: Czekam przy",
+      "lead": "Sentence 15: Czekam przy",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Czekam przy biurze. means I am waiting by the office.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-086",
+      "title": "Sentence 16: Mam",
+      "lead": "Sentence 16: Mam",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Mam biuro. means I have an office.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-087",
+      "title": "Sentence 17: Widzę",
+      "lead": "Sentence 17: Widzę",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Widzę biuro. means I see the office.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-088",
+      "title": "Sentence 18: Kupuję",
+      "lead": "Sentence 18: Kupuję",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Kupuję biuro. means I am buying an office.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-089",
+      "title": "Sentence 19: Pracujemy w",
+      "lead": "Sentence 19: Pracujemy w",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Pracujemy w biurach. means We work in offices.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-090",
+      "title": "Sentence 20: Zarządzamy",
+      "lead": "Sentence 20: Zarządzamy",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Zarządzamy biurami. means We manage offices.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-091",
+      "title": "Fast match 1",
+      "lead": "Fast match 1",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Pair every singular form with its meaning. All pairs must be locked for a Got it.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-092",
+      "title": "Fast match 2",
+      "lead": "Fast match 2",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Pair every plural form with its meaning. All pairs must be locked for a Got it.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-093",
+      "title": "Fast match 3",
+      "lead": "Fast match 3",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Pair each form with where it appears. All pairs must be locked for a Got it.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-094",
+      "title": "Fast match 4",
+      "lead": "Fast match 4",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Pair each trigger with the form it asks for. All pairs must be locked for a Got it.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-095",
+      "title": "Fast match 5",
+      "lead": "Fast match 5",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Pair the base word with its case names. All pairs must be locked for a Got it.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-096",
+      "title": "Recall: do",
+      "lead": "Recall: do",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Give me the form after do. Answer: biura.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-097",
+      "title": "Recall: w",
+      "lead": "Recall: w",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Give me the form after w. Answer: biurze.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-098",
+      "title": "Recall: pomagać",
+      "lead": "Recall: pomagać",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Give me the form after pomagać. Answer: biuru.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-099",
+      "title": "Recall: zarządzać",
+      "lead": "Recall: zarządzać",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Give me the form after zarządzać. Answer: biurem.",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "level": "card",
+      "cardKey": "biuro-100",
+      "title": "Recall: plural",
+      "lead": "Recall: plural",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Give me the plural after numbers five and above. Answer: biur.",
           "lang": "en"
         }
       ]

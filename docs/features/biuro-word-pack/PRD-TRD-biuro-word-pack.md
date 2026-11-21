@@ -38,7 +38,7 @@ documents the folder shape for later words.
 ## 4. Simulation contract
 
 `simulate.sh` must demonstrate: the folder contents, the seeded bundle's counts
-and fields, the five stage/mode pairs, the seven pages, the import check, and the
+and fields, the five stage/mode pairs, the pages, the import check, and the
 fact that another pack folder can be copied with a different word.
 
 ## 5. Technical design
@@ -70,7 +70,26 @@ locked identity rule.
 - No change to any existing built-in pack's cards.
 - No global lexicon or online lookup at runtime.
 
-## 7. Compatibility
+## 7. Full-course revision (2026-11-21)
+
+The five-card scope above was rejected. The locked revision is recorded in
+`GRILL-full-course.txt` and supersedes sections 2 through 6. The five-card
+numbers in those sections are historical and must not be read as the shipped
+course:
+
+- Five decks instead of one: Meet biuro, Every form, What triggers what, In a
+  sentence, Fast recall.
+- About 100 cards instead of five, still all about the one word biuro.
+- The word record declares the full paradigm: seven singular forms and seven
+  plural forms, with a reason for each; the matching pairs use the nine distinct
+  forms.
+- Most cards ask the learner to choose or produce the right form for a cue
+  (preposition, verb, negation, number or sentence context). Meaning cards
+  remain but are a minority.
+- Pack, five deck and ~100 card Dictionary pages still ship, text only.
+- No new schema, answer modes or page levels.
+
+## 8. Compatibility
 
 - Packs without `words.json` keep producing the same bundle they did before.
 - The seed test still checks the other three packs at ten cards per deck.
