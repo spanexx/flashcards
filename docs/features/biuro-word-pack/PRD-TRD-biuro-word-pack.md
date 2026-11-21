@@ -77,8 +77,10 @@ The five-card scope above was rejected. The locked revision is recorded in
 numbers in those sections are historical and must not be read as the shipped
 course:
 
-- Five decks instead of one: Meet biuro, Every form, What triggers what, In a
-  sentence, Fast recall.
+- Five decks instead of one: At the office, Every form, What triggers what, In
+  a sentence, Fast recall. The first deck keeps the earlier id and label, and
+  the earlier five cards keep their exact content, so an installed v1.0.0 pack
+  upgrades to v2.0.0 without leaving stale decks or cards behind.
 - About 100 cards instead of five, still all about the one word biuro.
 - The word record declares the full paradigm: seven singular forms and seven
   plural forms, with a reason for each; the matching pairs use the nine distinct

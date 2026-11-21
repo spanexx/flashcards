@@ -43,7 +43,7 @@ Why:
 
 4. "I need this pack is specifically for bureau, which is office word. You can have like three decks or four decks or five decks that go through the process of showing me exactly the word, learning it, using it in sentence, where it appears so I can know that if it appears here, I should say this word."
 Answer:
-- Five decks: Meet biuro, Every form, What triggers what, In a sentence, Fast recall.
+- Five decks: At the office, Every form, What triggers what, In a sentence, Fast recall. The first deck keeps the old id and label so a learner upgrading from the five-card example keeps those cards and their evidence.
 - The triggers deck teaches that do/bez/z(from) ask for biura, w/o/przy ask for biurze, pomagać/dziękować ask for biuru, zarządzać/interesować się ask for biurem, and the plural forms.
 
 Why:
