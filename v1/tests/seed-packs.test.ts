@@ -12,11 +12,14 @@ import path from "node:path";
 import { parseBundle } from "@/lib/browser/bundle";
 import { deckCardId } from "@/lib/core/card";
 import { SEED_INDEX_SCHEMA } from "@/lib/browser/seed";
+import { lessonIssues } from "@/lib/core/word-check";
 
 const projectRoot = fileURLToPath(new URL("..", import.meta.url));
 
-const PACK_NAMES = ["browser-dev", "polish-from-scratch", "system-design"] as const;
+const PACK_NAMES = ["biuro", "browser-dev", "polish-from-scratch", "system-design"] as const;
 const CARDS_PER_DECK = 10;
+// WHY: the biuro pack is one word taught in depth, not a ten-card topic deck.
+const WORD_PACKS = ["biuro"] as const;
 
 /** A YouTube video is named by its 11-character id, never by a page address. */
 const YOUTUBE_ID = /^[A-Za-z0-9_-]{11}$/;
@@ -81,6 +84,7 @@ describe.each(PACK_NAMES)("%s seed bundle", (name) => {
       expect(card.deckId, `card ${card.key} has no deck`).toBeTruthy();
       expect(known.has(card.deckId ?? "")).toBe(true);
     }
+    if ((WORD_PACKS as readonly string[]).includes(name)) return;
     for (const deck of bundle.decks) {
       const count = bundle.cards.filter((card) => card.deckId === deck.id).length;
       expect(count, `deck ${deck.id}`).toBe(CARDS_PER_DECK);
@@ -101,6 +105,95 @@ describe.each(PACK_NAMES)("%s seed bundle", (name) => {
         }
       }
     }
+  });
+});
+
+describe("biuro full course", () => {
+  it("ships one word, its whole paradigm and a hundred linked cards", async () => {
+    const bundle = await readSeed("biuro");
+    expect(bundle.pack.version).toBe("2.0.0");
+    expect(bundle.pack.language).toBe("pl");
+    expect(bundle.pack.sourceLanguage).toBe("en");
+    expect(bundle.decks).toHaveLength(5);
+    expect(bundle.words).toHaveLength(1);
+    const [word] = bundle.words;
+    expect(word.id).toBe("biuro");
+    expect(word.lemma).toBe("biuro");
+    expect(word.meaning).toBe("office");
+    expect(word.forms.map((form) => form.to)).toEqual([
+      "biuro", "biura", "biuru", "biuro", "biurem", "biurze", "biuro",
+      "biura", "biur", "biurom", "biura", "biurami", "biurach", "biura",
+    ]);
+    expect(new Set(word.forms.map((form) => form.label)).size).toBe(14);
+    expect(word.forms.every((form) => form.why.length > 0)).toBe(true);
+    expect(word.pairs).toHaveLength(9);
+    expect(new Set(word.pairs.map((pair) => pair.target)).size).toBe(9);
+    expect(bundle.cards).toHaveLength(100);
+    expect(bundle.cards.every((card) => card.wordId === "biuro")).toBe(true);
+    for (const deck of bundle.decks) {
+      expect(bundle.cards.filter((card) => card.deckId === deck.id).length).toBeGreaterThan(0);
+    }
+    expect(lessonIssues(bundle.cards, bundle.words)).toEqual([]);
+  });
+
+  it("fixes the answer mode for every stage and never prints the answer in the prompt", async () => {
+    const bundle = await readSeed("biuro");
+    const modes: Record<string, string> = {
+      story: "cloze",
+      spelling: "type",
+      forms: "type",
+      dialogue: "picks",
+      matching: "match",
+    };
+    for (const card of bundle.cards) {
+      expect(card.answerDef.mode, `card ${card.key}`).toBe(modes[card.stage ?? ""]);
+      const expected = [
+        ...(card.answerDef.expected ?? []),
+        ...(card.answerDef.blanks ?? []).flatMap((blank) => blank.expected),
+        ...(card.answerDef.correct ?? []),
+      ];
+      const promptText = card.prompt
+        .filter((part): part is { type: "text"; text: string } => part.type === "text")
+        .map((part) => part.text)
+        .join(" ");
+      for (const answer of expected) {
+        expect(promptText.includes(answer), `card ${card.key} prints ${answer}`).toBe(false);
+      }
+    }
+  });
+
+  it("ships a Dictionary page for the pack, every deck and every card", async () => {
+    const bundle = await readSeed("biuro");
+    const pages = bundle.pages;
+    expect(pages.filter((page) => page.level === "pack")).toHaveLength(1);
+    expect(pages.filter((page) => page.level === "deck")).toHaveLength(bundle.decks.length);
+    const cardPages = pages.filter((page) => page.level === "card");
+    expect(cardPages).toHaveLength(bundle.cards.length);
+    const deckNames = new Map(bundle.decks.map((deck) => [deck.id, deck.name]));
+    const ids = new Set(
+      bundle.cards.map((card) =>
+        deckCardId("biuro", card.deckId ?? "", { ...card, topics: [deckNames.get(card.deckId ?? "") ?? ""] }),
+      ),
+    );
+    for (const page of cardPages) {
+      expect(ids.has(page.cardId ?? ""), `page ${page.cardId} names no card`).toBe(true);
+      expect(page.parts.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("keeps every meaning in the question language", async () => {
+    const bundle = await readSeed("biuro");
+    const [word] = bundle.words;
+    for (const part of word.note ?? []) {
+      if (part.type === "text") expect(part.text).toMatch(/[a-z]/);
+    }
+    for (const form of word.forms) {
+      expect(form.meaning.length).toBeGreaterThan(0);
+      for (const part of form.why) {
+        if (part.type === "text") expect(part.lang).toBe("en");
+      }
+    }
+    for (const pair of word.pairs) expect(pair.meaning.length).toBeGreaterThan(0);
   });
 });
 

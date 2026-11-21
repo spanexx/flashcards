@@ -225,4 +225,31 @@ describe("buildAuthoringPrompt", () => {
     );
     expect(parseCardsBundle(example(prompt)).ok).toBe(true);
   });
+
+  it("shows a whole word lesson the importer will accept", () => {
+    const prompt = buildAuthoringPrompt({ kind: "pack" });
+    expect(prompt).toContain('"words"');
+    expect(prompt).toContain('"matching"');
+    expect(prompt).toContain("Stage fixes the answer mode");
+    const result = parseBundle(example(prompt));
+    expect(result.ok, JSON.stringify(result)).toBe(true);
+    if (result.ok) {
+      expect(result.bundle.words[0].lemma).toBe("the base word");
+      expect(result.bundle.cards.filter((card) => card.stage)).toHaveLength(5);
+    }
+  });
+
+  it("carries the focus word into both lanes and keeps it out of fragments' shape", () => {
+    const brief = defaultCreationBrief({ subject: "at the office", focusWord: "biuro" });
+    const packPrompt = buildAuthoringPrompt({ kind: "pack" }, null, { brief });
+    const cardsPrompt = buildAuthoringPrompt(
+      { kind: "cards", packName: "starter", deckId: "basics" },
+      pack,
+      { brief },
+    );
+    expect(packPrompt).toContain('lemma "biuro"');
+    expect(cardsPrompt).toContain('lemma "biuro"');
+    expect(cardsPrompt).toContain("A fragment cannot define a word");
+    expect(parseCardsBundle(example(cardsPrompt)).ok).toBe(true);
+  });
 });

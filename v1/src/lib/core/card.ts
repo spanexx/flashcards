@@ -8,6 +8,8 @@
 // [pack: browser-app]
 // 2026-10-22 opencode: a spoken prompt may repeat as the answer, so a
 // listen-and-type card is not refused as a duplicated side. [pack: creation-control]
+// 2026-11-21 opencode: a card may carry a word link and a stage. Neither is
+// content, so neither enters the identity hash. [pack: word-lessons]
 
 import { z } from "zod";
 import type {
@@ -55,6 +57,12 @@ export function stableStringify(value: unknown): string {
  * pack version and the display id never count, so a reinstall and an unchanged
  * update keep the learner's history attached. The teaching layer is help, not
  * content: editing it must never make the learner look like a new learner.
+ *
+ * WHY the word link is absent too: `wordId` and `stage` say where a card sits
+ * in a lesson, not what it asks. Hashing them would change the id of every
+ * shipped card that gains a link, and the learner's evidence would be lost for
+ * a change that never touched a question. A stage never changes the prompt or
+ * the answer, so two cards that differ only by stage cannot exist in practice.
  */
 export function canonicalContent(source: CardSource): string {
   return stableStringify({
@@ -186,6 +194,8 @@ export function buildCard(
     hints: source.hints && source.hints.length > 0 ? source.hints : undefined,
     fullLine: source.fullLine,
     teaching: source.teaching && source.teaching.length > 0 ? source.teaching : undefined,
+    wordId: source.wordId,
+    stage: source.stage,
     origin,
     createdAt: now,
   };

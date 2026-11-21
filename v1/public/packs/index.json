@@ -2,6 +2,11 @@
   "schema": "flashcards.pack-index/v1",
   "packs": [
     {
+      "name": "biuro",
+      "version": "2.0.0",
+      "file": "/packs/biuro.json"
+    },
+    {
       "name": "browser-dev",
       "version": "1.0.0",
       "file": "/packs/browser-dev.json"

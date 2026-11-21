@@ -42,6 +42,11 @@ export function studyCardInstruction(
       ? `Listen, then type the full ${pair.targetName} line.`
       : "Listen, then type the full line.";
   }
+  if (mode === "match") {
+    return pair.known && !pair.same
+      ? `Match each ${pair.targetName} form with its ${pair.sourceName} meaning.`
+      : "Match each form with its meaning.";
+  }
   return pair.known && !pair.same
     ? `Choose the correct ${pair.sourceName} meaning.`
     : "Choose the correct meaning.";
@@ -52,7 +57,17 @@ export function studyModeLabel(mode: AnswerMode): string {
   if (mode === "cloze") return "Fill the blank";
   if (mode === "type") return "Type the line";
   if (mode === "hear_type") return "Listen and type";
+  if (mode === "match") return "Match the pairs";
   return "Choose the meaning";
+}
+
+/**
+ * What a learner who gives up on a matching board sends. The judge reads this
+ * count and records `no`; without it there is no way to answer a board with no
+ * locked pairs, which the lesson design promises.
+ */
+export function matchGiveUpAnswer(total: number): string {
+  return `0/${total}`;
 }
 
 /** What the listen control should say, in the pack language when it is known. */

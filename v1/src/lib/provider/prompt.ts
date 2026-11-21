@@ -120,10 +120,15 @@ export function buildGenerationPrompt(
       ...describeCreationBrief(input.brief, input.inventory ?? []),
       ...cardStylePromptLines(input.brief.cardStyle, pair),
       ...teaching,
+      FRAGMENT_WORD_RULE,
     ];
     user = `${user}\n\n${extra.join("\n")}`;
   } else {
-    const pairLines = [...pairPromptLines(pair, pack.studyInstruction ?? ""), ...teaching];
+    const pairLines = [
+      ...pairPromptLines(pair, pack.studyInstruction ?? ""),
+      ...teaching,
+      FRAGMENT_WORD_RULE,
+    ];
     if (pairLines.length > 0) user = `${user}\n\n${pairLines.join("\n")}`;
   }
 
@@ -210,6 +215,10 @@ function exampleLine(pair: PackLanguagePair): {
   };
 }
 
+/** A deck or cards bundle cannot carry words, so its lines cannot link to one. */
+const FRAGMENT_WORD_RULE =
+  'This target cannot define a word. Leave "wordId" and "stage" out of every line.';
+
 /** The optional layer rules every structured prompt repeats. */
 function teachingPromptLines(): string[] {
   return [
@@ -229,6 +238,55 @@ function exampleTeaching(
     : { type: "text", text: line.teaching };
 }
 
+/**
+ * The word rules this lane can honour. It writes cloze and type lines, so it
+ * can teach story, spelling and forms but never picks or a matching board.
+ */
+function generationWordLessonLines(): string[] {
+  return [
+    "A word lesson is one word and the cards that teach it. Write at most one word beside the lines, and make every word card belong to it.",
+    'A word has "id" (lowercase slug), "lemma", "meaning", "lang" (the target language code), "forms" and "pairs".',
+    'A form is {"label":"...","to":"...","meaning":"...","why":[{"type":"text","text":"..."}]}. "meaning" and "why" are in the question language; "why" explains the change and never gives a card answer.',
+    'A pair is {"target":"...","meaning":"..."}; both are in the question language and must be distinct inside one word.',
+    'Every word card sets "wordId" to that word\'s id and "stage" to "story", "spelling" or "forms". Stage fixes style: story is cloze, spelling and forms are type. This lane must not write "dialogue" or "matching".',
+    "Never print a changed form in a card prompt or teaching part: the learner has to produce it.",
+  ];
+}
+
+/** A word and one linked card the new-pack example can copy. */
+function wordLessonExample(
+  pair: PackLanguagePair,
+  cardStyle: CardStyle,
+): { word: Record<string, unknown>; line: Record<string, unknown> } {
+  const line = exampleLine(pair);
+  const style = cardStyle === "hear_type" ? "cloze" : exampleStyle(cardStyle);
+  const stage = style === "cloze" ? "story" : "spelling";
+  const word: Record<string, unknown> = {
+    id: "sweet-fruit",
+    lemma: line.target,
+    meaning: line.translation,
+    forms: [],
+    pairs: [{ target: line.target, meaning: line.translation }],
+  };
+  if (pair.target.length > 0) word.lang = pair.target;
+  return {
+    word,
+    line: {
+      deckId: "basics",
+      style,
+      fullLine: line.fullLine,
+      target: line.target,
+      translation: line.translation,
+      topics: ["Basics"],
+      tags: [],
+      summary: `Word lesson: ${line.target}`,
+      teaching: [exampleTeaching(line, pair)],
+      wordId: word.id,
+      stage,
+    },
+  };
+}
+
 /** The whole-pack example, with a style the provider can copy. */
 function packShape(
   cardStyle: CardStyle,
@@ -244,9 +302,11 @@ function packShape(
   if (pair.target.length > 0) pack.language = pair.target;
   if (pair.source.length > 0) pack.sourceLanguage = pair.source;
   if (studyInstruction.trim().length > 0) pack.studyInstruction = studyInstruction.trim();
+  const lesson = wordLessonExample(pair, cardStyle);
   return JSON.stringify({
     pack,
     decks: [{ id: "basics", name: "Basics" }],
+    words: [lesson.word],
     lines: [
       {
         deckId: "basics",
@@ -259,6 +319,7 @@ function packShape(
         summary: "A sweet fruit",
         teaching: [exampleTeaching(line, pair)],
       },
+      lesson.line,
     ],
   });
 }
@@ -347,6 +408,7 @@ export function buildPackGenerationPrompt(
     `Learner level: ${slots.level}. Preferred learning style: ${slots.learningStyle}.`,
     "Every line must name one of your decks with deckId. The app turns each line into its exercise.",
     ...teachingPromptLines(),
+    ...generationWordLessonLines(),
     "Return JSON only, shaped like:",
     packShape(brief?.cardStyle ?? "mixed", pair, studyInstruction),
   );
@@ -391,6 +453,7 @@ export function buildDeckGenerationPrompt(
     `Learner level: ${slots.level}. Preferred learning style: ${slots.learningStyle}.`,
     "The app turns each line into its exercise.",
     ...teachingPromptLines(),
+    FRAGMENT_WORD_RULE,
     "Return JSON only, shaped like:",
     deckShape(brief?.cardStyle ?? "mixed", pair),
   );

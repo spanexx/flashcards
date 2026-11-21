@@ -34,6 +34,20 @@ function optionsFor(answerDef: AnswerDef): NormalizeOptions {
 }
 
 /**
+ * Read the matching board's "got/total" note. Anything else is not a count, and
+ * a count that cannot be true is refused rather than believed.
+ */
+function matchCount(value: string): [number | null, number | null] {
+  const match = /^(\d+)\s*\/\s*(\d+)$/.exec(value.trim());
+  if (!match) return [null, null];
+  const got = Number(match[1]);
+  const total = Number(match[2]);
+  if (!Number.isInteger(got) || !Number.isInteger(total)) return [null, null];
+  if (total < 2 || got < 0 || got > total) return [null, null];
+  return [got, total];
+}
+
+/**
  * Judge one region. An empty expectation list means no judge is available and
  * the row is unjudged, which is a state the record can tell apart from wrong.
  */
@@ -78,6 +92,28 @@ export function judgeCard(
       {
         ...judgeRegion(answers.choice ?? "", answerDef.correct ?? [], options, seenBefore),
         region: null,
+      },
+    ];
+  } else if (answerDef.mode === "match") {
+    // WHY: a matching board reports what it locked as "3 of 3 pairs", never as
+    // the learner's words, because the board taps rather than writes. The count
+    // is the whole attempt: all pairs is Got it, some is Nearly, none is No.
+    const [got, total] = matchCount(answers.answer ?? "");
+    const judged: Outcome =
+      got === null || total === null || total < 2
+        ? "unjudged"
+        : got === total
+          ? "got_it"
+          : got > 0
+            ? "nearly"
+            : "no";
+    regions = [
+      {
+        region: null,
+        outcome: judged,
+        given: got === null || total === null ? (answers.answer ?? "") : `${got} of ${total} pairs`,
+        expected: got === null || total === null ? [] : [`all ${total} pairs`],
+        nearMiss: judged === "nearly",
       },
     ];
   } else {

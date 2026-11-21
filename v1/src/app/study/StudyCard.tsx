@@ -24,10 +24,17 @@ import { playCue } from "@/lib/client/sound";
 import { answerCompletion } from "@/lib/core/answer-completion";
 import { hasAnswerAttempt } from "@/lib/core/answer-attempt";
 import { speak, speakLines, speechSupported } from "@/lib/client/speech";
-import { LISTEN_INSTRUCTION, listenPrompt, studyModeLabel } from "@/lib/client/study-view";
+import {
+  LISTEN_INSTRUCTION,
+  listenPrompt,
+  matchGiveUpAnswer,
+  studyModeLabel,
+} from "@/lib/client/study-view";
 import { OUTCOME_LABELS, OUTCOME_MEANINGS } from "@/lib/core/outcome";
-import type { AnswerResult, Card, CardPart, Outcome, StudyLevel } from "@/lib/shared/types";
+import type { AnswerResult, Card, CardPart, Outcome, StudyLevel, Word } from "@/lib/shared/types";
 import CardSide from "./CardSide";
+import MatchBoard from "./MatchBoard";
+import WordLine from "./WordLine";
 
 /** A hint bulb and a book mark; the words ride beside them on a wide screen. */
 const BULB = (
@@ -53,6 +60,8 @@ const CHECK = (
 
 interface StudyCardProps {
   card: Card;
+  /** The word this card teaches, when the pack declared one. */
+  word?: Word | null;
   /** The card's deck level; beginner is the only level that completes. */
   level: StudyLevel;
   answers: Record<string, string>;
@@ -94,6 +103,7 @@ interface StudyCardProps {
 /** The question, the hint block and the answer reveal. */
 export default function StudyCard({
   card,
+  word,
   level,
   answers,
   onAnswerChange,
@@ -287,6 +297,8 @@ export default function StudyCard({
         </div>
       </div>
 
+      {word ? <WordLine word={word} card={card} revealed={Boolean(result)} /> : null}
+
       {returned ? (
         <p className="muted study-returned">
           This one is marked to return once — it was missed in this session.
@@ -337,6 +349,27 @@ export default function StudyCard({
 
       {hintBlock}
 
+      {/* WHY: The board sits outside the answered/unanswered branches so its
+          locked pairs survive the reveal. It freezes instead of unmounting, so
+          the learner can still see what they matched while reading the result. */}
+      {mode === "match" ? (
+        word ? (
+          <MatchBoard
+            pairs={word.pairs}
+            frozen={Boolean(result)}
+            onProgress={(got, total) => onAnswerChange({ answer: `${got}/${total}` })}
+            onComplete={(got, total) => {
+              onAnswerChange({ answer: `${got}/${total}` });
+              onSubmit({ answer: `${got}/${total}` });
+            }}
+          />
+        ) : (
+          <div className="notice error">
+            This matching card has no word to take its pairs from.
+          </div>
+        )
+      ) : null}
+
       {!result ? (
         <>
           {mode === "picks" ? (
@@ -353,7 +386,7 @@ export default function StudyCard({
                 </button>
               ))}
             </div>
-          ) : mode === "cloze" ? null : (
+          ) : mode === "cloze" || mode === "match" ? null : (
             <div className="answer-field">
               <input
                 className="answer-input"
@@ -382,7 +415,7 @@ export default function StudyCard({
           {/* WHY: A learner who is stuck needs an exit from the gate, and a
               beginner needs a visible way to take the completion on a phone.
               Neither control ever fills the answer on its own. */}
-          {mode !== "picks" ? (
+          {mode !== "picks" && mode !== "match" ? (
             <div className="study-answer-aids">
               <span className="study-complete">
                 {completion ? (
@@ -405,8 +438,26 @@ export default function StudyCard({
               </button>
             </div>
           ) : null}
+          {/* WHY: A matching board with no locked pairs is still an answer the
+              learner may choose to give. Sending 0/total lets the judge record
+              No, as the lesson design promises, instead of leaving the card
+              stuck with a disabled Answer button and no way out. */}
+          {mode === "match" && word ? (
+            <div className="study-answer-aids">
+              <span className="study-complete" />
+              <button
+                className="study-link study-dont-know"
+                type="button"
+                onClick={() => onSubmit({ answer: matchGiveUpAnswer(word.pairs.length) })}
+                disabled={busy}
+                title="Reveals the answer and records this card as missed."
+              >
+                I don&apos;t know
+              </button>
+            </div>
+          ) : null}
           <div className="study-card-actions">
-            {mode !== "picks" ? (
+            {mode !== "picks" && mode !== "match" ? (
               <span className="study-enter">
                 <kbd>Enter</kbd> to check
               </span>

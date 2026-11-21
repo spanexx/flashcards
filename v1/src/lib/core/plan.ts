@@ -13,6 +13,42 @@ import { newId } from "@/lib/core/id";
 import { buildSummaries } from "@/lib/core/summaries";
 import { runSelection } from "@/lib/core/algorithm/run";
 import { computeOffer } from "@/lib/core/session";
+import { stageRank } from "@/lib/core/word";
+
+/**
+ * Keep one word's cards together and walk them in stage order. A card with no
+ * word stays exactly where the algorithm put it, and a word is placed at its
+ * first selected card, so a session reads as a lesson instead of five unrelated
+ * questions about the same word.
+ */
+export function orderWordCards<T extends Pick<Card, "wordId" | "stage">>(
+  cards: readonly T[],
+): T[] {
+  const blocks = new Map<string, T[]>();
+  for (const card of cards) {
+    if (!card.wordId) continue;
+    const block = blocks.get(card.wordId);
+    if (block) block.push(card);
+    else blocks.set(card.wordId, [card]);
+  }
+
+  const placed = new Set<string>();
+  const ordered: T[] = [];
+  for (const card of cards) {
+    if (!card.wordId) {
+      ordered.push(card);
+      continue;
+    }
+    if (placed.has(card.wordId)) continue;
+    placed.add(card.wordId);
+    const block = [...(blocks.get(card.wordId) ?? [])];
+    // WHY: sort is stable, so two cards of the same stage keep the algorithm's
+    // order rather than shuffling for no reason.
+    block.sort((left, right) => stageRank(left.stage) - stageRank(right.stage));
+    ordered.push(...block);
+  }
+  return ordered;
+}
 
 /** Everything needed to plan one session. */
 export interface PlanInput {
@@ -50,7 +86,7 @@ export function buildPlan(input: PlanInput, fallbackCountBefore = 0): PlanResult
   const fallbackCount = fallbackCountBefore + (result.usedFallback ? 1 : 0);
   const plan: Plan = {
     sessionId: newId(),
-    cards: result.selection.cards,
+    cards: orderWordCards(result.selection.cards),
     groups: result.selection.groups,
     offer,
     algorithm: result.algorithm,

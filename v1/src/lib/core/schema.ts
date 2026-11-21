@@ -3,8 +3,12 @@
 // card, and anything that fails names the field that is wrong.
 // PACK: v1-prototype
 // 2026-10-19 opencode: created for the v1 prototype [pack: v1-prototype]
+// 2026-11-21 opencode: a language pack may declare words, and a card may name
+// one and its stage. The stage fixes the answer mode, so a mislabelled card is
+// refused here rather than rendered somewhere unexpected. [pack: word-lessons]
 
 import { z } from "zod";
+import type { AnswerMode, WordStage } from "@/lib/shared/types";
 
 /** One ordered part of a card side. */
 export const cardPartSchema = z.discriminatedUnion("type", [
@@ -139,7 +143,7 @@ export const blankDefSchema = z.object({
 
 /** The answering rule the pack declared for this card. */
 export const answerDefSchema = z.object({
-  mode: z.enum(["cloze", "picks", "type", "hear_type"]),
+  mode: z.enum(["cloze", "picks", "type", "hear_type", "match"]),
   blanks: z.array(blankDefSchema).optional(),
   options: z.array(z.string()).optional(),
   correct: z.array(z.string()).optional(),
@@ -150,6 +154,56 @@ export const answerDefSchema = z.object({
     .object({ label: z.string().min(1), expected: z.string().min(1) })
     .optional(),
 });
+
+/** One target form and the exact meaning it must be paired with. */
+export const wordPairSchema = z.object({
+  target: z.string().min(1, "a matching pair needs a target word"),
+  meaning: z.string().min(1, "a matching pair needs a meaning"),
+});
+
+/**
+ * One changed form of a word. `meaning` is in the pack's source language, so a
+ * pack may teach English to a Polish speaker without a code change.
+ */
+export const wordFormSchema = z.object({
+  label: z.string().min(1, "a form needs a grammar label"),
+  to: z.string().min(1, "a form needs the changed word"),
+  meaning: z.string().min(1, "a form needs a meaning"),
+  why: z.array(teachingPartSchema).min(1, "a form needs at least one reason"),
+  use: z.string().min(1, "a fresh sentence cannot be empty").optional(),
+});
+
+/** One word a language pack teaches in depth. */
+export const wordSchema = z.object({
+  id: z
+    .string()
+    .min(1, "a word needs an id")
+    .regex(/^[a-z0-9][a-z0-9-]*$/, "a word id uses lowercase letters, numbers and dashes"),
+  lemma: z.string().min(1, "a word needs its base form"),
+  meaning: z.string().min(1, "a word needs a meaning"),
+  lang: z.string().min(1, "a word language is a code, not an empty string").optional(),
+  forms: z.array(wordFormSchema).default([]),
+  pairs: z.array(wordPairSchema).default([]),
+  note: z
+    .array(teachingPartSchema)
+    .min(1, "a word note needs at least one part")
+    .optional(),
+});
+
+/** The five stages of a word lesson, in walk order. */
+export const WORD_STAGES = ["story", "spelling", "forms", "dialogue", "matching"] as const;
+
+/** A stage name, checked against the five the app knows. */
+export const wordStageSchema = z.enum(WORD_STAGES);
+
+/** The one answer mode each stage may use. A mismatch is a broken lesson. */
+export const STAGE_MODE: Record<WordStage, AnswerMode> = {
+  story: "cloze",
+  spelling: "type",
+  forms: "type",
+  dialogue: "picks",
+  matching: "match",
+};
 
 /** The pack author's card source, before identity is assigned. */
 export const cardSourceSchema = z.object({
@@ -166,6 +220,8 @@ export const cardSourceSchema = z.object({
     .array(teachingPartSchema)
     .min(1, "a teaching layer needs at least one part")
     .optional(),
+  wordId: z.string().min(1, "a word link needs a word id").optional(),
+  stage: wordStageSchema.optional(),
 });
 
 /** The pack manifest. Name and version identify the pack; version is not card identity. */
@@ -185,9 +241,10 @@ export const packManifestSchema = z.object({
   topicLabels: z.record(z.string(), z.string()).default({}),
 });
 
-/** One item in a pack's cards file. */
+/** One item in a pack's cards file. A language pack may declare its words here. */
 export const packCardsSchema = z.object({
   cards: z.array(cardSourceSchema),
+  words: z.array(wordSchema).default([]),
 });
 
 /** The pack's prompt text. The app owns the three slots it fills in. */

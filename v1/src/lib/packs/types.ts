@@ -4,7 +4,7 @@
 // PACK: v1-prototype
 // 2026-10-19 opencode: created for the v1 prototype [pack: v1-prototype]
 
-import type { CardSource } from "@/lib/shared/types";
+import type { CardSource, Word } from "@/lib/shared/types";
 
 /** The prompt text a pack ships. The app fills the slots it owns. */
 export interface PackPrompts {
@@ -24,6 +24,8 @@ export interface PackRecord {
   topics: string[];
   topicLabels: Record<string, string>;
   cards: CardSource[];
+  /** Words a language pack teaches in depth. An old folder simply has none. */
+  words?: Word[];
   prompts: PackPrompts | null;
   error?: string;
 }

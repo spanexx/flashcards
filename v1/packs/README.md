@@ -2,7 +2,8 @@
 
 A pack is one folder inside `packs/`. Everything is plain JSON, readable and
 writable by hand. Files: `pack.json` (required), `cards.json` or a `cards/`
-folder (optional) and `prompts.json` (optional).
+folder (optional), `words.json` (optional), `pages.json` (optional) and
+`prompts.json` (optional).
 
 ```
 packs/
@@ -83,6 +84,7 @@ surfaces exist:
 | `type`      | types the answer                               | `expected`, optional `judge`    |
 | `picks`     | picks the correct options                      | `options`, `correct`            |
 | `hear_type` | listens (the question is read aloud), then types | `expected`                    |
+| `match`     | taps forms and meanings into pairs                | no extra fields               |
 
 Parts available inside `prompt` and `answer`:
 
@@ -99,6 +101,41 @@ a card are not the same text. Every topic a card uses must also appear in
 `pack.json`'s `topics` list, so a typo fails the pack instead of quietly
 inventing a topic group. A broken card fails the whole pack with the card
 number and the field named — nothing half-loads.
+
+## words.json
+
+Optional. A language pack that teaches one word in depth declares it here. The
+`biuro` pack is the worked example to copy.
+
+```json
+{
+  "words": [
+    {
+      "id": "biuro",
+      "lemma": "biuro",
+      "meaning": "office",
+      "lang": "pl",
+      "forms": [
+        {
+          "label": "locative singular",
+          "to": "biurze",
+          "meaning": "in the office",
+          "why": [{ "type": "text", "text": "After w, -o becomes -e.", "lang": "en" }],
+          "use": "Pracuję w ___."
+        }
+      ],
+      "pairs": [{ "target": "biuro", "meaning": "office" }]
+    }
+  ]
+}
+```
+
+Every `meaning` is in the pack's `sourceLanguage`, never hard-coded English.
+A card joins the lesson with `wordId` (the word's `id`) and `stage`: `story`
+(cloze), `spelling` or `forms` (type), `dialogue` (picks), `matching` (match).
+The stage fixes the answer mode; a mismatch refuses the whole bundle. The
+change is never printed in the card prompt before the answer. See
+`docs/features/word-lessons/` for the full contract.
 
 ## prompts.json
 

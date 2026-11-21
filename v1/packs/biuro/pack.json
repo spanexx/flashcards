@@ -1,0 +1,31 @@
+{
+  "name": "biuro",
+  "version": "2.0.0",
+  "author": "flashcards v1 prototype",
+  "description": "A full course for one Polish word: biuro, the office. Meet it, learn every form, learn what triggers each form, use it in sentences and recall it fast.",
+  "language": "pl",
+  "sourceLanguage": "en",
+  "coreRange": "*",
+  "studyInstruction": "The question is never whether you know the word. It is whether you know how it changes in this situation.",
+  "topics": [
+    "meet-biuro",
+    "every-form",
+    "what-triggers-what",
+    "in-a-sentence",
+    "fast-recall"
+  ],
+  "topicLabels": {
+    "meet-biuro": "Meet biuro",
+    "every-form": "Every form",
+    "what-triggers-what": "What triggers what",
+    "in-a-sentence": "In a sentence",
+    "fast-recall": "Fast recall"
+  },
+  "topicLevels": {
+    "meet-biuro": "beginner",
+    "every-form": "beginner",
+    "what-triggers-what": "intermediate",
+    "in-a-sentence": "intermediate",
+    "fast-recall": "advanced"
+  }
+}

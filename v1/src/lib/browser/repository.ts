@@ -15,6 +15,7 @@ import type {
   SessionEvent,
   Settings,
   Tombstone,
+  Word,
 } from "@/lib/shared/types";
 import { cardPageId, deckPageId, packPageId } from "@/lib/core/pages";
 import type { PackPrompts } from "@/lib/packs/types";
@@ -36,6 +37,12 @@ export interface BrowserPack extends StoredValue {
   prompts: PackPrompts | null;
   /** True when the pack wants every card page read before an answer counts. */
   requirePageRead?: boolean;
+  /**
+   * The words this pack teaches in depth. They live on the pack row because the
+   * cards that link to them live beside it, and a backup that carried one but
+   * not the other would restore broken links.
+   */
+  words?: Word[];
   createdAt: string;
   updatedAt: string;
 }
@@ -481,6 +488,7 @@ export function packStatus(pack: BrowserPack, cards: Card[]): PackStatus {
     studyInstruction: pack.studyInstruction,
     prompts: pack.prompts,
     decks: pack.decks,
+    words: pack.words,
     topics: deckNames,
     topicLabels: {},
     cardCount: cards.filter((card) => card.packName === pack.name && !card.retired).length,

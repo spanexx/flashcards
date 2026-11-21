@@ -1,0 +1,71 @@
+biuro full course - Grill Notes (revision of biuro-word-pack)
+
+Status: Locked
+Date: 2026-11-21
+Source: the learner's rejection of the five-card example
+
+What this revision is about
+
+- Replace the five-card example with a full single-word course for biuro (office).
+- Still one word only. No other words are added.
+- Teach the process of meeting the word, every form, the triggers that choose a form, the word in sentences, and fast recall.
+- Around 100 cards across five decks.
+- Keep the locked word model: no new fields, answer modes or page levels.
+
+Questions and answers locked so far
+
+1. "No, I don't want more words. I need to go through the process of learning this office word, which is bureau. I need to go through the process. Like there is a burem, bura, buru, I don't know anything about it. You just smuggled it in there."
+Answer:
+- Teach the forms explicitly and repeatedly, with reasons and many chances to retrieve them.
+- Do not assume a form is known because it appears in a word record.
+
+Why:
+- The learner's complaint is about forms being present in data but never taught.
+- Source: learner message, 2026-11-21.
+
+2. "at least give me many options so I can get used to it. Give me many steps to take so I can actually get used to the word."
+Answer:
+- Many different exercises per point, not one card per point.
+- Use the existing modes in varied sentences and choices.
+
+Why:
+- Repetition with variation is the locked learning principle (Nation: repetition, retrieval, elaboration).
+- Source: learner message; https://tesolanz.org.nz/resources/paul-nation-the-principles-of-vocabulary-learning .
+
+3. "It shouldn't be five cards, it should be like 50 cards or 60 cards. This is why I want to make it a feature. Take your time and build a full course. This is not a full course. We planned a full course and you gave me like five cards. What is that?"
+Answer:
+- Build about 100 cards, not five.
+- Treat it as a full feature with its own docs, tests and simulation.
+
+Why:
+- The learner explicitly rejected the five-card scope and asked for a full course.
+- Source: learner message, 2026-11-21.
+
+4. "I need this pack is specifically for bureau, which is office word. You can have like three decks or four decks or five decks that go through the process of showing me exactly the word, learning it, using it in sentence, where it appears so I can know that if it appears here, I should say this word."
+Answer:
+- Five decks: Meet biuro, Every form, What triggers what, In a sentence, Fast recall.
+- The triggers deck teaches that do/bez/z(from) ask for biura, w/o/przy ask for biurze, pomagać/dziękować ask for biuru, zarządzać/interesować się ask for biurem, and the plural forms.
+
+Why:
+- This makes the course about how the word changes in a situation, which is the learner's stated end goal.
+- Source: learner message; declension checked at https://en.wiktionary.org/wiki/biuro ; prepositions checked at https://pol-langua.pl/en/learn-polish/polish-prepositions/ .
+
+5. "At the end of the day, there will be no question, do I know what is bureau? The question would be, do I know how it changed in this situation?"
+Answer:
+- The course's centre is form selection from a cue, not translation recall.
+- Meaning cards still exist, but most cards ask for the right form.
+
+Why:
+- The learner named the target behaviour precisely.
+- Source: learner message, 2026-11-21.
+
+6. "Take your time, build the course. Don't do a half-assed job for me."
+Answer:
+- Verify every Polish form and trigger against a reference before writing cards.
+- Generate the data, then run the real importer checks and a full build before opening the PR.
+
+Why:
+- Accuracy is the whole point of this pack; a wrong form would teach the learner the wrong thing.
+- Source: learner message, 2026-11-21.
+
+No remaining open questions

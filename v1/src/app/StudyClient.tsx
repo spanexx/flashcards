@@ -50,6 +50,7 @@ import type { PastSession } from "@/lib/core/past-sessions";
 import { encodePlanScope } from "@/lib/core/plan-scope";
 import { newId } from "@/lib/core/id";
 import { cardPageId, pageIsRead } from "@/lib/core/pages";
+import { resolveCardHelp, wordById } from "@/lib/core/word";
 import type {
   AnswerResult,
   DictionaryPage,
@@ -102,9 +103,14 @@ export default function StudyClient() {
   const [planRefreshing, setPlanRefreshing] = useState(false);
   const [working, setWorking] = useState("");
   const [packs, setPacks] = useState<PackStatus[]>([]);
-  const [pageState, setPageState] = useState<{ written: Set<string>; read: Set<string> }>({
+  const [pageState, setPageState] = useState<{
+    written: Set<string>;
+    read: Set<string>;
+    pages: Map<string, DictionaryPage>;
+  }>({
     written: new Set(),
     read: new Set(),
+    pages: new Map(),
   });
   const [scope, setScope] = useState<PlanScope>([]);
   const [hintSource, setHintSource] = useState<string | null>(null);
@@ -136,14 +142,17 @@ export default function StudyClient() {
     [answersByEntry, entry],
   );
   const level = card ? deckLevelFor(card, packs) : "intermediate";
-  const policy = layerPolicy(level, Boolean(card?.teaching?.length) && !entry?.suppressTeaching);
+  // WHY: keep the one boolean the callbacks need as a plain value, so they do
+  // not hold a dependency on a policy object that is rebuilt every render. A
+  // word card has a layer even when its help comes from the word, not itself.
+  const hasLayer = Boolean(card?.teaching?.length || card?.wordId) && !entry?.suppressTeaching;
+  const policy = layerPolicy(level, hasLayer);
   const layerOpen =
-    policy.hasLayer &&
+    hasLayer &&
     (layerUi?.entryId === entry?.entryId
       ? layerUi.open
       : autoOpenPolicy(policy, autoOpen) === "open");
-  const layerBarAvailable =
-    policy.hasLayer && (Boolean(result) || policy.before !== "hidden");
+  const layerBarAvailable = hasLayer && (Boolean(result) || policy.before !== "hidden");
 
   // Hints and late answers belong to one entry, because one card can come back.
   useEffect(() => {
@@ -171,11 +180,11 @@ export default function StudyClient() {
 
   /** Open the layer, and remember a peek that happened before the answer. */
   const openTeaching = useCallback(() => {
-    if (!entry || !policy.hasLayer) return;
+    if (!entry || !hasLayer) return;
     if (level === "advanced" && !result) return;
     if (level === "intermediate" && !result) peekedRef.current.add(entry.entryId);
     setLayerUi({ entryId: entry.entryId, open: true });
-  }, [entry, level, policy.hasLayer, result]);
+  }, [entry, hasLayer, level, result]);
 
   const closeTeaching = useCallback(() => {
     if (!entry) return;
@@ -394,7 +403,11 @@ export default function StudyClient() {
               .filter((page) => pageIsRead(page, traces.get(page.id) ?? null))
               .map((page) => page.id),
           );
-          setPageState({ written, read });
+          setPageState({
+            written,
+            read,
+            pages: new Map(answer.pages.map((page) => [page.id, page])),
+          });
         })
         .catch(() => {
           // The card and its answer never depend on this read.
@@ -841,9 +854,18 @@ export default function StudyClient() {
 
   if (phase === "running" && card && entry) {
     const cardPack = packs.find((pack) => pack.name === card.packName) ?? null;
+    const word = wordById(cardPack?.words, card.wordId);
+    const cardPage = cardPageId(card.id);
     const instruction = studyCardInstruction(card, cardPack);
     const packLanguage = cardPack?.language;
-    const cardPage = cardPageId(card.id);
+    // WHY: A word lesson's help can come from the card, the word or its
+    // Dictionary page. The layer renders this one resolved list rather than the
+    // card's own teaching, so a word card shows its lesson at the level asked.
+    const help = resolveCardHelp({
+      card,
+      word,
+      pageParts: pageState.pages.get(cardPage)?.parts,
+    });
     const hasPage = pageState.written.has(cardPage);
     const pageRead = pageState.read.has(cardPage);
     const dictionaryHref = card.packName
@@ -865,10 +887,10 @@ export default function StudyClient() {
         </div>
       ) : null;
     const layer =
-      layerOpen && card.teaching?.length ? (
+      layerOpen && help.length ? (
         <TeachingLayer
           key={entry.entryId}
-          parts={card.teaching}
+          parts={help}
           lang={packLanguage}
           level={level}
           answered={Boolean(result)}
@@ -898,6 +920,7 @@ export default function StudyClient() {
         <StudyCard
           key={entry.entryId}
           card={card}
+          word={word}
           level={level}
           answers={answers}
           onAnswerChange={updateAnswers}

@@ -20,11 +20,13 @@ import { buildCard, deckCardId, hardRuleIssues } from "@/lib/core/card";
 import { parseJsonLoose, type RepairKind } from "@/lib/core/json-repair";
 import { referencedMediaIds } from "@/lib/core/media";
 import { pageIdFor, pageRuleProblems } from "@/lib/core/pages";
+import { lessonIssues } from "@/lib/core/word-check";
 import {
   cardSourceSchema,
   packPromptsSchema,
   studyLevelSchema,
   teachingPartSchema,
+  wordSchema,
   type ValidationIssue,
 } from "@/lib/core/schema";
 import { normalizeSettings } from "@/lib/core/settings-shape";
@@ -121,6 +123,12 @@ export const packBundleSchema = z.object({
   pack: bundlePackSchema,
   decks: z.array(deckSchema),
   cards: z.array(bundleCardSchema),
+  /**
+   * The words this pack teaches in depth. Absent in every bundle written before
+   * word lessons, which is why it defaults to an empty list rather than being
+   * required.
+   */
+  words: z.array(wordSchema).default([]),
   pages: z.array(bundlePageSchema).default([]),
 });
 
@@ -442,6 +450,13 @@ async function reconcilePackCards(
     }
     duplicates += 1;
     const merged = withTeaching(old, card.teaching);
+    // WHY: A pack update may add a word link to a card whose words did not
+    // change. The link is part of the new pack's teaching design, so it must
+    // replace the old one here; the identity is unchanged, so evidence stays.
+    if (card.wordId) merged.wordId = card.wordId;
+    else delete merged.wordId;
+    if (card.stage) merged.stage = card.stage;
+    else delete merged.stage;
     delete merged.retired;
     merged.origin =
       old.origin.kind === "pack"
@@ -551,6 +566,13 @@ async function importPack(text: string, options: ImportOptions): Promise<ImportR
     else cards.push(built.card);
   }
 
+  // WHY: A lesson is only whole when every link lands. The check runs on the
+  // cards this file will actually write, and it may resolve a link against a
+  // word the installed pack already has, so adding cards to a lesson works.
+  const definedWords = bundle.words;
+  const inheritedWords = definedWords.length > 0 ? [] : (installed?.words ?? []);
+  issues.push(...lessonIssues(cards, definedWords, inheritedWords));
+
   // WHY: A page names a deck or a card that this import is about to write, so
   // the page is checked against the same two sets the cards were checked
   // against. A page pointing nowhere refuses the whole file, like a bad card.
@@ -589,6 +611,11 @@ async function importPack(text: string, options: ImportOptions): Promise<ImportR
     decks: [...decks.values()],
     prompts: bundle.pack.prompts ?? installed?.prompts ?? null,
     requirePageRead: bundle.pack.requirePageRead ?? installed?.requirePageRead,
+    // WHY: A pack update that says nothing about words keeps the words it
+    // already has, just as it keeps its decks. A bundle with no words never
+    // wipes a lesson behind the learner's back; removing a word is a deliberate
+    // authoring change that ships new cards without the link.
+    words: bundle.words.length > 0 ? bundle.words : (installed?.words ?? []),
     createdAt: installed?.createdAt ?? now,
     updatedAt: now,
   };
@@ -676,6 +703,9 @@ async function importDeck(text: string, packName: string, options: ImportOptions
     else cards.push(built.card);
   }
 
+  // A fragment defines no words, so every link must already exist here.
+  issues.push(...lessonIssues(cards, [], pack.words ?? []));
+
   if (issues.length > 0) return { ok: false, issues };
 
   const { fresh, duplicates } = await keepFreshCards(cards);
@@ -734,6 +764,8 @@ async function importCards(
     if ("issues" in built) issues.push(...built.issues);
     else cards.push(built.card);
   }
+  // A cards fragment defines no words, so every link must already exist here.
+  issues.push(...lessonIssues(cards, [], pack.words ?? []));
   if (issues.length > 0) return { ok: false, issues };
 
   const { fresh, duplicates } = await keepFreshCards(cards);
@@ -777,6 +809,8 @@ function cardToBundleCard(card: Card): BundleCard {
     hints: card.hints,
     fullLine: card.fullLine,
     ...(card.teaching ? { teaching: card.teaching } : {}),
+    ...(card.wordId ? { wordId: card.wordId } : {}),
+    ...(card.stage ? { stage: card.stage } : {}),
   };
 }
 
@@ -836,6 +870,7 @@ export async function exportPackBundle(name: string): Promise<{ ok: true; json: 
     },
     decks: pack.decks,
     cards: cards.map(cardToBundleCard),
+    words: pack.words ?? [],
     pages: pages.map(shareablePage).map(pageToBundlePage),
   };
   return { ok: true, json: JSON.stringify(bundle, null, 2) };
@@ -857,6 +892,8 @@ export const backupSchema = z.object({
       decks: z.array(deckSchema),
       prompts: packPromptsSchema.nullable(),
       requirePageRead: z.boolean().optional(),
+      /** An older backup has no words; restoring it must not fail. */
+      words: z.array(wordSchema).default([]),
       createdAt: z.string(),
       updatedAt: z.string(),
     }),

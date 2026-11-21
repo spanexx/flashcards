@@ -103,4 +103,40 @@ describe("importCards", () => {
       expect(result.duplicates).toBe(1);
     }
   });
+
+  it("refuses a word link, because a flat batch cannot define the word", () => {
+    const source = {
+      summary: "Story: at the office",
+      topics: ["cases"],
+      prompt: [
+        { type: "text", text: "Jestem w " },
+        { type: "blank", id: "b1" },
+        { type: "text", text: "." },
+      ],
+      answer: [{ type: "text", text: "Jestem w biurze." }],
+      answerDef: { mode: "cloze", blanks: [{ id: "b1", expected: ["biurze"] }] },
+      wordId: "biuro",
+      stage: "story",
+    };
+    const result = importCards(JSON.stringify([source]), [], NOW);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.issues[0].message).toContain('names the word "biuro"');
+    }
+  });
+
+  it("refuses a matching card with no word in a flat batch", () => {
+    const source = {
+      summary: "Match the pairs",
+      topics: ["cases"],
+      prompt: [{ type: "text", text: "Match each form with its meaning." }],
+      answer: [{ type: "text", text: "Every pair matches." }],
+      answerDef: { mode: "match" },
+    };
+    const result = importCards(JSON.stringify([source]), [], NOW);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.issues[0].message).toContain("needs a word to take its pairs from");
+    }
+  });
 });

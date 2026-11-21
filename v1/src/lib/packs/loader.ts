@@ -9,6 +9,7 @@ import path from "node:path";
 import semver from "semver";
 import { packCardsSchema, packManifestSchema, packPromptsSchema } from "@/lib/core/schema";
 import { hardRuleIssues } from "@/lib/core/card";
+import { lessonIssues } from "@/lib/core/word-check";
 import { APP_VERSION } from "@/lib/version";
 import type { PackRecord } from "@/lib/packs/types";
 
@@ -89,6 +90,7 @@ export async function readPackFolder(folder: string): Promise<PackRecord> {
     };
 
     let cardSources: PackRecord["cards"] = [];
+    let words: PackRecord["words"] = [];
     const cardsRaw = await readOptionalJson(path.join(folder, "cards.json"));
     if (cardsRaw !== null) {
       const cardsFile = packCardsSchema.safeParse(cardsRaw);
@@ -100,6 +102,7 @@ export async function readPackFolder(folder: string): Promise<PackRecord> {
           `cards.json is wrong at ${first.path.join(".") || "the top"}: ${first.message}`,
         );
       }
+      words = cardsFile.data.words;
 
       const declaredTopics = new Set(data.topics);
       for (let index = 0; index < cardsFile.data.cards.length; index += 1) {
@@ -125,6 +128,14 @@ export async function readPackFolder(folder: string): Promise<PackRecord> {
         }
       }
       cardSources = cardsFile.data.cards;
+
+      // WHY: a folder pack gets the same lesson check as an imported bundle, so
+      // a shipped lesson cannot be more broken than a pasted one.
+      const lesson = lessonIssues(cardSources, words);
+      if (lesson.length > 0) {
+        const first = lesson[0];
+        return broken(folder, data.name, first.message);
+      }
     }
 
     const promptsRaw = await readOptionalJson(path.join(folder, "prompts.json"));
@@ -142,7 +153,7 @@ export async function readPackFolder(folder: string): Promise<PackRecord> {
       prompts = promptsFile.data;
     }
 
-    return { ...base, cards: cardSources, prompts };
+    return { ...base, cards: cardSources, words, prompts };
   } catch (error) {
     return broken(
       folder,

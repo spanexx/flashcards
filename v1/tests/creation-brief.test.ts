@@ -27,6 +27,7 @@ describe("creation brief defaults", () => {
       targetLanguage: "",
       sourceLanguage: "en",
       studyInstruction: "",
+      focusWord: "",
     });
     expect(defaultCreationBrief({ subject: "ordering coffee" }).subject).toBe("ordering coffee");
     expect(defaultCreationBrief({ subject: "x" }).subjectMode).toBe("learner");
@@ -67,6 +68,7 @@ describe("validateCreationBrief", () => {
       targetLanguage: "pl",
       sourceLanguage: "en",
       studyInstruction: "Read the English line.",
+      focusWord: "",
     });
   });
 
@@ -247,5 +249,43 @@ describe("describeCreationBrief", () => {
     expect(
       describeCreationBrief(brief, inventory, { includeInventory: true }).join("\n"),
     ).toContain("starter");
+  });
+
+  it("leaves the prompt alone when no focus word was written", () => {
+    const lines = describeCreationBrief(defaultCreationBrief({ subject: "cases" }), inventory);
+    expect(lines.join("\n")).not.toContain("one word");
+  });
+
+  it("names the exact lemma and asks for one lesson when a focus word is set", () => {
+    const lines = describeCreationBrief(
+      defaultCreationBrief({ subject: "cases", focusWord: "biuro" }),
+      inventory,
+    );
+    const text = lines.join("\n");
+    expect(text).toContain('lemma "biuro"');
+    expect(text).toContain("one lesson about \"biuro\"");
+  });
+});
+
+describe("focusWord validation", () => {
+  it("trims an optional focus word", () => {
+    const result = validateCreationBrief({
+      subjectMode: "learner",
+      subject: "cases",
+      targetLanguage: "pl",
+      focusWord: "  biuro  ",
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.brief.focusWord).toBe("biuro");
+  });
+
+  it("refuses a non-string focus word instead of guessing one", () => {
+    const result = validateCreationBrief({
+      subjectMode: "learner",
+      subject: "cases",
+      targetLanguage: "pl",
+      focusWord: 7,
+    });
+    expect(result.ok).toBe(false);
   });
 });

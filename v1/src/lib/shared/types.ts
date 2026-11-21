@@ -6,6 +6,9 @@
 // 2026-10-20 opencode: a card now names its pack and its one deck; a pack
 // reports its decks, and the provider key can live in the browser.
 // [pack: browser-app]
+// 2026-11-21 opencode: a language pack may teach one word in depth, and a card
+// may name that word and its stage. The link is context, never identity.
+// [pack: word-lessons]
 
 /** How a deck presents help. The level belongs to the deck, never the card. */
 export type StudyLevel = "beginner" | "intermediate" | "advanced";
@@ -98,8 +101,8 @@ export type CardPart =
   | { type: "media"; src: string; alt?: string; mime?: string }
   | { type: "blank"; id: string; hint?: string; width?: "short" | "medium" | "long" };
 
-/** How a card collects its answer. The pack declares one of the four surfaces. */
-export type AnswerMode = "cloze" | "picks" | "type" | "hear_type";
+/** How a card collects its answer. The pack declares one of the five surfaces. */
+export type AnswerMode = "cloze" | "picks" | "type" | "hear_type" | "match";
 
 /** One blank inside a cloze card. */
 export interface BlankDef {
@@ -143,6 +146,10 @@ export interface Card {
   hints?: string[];
   fullLine?: string;
   teaching?: TeachingPart[];
+  /** The word this card teaches, when the pack is a language lesson. */
+  wordId?: string;
+  /** Where this card sits in its word's lesson. It travels with `wordId`. */
+  stage?: WordStage;
   origin: CardOrigin;
   retired?: boolean;
   editedFrom?: string;
@@ -161,6 +168,64 @@ export interface CardSource {
   hints?: string[];
   fullLine?: string;
   teaching?: TeachingPart[];
+  wordId?: string;
+  stage?: WordStage;
+}
+
+/**
+ * The five stages of a word lesson, in the order a learner walks them. A pack
+ * writes only the stages its word supports; a missing stage is simply absent.
+ */
+export type WordStage = "story" | "spelling" | "forms" | "dialogue" | "matching";
+
+/**
+ * One changed form of a word, with the rule that explains the change. The rule
+ * is the existing teaching shape, so one renderer serves both.
+ */
+export interface WordForm {
+  /** The grammar name the learner sees, e.g. "locative". */
+  label: string;
+  /** The changed form, e.g. "biurze". */
+  to: string;
+  /**
+   * What the changed form means, in the pack's source language. The field is
+   * deliberately not called `en`: a Polish speaker learning English has Polish
+   * meanings, and a pack may teach any pair.
+   */
+  meaning: string;
+  /** Why the word changes here. Never empty: a form without a reason is refused. */
+  why: TeachingPart[];
+  /** A fresh sentence with one blank, for the learner to apply the form. */
+  use?: string;
+}
+
+/** One target-language form and the exact meaning it must be paired with. */
+export interface WordPair {
+  target: string;
+  /** In the pack's source language, never hardcoded English. */
+  meaning: string;
+}
+
+/**
+ * One word a language pack teaches in depth. It is the trunk: the cards that
+ * teach it are leaves, and they point here by id. Every field is checked at
+ * import, because a half-written word is worse than no word at all.
+ */
+export interface Word {
+  /** Stable, lowercase, unique inside the pack; a card links to it by this. */
+  id: string;
+  /** The base form the learner looks up, e.g. "biuro". */
+  lemma: string;
+  /** One plain line in the pack's source language, e.g. "office". */
+  meaning: string;
+  /** The target language code; absent means the pack's own language. */
+  lang?: string;
+  /** The forms this word takes. An empty list means there is no Forms stage. */
+  forms: WordForm[];
+  /** The pairs a Matching card asks for. Empty means there is no match stage. */
+  pairs: WordPair[];
+  /** A short explanation of the word itself, shown before the card's own help. */
+  note?: TeachingPart[];
 }
 
 /** One answer, appended and never edited. */
@@ -329,6 +394,8 @@ export interface PackStatus {
   requirePageRead?: boolean;
   prompts?: import("@/lib/packs/types").PackPrompts | null;
   decks?: Deck[];
+  /** The words this pack teaches in depth; absent for a plain pack. */
+  words?: Word[];
   topics: string[];
   topicLabels: Record<string, string>;
   cardCount: number;

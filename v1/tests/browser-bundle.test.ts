@@ -749,3 +749,181 @@ describe("Dictionary pages in bundles and backups", () => {
     expect((await readPages(undefined, store)).length).toBe(1);
   });
 });
+
+/** One word and the five leaves that teach it, as a pack file would carry them. */
+function wordBundle(version = "1.0.0", withWord = true): string {
+  const words = withWord
+    ? [
+        {
+          id: "biuro",
+          lemma: "biuro",
+          meaning: "office",
+          lang: "pl",
+          forms: [
+            {
+              label: "locative",
+              to: "biurze",
+              meaning: "in the office",
+              why: [{ type: "text", text: "After w, neuter -o becomes -e." }],
+              use: "Jestem w ___.",
+            },
+          ],
+          pairs: [
+            { target: "biuro", meaning: "office" },
+            { target: "biurze", meaning: "in the office" },
+          ],
+        },
+      ]
+    : [];
+  return JSON.stringify({
+    schema: PACK_BUNDLE_SCHEMA,
+    pack: { name: "starter", version, language: "pl", sourceLanguage: "en" },
+    decks: [{ id: "basics", name: "Basics" }],
+    words,
+    cards: [
+      {
+        deckId: "basics",
+        summary: "Story: at the office",
+        prompt: [{ type: "text", text: "Jestem w " }, { type: "blank", id: "b1" }, { type: "text", text: "." }],
+        answer: [{ type: "text", text: "Jestem w biurze." }],
+        answerDef: { mode: "cloze", blanks: [{ id: "b1", expected: ["biurze"] }] },
+        wordId: "biuro",
+        stage: "story",
+      },
+      {
+        deckId: "basics",
+        summary: "Spelling: biuro",
+        prompt: [{ type: "text", text: "Type the base word." }],
+        answer: [{ type: "text", text: "biuro" }],
+        answerDef: { mode: "type", expected: ["biuro"] },
+        wordId: "biuro",
+        stage: "spelling",
+      },
+      {
+        deckId: "basics",
+        summary: "Forms: biuro",
+        prompt: [{ type: "text", text: "biuro -> ___" }],
+        answer: [{ type: "text", text: "biurze" }],
+        answerDef: { mode: "type", expected: ["biurze"] },
+        wordId: "biuro",
+        stage: "forms",
+      },
+      {
+        deckId: "basics",
+        summary: "Dialogue: at the office",
+        prompt: [{ type: "text", text: "Gdzie jesteś?" }],
+        answer: [{ type: "text", text: "W biurze." }],
+        answerDef: { mode: "picks", options: ["W biurze.", "W biuro."], correct: ["W biurze."] },
+        wordId: "biuro",
+        stage: "dialogue",
+      },
+      {
+        deckId: "basics",
+        summary: "Match: biuro",
+        prompt: [{ type: "text", text: "Match each form with its meaning." }],
+        answer: [{ type: "text", text: "Every pair matches." }],
+        answerDef: { mode: "match" },
+        wordId: "biuro",
+        stage: "matching",
+      },
+    ],
+  });
+}
+
+describe("word lessons through the bundle", () => {
+  it("imports one whole lesson and keeps the words on the pack", async () => {
+    const result = await importBundle(wordBundle(), { kind: "pack" });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.cardsAdded).toBe(5);
+    const pack = await readPack("starter", store);
+    expect(pack?.words?.map((word) => word.id)).toEqual(["biuro"]);
+    const cards = await readCards(store);
+    expect(cards.map((card) => card.stage).sort()).toEqual([
+      "dialogue",
+      "forms",
+      "spelling",
+      "story",
+      "matching",
+    ].sort());
+    expect(cards.every((card) => card.wordId === "biuro")).toBe(true);
+  });
+
+  it("exports the words with the pack", async () => {
+    await importBundle(wordBundle(), { kind: "pack" });
+    const exported = await exportPackBundle("starter");
+    expect(exported.ok).toBe(true);
+    if (!exported.ok) return;
+    const parsed = JSON.parse(exported.json) as { words: Array<{ id: string }> };
+    expect(parsed.words.map((word) => word.id)).toEqual(["biuro"]);
+  });
+
+  it("refuses a link to a word the file never defines, and writes nothing", async () => {
+    const result = await importBundle(wordBundle("1.0.0", false), { kind: "pack" });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.issues[0].message).toBe(
+      'Card 1 ("Story: at the office"): names the word "biuro", which this pack does not define.',
+    );
+    expect(await readPack("starter", store)).toBeNull();
+    expect(await readCards(store)).toEqual([]);
+  });
+
+  it("adds a word link on update without changing the card id or its evidence", async () => {
+    const plain = JSON.stringify({
+      schema: PACK_BUNDLE_SCHEMA,
+      pack: { name: "starter", version: "1.0.0", language: "pl" },
+      decks: [{ id: "basics", name: "Basics" }],
+      cards: [
+        {
+          deckId: "basics",
+          summary: "Story: at the office",
+          prompt: [
+            { type: "text", text: "Jestem w " },
+            { type: "blank", id: "b1" },
+            { type: "text", text: "." },
+          ],
+          answer: [{ type: "text", text: "Jestem w biurze." }],
+          answerDef: { mode: "cloze", blanks: [{ id: "b1", expected: ["biurze"] }] },
+        },
+      ],
+    });
+    await importBundle(plain, { kind: "pack" });
+    const [before] = await readCards(store);
+    await appendEvidence(
+      [
+        {
+          id: "row-1",
+          cardId: before.id,
+          attemptId: "attempt-1",
+          region: "b1",
+          outcome: "got_it",
+          timeMs: 1200,
+          seenBefore: 0,
+          at: now,
+          kind: "answer",
+        },
+      ],
+      store,
+    );
+
+    const result = await importBundle(wordBundle("2.0.0"), { kind: "pack" });
+    expect(result.ok).toBe(true);
+    const [after] = await readCards(store);
+    expect(after.id).toBe(before.id);
+    expect(after.wordId).toBe("biuro");
+    expect(after.stage).toBe("story");
+    expect((await readEvidence(store)).filter((row) => row.cardId === before.id)).toHaveLength(1);
+  });
+
+  it("restores words through a full backup", async () => {
+    await importBundle(wordBundle(), { kind: "pack" });
+    const text = await exportBackup();
+    setBrowserStore((store = new MemoryStore()));
+    const result = await restoreBackup(text);
+    expect(result.ok).toBe(true);
+    const pack = await readPack("starter", store);
+    expect(pack?.words?.map((word) => word.id)).toEqual(["biuro"]);
+    expect((await readCards(store)).filter((card) => card.wordId === "biuro")).toHaveLength(5);
+  });
+});

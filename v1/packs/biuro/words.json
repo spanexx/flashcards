@@ -1,0 +1,239 @@
+{
+  "words": [
+    {
+      "id": "biuro",
+      "lemma": "biuro",
+      "meaning": "office",
+      "lang": "pl",
+      "note": [
+        {
+          "type": "text",
+          "text": "biuro is a neuter noun. The ending changes with the case the sentence asks for. Learn the trigger with each form.",
+          "lang": "en"
+        }
+      ],
+      "forms": [
+        {
+          "label": "nominative singular",
+          "to": "biuro",
+          "meaning": "office (subject)",
+          "why": [
+            {
+              "type": "text",
+              "text": "The dictionary form. Use it for the subject: co? (what?)",
+              "lang": "en"
+            }
+          ],
+          "use": "To jest ___."
+        },
+        {
+          "label": "genitive singular",
+          "to": "biura",
+          "meaning": "of the office",
+          "why": [
+            {
+              "type": "text",
+              "text": "The final -o becomes -a. Use after do, z meaning from, bez, dla and after nie ma.",
+              "lang": "en"
+            }
+          ],
+          "use": "Idę do ___."
+        },
+        {
+          "label": "dative singular",
+          "to": "biuru",
+          "meaning": "to the office",
+          "why": [
+            {
+              "type": "text",
+              "text": "A neuter noun takes -u in the dative, not -owi. Use with pomagać and dziękować.",
+              "lang": "en"
+            }
+          ],
+          "use": "Pomagam ___."
+        },
+        {
+          "label": "accusative singular",
+          "to": "biuro",
+          "meaning": "office (object)",
+          "why": [
+            {
+              "type": "text",
+              "text": "For a neuter noun the accusative is the same as the nominative. Use after mam, widzę, kupuję.",
+              "lang": "en"
+            }
+          ],
+          "use": "Mam ___."
+        },
+        {
+          "label": "instrumental singular",
+          "to": "biurem",
+          "meaning": "with the office",
+          "why": [
+            {
+              "type": "text",
+              "text": "The ending is -em. Use with zarządzać, kierować and interesować się.",
+              "lang": "en"
+            }
+          ],
+          "use": "Zarządzam ___."
+        },
+        {
+          "label": "locative singular",
+          "to": "biurze",
+          "meaning": "in the office",
+          "why": [
+            {
+              "type": "text",
+              "text": "After w, o and przy the ending is -e, and r softens to rz.",
+              "lang": "en"
+            }
+          ],
+          "use": "Pracuję w ___."
+        },
+        {
+          "label": "vocative singular",
+          "to": "biuro",
+          "meaning": "office (address)",
+          "why": [
+            {
+              "type": "text",
+              "text": "The neuter vocative equals the nominative. You will rarely address an office.",
+              "lang": "en"
+            }
+          ],
+          "use": "O, ___!"
+        },
+        {
+          "label": "nominative plural",
+          "to": "biura",
+          "meaning": "offices (subject)",
+          "why": [
+            {
+              "type": "text",
+              "text": "The neuter plural nominative ends in -a.",
+              "lang": "en"
+            }
+          ],
+          "use": "___ są otwarte."
+        },
+        {
+          "label": "genitive plural",
+          "to": "biur",
+          "meaning": "of the offices",
+          "why": [
+            {
+              "type": "text",
+              "text": "The genitive plural has no ending here: biur. Use it with numbers five and above.",
+              "lang": "en"
+            }
+          ],
+          "use": "Pięć ___."
+        },
+        {
+          "label": "dative plural",
+          "to": "biurom",
+          "meaning": "to the offices",
+          "why": [
+            {
+              "type": "text",
+              "text": "The dative plural ending is -om.",
+              "lang": "en"
+            }
+          ],
+          "use": "Pomagam ___."
+        },
+        {
+          "label": "accusative plural",
+          "to": "biura",
+          "meaning": "offices (object)",
+          "why": [
+            {
+              "type": "text",
+              "text": "The neuter accusative plural equals the nominative plural.",
+              "lang": "en"
+            }
+          ],
+          "use": "Widzę ___."
+        },
+        {
+          "label": "instrumental plural",
+          "to": "biurami",
+          "meaning": "with the offices",
+          "why": [
+            {
+              "type": "text",
+              "text": "The instrumental plural ending is -ami.",
+              "lang": "en"
+            }
+          ],
+          "use": "Zarządzam ___."
+        },
+        {
+          "label": "locative plural",
+          "to": "biurach",
+          "meaning": "in the offices",
+          "why": [
+            {
+              "type": "text",
+              "text": "The locative plural ending is -ach.",
+              "lang": "en"
+            }
+          ],
+          "use": "Pracujemy w ___."
+        },
+        {
+          "label": "vocative plural",
+          "to": "biura",
+          "meaning": "offices (address)",
+          "why": [
+            {
+              "type": "text",
+              "text": "The neuter vocative plural equals the nominative plural.",
+              "lang": "en"
+            }
+          ],
+          "use": "O, ___!"
+        }
+      ],
+      "pairs": [
+        {
+          "target": "biuro",
+          "meaning": "office"
+        },
+        {
+          "target": "biura",
+          "meaning": "of the office"
+        },
+        {
+          "target": "biuru",
+          "meaning": "to the office"
+        },
+        {
+          "target": "biurze",
+          "meaning": "in the office"
+        },
+        {
+          "target": "biurem",
+          "meaning": "with the office"
+        },
+        {
+          "target": "biur",
+          "meaning": "of the offices"
+        },
+        {
+          "target": "biurom",
+          "meaning": "to the offices"
+        },
+        {
+          "target": "biurach",
+          "meaning": "in the offices"
+        },
+        {
+          "target": "biurami",
+          "meaning": "with the offices"
+        }
+      ]
+    }
+  ]
+}
