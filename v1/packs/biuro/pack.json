@@ -8,21 +8,21 @@
   "coreRange": "*",
   "studyInstruction": "The question is never whether you know the word. It is whether you know how it changes in this situation.",
   "topics": [
-    "meet-biuro",
+    "at-the-office",
     "every-form",
     "what-triggers-what",
     "in-a-sentence",
     "fast-recall"
   ],
   "topicLabels": {
-    "meet-biuro": "Meet biuro",
+    "at-the-office": "At the office",
     "every-form": "Every form",
     "what-triggers-what": "What triggers what",
     "in-a-sentence": "In a sentence",
     "fast-recall": "Fast recall"
   },
   "topicLevels": {
-    "meet-biuro": "beginner",
+    "at-the-office": "beginner",
     "every-form": "beginner",
     "what-triggers-what": "intermediate",
     "in-a-sentence": "intermediate",

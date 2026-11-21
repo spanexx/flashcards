@@ -10,8 +10,8 @@
   },
   "decks": [
     {
-      "id": "meet-biuro",
-      "name": "Meet biuro",
+      "id": "at-the-office",
+      "name": "At the office",
       "level": "beginner"
     },
     {
@@ -37,190 +37,11 @@
   ],
   "cards": [
     {
-      "key": "biuro-001",
-      "summary": "Meet: To jest biuro.",
+      "key": "story-at-the-office",
+      "summary": "Pracuję w biurze",
       "tags": [
-        "name"
-      ],
-      "prompt": [
-        {
-          "type": "text",
-          "text": "To jest ",
-          "lang": "pl"
-        },
-        {
-          "type": "blank",
-          "id": "b1"
-        },
-        {
-          "type": "text",
-          "text": ".",
-          "lang": "pl"
-        }
-      ],
-      "answer": [
-        {
-          "type": "text",
-          "text": "To jest biuro.",
-          "lang": "pl"
-        },
-        {
-          "type": "text",
-          "text": "This is an office.",
-          "role": "translation",
-          "lang": "en"
-        }
-      ],
-      "answerDef": {
-        "mode": "cloze",
-        "blanks": [
-          {
-            "id": "b1",
-            "expected": [
-              "biuro"
-            ]
-          }
-        ]
-      },
-      "hints": [
-        "Look for the case the sentence asks for."
-      ],
-      "teaching": [
-        {
-          "type": "text",
-          "text": "Read the whole line first; the missing word is the one this course teaches.",
-          "lang": "en"
-        }
-      ],
-      "wordId": "biuro",
-      "stage": "story",
-      "deckId": "meet-biuro"
-    },
-    {
-      "key": "biuro-002",
-      "summary": "Meet: Widzę biuro.",
-      "tags": [
-        "name"
-      ],
-      "prompt": [
-        {
-          "type": "text",
-          "text": "Widzę ",
-          "lang": "pl"
-        },
-        {
-          "type": "blank",
-          "id": "b1"
-        },
-        {
-          "type": "text",
-          "text": ".",
-          "lang": "pl"
-        }
-      ],
-      "answer": [
-        {
-          "type": "text",
-          "text": "Widzę biuro.",
-          "lang": "pl"
-        },
-        {
-          "type": "text",
-          "text": "I see an office.",
-          "role": "translation",
-          "lang": "en"
-        }
-      ],
-      "answerDef": {
-        "mode": "cloze",
-        "blanks": [
-          {
-            "id": "b1",
-            "expected": [
-              "biuro"
-            ]
-          }
-        ]
-      },
-      "hints": [
-        "Look for the case the sentence asks for."
-      ],
-      "teaching": [
-        {
-          "type": "text",
-          "text": "Read the whole line first; the missing word is the one this course teaches.",
-          "lang": "en"
-        }
-      ],
-      "wordId": "biuro",
-      "stage": "story",
-      "deckId": "meet-biuro"
-    },
-    {
-      "key": "biuro-003",
-      "summary": "Meet: Mam biuro.",
-      "tags": [
-        "name"
-      ],
-      "prompt": [
-        {
-          "type": "text",
-          "text": "Mam ",
-          "lang": "pl"
-        },
-        {
-          "type": "blank",
-          "id": "b1"
-        },
-        {
-          "type": "text",
-          "text": ".",
-          "lang": "pl"
-        }
-      ],
-      "answer": [
-        {
-          "type": "text",
-          "text": "Mam biuro.",
-          "lang": "pl"
-        },
-        {
-          "type": "text",
-          "text": "I have an office.",
-          "role": "translation",
-          "lang": "en"
-        }
-      ],
-      "answerDef": {
-        "mode": "cloze",
-        "blanks": [
-          {
-            "id": "b1",
-            "expected": [
-              "biuro"
-            ]
-          }
-        ]
-      },
-      "hints": [
-        "Look for the case the sentence asks for."
-      ],
-      "teaching": [
-        {
-          "type": "text",
-          "text": "Read the whole line first; the missing word is the one this course teaches.",
-          "lang": "en"
-        }
-      ],
-      "wordId": "biuro",
-      "stage": "story",
-      "deckId": "meet-biuro"
-    },
-    {
-      "key": "biuro-004",
-      "summary": "Meet: Pracuję w biurze.",
-      "tags": [
-        "location"
+        "locative",
+        "place"
       ],
       "prompt": [
         {
@@ -263,78 +84,203 @@
         ]
       },
       "hints": [
-        "Look for the case the sentence asks for."
+        "The preposition w with a place asks for the locative case."
       ],
+      "fullLine": "Pracuję w biurze.",
       "teaching": [
         {
           "type": "text",
-          "text": "Read the whole line first; the missing word is the one this course teaches.",
+          "text": "The line says where someone works. After w, Polish uses a special ending on the place word.",
           "lang": "en"
         }
       ],
       "wordId": "biuro",
       "stage": "story",
-      "deckId": "meet-biuro"
+      "deckId": "at-the-office"
     },
     {
-      "key": "biuro-005",
-      "summary": "Meet: Jestem w biurze.",
+      "key": "spelling-biuro",
+      "summary": "office",
       "tags": [
-        "location"
+        "base form"
       ],
       "prompt": [
         {
           "type": "text",
-          "text": "Jestem w ",
+          "text": "office",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "biuro",
+          "lang": "pl"
+        },
+        {
+          "type": "text",
+          "text": "office",
+          "role": "translation",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biuro"
+        ]
+      },
+      "hints": [
+        "A neuter noun ending in -o."
+      ],
+      "fullLine": "biuro",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Write the dictionary form of the word, the form you would look up.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "spelling",
+      "deckId": "at-the-office"
+    },
+    {
+      "key": "forms-biuro",
+      "summary": "biuro in the locative",
+      "tags": [
+        "locative"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "biuro → ",
           "lang": "pl"
         },
         {
           "type": "blank",
           "id": "b1"
-        },
+        }
+      ],
+      "answer": [
         {
           "type": "text",
-          "text": ".",
+          "text": "biurze",
+          "lang": "pl"
+        }
+      ],
+      "answerDef": {
+        "mode": "type",
+        "expected": [
+          "biurze"
+        ]
+      },
+      "hints": [
+        "The word's reason explains this change."
+      ],
+      "fullLine": "biuro → biurze",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "Change the dictionary form to the one used after w. The word record explains why it changes.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "forms",
+      "deckId": "at-the-office"
+    },
+    {
+      "key": "dialogue-at-the-office",
+      "summary": "Gdzie pracujesz?",
+      "tags": [
+        "dialogue",
+        "locative"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Gdzie pracujesz?",
           "lang": "pl"
         }
       ],
       "answer": [
         {
           "type": "text",
-          "text": "Jestem w biurze.",
+          "text": "W biurze.",
           "lang": "pl"
         },
         {
           "type": "text",
-          "text": "I am in the office.",
+          "text": "In the office.",
           "role": "translation",
           "lang": "en"
         }
       ],
       "answerDef": {
-        "mode": "cloze",
-        "blanks": [
-          {
-            "id": "b1",
-            "expected": [
-              "biurze"
-            ]
-          }
+        "mode": "picks",
+        "options": [
+          "W biurze.",
+          "W biuro.",
+          "W biura."
+        ],
+        "correct": [
+          "W biurze."
         ]
       },
       "hints": [
-        "Look for the case the sentence asks for."
+        "The answer names a place after w."
       ],
+      "fullLine": "W biurze.",
       "teaching": [
         {
           "type": "text",
-          "text": "Read the whole line first; the missing word is the one this course teaches.",
+          "text": "Someone asks where you work. Pick the line that answers with the place word in its correct form.",
           "lang": "en"
         }
       ],
       "wordId": "biuro",
-      "stage": "story",
-      "deckId": "meet-biuro"
+      "stage": "dialogue",
+      "deckId": "at-the-office"
+    },
+    {
+      "key": "matching-biuro",
+      "summary": "Match biuro",
+      "tags": [
+        "meaning",
+        "forms"
+      ],
+      "prompt": [
+        {
+          "type": "text",
+          "text": "Match each form with its meaning.",
+          "lang": "en"
+        }
+      ],
+      "answer": [
+        {
+          "type": "text",
+          "text": "Every pair matches.",
+          "lang": "en"
+        }
+      ],
+      "answerDef": {
+        "mode": "match"
+      },
+      "hints": [
+        "Meanings are in English."
+      ],
+      "fullLine": "Match each form with its meaning.",
+      "teaching": [
+        {
+          "type": "text",
+          "text": "The left column holds Polish forms; the right column holds their exact English meanings.",
+          "lang": "en"
+        }
+      ],
+      "wordId": "biuro",
+      "stage": "matching",
+      "deckId": "at-the-office"
     },
     {
       "key": "biuro-006",
@@ -374,7 +320,7 @@
       ],
       "wordId": "biuro",
       "stage": "spelling",
-      "deckId": "meet-biuro"
+      "deckId": "at-the-office"
     },
     {
       "key": "biuro-007",
@@ -414,7 +360,7 @@
       ],
       "wordId": "biuro",
       "stage": "spelling",
-      "deckId": "meet-biuro"
+      "deckId": "at-the-office"
     },
     {
       "key": "biuro-008",
@@ -454,7 +400,7 @@
       ],
       "wordId": "biuro",
       "stage": "spelling",
-      "deckId": "meet-biuro"
+      "deckId": "at-the-office"
     },
     {
       "key": "biuro-009",
@@ -494,7 +440,7 @@
       ],
       "wordId": "biuro",
       "stage": "spelling",
-      "deckId": "meet-biuro"
+      "deckId": "at-the-office"
     },
     {
       "key": "biuro-010",
@@ -534,7 +480,7 @@
       ],
       "wordId": "biuro",
       "stage": "spelling",
-      "deckId": "meet-biuro"
+      "deckId": "at-the-office"
     },
     {
       "key": "biuro-011",
@@ -574,7 +520,7 @@
       ],
       "wordId": "biuro",
       "stage": "spelling",
-      "deckId": "meet-biuro"
+      "deckId": "at-the-office"
     },
     {
       "key": "biuro-012",
@@ -614,7 +560,7 @@
       ],
       "wordId": "biuro",
       "stage": "spelling",
-      "deckId": "meet-biuro"
+      "deckId": "at-the-office"
     },
     {
       "key": "biuro-013",
@@ -654,7 +600,7 @@
       ],
       "wordId": "biuro",
       "stage": "spelling",
-      "deckId": "meet-biuro"
+      "deckId": "at-the-office"
     },
     {
       "key": "biuro-014",
@@ -699,7 +645,7 @@
       ],
       "wordId": "biuro",
       "stage": "dialogue",
-      "deckId": "meet-biuro"
+      "deckId": "at-the-office"
     },
     {
       "key": "biuro-015",
@@ -744,7 +690,7 @@
       ],
       "wordId": "biuro",
       "stage": "dialogue",
-      "deckId": "meet-biuro"
+      "deckId": "at-the-office"
     },
     {
       "key": "biuro-016",
@@ -789,7 +735,7 @@
       ],
       "wordId": "biuro",
       "stage": "dialogue",
-      "deckId": "meet-biuro"
+      "deckId": "at-the-office"
     },
     {
       "key": "biuro-017",
@@ -834,7 +780,7 @@
       ],
       "wordId": "biuro",
       "stage": "dialogue",
-      "deckId": "meet-biuro"
+      "deckId": "at-the-office"
     },
     {
       "key": "biuro-018",
@@ -879,7 +825,7 @@
       ],
       "wordId": "biuro",
       "stage": "dialogue",
-      "deckId": "meet-biuro"
+      "deckId": "at-the-office"
     },
     {
       "key": "biuro-019",
@@ -916,7 +862,7 @@
       ],
       "wordId": "biuro",
       "stage": "matching",
-      "deckId": "meet-biuro"
+      "deckId": "at-the-office"
     },
     {
       "key": "biuro-020",
@@ -953,7 +899,7 @@
       ],
       "wordId": "biuro",
       "stage": "matching",
-      "deckId": "meet-biuro"
+      "deckId": "at-the-office"
     },
     {
       "key": "biuro-021",
@@ -4872,8 +4818,8 @@
     },
     {
       "level": "deck",
-      "deckId": "meet-biuro",
-      "title": "Meet biuro",
+      "deckId": "at-the-office",
+      "title": "At the office",
       "lead": "Meet the word and its meaning in several ways.",
       "parts": []
     },
@@ -4907,68 +4853,68 @@
     },
     {
       "level": "card",
-      "title": "Meet: To jest biuro.",
-      "lead": "Meet: To jest biuro.",
+      "title": "Pracuję w biurze",
+      "lead": "Pracuję w biurze",
       "parts": [
         {
           "type": "text",
-          "text": "The full line is To jest biuro.",
+          "text": "Pracuję w biurze. means I work in the office.",
           "lang": "en"
         }
       ],
-      "cardId": "deck-biuro-meet-biuro:af84881e462eac15"
+      "cardId": "deck-biuro-at-the-office:dce3feb4b4bd4946"
     },
     {
       "level": "card",
-      "title": "Meet: Widzę biuro.",
-      "lead": "Meet: Widzę biuro.",
+      "title": "office",
+      "lead": "office",
       "parts": [
         {
           "type": "text",
-          "text": "The full line is Widzę biuro.",
+          "text": "The dictionary form is biuro.",
           "lang": "en"
         }
       ],
-      "cardId": "deck-biuro-meet-biuro:819d086e97e6a469"
+      "cardId": "deck-biuro-at-the-office:50b64982b66e5e84"
     },
     {
       "level": "card",
-      "title": "Meet: Mam biuro.",
-      "lead": "Meet: Mam biuro.",
+      "title": "biuro in the locative",
+      "lead": "biuro in the locative",
       "parts": [
         {
           "type": "text",
-          "text": "The full line is Mam biuro.",
+          "text": "The locative after w is biurze.",
           "lang": "en"
         }
       ],
-      "cardId": "deck-biuro-meet-biuro:0ba695af012110ee"
+      "cardId": "deck-biuro-at-the-office:0fa73632bd2d5f76"
     },
     {
       "level": "card",
-      "title": "Meet: Pracuję w biurze.",
-      "lead": "Meet: Pracuję w biurze.",
+      "title": "Gdzie pracujesz?",
+      "lead": "Gdzie pracujesz?",
       "parts": [
         {
           "type": "text",
-          "text": "The full line is Pracuję w biurze.",
+          "text": "W biurze. is the short answer to where you work.",
           "lang": "en"
         }
       ],
-      "cardId": "deck-biuro-meet-biuro:89d023fc2f14e3d0"
+      "cardId": "deck-biuro-at-the-office:752c2b3620104cfc"
     },
     {
       "level": "card",
-      "title": "Meet: Jestem w biurze.",
-      "lead": "Meet: Jestem w biurze.",
+      "title": "Match biuro",
+      "lead": "Match biuro",
       "parts": [
         {
           "type": "text",
-          "text": "The full line is Jestem w biurze.",
+          "text": "Each form is paired with its exact English meaning.",
           "lang": "en"
         }
       ],
-      "cardId": "deck-biuro-meet-biuro:40ada1012103a8bd"
+      "cardId": "deck-biuro-at-the-office:0962f88656e3bc4f"
     },
     {
       "level": "card",
@@ -4981,7 +4927,7 @@
           "lang": "en"
         }
       ],
-      "cardId": "deck-biuro-meet-biuro:71a7f6a9f1ce2c67"
+      "cardId": "deck-biuro-at-the-office:64b1fa190d0e17b7"
     },
     {
       "level": "card",
@@ -4994,7 +4940,7 @@
           "lang": "en"
         }
       ],
-      "cardId": "deck-biuro-meet-biuro:141ae115c183b271"
+      "cardId": "deck-biuro-at-the-office:5f8cdc873a8a5ac1"
     },
     {
       "level": "card",
@@ -5007,7 +4953,7 @@
           "lang": "en"
         }
       ],
-      "cardId": "deck-biuro-meet-biuro:f2e359b1ffd93d55"
+      "cardId": "deck-biuro-at-the-office:3cc12ba21f8ee805"
     },
     {
       "level": "card",
@@ -5020,7 +4966,7 @@
           "lang": "en"
         }
       ],
-      "cardId": "deck-biuro-meet-biuro:5c99df31bf7febd7"
+      "cardId": "deck-biuro-at-the-office:83d29c186d4d95e7"
     },
     {
       "level": "card",
@@ -5033,7 +4979,7 @@
           "lang": "en"
         }
       ],
-      "cardId": "deck-biuro-meet-biuro:74b1fa20e0a521b8"
+      "cardId": "deck-biuro-at-the-office:2099a8f17715d8ba"
     },
     {
       "level": "card",
@@ -5046,7 +4992,7 @@
           "lang": "en"
         }
       ],
-      "cardId": "deck-biuro-meet-biuro:0ea2421967537569"
+      "cardId": "deck-biuro-at-the-office:281177fac10dc049"
     },
     {
       "level": "card",
@@ -5059,7 +5005,7 @@
           "lang": "en"
         }
       ],
-      "cardId": "deck-biuro-meet-biuro:a5c41fc5d9fe13e2"
+      "cardId": "deck-biuro-at-the-office:473f8600f3c5bb8c"
     },
     {
       "level": "card",
@@ -5072,7 +5018,7 @@
           "lang": "en"
         }
       ],
-      "cardId": "deck-biuro-meet-biuro:a258f3220e10fd88"
+      "cardId": "deck-biuro-at-the-office:969394b5b002ebca"
     },
     {
       "level": "card",
@@ -5085,7 +5031,7 @@
           "lang": "en"
         }
       ],
-      "cardId": "deck-biuro-meet-biuro:b0ee8d2785844e4f"
+      "cardId": "deck-biuro-at-the-office:1fc99a3a26a1fa0f"
     },
     {
       "level": "card",
@@ -5098,7 +5044,7 @@
           "lang": "en"
         }
       ],
-      "cardId": "deck-biuro-meet-biuro:8470af2898ad6a90"
+      "cardId": "deck-biuro-at-the-office:8ed51d1b015c2522"
     },
     {
       "level": "card",
@@ -5111,7 +5057,7 @@
           "lang": "en"
         }
       ],
-      "cardId": "deck-biuro-meet-biuro:f3944cd2247d4b0b"
+      "cardId": "deck-biuro-at-the-office:7dc56d1333abcbdb"
     },
     {
       "level": "card",
@@ -5124,7 +5070,7 @@
           "lang": "en"
         }
       ],
-      "cardId": "deck-biuro-meet-biuro:ed9c010c69a4fcf4"
+      "cardId": "deck-biuro-at-the-office:c0eae7688067eac6"
     },
     {
       "level": "card",
@@ -5137,7 +5083,7 @@
           "lang": "en"
         }
       ],
-      "cardId": "deck-biuro-meet-biuro:360f68ca5d87106d"
+      "cardId": "deck-biuro-at-the-office:88d5fdd5b1538b2d"
     },
     {
       "level": "card",
@@ -5150,7 +5096,7 @@
           "lang": "en"
         }
       ],
-      "cardId": "deck-biuro-meet-biuro:361ec6d8373deb9b"
+      "cardId": "deck-biuro-at-the-office:ab9c07373d40f52b"
     },
     {
       "level": "card",
@@ -5163,7 +5109,7 @@
           "lang": "en"
         }
       ],
-      "cardId": "deck-biuro-meet-biuro:df8671b21e438d4a"
+      "cardId": "deck-biuro-at-the-office:1edfc12eb8fce404"
     },
     {
       "level": "card",

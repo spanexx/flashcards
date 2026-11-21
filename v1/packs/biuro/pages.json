@@ -8,8 +8,8 @@
     },
     {
       "level": "deck",
-      "deckId": "meet-biuro",
-      "title": "Meet biuro",
+      "deckId": "at-the-office",
+      "title": "At the office",
       "lead": "Meet the word and its meaning in several ways.",
       "parts": []
     },
@@ -43,65 +43,65 @@
     },
     {
       "level": "card",
-      "cardKey": "biuro-001",
-      "title": "Meet: To jest biuro.",
-      "lead": "Meet: To jest biuro.",
+      "cardKey": "story-at-the-office",
+      "title": "Pracuję w biurze",
+      "lead": "Pracuję w biurze",
       "parts": [
         {
           "type": "text",
-          "text": "The full line is To jest biuro.",
+          "text": "Pracuję w biurze. means I work in the office.",
           "lang": "en"
         }
       ]
     },
     {
       "level": "card",
-      "cardKey": "biuro-002",
-      "title": "Meet: Widzę biuro.",
-      "lead": "Meet: Widzę biuro.",
+      "cardKey": "spelling-biuro",
+      "title": "office",
+      "lead": "office",
       "parts": [
         {
           "type": "text",
-          "text": "The full line is Widzę biuro.",
+          "text": "The dictionary form is biuro.",
           "lang": "en"
         }
       ]
     },
     {
       "level": "card",
-      "cardKey": "biuro-003",
-      "title": "Meet: Mam biuro.",
-      "lead": "Meet: Mam biuro.",
+      "cardKey": "forms-biuro",
+      "title": "biuro in the locative",
+      "lead": "biuro in the locative",
       "parts": [
         {
           "type": "text",
-          "text": "The full line is Mam biuro.",
+          "text": "The locative after w is biurze.",
           "lang": "en"
         }
       ]
     },
     {
       "level": "card",
-      "cardKey": "biuro-004",
-      "title": "Meet: Pracuję w biurze.",
-      "lead": "Meet: Pracuję w biurze.",
+      "cardKey": "dialogue-at-the-office",
+      "title": "Gdzie pracujesz?",
+      "lead": "Gdzie pracujesz?",
       "parts": [
         {
           "type": "text",
-          "text": "The full line is Pracuję w biurze.",
+          "text": "W biurze. is the short answer to where you work.",
           "lang": "en"
         }
       ]
     },
     {
       "level": "card",
-      "cardKey": "biuro-005",
-      "title": "Meet: Jestem w biurze.",
-      "lead": "Meet: Jestem w biurze.",
+      "cardKey": "matching-biuro",
+      "title": "Match biuro",
+      "lead": "Match biuro",
       "parts": [
         {
           "type": "text",
-          "text": "The full line is Jestem w biurze.",
+          "text": "Each form is paired with its exact English meaning.",
           "lang": "en"
         }
       ]
