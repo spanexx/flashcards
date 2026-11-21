@@ -135,11 +135,12 @@ A10. Cards of the same word stay together and run in stage order. The plan
      [agent decision, from the spec's "intentional sequence"]
 
 Q11. What does the learner see above a word card?
-A11. One compact word line: `lemma -> current form` with the form label, and
-     the form's `why` as help. It appears only when the card has a `wordId` and
-     the word has a form for that card, so a plain card is unchanged. On the
-     Matching card the same line names the word and the line count, never the
-     pairing.
+A11. One compact word line: the lemma and its meaning before the answer, with
+     the changed form and its label added only once the answer is on screen, so
+     the line never leaks the answer. The form's `why` is shown as help at the
+     level's chosen moment. It appears only when the card has a `wordId`, so a
+     plain card is unchanged. On the Matching card the same line names the word;
+     the board below carries the pairs.
      [agent decision]
 
 Q12. What does `focusWord` do in the creation brief?

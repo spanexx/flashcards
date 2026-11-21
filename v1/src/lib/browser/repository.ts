@@ -488,6 +488,7 @@ export function packStatus(pack: BrowserPack, cards: Card[]): PackStatus {
     studyInstruction: pack.studyInstruction,
     prompts: pack.prompts,
     decks: pack.decks,
+    words: pack.words,
     topics: deckNames,
     topicLabels: {},
     cardCount: cards.filter((card) => card.packName === pack.name && !card.retired).length,

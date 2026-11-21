@@ -114,14 +114,24 @@ describe("resolveCardHelp", () => {
     ]);
   });
 
-  it("falls back to the card's Dictionary page", () => {
-    const card = makeCard("card:page");
+  it("falls back to the card's Dictionary page for a word card", () => {
+    const card = makeCard("card:page", { wordId: "biuro", stage: "story" });
     const help = resolveCardHelp({
       card,
       word: null,
       pageParts: [{ type: "text", text: "Page help." }],
     });
     expect(help).toEqual([{ type: "text", text: "Page help." }]);
+  });
+
+  it("never turns a plain card's page into pre-answer help", () => {
+    const card = makeCard("card:plain-page");
+    const help = resolveCardHelp({
+      card,
+      word: null,
+      pageParts: [{ type: "text", text: "Page help." }],
+    });
+    expect(help).toEqual([]);
   });
 
   it("returns nothing rather than an empty promise", () => {

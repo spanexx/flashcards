@@ -99,4 +99,36 @@ describe("judgeCard", () => {
     const judged = judgeCard({ mode: "type", expected: ["kawę"], judge: "exact" }, { answer: "kawi" }, 0, false);
     expect(judged.results[0].outcome).toBe("no");
   });
+
+  it("judges one whole matching board by its locked pairs", () => {
+    const board = judgeCard({ mode: "match" }, { answer: "3/3" }, 0, false);
+    expect(board.results).toHaveLength(1);
+    expect(board.results[0]).toMatchObject({
+      region: null,
+      outcome: "got_it",
+      given: "3 of 3 pairs",
+      expected: ["all 3 pairs"],
+    });
+    expect(board.cardOutcome).toBe("got_it");
+    expect(board.judge).toBe("local");
+  });
+
+  it("calls a partly matched board nearly and an empty one no", () => {
+    expect(judgeCard({ mode: "match" }, { answer: "2/3" }, 0, false).cardOutcome).toBe("nearly");
+    const none = judgeCard({ mode: "match" }, { answer: "0/3" }, 0, false);
+    expect(none.cardOutcome).toBe("no");
+    expect(none.results[0].nearMiss).toBe(false);
+  });
+
+  it("leaves a malformed or impossible count unjudged", () => {
+    expect(judgeCard({ mode: "match" }, { answer: "all of them" }, 0, false).judge).toBe("learner");
+    expect(judgeCard({ mode: "match" }, { answer: "1/1" }, 0, false).cardOutcome).toBe("unjudged");
+    expect(judgeCard({ mode: "match" }, { answer: "4/3" }, 0, false).cardOutcome).toBe("unjudged");
+  });
+
+  it("caps a matching board for a real hint, like any other card", () => {
+    const judged = judgeCard({ mode: "match" }, { answer: "3/3" }, 0, true);
+    expect(judged.capped).toBe(true);
+    expect(judged.cardOutcome).toBe("nearly");
+  });
 });

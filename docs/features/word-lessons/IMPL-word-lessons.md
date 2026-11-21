@@ -25,7 +25,7 @@ Work:
   `words` (default `[]`) to `packCardsSchema` and to the pack bundle schema.
 - Carry `wordId`/`stage` through `buildCard`. Do **not** touch
   `canonicalContent`; add the WHY comment that says why the link is context.
-- Add `wordById(words, id)`, `formForStage(word, stage)` and
+- Add `wordById(words, id)`, `formForCard(word, card)` and
   `resolveCardHelp({ card, word, pageParts })` in `core/word.ts`. The resolver
   returns `TeachingPart[]` in the fixed order: card teaching, word note/form
   why, page parts.
@@ -50,14 +50,14 @@ Files:
 - `v1/src/app/study/StudySession.tsx`
 - `v1/src/app/StudyClient.tsx`
 - `v1/src/app/globals.css`
-- `v1/tests/match.test.ts` (new)
+- `v1/tests/judge.test.ts` (match outcomes live here, beside the other modes)
 - `v1/tests/plan.test.ts`
 
 Work:
 - Order a plan's cards so one word's cards are adjacent and run in
   `STAGE_ORDER`. A word with one selected card is untouched.
-- Add `WordLine`: `lemma -> form` with the form label. Render only when the card
-  has a word and the word has something to show.
+- Add `WordLine`: lemma and meaning first, changed form and label only after the
+  answer. Render only when the card has a word.
 - Forms needs no new surface: the card is a `type` card. Show the transformation
   above the prompt and the why as help.
 - Add `MatchBoard`: two independently shuffled columns, tap-to-pair, lock a

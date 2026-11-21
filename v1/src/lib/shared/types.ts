@@ -394,6 +394,8 @@ export interface PackStatus {
   requirePageRead?: boolean;
   prompts?: import("@/lib/packs/types").PackPrompts | null;
   decks?: Deck[];
+  /** The words this pack teaches in depth; absent for a plain pack. */
+  words?: Word[];
   topics: string[];
   topicLabels: Record<string, string>;
   cardCount: number;

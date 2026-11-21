@@ -2665,6 +2665,123 @@ td {
   text-transform: uppercase;
 }
 
+/* WHY: The word line names the focus word without giving the answer away. The
+   changed form is added only once the card has been answered, so a learner who
+   opens a word card still has to find the form themselves. */
+.word-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 5px 10px;
+  margin-top: 14px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 5%, var(--card));
+}
+
+.word-line-lemma {
+  font-family: var(--serif);
+  font-size: 1.2rem;
+  font-weight: 650;
+}
+
+.word-line-meaning {
+  color: var(--quiet);
+}
+
+.word-line-arrow {
+  color: var(--quiet);
+  margin-left: auto;
+}
+
+.word-line-form {
+  font-family: var(--serif);
+  font-size: 1.1rem;
+  font-weight: 650;
+  color: var(--good);
+}
+
+.word-line-label {
+  color: var(--quiet);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* WHY: Matching is tap-only and stays two columns even on a phone. Dragging is
+   hard on a small screen and impossible with a keyboard; picking one half from
+   each column works everywhere with the same gesture. */
+.match-board {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 18px 0 8px;
+}
+
+.match-column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.match-item {
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.95rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+}
+
+.match-item:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.match-item:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  outline-offset: 2px;
+}
+
+.match-item[data-state="picked"] {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--card));
+}
+
+.match-item[data-state="wrong"] {
+  border-color: var(--miss);
+  background: color-mix(in srgb, var(--miss) 10%, var(--card));
+  transform: translateX(2px);
+}
+
+.match-item[data-state="locked"] {
+  border-color: var(--good);
+  background: color-mix(in srgb, var(--good) 12%, var(--card));
+  color: var(--good);
+  cursor: default;
+}
+
+.match-board[data-frozen="true"] .match-item {
+  cursor: default;
+}
+
+@media (max-width: 560px) {
+  .match-board {
+    gap: 8px;
+  }
+
+  .match-item {
+    padding: 9px 8px;
+    font-size: 0.88rem;
+  }
+}
+
 .study-outcome {
   display: inline-flex;
   align-items: center;

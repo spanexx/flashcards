@@ -12,7 +12,7 @@ import type { Card, CardPart, TeachingPart, Word, WordForm, WordStage } from "@/
 import { WORD_STAGES } from "@/lib/core/schema";
 
 /** The card fields the word resolver needs. A full card satisfies this. */
-export type CardForWord = Pick<Card, "prompt" | "answer" | "answerDef" | "stage">;
+export type CardForWord = Pick<Card, "prompt" | "answer" | "answerDef" | "stage" | "wordId">;
 
 /** The word a card names, or null when the pack has no such word. */
 export function wordById(
@@ -85,6 +85,11 @@ export function resolveCardHelp(input: CardHelpInput): TeachingPart[] {
     if (fromWord.length > 0) return fromWord;
   }
 
+  // WHY: a plain card's layer is its own teaching, never its page. The page is a
+  // separate place the learner opens on purpose, and showing its whole body as
+  // pre-answer help would change every pack that already has one. Only a word
+  // lesson, which has no other source, borrows its card page as a last fallback.
+  if (!input.card.wordId) return [];
   return input.pageParts ? [...input.pageParts] : [];
 }
 

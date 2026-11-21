@@ -26,7 +26,7 @@ say "A stage the pack did not write never appears as an empty card."
 
 line "3. Story stage"
 say "Prompt: 'Pracuję w ___.'  (biuro)  [cloze]"
-say "Help line above the card: 'biuro -> biuro' (base form)"
+say "Word line above the card: 'biuro — office'. 'biuro -> biurze' appears only after the answer."
 say "The learner types 'biurze'."
 say "Answer: correct. Evidence row written once, cardId is the story card."
 

@@ -119,8 +119,10 @@ the deep material and stays reachable. No new page level is added.
 
 ## 5. What the learner sees
 
-- A compact word line above a word card: `lemma -> form` with the form label.
-  It appears only when the card has a word and the word has a form to show.
+- A compact word line above a word card: the lemma and its meaning before the
+  answer, then the changed form and its label after the answer. The form never
+  appears before the learner has tried, so the line cannot leak the answer. It
+  appears only when the card has a word.
 - On Forms: the transformation, then the why, then the card's own sentence with
   one blank. The learner types the changed form.
 - On Matching: two columns, target forms and source meanings, shuffled
@@ -138,7 +140,8 @@ the whole bundle passes.
 
 1. Word ids are unique in the pack and match `^[a-z0-9][a-z0-9-]*$`.
 2. `lemma` and `meaning` are non-empty.
-3. Every form has `label`, `to`, `en`, and at least one `why` part.
+3. Every form has `label`, `to`, `meaning` (in the pack's source language) and at
+   least one `why` part.
 4. Every pair has a non-empty `target` and `meaning`; targets are distinct and
    meanings are distinct within a word.
 5. `card.wordId` names a word in the same pack, or one already in the target pack

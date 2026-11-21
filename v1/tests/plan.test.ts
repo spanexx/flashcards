@@ -4,7 +4,7 @@
 // 2026-10-19 opencode: created for the v1 prototype [pack: v1-prototype]
 
 import { describe, expect, it } from "vitest";
-import { buildPlan } from "@/lib/core/plan";
+import { buildPlan, orderWordCards } from "@/lib/core/plan";
 import { makeCard, makeRow } from "./helpers";
 
 const NOW = new Date("2026-10-10T12:00:00.000Z");
@@ -70,5 +70,55 @@ describe("buildPlan", () => {
     });
     expect(result.plan.banner).toBeNull();
     expect(result.plan.sessionId.length).toBeGreaterThan(0);
+  });
+});
+
+describe("orderWordCards", () => {
+  it("keeps one word's leaves together and walks them in stage order", () => {
+    const cards = [
+      makeCard("card:match", { summary: "Match", wordId: "biuro", stage: "matching" }),
+      makeCard("card:plain", { summary: "Plain" }),
+      makeCard("card:story", { summary: "Story", wordId: "biuro", stage: "story" }),
+      makeCard("card:forms", { summary: "Forms", wordId: "biuro", stage: "forms" }),
+    ];
+    expect(orderWordCards(cards).map((card) => card.id)).toEqual([
+      "card:story",
+      "card:forms",
+      "card:match",
+      "card:plain",
+    ]);
+  });
+
+  it("places each word block at its first selected card", () => {
+    const cards = [
+      makeCard("card:one", { summary: "One", wordId: "a", stage: "story" }),
+      makeCard("card:two", { summary: "Two", wordId: "b", stage: "story" }),
+      makeCard("card:one-last", { summary: "One last", wordId: "a", stage: "matching" }),
+      makeCard("card:two-last", { summary: "Two last", wordId: "b", stage: "matching" }),
+    ];
+    expect(orderWordCards(cards).map((card) => card.id)).toEqual([
+      "card:one",
+      "card:one-last",
+      "card:two",
+      "card:two-last",
+    ]);
+  });
+
+  it("puts an unknown stage last without dropping the card", () => {
+    const cards = [
+      makeCard("card:odd", { summary: "Odd", wordId: "biuro", stage: "matching" }),
+      makeCard("card:unknown", { summary: "Unknown", wordId: "biuro", stage: "mystery" as "story" }),
+      makeCard("card:story", { summary: "Story", wordId: "biuro", stage: "story" }),
+    ];
+    expect(orderWordCards(cards).map((card) => card.id)).toEqual([
+      "card:story",
+      "card:odd",
+      "card:unknown",
+    ]);
+  });
+
+  it("leaves a plan with no words exactly as the algorithm built it", () => {
+    const cards = [makeCard("card:a", { summary: "A" }), makeCard("card:b", { summary: "B" })];
+    expect(orderWordCards(cards)).toEqual(cards);
   });
 });
