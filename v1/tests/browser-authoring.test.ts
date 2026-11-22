@@ -10,6 +10,7 @@
 import { describe, expect, it } from "vitest";
 import { AUTHORING_SKILL_VERSION, buildAuthoringPrompt } from "@/lib/browser/authoring";
 import { parseBundle, parseCardsBundle, parseDeckBundle } from "@/lib/browser/bundle";
+import { clozeContextIssue, promptLine } from "@/lib/core/prompt-context";
 import type { BrowserPack } from "@/lib/browser/repository";
 import {
   defaultCreationBrief,
@@ -88,7 +89,7 @@ describe("buildAuthoringPrompt", () => {
         }),
       },
     );
-    expect(AUTHORING_SKILL_VERSION).toBe("7.0.0");
+    expect(AUTHORING_SKILL_VERSION).toBe("8.0.0");
     expect(prompt).toContain("Spanish");
     expect(prompt).toContain("English");
     expect(prompt).toContain("Say each line aloud first.");
@@ -106,6 +107,25 @@ describe("buildAuthoringPrompt", () => {
         "<one short learner-facing sentence on how to study>",
       );
     }
+  });
+
+  it("shows a self-contained cloze example that passes the same guard as a real card", () => {
+    const prompt = buildAuthoringPrompt(
+      { kind: "cards", packName: "starter", deckId: "basics" },
+      pack,
+    );
+    expect(prompt).toContain("Base word: apple. There are two apples on the table.");
+    expect(prompt).not.toContain("The red apple is sweet.");
+    const parsed = parseCardsBundle(example(prompt));
+    expect(parsed.ok, JSON.stringify(parsed)).toBe(true);
+    if (!parsed.ok) return;
+    const card = parsed.bundle.cards[0];
+    expect(card.fullLine).toBe("Base word: apple. There are two apples on the table.");
+    expect(promptLine(card.prompt)).toBe("Base word: apple. There are two on the table.");
+    expect(JSON.stringify(card.prompt)).toContain('"type":"blank","id":"b1"');
+    expect(card.answerDef).toMatchObject({ mode: "cloze", blanks: [{ expected: ["apples"] }] });
+    expect(clozeContextIssue(card)).toBeNull();
+    expect(JSON.stringify(card.teaching)).not.toContain("apples");
   });
 
   it("reads the pair and instruction from an existing pack", () => {
@@ -249,6 +269,10 @@ describe("buildAuthoringPrompt", () => {
     if (result.ok) {
       expect(result.bundle.words[0].lemma).toBe("the base word");
       expect(result.bundle.cards.filter((card) => card.stage)).toHaveLength(5);
+      const forms = result.bundle.cards.find((card) => card.stage === "forms");
+      expect(promptLine(forms?.prompt ?? [])).toBe('Type the changed form of "the base word":');
+      expect(promptLine(forms?.prompt ?? [])).not.toContain("___");
+      expect(prompt).toContain("A forms card is a type card, not a cloze");
     }
   });
 

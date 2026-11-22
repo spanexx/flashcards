@@ -1,9 +1,9 @@
 # Drift Log
-**Last updated:** 2026-11-22  **Open:** 0  **Awaiting:** 0  **Resolved:** 48  **Critical/High:** 0
+**Last updated:** 2026-11-22  **Open:** 0  **Awaiting:** 0  **Resolved:** 49  **Critical/High:** 0
 
 ## Open
 
-_None. The 2026-10-29 course-dictionary review found eight gaps (D-32–D-39); all were fixed and verified the same day. A later audit of the locked GRILL's source lines added D-40, also fixed the same day. The system-design review found D-41, a YouTube embed fault shared by every pack; it was fixed and verified the same day. The learner then found the system-design Dictionary pages empty, logged as D-42 and fixed the same day. See Resolved._
+_None. See Resolved for the 2026-11-22 prompt-example clarity fix (D-49)._
 
 ## Awaiting decision
 
@@ -17,6 +17,15 @@ the IMPL reconcile section, is in progress._
 ---
 
 ## Resolved
+
+- **D-49** (Medium, 2026-11-22, reporter: the learner via an independent triage of the delegated goal; resolved 2026-11-22) — Two worked examples in the authoring skill contradicted the self-contained-card rule they teach: the generic apple cloze hid "sweet" with no clue, and the forms-stage example used a literal "___" inside a text part even though forms is a type card.
+  - Doc claim: "every cloze or transformation prompt must name the base word, owner, or context in the prompt when the sentence alone cannot tell the learner what to supply" (`docs/features/study-card-clarity/PRD-TRD-study-card-clarity.md:63-79`); "forms -> type" (`docs/features/word-lessons/GRILL-word-lessons.txt:86-97`).
+  - Code reality: both lanes shipped the same apple map, and the chat word-lesson example wrote the forms prompt as a text part containing a literal blank. After the fix both maps use a counted-plural example that names the base word, the forms prompt asks in words, and a rule in both lanes says forms is type, not cloze.
+  - Why matters: an example that breaks the rule teaches the chat to copy the exception; a blank part on a type card creates a dead input the judge ignores.
+  - Owner: cross-pack (study-card-clarity + word-lessons)
+  - To fix: update the example maps in `v1/src/lib/browser/authoring.ts` and `v1/src/lib/provider/prompt.ts`, the forms example and rule in `authoring.ts`, bump the skill to 8.0.0, update pinned tests and affected docs. Shipped pack data is unchanged.
+  - Verified by: new self-contained-example and forms-prompt assertions in `v1/tests/browser-authoring.test.ts`; updated example assertion in `v1/tests/provider-prompt.test.ts`; version assertions in `v1/tests/simulate-study-card-clarity.test.ts`; full suite 91 files / 1130 tests; typecheck and changed-file lint clean; `npm run build` with `check-pwa: passed`; both drift gates green.
+  - Related: study-card-clarity, word-lessons.
 
 - **D-48** (High, 2026-11-22, reporter: the learner, via an independent triage of the delegated goal; resolved 2026-11-22) — A raw AI-addressed study directive could still be stored on a pack even after the prompt lanes were taught to write a learner-facing note.
   - Doc claim: "A raw note still reaching a pack. The chat lane no longer writes it, the provider lane no longer falls back to it, and the card no longer prints it." (`docs/features/study-card-clarity/IMPL-study-card-clarity.md`, risk section); "The study card shows that instruction verbatim when present." (`docs/features/language-prompt-control/PRD-TRD-language-prompt-control.md:41-42`, superseded by study-card-clarity).

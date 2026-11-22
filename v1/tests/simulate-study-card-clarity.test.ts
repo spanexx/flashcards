@@ -96,11 +96,11 @@ describe("study card clarity rehearsal", () => {
     expect(block(css, ':root[data-theme="dark"] {')).not.toContain("--ink: #23211d");
     line("scene 4: the card's primary action is ink on paper in both themes");
 
-    expect(AUTHORING_SKILL_VERSION).toBe("7.0.0");
+    expect(AUTHORING_SKILL_VERSION).toBe("8.0.0");
     const authoring = buildAuthoringPrompt({ kind: "pack" });
     expect(authoring).toContain("Base word: cup. There are two ___ on the table.");
     expect(authoring).toContain("Owner: Anna. That is ___ winter coat.");
-    line("scene 5: the authoring skill is 7.0.0 and carries both self-contained examples");
+    line("scene 5: the authoring skill is 8.0.0 and carries both self-contained examples");
 
     const coatIssue = clozeContextIssue({
       prompt: [{ type: "text", text: "That is ___ winter coat." }],

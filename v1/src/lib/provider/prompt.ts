@@ -208,21 +208,23 @@ function pairPromptLines(pair: PackLanguagePair, studyInstruction = ""): string[
 /** A short concrete line in the target language, translated into the source. */
 function exampleLine(pair: PackLanguagePair): {
   fullLine: string;
+  base: string;
   target: string;
   translation: string;
   teaching: string;
 } {
-  const examples: Record<string, { fullLine: string; target: string; teaching: string }> = {
-    de: { fullLine: "Der Apfel ist süß.", target: "süß", teaching: "Ein Apfel ist eine Frucht." },
-    en: { fullLine: "The red apple is sweet.", target: "sweet", teaching: "An apple is a fruit." },
-    es: { fullLine: "La manzana es dulce.", target: "dulce", teaching: "Una manzana es una fruta." },
-    fr: { fullLine: "La pomme est sucrée.", target: "sucrée", teaching: "Une pomme est un fruit." },
-    pl: { fullLine: "Czerwone jabłko jest słodkie.", target: "słodkie", teaching: "Jabłko to owoc." },
+  const examples: Record<string, { fullLine: string; base: string; target: string; teaching: string }> = {
+    de: { fullLine: "Grundwort: Apfel. Es liegen zwei Äpfel auf dem Tisch.", base: "Apfel", target: "Äpfel", teaching: "Es wächst auf einem Baum." },
+    en: { fullLine: "Base word: apple. There are two apples on the table.", base: "apple", target: "apples", teaching: "It grows on a tree." },
+    es: { fullLine: "Palabra base: manzana. Hay dos manzanas sobre la mesa.", base: "manzana", target: "manzanas", teaching: "Crece en un árbol." },
+    fr: { fullLine: "Mot de base: pomme. Il y a deux pommes sur la table.", base: "pomme", target: "pommes", teaching: "Il pousse sur un arbre." },
+    pl: { fullLine: "Słowo podstawowe: jabłko. Na stole leżą dwa jabłka.", base: "jabłko", target: "jabłka", teaching: "Rośnie na drzewie." },
   };
   const target = examples[pair.target.split("-")[0]] ?? examples.en;
   const source = examples[pair.source.split("-")[0]] ?? target;
   return {
     fullLine: target.fullLine,
+    base: target.base,
     target: target.target,
     translation: source.fullLine,
     teaching: target.teaching,
@@ -271,6 +273,7 @@ function generationWordLessonLines(): string[] {
     'A pair is {"target":"...","meaning":"..."}; both are in the question language and must be distinct inside one word.',
     'Every word card sets "wordId" to that word\'s id and "stage" to "story", "spelling" or "forms". Stage fixes style: story is cloze, spelling and forms are type. This lane must not write "dialogue" or "matching".',
     "Never print a changed form in a card prompt or teaching part: the learner has to produce it.",
+    'A forms line is a type line: it asks for the changed form, and the app turns the line into a translation prompt with one answer field — never a ___ blank.',
   ];
 }
 
@@ -283,11 +286,11 @@ function wordLessonExample(
   const style = cardStyle === "hear_type" ? "cloze" : exampleStyle(cardStyle);
   const stage = style === "cloze" ? "story" : "spelling";
   const word: Record<string, unknown> = {
-    id: "sweet-fruit",
-    lemma: line.target,
+    id: "base-apple",
+    lemma: line.base,
     meaning: line.translation,
     forms: [],
-    pairs: [{ target: line.target, meaning: line.translation }],
+    pairs: [{ target: line.base, meaning: line.translation }],
   };
   if (pair.target.length > 0) word.lang = pair.target;
   return {
@@ -337,7 +340,7 @@ function packShape(
         translation: line.translation,
         topics: ["Basics"],
         tags: [],
-        summary: "A sweet fruit",
+        summary: "Two apples",
         teaching: [exampleTeaching(line, pair)],
       },
       lesson.line,
@@ -358,7 +361,7 @@ function deckShape(cardStyle: CardStyle, pair: PackLanguagePair): string {
         translation: line.translation,
         topics: ["Extra"],
         tags: [],
-        summary: "A sweet fruit",
+        summary: "Two apples",
         teaching: [exampleTeaching(line, pair)],
       },
     ],

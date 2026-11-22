@@ -11,7 +11,7 @@
 1. The plain card styles.
 2. The study goal leaves the card and lands in the Library pack row.
 3. The cloze context validator.
-4. The authoring skill 7.0.0.
+4. The authoring skill 8.0.0.
 5. The provider prompt rules and the generated-note precedence.
 6. Tests, the post-implementation simulation, and the gates.
 
@@ -98,12 +98,12 @@ on the new test file is allowed to fail only on the not-yet-written parts.
 
 **Proof:** `npx vitest run tests/prompt-context.test.ts tests/card.test.ts`.
 
-## Phase 4 — the authoring skill 7.0.0
+## Phase 4 — the authoring skill 8.0.0
 
 **Files:** `v1/src/lib/browser/authoring.ts`,
 `v1/src/lib/shared/creation.ts`
 
-- `AUTHORING_SKILL_VERSION = "7.0.0"`.
+- `AUTHORING_SKILL_VERSION = "8.0.0"`.
 - `commonRules` gains:
   - every cloze or transformation prompt names the base word, owner or context
     when the sentence alone cannot tell the learner what to supply;
@@ -167,7 +167,7 @@ on the new test file is allowed to fail only on the not-yet-written parts.
   `hardRuleIssues`, and the self-contained versions pass.
 - `study-experience.test.ts` proves the pack's raw note is ignored and the mode
   line wins.
-- `browser-authoring.test.ts` proves 7.0.0, both examples, the placeholder, and
+- `browser-authoring.test.ts` proves 8.0.0, both examples, the placeholder, and
   the absence of the raw request from the example JSON.
 - `creation-brief.test.ts` proves `withBriefOnPackText` keeps the pair and does
   not copy the raw note.
