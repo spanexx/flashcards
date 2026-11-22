@@ -21,7 +21,7 @@ import {
 import { packLanguagePair, type PackLanguagePair } from "@/lib/shared/language";
 
 /** Bump when the prompt or the JSON shape it teaches changes. */
-export const AUTHORING_SKILL_VERSION = "7.0.0";
+export const AUTHORING_SKILL_VERSION = "8.0.0";
 
 /** Where the chat is allowed to write. No learner-written name field exists. */
 export type AuthoringTarget =
@@ -43,11 +43,11 @@ function exampleLine(pair: PackLanguagePair): {
   teaching: string;
 } {
   const examples: Record<string, { fullLine: string; target: string; teaching: string }> = {
-    de: { fullLine: "Der Apfel ist süß.", target: "süß", teaching: "Ein Apfel ist eine Frucht." },
-    en: { fullLine: "The red apple is sweet.", target: "sweet", teaching: "An apple is a fruit." },
-    es: { fullLine: "La manzana es dulce.", target: "dulce", teaching: "Una manzana es una fruta." },
-    fr: { fullLine: "La pomme est sucrée.", target: "sucrée", teaching: "Une pomme est un fruit." },
-    pl: { fullLine: "Czerwone jabłko jest słodkie.", target: "słodkie", teaching: "Jabłko to owoc." },
+    de: { fullLine: "Grundwort: Apfel. Es liegen zwei Äpfel auf dem Tisch.", target: "Äpfel", teaching: "Es wächst auf einem Baum." },
+    en: { fullLine: "Base word: apple. There are two apples on the table.", target: "apples", teaching: "It grows on a tree." },
+    es: { fullLine: "Palabra base: manzana. Hay dos manzanas sobre la mesa.", target: "manzanas", teaching: "Crece en un árbol." },
+    fr: { fullLine: "Mot de base: pomme. Il y a deux pommes sur la table.", target: "pommes", teaching: "Il pousse sur un arbre." },
+    pl: { fullLine: "Słowo podstawowe: jabłko. Na stole leżą dwa jabłka.", target: "jabłka", teaching: "Rośnie na drzewie." },
   };
   const target = examples[pair.target.split("-")[0]] ?? examples.en;
   const source = examples[pair.source.split("-")[0]] ?? target;
@@ -76,6 +76,7 @@ function commonRules(pair: PackLanguagePair): string {
   "Base word: cup. There are two ___ on the table."
   "Owner: Anna. That is ___ winter coat."
   Never leave the missing word to be guessed from the deck name, the previous card or a picture.
+- A forms card is a type card, not a cloze: its prompt names the change and asks for the changed form in words, for example "Type the genitive form of \"the base word\":". Do not write a ___ blank in a forms prompt; the learner types the answer in the answer field.
 - fullLine: the complete sentence or phrase the card is built from.
 - teaching: optional, at most three parts. Each part is one of:
   {"type":"text","text":"...","lang":"${speakLang}"}
@@ -101,7 +102,7 @@ function exampleCard(deckId: string, pair: PackLanguagePair): string {
   const sourceLang = pair.source ? `,"lang":${JSON.stringify(pair.source)}` : "";
   return `{
       "deckId": ${JSON.stringify(deckId)},
-      "summary": "A sweet fruit",
+      "summary": "Two apples",
       "prompt": [{"type":"text","text":${JSON.stringify(before)}${targetLang}},{"type":"blank","id":"b1"},{"type":"text","text":${JSON.stringify(after)}${targetLang}}],
       "answer": [{"type":"text","text":${JSON.stringify(line.fullLine)}${targetLang}},{"type":"text","text":${JSON.stringify(line.translation)},"role":"translation"${sourceLang}}],
       "answerDef": {"mode":"cloze","blanks":[{"id":"b1","expected":[${JSON.stringify(line.target)}]}]},
@@ -167,7 +168,7 @@ function wordLessonExample(deckId: string, pair: PackLanguagePair) {
       wordId: id,
       stage: "forms",
       summary: "Forms: change the word",
-      prompt: [text("the base word -> ___")],
+      prompt: [text('Type the changed form of "the base word":')],
       answer: [text("the changed form")],
       answerDef: { mode: "type", expected: ["the changed form"] },
       hints: ["The word's reason explains this change."],
@@ -384,7 +385,7 @@ ${rules}
 Return JSON shaped like this:
 ${shapeForPack("basics", "Everyday basics", pair, rawPreference.length > 0)}
 
-Before you answer, check: every deck id is lowercase; every card has a deckId that exists in "decks"; every blank has one expected answer; every picks card has "correct" inside "options"; every cloze prompt names its base word, owner or context; the study note is one short learner-facing sentence; there is no "topics" field; and no teaching part gives the answer away.`;
+Before you answer, check: every deck id is lowercase; every card has a deckId that exists in "decks"; every blank has one expected answer; every picks card has "correct" inside "options"; every cloze prompt names its base word, owner or context; a forms prompt asks for the changed form in words and has no ___ blank; the study note is one short learner-facing sentence; there is no "topics" field; and no teaching part gives the answer away.`;
   }
 
   if (!pack) {

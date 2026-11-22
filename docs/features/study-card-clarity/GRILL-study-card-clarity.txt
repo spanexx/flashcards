@@ -114,6 +114,9 @@ A. `AUTHORING_SKILL_VERSION` goes from 6.0.0 to 7.0.0, because the prompt text
    new version.
    Rules out: keeping 6.0.0 and pretending the prompt did not change.
    Source: `v1/src/lib/browser/authoring.ts:22-23`.
+   NOTE 2026-11-22 (D-49): the worked examples were tightened again, so the
+   current version is 8.0.0. The 6.0.0 -> 7.0.0 line above is the history of
+   this pack's first delivery, not a still-current value.
 
 Q6. What does the authoring prompt say about self-contained cloze prompts?
 A. Every cloze or transformation prompt must name the base word, owner, or

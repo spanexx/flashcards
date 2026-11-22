@@ -113,6 +113,10 @@ A8. No. A Forms card is an ordinary `type` card whose prompt shows
     only new interaction surface in the app to Matching.
     [agent decision, from the spec's "apply the changed form in a fresh
     sentence"; narrowed by the no-leak rule]
+    NOTE 2026-11-22 (D-49): new authoring prompts should write the request in
+    words (`Type the changed form of "..." :`), not with a literal `___` text
+    part. A real blank part is for cloze cards only; a type-card judge ignores
+    blank inputs. Shipped cards are not rewritten.
 
 Q9. How are the dictionary and the teaching layer used?
 A9. In one fixed order, in one resolver:

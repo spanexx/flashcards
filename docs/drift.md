@@ -1,18 +1,9 @@
 # Drift Log
-**Last updated:** 2026-11-22  **Open:** 1  **Awaiting:** 0  **Resolved:** 48  **Critical/High:** 0
+**Last updated:** 2026-11-22  **Open:** 0  **Awaiting:** 0  **Resolved:** 49  **Critical/High:** 0
 
 ## Open
 
-_See D-49 below for the one open entry. The 2026-10-29 course-dictionary review found eight gaps (D-32–D-39); all were fixed and verified the same day. A later audit of the locked GRILL's source lines added D-40, also fixed the same day. The system-design review found D-41, a YouTube embed fault shared by every pack; it was fixed and verified the same day. The learner then found the system-design Dictionary pages empty, logged as D-42 and fixed the same day. See Resolved._
-
-- **D-49** (Medium, 2026-11-22, reporter: the learner via an independent triage of the delegated goal on 2026-11-22) — Two worked examples in the authoring skill contradict the self-contained-card rule they teach: the generic apple cloze hides "sweet" with no clue, and the forms-stage example uses a literal "___" inside a text part, which looks like a cloze even though stage forms uses `mode: "type"`.
-   - Reporter: the learner via an independent triage of the delegated goal on 2026-11-22.
-   - Doc claim: "requiring every cloze or transformation card to include the base word, owner, or context explicitly in prompt" (`docs/features/study-card-clarity/GRILL-study-card-clarity.txt:44-48`); "every cloze or transformation prompt must name the base word, owner, or context in the prompt when the sentence alone cannot tell the learner what to supply" (`docs/features/study-card-clarity/PRD-TRD-study-card-clarity.md:63-79`); the locked stage rule "forms -> type" (`docs/features/word-lessons/GRILL-word-lessons.txt:86-97`).
-   - Code reality: both prompt lanes ship the same apple map — `v1/src/lib/browser/authoring.ts:45-51` and `v1/src/lib/provider/prompt.ts:215-221` — with "The red apple is sweet." hiding "sweet" behind a blank while the teaching line only says an apple is a fruit, so the missing word is never named in the prompt. The chat word-lesson example at `v1/src/lib/browser/authoring.ts:165-175` writes the forms stage as a text part containing a literal blank while its answerDef is `mode: "type"`, putting a cloze-shaped input inside a type card.
-   - Why matters: every example in the copy target should model the rule it teaches, or the chat will copy the exception; a literal blank in a type prompt looks like a cloze and could teach the chat to emit a dead input the judge ignores.
-   - Owner: cross-pack (study-card-clarity + word-lessons)
-   - To fix: surgical change — replace both duplicated apple maps (`v1/src/lib/browser/authoring.ts`, `v1/src/lib/provider/prompt.ts`) with one counted-plural example whose base singular is named in the prompt line and whose expected answer is not leaked by the teaching line; change the chat forms example in `v1/src/lib/browser/authoring.ts` to an explicit "Type the changed form of ..." text prompt with no blank part, because a type-card judge ignores blank inputs; add a rule line in both prompt lanes clarifying that forms is type, not cloze; bump AUTHORING_SKILL_VERSION from 7.0.0 to 8.0.0 and update the version-pinning tests (`v1/tests/browser-authoring.test.ts`, `v1/tests/provider-prompt.test.ts`, `v1/tests/simulate-study-card-clarity.test.ts`) and the docs (`docs/features/study-card-clarity/PRD-TRD-study-card-clarity.md`, `docs/features/study-card-clarity/IMPL-study-card-clarity.md`, `docs/features/word-lessons/GRILL-word-lessons.txt`, `docs/features/word-lessons/PRD-TRD-word-lessons.md`). Do NOT change shipped pack data — card identity and evidence stay as they are.
-   - Related: study-card-clarity, word-lessons.
+_None. See Resolved for the 2026-11-22 prompt-example clarity fix (D-49)._
 
 ## Awaiting decision
 
@@ -26,6 +17,15 @@ the IMPL reconcile section, is in progress._
 ---
 
 ## Resolved
+
+- **D-49** (Medium, 2026-11-22, reporter: the learner via an independent triage of the delegated goal; resolved 2026-11-22) — Two worked examples in the authoring skill contradicted the self-contained-card rule they teach: the generic apple cloze hid "sweet" with no clue, and the forms-stage example used a literal "___" inside a text part even though forms is a type card.
+  - Doc claim: "every cloze or transformation prompt must name the base word, owner, or context in the prompt when the sentence alone cannot tell the learner what to supply" (`docs/features/study-card-clarity/PRD-TRD-study-card-clarity.md:63-79`); "forms -> type" (`docs/features/word-lessons/GRILL-word-lessons.txt:86-97`).
+  - Code reality: both lanes shipped the same apple map, and the chat word-lesson example wrote the forms prompt as a text part containing a literal blank. After the fix both maps use a counted-plural example that names the base word, the forms prompt asks in words, and a rule in both lanes says forms is type, not cloze.
+  - Why matters: an example that breaks the rule teaches the chat to copy the exception; a blank part on a type card creates a dead input the judge ignores.
+  - Owner: cross-pack (study-card-clarity + word-lessons)
+  - To fix: update the example maps in `v1/src/lib/browser/authoring.ts` and `v1/src/lib/provider/prompt.ts`, the forms example and rule in `authoring.ts`, bump the skill to 8.0.0, update pinned tests and affected docs. Shipped pack data is unchanged.
+  - Verified by: new self-contained-example and forms-prompt assertions in `v1/tests/browser-authoring.test.ts`; updated example assertion in `v1/tests/provider-prompt.test.ts`; version assertions in `v1/tests/simulate-study-card-clarity.test.ts`; full suite 91 files / 1130 tests; typecheck and changed-file lint clean; `npm run build` with `check-pwa: passed`; both drift gates green.
+  - Related: study-card-clarity, word-lessons.
 
 - **D-48** (High, 2026-11-22, reporter: the learner, via an independent triage of the delegated goal; resolved 2026-11-22) — A raw AI-addressed study directive could still be stored on a pack even after the prompt lanes were taught to write a learner-facing note.
   - Doc claim: "A raw note still reaching a pack. The chat lane no longer writes it, the provider lane no longer falls back to it, and the card no longer prints it." (`docs/features/study-card-clarity/IMPL-study-card-clarity.md`, risk section); "The study card shows that instruction verbatim when present." (`docs/features/language-prompt-control/PRD-TRD-language-prompt-control.md:41-42`, superseded by study-card-clarity).

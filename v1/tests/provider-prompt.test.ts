@@ -230,7 +230,8 @@ describe("structured generation prompts", () => {
     expect(cards.messages[1].content).not.toContain("Polish");
     const packPrompt = buildPackGenerationPrompt(slots, 3, {});
     expect(packPrompt.messages[1].content).not.toContain("Polish");
-    expect(packPrompt.messages[1].content).toContain("The red apple is sweet.");
+    expect(packPrompt.messages[1].content).toContain("Base word: apple. There are two apples on the table.");
+    expect(packPrompt.messages[1].content).not.toContain("The red apple is sweet.");
   });
 
   it("puts the same teaching rule in all three shapes", () => {

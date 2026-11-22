@@ -62,7 +62,7 @@ the judge, the evidence, the session loop or the stored card shape.
 
 ### 2.3 Self-contained prompts
 
-- The authoring skill moves to `7.0.0`.
+- The authoring skill moves to `8.0.0`.
 - The authoring prompt and the provider generation prompts say: every cloze or
   transformation prompt must name the base word, owner, or context in the prompt
   when the sentence alone cannot tell the learner what to supply.
@@ -102,7 +102,7 @@ The post-implementation simulation must show all of these:
 3. The card surface has no outcome wash, no coloured border, no coloured answer
    rule, no tinted hint block, no tinted layer bar and no tinted word line.
 4. The card's primary action is monochrome in both themes.
-5. The authoring skill says `7.0.0` and contains both self-contained examples.
+5. The authoring skill says `8.0.0` and contains both self-contained examples.
 6. The validator refuses `That is ___ winter coat.` with expected `Anna's` and
    names the owner.
 7. The validator refuses `There are two ___ on the table.` with expected `cups`
@@ -193,7 +193,7 @@ New module `v1/src/lib/core/prompt-context.ts`:
 
 `v1/src/lib/browser/authoring.ts`
 
-- `AUTHORING_SKILL_VERSION = "7.0.0"`.
+- `AUTHORING_SKILL_VERSION = "8.0.0"`.
 - `commonRules` gains the self-contained prompt rule. The study-note rule is a
   pack-level line in the pack-target prompt, because a note is stored only on a
   pack; deck and card fragments carry no pack header.
@@ -247,7 +247,7 @@ New module `v1/src/lib/core/prompt-context.ts`:
   irregular plurals, base-word acceptance, owner acceptance and safe words.
 - `v1/tests/card.test.ts` or the existing hard-rule test: the validator refuses
   the two examples through `hardRuleIssues`.
-- `v1/tests/browser-authoring.test.ts`: version 7.0.0, both examples, the
+- `v1/tests/browser-authoring.test.ts`: version 8.0.0, both examples, the
   distilled note placeholder, no raw request in the example shape.
 - `v1/tests/creation-brief.test.ts`: `withBriefOnPackText` keeps the pair and
   does not copy the raw instruction.

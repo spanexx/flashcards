@@ -125,6 +125,11 @@ the deep material and stays reachable. No new page level is added.
   appears only when the card has a word.
 - On Forms: the transformation, then the why, then the card's own sentence with
   one blank. The learner types the changed form.
+  NOTE 2026-11-22 (D-49): in new authoring prompts a forms card asks in words,
+  for example `Type the changed form of "the base word":`, with no `___` text
+  part. A blank part is reserved for cloze cards; a type card's judge ignores
+  blank inputs. Existing shipped cards with literal underscores are unchanged
+  because changing their prompt would change their identity and evidence.
 - On Matching: two columns, target forms and source meanings, shuffled
   independently. The learner taps one from each side. A correct pair locks and
   fades. A wrong pair shakes once and clears. The card is answered when every
