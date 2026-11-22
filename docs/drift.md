@@ -1,5 +1,5 @@
 # Drift Log
-**Last updated:** 2026-11-21  **Open:** 0  **Awaiting:** 0  **Resolved:** 47  **Critical/High:** 0
+**Last updated:** 2026-11-22  **Open:** 0  **Awaiting:** 0  **Resolved:** 48  **Critical/High:** 0
 
 ## Open
 
@@ -17,6 +17,15 @@ the IMPL reconcile section, is in progress._
 ---
 
 ## Resolved
+
+- **D-48** (High, 2026-11-22, reporter: the learner, via an independent triage of the delegated goal; resolved 2026-11-22) — A raw AI-addressed study directive could still be stored on a pack even after the prompt lanes were taught to write a learner-facing note.
+  - Doc claim: "A raw note still reaching a pack. The chat lane no longer writes it, the provider lane no longer falls back to it, and the card no longer prints it." (`docs/features/study-card-clarity/IMPL-study-card-clarity.md`, risk section); "The study card shows that instruction verbatim when present." (`docs/features/language-prompt-control/PRD-TRD-language-prompt-control.md:41-42`, superseded by study-card-clarity).
+  - Code reality: the merged study-card-clarity work fixed the prompt lanes and the card face, but `studyInstruction` was still accepted verbatim by `bundlePackSchema`, `packManifestSchema` and `generatedPackSchema`, so a provider echo such as "Your job is to create decks." could be imported and stored.
+  - Why matters: a learner could still meet the operator's generation directive in pack data even though the active card no longer printed it.
+  - Owner: cross-pack (study-card-clarity + word-lessons + language-prompt-control)
+  - To fix: add `normalizeStudyInstruction` and the shared `studyInstructionField` in `v1/src/lib/core/prompt-context.ts`, use it in `v1/src/lib/core/schema.ts`, `v1/src/lib/browser/bundle.ts` and `v1/src/lib/provider/generate.ts`, and prove that an echoed wrapper is unwrapped while AI meta text is refused. Keep the field optional so old packs still import.
+  - Verified by: `normalizeStudyInstruction` and shared zod field cases in `v1/tests/prompt-context.test.ts`; pack-storage refusal and unwrap cases in `v1/tests/browser-bundle.test.ts`; full suite green; typecheck, changed-file lint and build green; both drift gates green.
+  - Related: study-card-clarity, word-lessons, language-prompt-control.
 
 - **D-43** (High, 2026-11-21, reporter: fresh-eyes feature-pipeline review of word-lessons) — The Matching card's "nothing matched before giving up is No" outcome existed in the judge and its unit test but had no path from the study screen, so a learner with an empty board could not answer the card at all.
   - Doc claim: "nothing matched before the learner gives up is `no`" (`docs/features/word-lessons/GRILL-word-lessons.txt:56-59`); "Press Check with none matched: outcome no." (`docs/features/word-lessons/simulate-pre.sh:53`).

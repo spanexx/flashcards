@@ -18,6 +18,7 @@ import { z } from "zod";
 import type { Card, CardPart, CardSource, StudyLevel } from "@/lib/shared/types";
 import { buildCard, deckCardId, generatedCardId } from "@/lib/core/card";
 import { teachingPartSchema, wordSchema } from "@/lib/core/schema";
+import { normalizeStudyInstruction, studyInstructionField } from "@/lib/core/prompt-context";
 import type { PackRecord } from "@/lib/packs/types";
 import { extractJson } from "@/lib/provider/client";
 import {
@@ -57,7 +58,7 @@ export const generatedPackSchema = z
       description: z.string().optional(),
       language: z.string().optional(),
       sourceLanguage: z.string().optional(),
-      studyInstruction: z.string().optional(),
+      studyInstruction: studyInstructionField,
     }),
     decks: z.array(z.object({ id: z.string().min(1), name: z.string().min(1) })).min(1),
     lines: z.array(generatedLineSchema.extend({ deckId: z.string().min(1) })).min(1),
@@ -331,7 +332,9 @@ export function generatedPackBundle(
   const language = options.language?.trim() || parsed.data.pack.language?.trim();
   const sourceLanguage =
     options.sourceLanguage?.trim() || parsed.data.pack.sourceLanguage?.trim();
-  const studyInstruction = parsed.data.pack.studyInstruction?.trim();
+  const studyNote = normalizeStudyInstruction(parsed.data.pack.studyInstruction);
+  if (!studyNote.ok) return { ok: false, message: studyNote.message };
+  const studyInstruction = studyNote.value;
   const cards = [];
   for (const line of parsed.data.lines) {
     const deck = decks.get(line.deckId);

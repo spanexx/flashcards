@@ -21,6 +21,7 @@ import { parseJsonLoose, type RepairKind } from "@/lib/core/json-repair";
 import { referencedMediaIds } from "@/lib/core/media";
 import { pageIdFor, pageRuleProblems } from "@/lib/core/pages";
 import { lessonIssues } from "@/lib/core/word-check";
+import { studyInstructionField } from "@/lib/core/prompt-context";
 import {
   cardSourceSchema,
   packPromptsSchema,
@@ -91,7 +92,7 @@ export const bundlePackSchema = z.object({
   description: z.string().optional(),
   language: z.string().optional(),
   sourceLanguage: z.string().optional(),
-  studyInstruction: z.string().optional(),
+  studyInstruction: studyInstructionField,
   prompts: packPromptsSchema.optional(),
   /** The pack asks every card page to be read before an answer counts. */
   requirePageRead: z.boolean().optional(),
@@ -888,7 +889,7 @@ export const backupSchema = z.object({
       description: z.string().optional(),
       language: z.string().optional(),
       sourceLanguage: z.string().optional(),
-      studyInstruction: z.string().optional(),
+      studyInstruction: studyInstructionField,
       decks: z.array(deckSchema),
       prompts: packPromptsSchema.nullable(),
       requirePageRead: z.boolean().optional(),

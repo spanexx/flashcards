@@ -5,11 +5,14 @@
 // 2026-11-22 opencode: created for the study-card-clarity pack. [pack: study-card-clarity]
 
 import { describe, expect, it } from "vitest";
+import { z } from "zod";
 import {
   COUNT_WORDS,
   clozeContextIssue,
+  normalizeStudyInstruction,
   promptLine,
   singularBase,
+  studyInstructionField,
 } from "@/lib/core/prompt-context";
 import type { CardPart, CardSource } from "@/lib/shared/types";
 
@@ -134,5 +137,39 @@ describe("singularBase", () => {
     expect(singularBase("glass")).toBeNull();
     expect(singularBase("as")).toBeNull();
     expect(singularBase("cup")).toBeNull();
+  });
+});
+
+describe("study instruction normalisation", () => {
+  it("keeps a learner-facing note and allows an absent one", () => {
+    expect(normalizeStudyInstruction("  Read it aloud.  ")).toEqual({
+      ok: true,
+      value: "Read it aloud.",
+    });
+    expect(normalizeStudyInstruction(undefined)).toEqual({ ok: true });
+    expect(normalizeStudyInstruction("  ")).toEqual({ ok: true });
+  });
+
+  it("unwraps an echoed prompt wrapper", () => {
+    expect(
+      normalizeStudyInstruction('Store this study instruction on the pack: "Read it aloud."'),
+    ).toEqual({ ok: true, value: "Read it aloud." });
+  });
+
+  it("refuses AI-addressed meta text", () => {
+    const bad = normalizeStudyInstruction("Your job is to create decks for every form.");
+    expect(bad.ok).toBe(false);
+    if (!bad.ok) expect(bad.message).toContain("learner-facing");
+  });
+
+  it("rejects and unwraps through the shared zod field", () => {
+    const field = z.object({ note: studyInstructionField });
+    const unwrapped = field.safeParse({
+      note: 'Store this study instruction on the pack: "Read it aloud."',
+    });
+    expect(unwrapped.success).toBe(true);
+    if (unwrapped.success) expect(unwrapped.data.note).toBe("Read it aloud.");
+    expect(field.safeParse({ note: "Your job is to create decks." }).success).toBe(false);
+    expect(field.safeParse({}).success).toBe(true);
   });
 });
