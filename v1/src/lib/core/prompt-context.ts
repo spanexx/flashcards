@@ -7,6 +7,7 @@
 // 2026-11-22 opencode: created for the study-card-clarity pack.
 // [pack: study-card-clarity]
 
+import { z } from "zod";
 import type { CardPart, CardSource } from "@/lib/shared/types";
 
 /** The words that tell a learner a plural is expected. */
@@ -146,3 +147,53 @@ export function clozeContextIssue(
 
   return null;
 }
+
+// WHY (D-48): the prompt lanes ask the provider to write a learner-facing note,
+// but a provider can still echo the old wrapper or an AI directive. This guard
+// is the last line of defence at pack storage; it keeps the field optional so
+// old packs still import. [pack: study-card-clarity / word-lessons]
+
+const STUDY_NOTE_WRAPPER = /^store this study instruction on the pack:\s*["“']?([\s\S]*?)["”']?\s*$/i;
+const STUDY_NOTE_AI_META =
+  /^(you are|you're|your job is|your task is|as an? (ai|assistant)|you must|you should|please (write|create|generate|build)|store this study instruction)\b/i;
+const STUDY_NOTE_AI_TASK =
+  /^(write|create|generate|build|produce)\b.{0,100}\b(decks?|packs?|cards?|json|bundle|jargon)s?\b/i;
+
+export type StudyInstructionResult =
+  | { ok: true; value?: string }
+  | { ok: false; message: string };
+
+/** Trim, unwrap an echoed prompt wrapper, and refuse AI-addressed study notes. */
+export function normalizeStudyInstruction(value: unknown): StudyInstructionResult {
+  if (value === undefined || value === null) return { ok: true };
+  if (typeof value !== "string") {
+    return { ok: false, message: "The study instruction must be text." };
+  }
+  let text = value.trim();
+  if (text.length === 0) return { ok: true };
+  const wrapper = STUDY_NOTE_WRAPPER.exec(text);
+  if (wrapper) text = wrapper[1].trim();
+  if (text.length === 0) return { ok: true };
+  if (STUDY_NOTE_AI_META.test(text) || STUDY_NOTE_AI_TASK.test(text)) {
+    return {
+      ok: false,
+      message: "The study instruction must be a learner-facing rule, not an AI instruction.",
+    };
+  }
+  return { ok: true, value: text };
+}
+
+/** One zod field for every place a pack's study note is accepted. */
+export const studyInstructionField = z
+  .string()
+  .optional()
+  .superRefine((value, ctx) => {
+    const result = normalizeStudyInstruction(value);
+    if (!result.ok) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: result.message });
+    }
+  })
+  .transform((value) => {
+    const result = normalizeStudyInstruction(value);
+    return result.ok ? result.value : undefined;
+  });

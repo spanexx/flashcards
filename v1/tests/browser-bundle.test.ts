@@ -927,3 +927,30 @@ describe("word lessons through the bundle", () => {
     expect((await readCards(store)).filter((card) => card.wordId === "biuro")).toHaveLength(5);
   });
 });
+
+describe("study note at pack storage", () => {
+  function notePack(note: string): string {
+    return JSON.stringify({
+      schema: PACK_BUNDLE_SCHEMA,
+      pack: { name: "starter", version: "1.0.0", language: "en", studyInstruction: note },
+      decks: [{ id: "basics", name: "Basics" }],
+      cards: [],
+    });
+  }
+
+  it("refuses an AI-directed study note and writes nothing", async () => {
+    const result = await importBundle(notePack("Your job is to create decks."), { kind: "pack" });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.issues[0].message).toContain("learner-facing");
+    expect(await readPack("starter", store)).toBeNull();
+  });
+
+  it("unwraps an echoed prompt wrapper on import", async () => {
+    const result = await importBundle(
+      notePack('Store this study instruction on the pack: "Read it aloud."'),
+      { kind: "pack" },
+    );
+    expect(result.ok).toBe(true);
+    expect((await readPack("starter", store))?.studyInstruction).toBe("Read it aloud.");
+  });
+});

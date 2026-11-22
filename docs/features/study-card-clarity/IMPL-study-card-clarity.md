@@ -209,3 +209,15 @@ no new dependency, no new route, no Dictionary redesign, no session-head drawer.
   cases; the validator refuses only the two mechanical cases. The validator is
   narrower on purpose, so a sound card is never refused for a rule the prompt
   only describes.
+
+## Delivery note — 2026-11-22 (D-48)
+
+- The residual risk "a raw note still reaching a pack" is now closed at storage.
+  `normalizeStudyInstruction` and `studyInstructionField` in
+  `v1/src/lib/core/prompt-context.ts` are used by the pack manifest, the bundle
+  and the generated-pack schemas. An echoed `Store this study instruction...`
+  wrapper is unwrapped; AI-addressed text is refused with a plain message.
+- The field stays optional, so an old pack with no note still imports. The card
+  face and pack overview behaviour from this pack are unchanged.
+- Proof: `tests/prompt-context.test.ts`, `tests/browser-bundle.test.ts`, full
+  suite, build and both drift gates. D-48 is resolved in `docs/drift.md`.
