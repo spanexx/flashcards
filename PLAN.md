@@ -1,60 +1,65 @@
-# TRACK 3 — Five Built-in Modes (build THIRD, after Track 2)
+# TRACK 4 — Mode Studio UI (build FOURTH, last)
 
-Status: PLAN ONLY. Base: `feature/prompt-assembler`. Branch: `feature/built-in-modes`.
+Status: PLAN ONLY. Base: `feature/built-in-modes`. Branch: `feature/mode-studio-ui`.
 
 ## 1. Scope and non-goals
 
-Author and seed five default LearningModes with Markdown skills and valid canonical pack examples. Consume Tracks 1-2; write no UI and no prompt-layer code.
+New Pack structured fields plus a first-class Modes wing: list, duplicate, edit, AI-create, test preview, export/import, delete. Consume Tracks 1-3; write no core/schema/prompt/mode-content code.
 
-Non-goals: changing the four shipped packs, regenerating `public/packs/*`, editing core schema/card/word rules, adding image/video assets to examples.
+Non-goals: changing endpoint contracts, provider schemas, mode definitions, router code, prompt rules.
 
 ## 2. Current state (evidence from research)
 
-- Pack seeding pattern: authored `v1/packs/<slug>/` → `v1/scripts/make-seed.mjs:13-18,114-186` → `v1/public/packs/<slug>.json` + `index.json`; browser reader `v1/src/lib/browser/seed.ts:14-36,61-71,73-80,105-130`, one-shot hook `router.ts:190-200`.
-- `parseBundle` `bundle.ts:240-248` validates shape only; hard rules `card.ts:125-182`, word rules `word-check.ts:35-156`, page rules `pages.ts:150-171` must be composed in tests.
-- `clozeContextIssue` `prompt-context.ts:118-149` is English-only (`COUNT_WORDS` `:14-30`, Saxon possessive `:61-66`), so non-English examples need explicit base/owner cues.
-- Existing reusable content: `polish-starter/cards.json:3-20`; `biuro/words.json:1-239`, `cards.json:3-115`, `pack.json:1-31`; `polish-from-scratch/cards/greetings.json:3-24`; `system-design/cards/foundations.json:3-63`; browser-dev shape examples `cards/console.json:3-53`; pack schema docs `packs/README.md:52-103`.
-- Generated pack ids are content hashes (`card.ts:96-98`), so example packs must be namespaced to avoid evidence collisions.
+- `CreatePanel` `v1/src/app/library/CreatePanel.tsx:81` mounted by `LibraryClient.tsx:261-271`; three steps target `:527-584`, method `:534-611`, content `:614-1075`; Write/Generate/Chat/Import branches `:625-1050`.
+- `briefForTarget` `library-utils.ts:205-227` strips fields for deck/cards; `optionalBrief` `router.ts:169-177` runs `validateCreationBrief` and drops unknown fields — hence Track 1's additive brief fields are required.
+- Library tabs are component state: `LibraryTab` `library-utils.ts:14`, `LibraryClient.tsx:43`, buttons `:249-259`. Routes are App Router folders (`library/page.tsx:6-10`, `dictionary/page.tsx:7-15`). Sidebar `LINKS` `Nav.tsx:18-23`, `prefetch={false}` `:57`, pathname startsWith `:52`.
+- New route must update `check-pwa.mjs:84` (requiredRoutes) and `:246` (precache list) or build fails. `build-pwa.mjs:41-50` walks out automatically; sw is network-first for navigation `:88-105`.
+- API helper `client/api.ts:15-25`; CRUD precedent list `LibraryClient.tsx:52-58`, create `CreatePanel.tsx:259-266`, update `PackEditor.tsx:74-97`, delete `LibraryClient.tsx:194-226`, `DeleteDialog.tsx:20-90`, `deleteName` `library-utils.ts:149-152`.
+- Draft precedent `PageEditor.tsx:155-159,356-409` (read-only prompt, copy, send, "draft in editor, nothing saved").
+- Preview via `CardSide.tsx:18-35`; existing form classes `globals.css:1151-1165,1188-1198,804-819`; `.create-grid` collapses at 760px `:1129-1149`, `.library-layout` at 1100px `:3285-3294`, `.brief-grid/.form-grid` at 620px `:1280-1289`.
 
 ## 3. Locked decisions
 
-1. Authored files `v1/modes/<id>.json`, one flat JSON per mode; generated `v1/public/modes/<id>.json` + `index.json` with schema `flashcards.mode-index/v1` and entries `{id,name,version,file}`.
-2. `canonicalExample` is an embedded `flashcards.pack/v1` object, 1-2 decks, 2-4 cards.
-3. Every example pack is `mode-demo-<id>` and is never seeded/imported as a real pack.
-4. Built-ins are versioned and overwritten; not deletable, only duplicable — no tombstone kind.
-5. No image/video teaching parts in examples (their `src` points at pack-local images that modes do not ship).
-6. `word-deep-dive` example is small: 1 word, 1-2 forms, 2-3 pairs, 2-3 cards across a few stages; not the 100-card biuro pack.
-7. Track 3 owns `make-seed.mjs`; Track 1 owns router/seed hook. Track 3 never edits `router.ts`.
+1. Modes is a first-class route `/modes` with sidebar entry and `ModesClient.tsx`, not a fourth Library tab.
+2. New Pack fields render once for `target === "pack"` before the method branch: Learning Mode, Subject, Target Language, Question Language, Card Mix (from `defaultCardMix`), Extra Study Preferences. Reuse `LanguageField` and existing form classes.
+3. Deck/cards targets show inherited mode read-only; no editable dropdown.
+4. Label "Learning mode" everywhere — bare "Mode" collides with AnswerMode and provider mode.
+5. `cardMix` is `AnswerMode[]` from Track 1's additive brief fields; do not silently replace `cardStyle`.
+6. No `/validate` endpoint. Save goes through Track 1 write routes; inline feedback uses Track 1's pure validator only.
+7. Test Preview is a pure local render via `CardSide`; no backend, no persistence.
+8. AI Mode Creator uses Track 2's draft prompt and Track 1's draft endpoints; prompt preview is read-only with copy; send opens editor, nothing saved until Save.
+9. Built-ins show Duplicate & Customize; user modes show Edit / Test preview / Delete with typed-name confirmation. Built-in delete is refused by router.
 
-## 4. The five definitions
+## 4. Proposed components and contracts
 
-1. `grammar-roles` — decks named with plain-English job + term in parentheses; role stated in prompt; no basic -s/-ed drilling; teaching explains intuition. Mix cloze/picks/type; `usesWordStages: false`.
-2. `language-general` — theme decks; accurate `lang` codes; base-word/meaning cues in foreign-language clozes; hear_type with spelling hints. Mix cloze/type/hear_type/picks; `usesWordStages: false`.
-3. `word-deep-dive` — exactly one word in `words`; five progressive decks; stage-to-mode rule; never print changed form; state trigger/context. Mix cloze/type/picks/match; `usesWordStages: true`.
-4. `system-architecture` — scenario-driven constraint→pattern prompts; trade-off picks; no dictionary definitions. Mix cloze/picks/type; `usesWordStages: false`.
-5. `programming-language` — mobile-sized 1-5 line code snippets; prompt names language and goal; picks for subtle bugs; hints explain why. Mix type/cloze/picks; `usesWordStages: false`.
+- `LearningModeFields.tsx` — props `{ brief, modes, onChange }`; maps `modeId`, `subject`, `targetLanguage`, `sourceLanguage`, `cardMix`, `modePreferences`.
+- `ModesPanel.tsx` / `ModesClient.tsx` — `GET /api/modes`, duplicate `POST /api/modes {sourceModeId,name}`, delete `DELETE /api/modes/:id`.
+- `ModeEditor.tsx` — fields from the entity; Save `POST`/`PATCH`; inline `validateCanonicalExample`; error detail via `errorLines` `library-utils.ts:154-168`.
+- `AiModeCreator.tsx` — `POST /api/modes/draft`, `POST /api/modes/draft/send`; provider gate pattern `CreatePanel.tsx:157-160,464-474`; version badge from Track 2.
+- `ModePreview.tsx` — renders canonicalExample cards via `CardSide` with no writes.
+- Export/import: reuse bundle export/import UI patterns for a mode JSON file if Track 1 exposes helpers; otherwise defer with an explicit note, not a fake button.
 
 ## 5. File ownership
 
-**Own:** `v1/modes/**` (new), `v1/public/modes/**` (generated), additive `v1/scripts/make-seed.mjs`, new tests `built-in-modes.test.ts` and `mode-seed.test.ts`, new `docs/features/built-in-modes/` origin pack with pre-sim.
+**Own:** `CreatePanel.tsx`, new `LearningModeFields.tsx`, `CreationBriefFields.tsx` (only if fields live there), `library-utils.ts`, `LibraryClient.tsx`, new `ModesPanel.tsx`, `ModeEditor.tsx`, `AiModeCreator.tsx`, `ModePreview.tsx`, new `app/modes/page.tsx` + `ModesClient.tsx`, `Nav.tsx`, `globals.css`, `check-pwa.mjs`, tests: new `mode-studio-utils.test.ts`, `browser-modes-ui.test.ts`, `simulate-mode-studio.test.ts`, new `docs/features/mode-studio-ui/` origin pack with pre/post sims.
 
-**Must not touch:** `v1/packs/**`, `v1/public/packs/**`, `core/schema.ts`, `card.ts`, `pages.ts`, `prompt-context.ts`, `word-check.ts`, `browser/bundle.ts`, `seed.ts`, `repository.ts`, `store.ts`, `router.ts`, provider/prompt modules, `app/**`, Drift live entries.
+**Must not touch:** Track 1 type/schema/repository/router; Track 2 prompt modules/version; Track 3 mode content; `client/api.ts`; `layout.tsx`; `package.json`; Drift live entries.
 
 ## 6. Ordered steps with proof
 
-1. Write `docs/features/built-in-modes/{GRILL,PRD-TRD,IMPL}.md` and pre-simulation from this plan.
-2. Red test: manifest exactly five ids; every canonicalExample parses and passes hard/word/spoiler rules; strict JSON parse.
-3. Write five `v1/modes/*.json` files with Markdown skill text.
-4. Add additive emit loop + index to `make-seed.mjs`; regenerate; assert `public/packs/*` bytes unchanged.
-5. Add mode-seed install tests: fresh install, no-op, newer version update, malformed silent and retry, no real pack created.
-6. Proof: targeted vitest; typecheck; changed-file lint; build; full suite; both drift gates.
+1. Write `docs/features/mode-studio-ui/{GRILL,PRD-TRD,IMPL}.md` and pre-simulation from this plan.
+2. Red tests: prefill helper, endpoint CRUD through `localGet`/`localSend`, invalid canonicalExample blocks Save, AI draft unsaved, built strings.
+3. Add `LearningModeFields` and wire `CreatePanel`; verify mode/cardMix/preferences reach Write/Generate/Chat briefs.
+4. Add `/modes` route, Nav, ModesPanel, ModeEditor, AiModeCreator, ModePreview; update check-pwa route/precache lists.
+5. Proof: `npm run build` first (sim reads `out/`), targeted vitest, full suite, typecheck, changed-file lint, both drift gates.
 
 ## 7. Acceptance
 
-- All five canonicalExamples pass `parseBundle` + `hardRuleIssues` + `lessonIssues` + spoiler validator; 1-2 decks, 2-4 cards, valid deckIds.
-- `usesWordStages` true only for word-deep-dive; no stage/wordId on the other four.
-- A fresh browser receives five built-ins with `isBuiltIn: true`; re-seed is idempotent; no `mode-demo-*` pack appears in `/api/packs`.
+- Selecting any built-in in New Pack loads its skill/example into the prompt.
+- Duplicate → edit → valid canonicalExample → Save → visible and selectable immediately; invalid example is refused with field-named message and draft stays open.
+- Test Preview does not write; AI draft opens unsaved; built-in delete refused; custom modes survive backup/restore.
+- Build passes check-pwa with `/modes`; existing Create strings remain in built output; 390px controls usable.
 
 ## 8. Risks
 
-English-only cloze validator; explicit cues in non-English examples. Lang codes must be consistent (`pl`, `en`, `pl-pl`). Demo pack namespace avoids card-id collisions. New browser module falls under 90% coverage threshold. Keep `make-seed.mjs` additive or `seed-packs.test.ts` fails.
+Mobile height from editor + AI box — reuse stack/modal classes and 16px controls. Stale service worker — rebuild and check sw.js version. Contract drift — build only after Tracks 1-3 interfaces are signed off; never edit router or prompt builders here.
