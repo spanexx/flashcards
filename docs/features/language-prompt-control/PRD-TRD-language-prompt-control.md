@@ -39,7 +39,7 @@ the learner one place to edit prompts, and fixes the two study leaks.
 ### 2.2 Study instruction
 
 - A pack may carry one optional `studyInstruction`.
-- The study card shows that instruction verbatim when present.
+- The study card shows that instruction verbatim when present. *(Superseded 2026-11-22: study-card-clarity Q3 moves the note to the Library pack overview and keeps the automatic mode line on the card.)*
 - Otherwise it shows one automatic instruction:
   - cloze: "Fill the blank in the {target} line."
   - type: "Read the {source} line, then type the full {target} line."

@@ -401,24 +401,48 @@ describe("structured generation bundles", () => {
     }
   });
 
-  it("keeps the brief's pair and instruction when the provider names another", () => {
+  // WHY: The pair is a fact the learner chose, but the study note is prose the
+  // provider writes. Copying the raw request instead would put AI-directed words
+  // on every pack. [pack: study-card-clarity]
+  // 2026-11-22 opencode: changed the note precedence. [pack: study-card-clarity]
+  it("keeps the brief's pair but the provider's distilled note", () => {
     const text = JSON.stringify({
-      pack: { name: "slow-polish", version: "1.0.0", language: "pl", sourceLanguage: "pl" },
+      pack: {
+        name: "slow-polish",
+        version: "1.0.0",
+        language: "pl",
+        sourceLanguage: "pl",
+        studyInstruction: "Focus on plain-English word form changes without Latin grammar jargon.",
+      },
       decks: [{ id: "basics", name: "Basics" }],
       lines: [{ deckId: "basics", fullLine: "The cat is black.", target: "black" }],
     });
     const read = generatedPackBundle(text, {
       language: "en",
       sourceLanguage: "en",
-      studyInstruction: "Say the line before typing.",
+      studyInstruction: "your job is use other words other than the Latin jargons",
     });
     expect(read.ok).toBe(true);
     if (!read.ok) return;
     expect(read.bundle.pack).toMatchObject({
       language: "en",
       sourceLanguage: "en",
-      studyInstruction: "Say the line before typing.",
+      studyInstruction: "Focus on plain-English word form changes without Latin grammar jargon.",
     });
+  });
+
+  it("leaves a pack without a note when the provider omits one", () => {
+    const text = JSON.stringify({
+      pack: { name: "slow-polish", version: "1.0.0" },
+      decks: [{ id: "basics", name: "Basics" }],
+      lines: [{ deckId: "basics", fullLine: "The cat is black.", target: "black" }],
+    });
+    const read = generatedPackBundle(text, {
+      studyInstruction: "your job is use other words other than the Latin jargons",
+    });
+    expect(read.ok).toBe(true);
+    if (!read.ok) return;
+    expect(read.bundle.pack).not.toHaveProperty("studyInstruction");
   });
 
   it("builds the requested type style inside a generated pack bundle", () => {

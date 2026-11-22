@@ -85,17 +85,22 @@ describe("study view decisions", () => {
     );
   });
 
-  it("keeps neutral words for an old pack and lets its instruction win", () => {
+  // WHY: A pack's note is a goal for the pack, not a sentence for every card.
+  // The card keeps its mode line even when an old pack still stores raw text.
+  // PACK: study-card-clarity
+  // 2026-11-22 opencode: changed the note precedence. [pack: study-card-clarity]
+  it("keeps neutral words for an old pack even when it stores a note", () => {
     expect(studyCardInstruction({ answerDef: { mode: "type" } })).toBe("Type the full line.");
     expect(studyCardInstruction(listeningCard)).toBe("Listen, then type the full line.");
     expect(studyCardInstruction({ answerDef: { mode: "picks" } })).toBe("Choose the correct meaning.");
-    expect(
-      studyCardInstruction({ answerDef: { mode: "type" } }, {
-        language: "pl",
-        sourceLanguage: "en",
-        studyInstruction: "  Say it before you type.  ",
-      }),
-    ).toBe("Say it before you type.");
+    const oldPack = {
+      language: "pl",
+      sourceLanguage: "en",
+      studyInstruction: "  Say it before you type.  ",
+    };
+    expect(studyCardInstruction({ answerDef: { mode: "type" } }, oldPack)).toBe(
+      "Read the English line, then type the full Polish line.",
+    );
   });
 
   it("uses neutral words when the source is missing or both languages are the same", () => {

@@ -171,6 +171,37 @@ describe("hardRuleIssues", () => {
     const issues = hardRuleIssues(makeSource({ summary: "", topics: [] }));
     expect(issues.length).toBeGreaterThan(0);
   });
+
+  // WHY: These are the two cards the learner saw during generation. The check
+  // must fire through the import lane, not only in the helper it comes from.
+  // PACK: study-card-clarity
+  // 2026-11-22 opencode: added the two learner examples. [pack: study-card-clarity]
+  it("refuses an ownerless possessive and accepts one that names its owner", () => {
+    const coat = (prompt: string) =>
+      makeSource({
+        summary: "That is winter coat",
+        prompt: [{ type: "text", text: prompt }, { type: "blank", id: "b1" }],
+        answer: [{ type: "text", text: "That is Anna's winter coat." }],
+        answerDef: { mode: "cloze", blanks: [{ id: "b1", expected: ["Anna's"] }] },
+      });
+    const refused = hardRuleIssues(coat("That is ___ winter coat."), 3);
+    expect(refused.some((issue) => issue.message.includes("Owner: Anna."))).toBe(true);
+    expect(refused.every((issue) => issue.index === 3)).toBe(true);
+    expect(hardRuleIssues(coat("Owner: Anna. That is ___ winter coat."))).toEqual([]);
+  });
+
+  it("refuses an uncounted base word and accepts one that names its base", () => {
+    const cups = (prompt: string) =>
+      makeSource({
+        summary: "There are two cups on the table",
+        prompt: [{ type: "text", text: prompt }, { type: "blank", id: "b1" }],
+        answer: [{ type: "text", text: "There are two cups on the table." }],
+        answerDef: { mode: "cloze", blanks: [{ id: "b1", expected: ["cups"] }] },
+      });
+    const refused = hardRuleIssues(cups("There are two ___ on the table."));
+    expect(refused.some((issue) => issue.message.includes("Base word: cup."))).toBe(true);
+    expect(hardRuleIssues(cups("Base word: cup. There are two ___ on the table."))).toEqual([]);
+  });
 });
 
 describe("simpleCardToSource", () => {

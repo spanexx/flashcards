@@ -17,6 +17,7 @@ import type { PackPrompts, PackRecord } from "@/lib/packs/types";
 import type { ChatMessage } from "@/lib/provider/client";
 import {
   describeCreationBrief,
+  STUDY_NOTE_RULE,
   type CardStyle,
   type CreationBrief,
   type LibraryInventory,
@@ -51,6 +52,8 @@ export const DEFAULT_GENERATION_TEMPLATE = [
   "Weak topic categories (labels only): {{weakTopics}}.",
   "Do not mention the learner or repeat their words.",
   "Vary the nouns, verbs and sentence shapes; do not reuse a line.",
+  'When the app hides a word the sentence cannot identify, the fullLine must name the base word or owner first: "Base word: cup. There are two cups on the table." or "Owner: Anna. That is Anna\'s winter coat."',
+  STUDY_NOTE_RULE,
   'A line may add "teaching": up to three parts that help before the answer. A part is {"type":"text","text":"...","lang":"..."} or {"type":"image","source":"web","src":"https://...","alt":"..."} or {"type":"video","source":"youtube","src":"<11-character video id>","search":"..."}.',
   'A teaching part never contains the answer, the hidden word or a translation of either. Leave it out when it would only repeat the line.',
   "Never claim a video is verified or reliable: the app can check that a YouTube id exists, not that it still plays.",
@@ -101,7 +104,8 @@ export function buildGenerationPrompt(
   // cards added through Generate must ask for the same layer the pack and deck
   // paths ask for. The app's default template already carries these words, so
   // they are added only when a pack's own template is in use. [D-28]
-  const teaching = ownTemplate === undefined ? [] : teachingPromptLines();
+  const teaching =
+    ownTemplate === undefined ? [] : [SELF_CONTAINED_PROMPT_RULE, ...teachingPromptLines()];
   const values = {
     topic: input.topic,
     count: String(input.count),
@@ -186,7 +190,17 @@ function pairPromptLines(pair: PackLanguagePair, studyInstruction = ""): string[
     lines.push(`Write full lines and translations in ${pair.targetName}.`);
   }
   if (studyInstruction.trim().length > 0) {
-    lines.push(`Store this study instruction on the pack: "${studyInstruction.trim()}"`);
+    // WHY: The stored note is a learner-facing sentence, not the raw request.
+    // Naming it as the current note keeps a pack's voice without inviting a copy
+    // of the learner's words. [pack: study-card-clarity]
+    lines.push(`The pack's current study note is: "${studyInstruction.trim()}"`);
+    // WHY: The old line told the provider to store the raw text. The note is
+    // now prose the provider writes, so the current note is context only.
+    // [pack: study-card-clarity]
+    lines.push(
+      "Write one short learner-facing study note when the app asks for one; keep the pack's current note in mind, but do not copy it.",
+      STUDY_NOTE_RULE,
+    );
   }
   return lines;
 }
@@ -218,6 +232,13 @@ function exampleLine(pair: PackLanguagePair): {
 /** A deck or cards bundle cannot carry words, so its lines cannot link to one. */
 const FRAGMENT_WORD_RULE =
   'This target cannot define a word. Leave "wordId" and "stage" out of every line.';
+
+/** The rule both generation lanes share: a hidden word needs its base in the line. */
+const SELF_CONTAINED_PROMPT_RULE =
+  'When the app hides a word the sentence cannot identify, the fullLine must name the base word or owner first: "Base word: cup. There are two cups on the table." or "Owner: Anna. That is Anna\'s winter coat."';
+
+/** The fixed example note. The raw learner request never enters the shape. */
+const STUDY_NOTE_PLACEHOLDER = "<one short learner-facing sentence on how to study>";
 
 /** The optional layer rules every structured prompt repeats. */
 function teachingPromptLines(): string[] {
@@ -291,7 +312,7 @@ function wordLessonExample(
 function packShape(
   cardStyle: CardStyle,
   pair: PackLanguagePair,
-  studyInstruction = "",
+  includeStudyNote = false,
 ): string {
   const line = exampleLine(pair);
   const pack: Record<string, unknown> = {
@@ -301,7 +322,7 @@ function packShape(
   };
   if (pair.target.length > 0) pack.language = pair.target;
   if (pair.source.length > 0) pack.sourceLanguage = pair.source;
-  if (studyInstruction.trim().length > 0) pack.studyInstruction = studyInstruction.trim();
+  if (includeStudyNote) pack.studyInstruction = STUDY_NOTE_PLACEHOLDER;
   const lesson = wordLessonExample(pair, cardStyle);
   return JSON.stringify({
     pack,
@@ -383,7 +404,7 @@ export function buildPackGenerationPrompt(
   const brief = context.brief ?? null;
   const inventory = context.inventory ?? [];
   const pair = pairForBrief(brief);
-  const studyInstruction = brief?.studyInstruction ?? "";
+  const rawPreference = brief?.studyInstruction.trim() ?? "";
   const userLines = [
     `Write ${count} complete, correct study lines for a new pack.`,
     brief?.packName
@@ -407,10 +428,11 @@ export function buildPackGenerationPrompt(
   userLines.push(
     `Learner level: ${slots.level}. Preferred learning style: ${slots.learningStyle}.`,
     "Every line must name one of your decks with deckId. The app turns each line into its exercise.",
+    SELF_CONTAINED_PROMPT_RULE,
     ...teachingPromptLines(),
     ...generationWordLessonLines(),
     "Return JSON only, shaped like:",
-    packShape(brief?.cardStyle ?? "mixed", pair, studyInstruction),
+    packShape(brief?.cardStyle ?? "mixed", pair, rawPreference.length > 0),
   );
   const user = userLines.join("\n");
   return {
@@ -452,6 +474,7 @@ export function buildDeckGenerationPrompt(
   userLines.push(
     `Learner level: ${slots.level}. Preferred learning style: ${slots.learningStyle}.`,
     "The app turns each line into its exercise.",
+    SELF_CONTAINED_PROMPT_RULE,
     ...teachingPromptLines(),
     FRAGMENT_WORD_RULE,
     "Return JSON only, shaped like:",

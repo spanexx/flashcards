@@ -206,6 +206,12 @@ export default function PacksPanel({
                       {languagePairLabel(pack)}
                     </div>
                     {pack.description ? <div className="muted">{pack.description}</div> : null}
+                    {pack.studyInstruction?.trim() ? (
+                      <div className="pack-study-goal">
+                        <span className="pack-study-goal-label">Study goal:</span>
+                        {pack.studyInstruction.trim()}
+                      </div>
+                    ) : null}
                     {pack.error ? <div className="muted">Could not load: {pack.error}</div> : null}
                   </div>
                   <div className="row">

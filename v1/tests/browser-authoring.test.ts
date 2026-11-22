@@ -71,7 +71,11 @@ describe("buildAuthoringPrompt", () => {
     expect(parseBundle(example(prompt)).ok).toBe(true);
   });
 
-  it("uses the learner's pair and instruction for a new pack", () => {
+  // WHY: The raw request is context for the chat, not the note it must write.
+  // The example shape teaches the distilled shape without echoing the request.
+  // PACK: study-card-clarity
+  // 2026-11-22 opencode: changed the note and cloze assertions. [pack: study-card-clarity]
+  it("quotes the learner's preference but teaches a distilled note", () => {
     const prompt = buildAuthoringPrompt(
       { kind: "pack" },
       null,
@@ -84,14 +88,23 @@ describe("buildAuthoringPrompt", () => {
         }),
       },
     );
+    expect(AUTHORING_SKILL_VERSION).toBe("7.0.0");
     expect(prompt).toContain("Spanish");
     expect(prompt).toContain("English");
     expect(prompt).toContain("Say each line aloud first.");
-    const parsed = parseBundle(example(prompt));
+    expect(prompt).toContain("Write one short learner-facing study note from it");
+    expect(prompt).toContain("Base word: cup. There are two ___ on the table.");
+    expect(prompt).toContain("Owner: Anna. That is ___ winter coat.");
+    const shape = example(prompt);
+    expect(shape).toContain("<one short learner-facing sentence on how to study>");
+    expect(shape).not.toContain("Say each line aloud first.");
+    const parsed = parseBundle(shape);
     expect(parsed.ok, JSON.stringify(parsed)).toBe(true);
     if (parsed.ok) {
       expect(parsed.bundle.pack).toMatchObject({ language: "es", sourceLanguage: "en" });
-      expect(parsed.bundle.pack.studyInstruction).toBe("Say each line aloud first.");
+      expect(parsed.bundle.pack.studyInstruction).toBe(
+        "<one short learner-facing sentence on how to study>",
+      );
     }
   });
 

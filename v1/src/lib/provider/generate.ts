@@ -324,13 +324,14 @@ export function generatedPackBundle(
   const parsed = generatedPackSchema.safeParse(json.value);
   if (!parsed.success) return providerRefusal(parsed.error);
   const decks = new Map(parsed.data.decks.map((deck) => [deck.id, deck]));
-  // The brief owns the pair and instruction. A provider may echo them, but it
-  // cannot replace what the learner chose.
+  // The brief owns the pair. The study note is different: it is prose the
+  // provider writes from the brief, so only the reply can supply it. Falling
+  // back to the raw request would store an AI-directed prompt on the pack.
+  // [pack: study-card-clarity]
   const language = options.language?.trim() || parsed.data.pack.language?.trim();
   const sourceLanguage =
     options.sourceLanguage?.trim() || parsed.data.pack.sourceLanguage?.trim();
-  const studyInstruction =
-    options.studyInstruction?.trim() || parsed.data.pack.studyInstruction?.trim();
+  const studyInstruction = parsed.data.pack.studyInstruction?.trim();
   const cards = [];
   for (const line of parsed.data.lines) {
     const deck = decks.get(line.deckId);
@@ -349,8 +350,8 @@ export function generatedPackBundle(
       schema: "flashcards.pack/v1",
       pack: {
         ...parsed.data.pack,
-        // The brief owns the pair and instruction. A provider may echo them,
-        // but it cannot silently erase what the learner chose.
+        // The brief owns the pair; the note above is the provider's distilled
+        // sentence. Neither is silently erased. [pack: study-card-clarity]
         ...(language ? { language } : {}),
         ...(sourceLanguage ? { sourceLanguage } : {}),
         ...(studyInstruction ? { studyInstruction } : {}),

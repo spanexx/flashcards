@@ -33,7 +33,10 @@ A2. They load unchanged. `sourceLanguage` is optional in files and storage. The
 
 Q3. What exactly does a card tell the learner to do?
 A3. The pack may carry one short `studyInstruction`. If it is present, the card
-    shows it verbatim. If it is absent, the app writes one from the answer mode
+    shows it verbatim. [SUPERSEDED 2026-11-22 by study-card-clarity Q3: the note
+    is shown in the Library pack overview, and the card keeps its automatic mode
+    line. See docs/features/study-card-clarity/GRILL-study-card-clarity.txt.]
+    If it is absent, the app writes one from the answer mode
     and the pack's pair:
     - cloze: "Fill the blank in the Polish line."
     - type: "Read the English line, then type the full Polish line."
@@ -78,7 +81,10 @@ A6. Each pack gets an "Edit pack" panel in Packs. It edits the target language,
 Q7. Where does the study instruction come from during creation?
 A7. A new pack has an optional study instruction field in the creation brief and
     the Write pack form. Generate and Chat receive it and must store it on the
-    pack. Deck and card creation show the parent pack's pair and instruction as
+    pack. [SUPERSEDED 2026-11-22 by study-card-clarity Q8: the brief's raw words
+    are context only; both lanes store a short distilled note the generator
+    writes, and a missing note stays missing.] Deck and card creation show the
+    parent pack's pair and instruction as
     read-only facts. The pack editor is the one place to change them later.
     [agent decision]
 

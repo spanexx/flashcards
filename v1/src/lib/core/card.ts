@@ -19,6 +19,7 @@ import type {
   CardSource,
 } from "@/lib/shared/types";
 import { cardSourceSchema, issuesFromZod, type ValidationIssue } from "@/lib/core/schema";
+import { clozeContextIssue } from "@/lib/core/prompt-context";
 
 /**
  * A short, stable id. FNV-1a in 64 bits is synchronous, needs no library and
@@ -148,6 +149,10 @@ export function hardRuleIssues(source: CardSource, index = 0): ValidationIssue[]
         field: "answerDef.blanks",
         message: `no expected answer is declared for blank ${missing.join(", ")}`,
       });
+    // A prompt that hides "Anna's" or "cups" must name Anna or the base word,
+    // or the learner has to guess. [pack: study-card-clarity]
+    const context = clozeContextIssue(source);
+    if (context) issues.push({ index, ...context });
   }
 
   if (def.mode === "picks") {

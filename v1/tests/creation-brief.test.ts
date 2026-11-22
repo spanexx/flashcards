@@ -145,9 +145,19 @@ describe("withBriefOnPackText", () => {
     studyInstruction: "Say the line before typing.",
   });
 
-  it("puts the brief's pair and instruction on a Chat pack", () => {
+  // WHY: A Chat answer must write its own study note; copying the brief would
+  // put the learner's AI-directed request in the pack. The pair is still a fact.
+  // PACK: study-card-clarity
+  // 2026-11-22 opencode: stopped copying the note. [pack: study-card-clarity]
+  it("puts only the brief's pair on a Chat pack", () => {
     const text = JSON.stringify({
-      pack: { name: "chat-pack", version: "1.0.0", language: "pl", sourceLanguage: "pl" },
+      pack: {
+        name: "chat-pack",
+        version: "1.0.0",
+        language: "pl",
+        sourceLanguage: "pl",
+        studyInstruction: "A note the chat wrote.",
+      },
       decks: [{ id: "basics", name: "Basics" }],
       cards: [],
     });
@@ -156,9 +166,18 @@ describe("withBriefOnPackText", () => {
       name: "chat-pack",
       language: "en",
       sourceLanguage: "en",
-      studyInstruction: "Say the line before typing.",
+      studyInstruction: "A note the chat wrote.",
     });
     expect(parsed.cards).toEqual([]);
+  });
+
+  it("does not add a note when neither the answer nor the brief has one", () => {
+    const text = JSON.stringify({
+      pack: { name: "chat-pack", version: "1.0.0" },
+      decks: [],
+    });
+    const parsed = JSON.parse(withBriefOnPackText(text, brief));
+    expect(parsed.pack).not.toHaveProperty("studyInstruction");
   });
 
   it("leaves invalid or non-pack text for the normal import error", () => {
@@ -254,6 +273,23 @@ describe("describeCreationBrief", () => {
   it("leaves the prompt alone when no focus word was written", () => {
     const lines = describeCreationBrief(defaultCreationBrief({ subject: "cases" }), inventory);
     expect(lines.join("\n")).not.toContain("one word");
+  });
+
+  // WHY: The preference is quoted once as context, with an instruction to write
+  // a short learner-facing note instead of copying the request. [pack: study-card-clarity]
+  // 2026-11-22 opencode: added the distillation assertion. [pack: study-card-clarity]
+  it("quotes a study preference as context and asks for a distilled note", () => {
+    const lines = describeCreationBrief(
+      defaultCreationBrief({
+        subject: "cases",
+        studyInstruction: "your job is use other words other than the Latin jargons",
+      }),
+      inventory,
+    );
+    const text = lines.join("\n");
+    expect(text).toContain('"your job is use other words other than the Latin jargons"');
+    expect(text).toContain("Write one short learner-facing study note from it");
+    expect(text).toContain("Do not copy those words");
   });
 
   it("names the exact lemma and asks for one lesson when a focus word is set", () => {
