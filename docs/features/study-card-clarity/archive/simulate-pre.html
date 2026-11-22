@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Study card clarity — design preview</title>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f7f6f3;
+    --ink: #23211d;
+    --quiet: #6d6a63;
+    --card: #ffffff;
+    --line: #dedbd3;
+    --soft: #f1efe9;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 32px;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    line-height: 1.55;
+  }
+  h1 { font-size: 1.2rem; margin: 0 0 6px; }
+  p.lede { color: var(--quiet); margin: 0 0 24px; }
+  .pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+  @media (max-width: 900px) { .pair { grid-template-columns: 1fr; } }
+  .label { color: var(--quiet); font-size: 0.76rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin: 0 0 8px; }
+  .card {
+    display: flex; flex-direction: column; min-height: 420px;
+    padding: 30px 34px 26px;
+    border: 1px solid var(--line); border-radius: 18px;
+    background: var(--card); box-shadow: 0 1px 2px rgba(35,33,29,.06);
+  }
+  .old { border-color: #9fc3b7; box-shadow: 0 18px 44px rgba(35,33,29,.08), 0 22px 60px -30px rgba(47,93,80,.45); }
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+  .mode { color: var(--quiet); font-size: .7rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+  .tools { display: flex; gap: 6px; }
+  .tool { border: 1px solid var(--line); border-radius: 8px; padding: 5px 10px; font-size: .82rem; color: var(--ink); background: transparent; }
+  .word-line { display: flex; flex-wrap: wrap; gap: 5px 10px; margin-top: 14px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--soft); }
+  .word-line strong { font-family: var(--serif); font-size: 1.2rem; }
+  .word-line span { color: var(--quiet); }
+  .layer { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 12px 0 0; padding: 9px 12px; border: 1px solid var(--line); border-left: 2px solid var(--ink); border-radius: 8px; }
+  .layer strong { display: block; font-size: .9rem; }
+  .layer small { color: var(--quiet); }
+  .layer button { margin-left: auto; border: 1px solid var(--line); border-radius: 8px; padding: 5px 10px; background: transparent; font: inherit; font-size: .82rem; }
+  .old .layer { border-left-color: #2f5d50; background: #eef5f2; }
+  .prompt { margin: 26px 0 8px; font-family: var(--serif); font-size: clamp(1.7rem, 2.6vw, 2.2rem); line-height: 1.35; letter-spacing: -.01em; }
+  .blank { display: inline-block; min-width: 7ch; border-bottom: 2px solid rgba(35,33,29,.3); }
+  .instruction { margin: 0; color: var(--quiet); font-size: .82rem; }
+  .raw { margin: 0; color: var(--quiet); font-size: .82rem; }
+  .old .raw { color: #4b5563; }
+  .foot { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: auto; padding-top: 16px; border-top: 1px solid var(--line); }
+  .enter { color: var(--quiet); font-size: .76rem; }
+  .enter kbd { border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px; padding: 2px 7px; background: var(--soft); font: inherit; font-size: .72rem; }
+  .primary { border: 1px solid var(--ink); border-radius: 10px; background: var(--ink); color: var(--card); padding: 9px 16px; font: inherit; font-weight: 600; }
+  .old .primary { border-color: #2f5d50; background: #2f5d50; color: #fff; box-shadow: 0 14px 30px rgba(47,93,80,.2); }
+  .note { margin-top: 24px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--soft); color: var(--quiet); font-size: .88rem; }
+  .note strong { color: var(--ink); }
+</style>
+</head>
+<body>
+  <h1>Study card clarity</h1>
+  <p class="lede">The same card, before and after. The right-hand card is the plain surface; the pack note moves to the pack overview.</p>
+  <div class="pair">
+    <section>
+      <p class="label">Before — too much colour, raw request on the card</p>
+      <article class="card old">
+        <div class="top">
+          <span class="mode">Fill the blank</span>
+          <div class="tools"><span class="tool">Hint</span><span class="tool">Dictionary</span></div>
+        </div>
+        <div class="word-line"><strong>przyjaciel</strong><span>friend (a person you know well and care about)</span></div>
+        <div class="layer"><div><strong>Teaching layer</strong><small>Collapsed. Reopening it adds nothing.</small></div><button>Show the teaching layer</button></div>
+        <p class="prompt">Mój przyjaciel ma na imię <span class="blank"></span>.</p>
+        <p class="raw">I have been learning languages I am particularly interested in grammatical forms, lets use English to understand this, your job is use other words other than the Latin jargons.</p>
+        <div class="foot"><span class="enter"><kbd>Enter</kbd> to check</span><button class="primary">Answer</button></div>
+      </article>
+    </section>
+    <section>
+      <p class="label">After — plain surface, no pack note</p>
+      <article class="card">
+        <div class="top">
+          <span class="mode">Fill the blank</span>
+          <div class="tools"><span class="tool">Hint</span><span class="tool">Dictionary</span></div>
+        </div>
+        <div class="word-line"><strong>przyjaciel</strong><span>friend (a person you know well and care about)</span></div>
+        <div class="layer"><div><strong>Teaching layer</strong><small>Collapsed. Reopening it adds nothing.</small></div><button>Show the teaching layer</button></div>
+        <p class="prompt">Mój przyjaciel ma na imię <span class="blank"></span>.</p>
+        <p class="instruction">Fill the blank in the Polish line.</p>
+        <div class="foot"><span class="enter"><kbd>Enter</kbd> to check</span><button class="primary">Answer</button></div>
+      </article>
+    </section>
+  </div>
+  <p class="note"><strong>Pack overview:</strong> Study goal: Answer in Polish. Ask for a hint if you get stuck. It is readable in the Library pack row, not on every card.</p>
+</body>
+</html>

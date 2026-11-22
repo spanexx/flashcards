@@ -1,0 +1,183 @@
+GRILL — study-card-clarity
+Status: Locked
+Date: 2026-11-22
+Decisions by: agent (delegated by the learner, 2026-11-22)
+Source: the learner's message of 2026-11-22 and the existing locked docs.
+
+Verbatim from the learner on 2026-11-22:
+
+  "lets fix the card design, too much color, can you make it plain and simple
+  deign"
+
+  "Fix pack.studyInstruction rendering in the Study Card UI
+
+  Problem: Currently, the study card component renders pack.studyInstruction
+  directly inside the active card body beneath the prompt. Because
+  studyInstruction stores the user's raw generation instructions (often a
+  multi-sentence meta-prompt addressed to the AI), printing it verbatim on every
+  card clutters the UI and pushes the answer input down.
+
+  Fix:
+
+  Remove pack.studyInstruction from the main card prompt area during active
+  review.
+
+  Move it to the Pack Overview / Deck Info view (or hide it behind a collapsible
+  "Study goal" / info drawer in the pack header) so it is accessible when
+  inspecting the pack without repeating on every card."
+
+  "2. Update the Flashcards Authoring Skill / Prompt (6.0.0)
+
+  Problem: Two issues occur during pack generation:
+
+  Underspecified cloze blanks: Cards like "That is ___ winter coat." (expected:
+  "Anna's") or "There are two ___ on the table." fail to provide the base
+  lemma/subject in the prompt, forcing the learner to guess a random noun or
+  name instead of practicing the grammatical transformation.
+
+  Raw meta-prompt stored in studyInstruction: Storing the user's conversational
+  request verbatim in pack.studyInstruction leaks AI-directed phrasing ("your
+  job is...") into the data model.
+
+  Fix:
+
+  Enforce self-contained prompts: Add a validation rule and prompt instruction
+  requiring every cloze or transformation card to include the base word, owner,
+  or context explicitly in prompt (e.g., "Base word: cup. There are two ___ on
+  the table." or "Owner: Anna. That is ___ winter coat.") whenever the missing
+  word cannot be uniquely deduced from the sentence alone.
+
+  Distill studyInstruction: Instruct the generator to summarize the user's
+  learning preference into a short, learner-facing 1-sentence study note (e.g.,
+  "Focus on plain-English word form changes without Latin grammar jargon.")
+  rather than copying the user's raw conversational prompt verbatim."
+
+The learner then delegated every decision to the agent with the goal skill and
+asked for a pull request when the work is done. The pull request is authorized;
+the merge is not.
+
+This pack changes a locked answer in language-prompt-control 2.2 ("The study
+card shows that instruction verbatim when present"). The new answer below
+supersedes that line. The change is recorded as a decision, not as drift.
+
+--------------------------------------------------------------------------------
+Q1. What does "plain and simple" mean for the card?
+A. A monochrome card. The border and shadow are neutral, the outcome no longer
+   washes the card or colours its border, the answer rule, hint block, teaching
+   layer bar and word line are neutral, and the card's primary action is ink on
+   paper in the light theme and paper on ink in the dark theme. The serif prompt
+   and the existing layout stay. Outcome words still name the result; colour is
+   no longer the signal.
+   Why: the learner said "too much color" and "plain and simple". Removing the
+   green tint from the card surface is the smallest change that answers it and
+   leaves the rest of the app's palette alone.
+   Rules out: a new theme, a new palette, a full app restyle, and removing the
+   serif reading face.
+   Source: learner message; `v1/src/app/globals.css` study card block.
+
+Q2. Does the automatic mode line stay under the prompt?
+A. Yes. "Fill the blank in the Polish line." is a neutral mode hint, not the
+   pack's meta-prompt. It stays. Only the pack's own studyInstruction leaves the
+   card.
+   Why: the learner named `pack.studyInstruction` as the problem, and the mode
+   line still helps a beginner know what to do.
+   Rules out: deleting all instruction copy from the card.
+   Source: learner message; `v1/src/lib/client/study-view.ts:22-53`.
+
+Q3. Where does the study goal live?
+A. The Library Packs panel shows a "Study goal" line in the pack row whenever
+   the pack has a studyInstruction. It sits with the version, deck count, card
+   count and language pair. The pack editor keeps its editable field. No new
+   drawer is added to the session head.
+   Why: the learner offered "Pack Overview / Deck Info view" as the destination,
+   and the Packs panel is the app's pack overview. A line there is reachable
+   without adding a second navigation surface.
+   Rules out: printing the note on every card, a new session-header drawer, and
+   hiding the note entirely.
+   Source: learner message; `v1/src/app/library/PacksPanel.tsx:202-209`.
+
+Q4. What happens to packs that already store a raw meta-prompt?
+A. The card stops printing it at once. No data is rewritten. The pack editor
+   still shows the stored text so the learner can replace it. New generation
+   stores a distilled note; an old pack keeps its old text until the learner
+   edits it.
+   Why: silently rewriting learner data is not allowed, and the learner can
+   already edit the field.
+   Rules out: a migration that rewrites packs, and deleting the field.
+   Source: learner message; `v1/src/app/library/PackEditor.tsx:148-157`.
+
+Q5. How is the authoring skill versioned?
+A. `AUTHORING_SKILL_VERSION` goes from 6.0.0 to 7.0.0, because the prompt text
+   and the rules it teaches change. The provider generation prompt gets the same
+   rules but has no version constant.
+   Why: the version is the copy target's contract; a changed contract needs a
+   new version.
+   Rules out: keeping 6.0.0 and pretending the prompt did not change.
+   Source: `v1/src/lib/browser/authoring.ts:22-23`.
+
+Q6. What does the authoring prompt say about self-contained cloze prompts?
+A. Every cloze or transformation prompt must name the base word, owner, or
+   context in the prompt when the sentence alone cannot tell the learner what to
+   supply. The prompt shows both examples: "Base word: cup. There are two ___ on
+   the table." and "Owner: Anna. That is ___ winter coat." The final self-check
+   repeats the rule.
+   Why: the learner named both failures and asked for a prompt instruction.
+   Rules out: relying on the deck name, the previous card, or a picture to carry
+   the missing subject.
+   Source: learner message.
+
+Q7. What is the code validation rule?
+A. A pure helper refuses two mechanical cases in `hardRuleIssues`:
+   1. A possessive expected answer ("Anna's") needs its owner ("Anna") as a
+      whole word in the prompt.
+   2. A prompt with a count word ("two", "three", "a pair", "several") and a
+      regular plural expected answer ("cups") needs the singular base ("cup")
+      as a whole word in the prompt.
+   The message tells the author what to write, e.g. "write Base word: cup.
+   before the sentence." The rule is narrow on purpose: the prompt instruction
+   covers the judgment cases the app cannot know, such as an irregular plural.
+   Why: the learner asked for a validation rule. These two cases are checkable
+   without a dictionary or a grammar engine, and they are the two examples the
+   learner gave.
+   Rules out: a heuristic that guesses at every missing subject and refuses
+   good cards such as "The capital of France is ___."
+   Source: learner message; `v1/src/lib/core/card.ts:124-177`.
+
+Q8. How is the study note distilled?
+A. The prompts tell the generator to write one short learner-facing sentence in
+   the question language that says how to study. It must not address the AI, say
+   "your job", mention cards, decks, JSON or generation, or copy the learner's
+   request. The example shape carries a placeholder, never the learner's raw
+   words. The generated note wins over the raw brief, and the app no longer
+   writes the raw brief onto the pack.
+   Why: the learner named the raw meta-prompt as the leak. Preferring the
+   generator's distilled note is the only way the new instruction has an effect.
+   Rules out: storing the brief verbatim, and keeping the old "brief wins"
+   precedence.
+   Source: learner message; `v1/src/lib/provider/generate.ts:327-333`,
+   `v1/src/lib/shared/creation.ts:196-204`.
+
+Q9. Does the provider generation lane get the same rules?
+A. Yes. The pack, deck and cards generation prompts get the self-contained
+   prompt rule and the study-note rule. The app's own default template also
+   states them, so a pack with no custom template is covered.
+   Why: the learner's example cards came from generation, and the app has two
+   generation lanes (provider and chat). One rulebook cannot disagree with
+   itself.
+   Rules out: fixing only the copyable chat prompt while provider generation
+   keeps the old habits.
+   Source: `v1/src/lib/provider/prompt.ts:44-59`, `:218-254`.
+
+Q10. What does not change?
+A. The judge, outcomes, evidence rows, scheduling, session loop, one-return
+   rule, hint cap, provider request shape, storage shape, import/export/backup
+   fields, and the Dictionary pages do not change. The automatic mode line stays.
+   The pack editor still owns the study instruction field. No new dependency is
+   added.
+   Why: this is a card-surface and prompt-language change, not a new learning
+   model.
+   Rules out: a new evidence field, a new route, a new provider call, and a new
+   settings screen.
+   Source: the existing locked packs and the learner's scope.
+
+No remaining open questions.

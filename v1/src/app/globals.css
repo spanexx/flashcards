@@ -1331,6 +1331,27 @@ td {
   min-width: 0;
 }
 
+/* WHY: The pack's study note is a pack fact, not a line for every card. It
+   sits with the pack's other facts, quiet and wrapping. [pack: study-card-clarity] */
+.pack-study-goal {
+  margin-top: 6px;
+  padding-left: 10px;
+  border-left: 2px solid var(--line);
+  color: var(--ink);
+  font-size: 0.88rem;
+  overflow-wrap: anywhere;
+}
+
+.pack-study-goal-label {
+  display: inline-block;
+  margin-right: 6px;
+  color: var(--quiet);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
 .deck-list {
   margin-left: 0;
 }
@@ -2592,12 +2613,13 @@ td {
   min-height: 420px;
   overflow: clip;
   padding: 30px var(--card-pad-x) 26px;
-  border: 1px solid var(--edge-accent);
+  /* WHY: The card is the page a learner reads for a whole session. A neutral
+     border and a soft shadow keep the surface plain; colour is no longer a
+     second signal for the outcome. [pack: study-card-clarity] */
+  border: 1px solid var(--line);
   border-radius: 18px;
   background: var(--card);
-  box-shadow:
-    var(--shadow-card),
-    0 22px 60px -30px color-mix(in srgb, var(--accent) 45%, transparent);
+  box-shadow: var(--shadow-soft);
   animation: card-enter 260ms cubic-bezier(0.22, 0.8, 0.3, 1) both;
 }
 
@@ -2612,8 +2634,9 @@ td {
   }
 }
 
-/* WHY: The wash names the outcome with colour as a second signal. The badge
-   and the answer line still carry the word, so colour never stands alone. */
+/* WHY: The outcome is named in words by the badge and the answer line. The
+   surface stays plain, so the wash layer remains in the DOM for the
+   reduced-motion rule but paints nothing. [pack: study-card-clarity] */
 .study-card::before {
   content: "";
   position: absolute;
@@ -2625,25 +2648,9 @@ td {
   transition: opacity 240ms ease;
 }
 
-.study-card[data-outcome="got_it"] {
-  --wash: color-mix(in srgb, var(--good) 8%, transparent);
-  border-color: color-mix(in srgb, var(--good) 50%, var(--line));
-}
-
-.study-card[data-outcome="nearly"] {
-  --wash: color-mix(in srgb, var(--near) 9%, transparent);
-  border-color: color-mix(in srgb, var(--near) 50%, var(--line));
-}
-
-.study-card[data-outcome="again"],
-.study-card[data-outcome="no"] {
-  --wash: color-mix(in srgb, var(--miss) 8%, transparent);
-  border-color: color-mix(in srgb, var(--miss) 48%, var(--line));
-}
-
-.study-card[data-outcome="unjudged"] {
-  --wash: color-mix(in srgb, var(--plain) 7%, transparent);
-  border-color: color-mix(in srgb, var(--plain) 40%, var(--line));
+.study-card[data-outcome] {
+  --wash: transparent;
+  border-color: var(--line);
 }
 
 .study-card[data-outcome]::before {
@@ -2677,7 +2684,7 @@ td {
   padding: 9px 12px;
   border: 1px solid var(--line);
   border-radius: 10px;
-  background: color-mix(in srgb, var(--accent) 5%, var(--card));
+  background: var(--soft);
 }
 
 .word-line-lemma {
@@ -2699,7 +2706,7 @@ td {
   font-family: var(--serif);
   font-size: 1.1rem;
   font-weight: 650;
-  color: var(--good);
+  color: var(--ink);
 }
 
 .word-line-label {
@@ -2786,22 +2793,19 @@ td {
   display: inline-flex;
   align-items: center;
   padding: 4px 10px;
+  border: 1px solid var(--line);
   border-radius: 999px;
+  background: transparent;
   font-size: 0.76rem;
   font-weight: 650;
 }
 
-.study-outcome.outcome-got_it {
-  background: color-mix(in srgb, var(--good) 12%, transparent);
-}
-
-.study-outcome.outcome-nearly {
-  background: color-mix(in srgb, var(--near) 14%, transparent);
-}
-
+/* The outcome word keeps its colour, but no pill background carries it. */
+.study-outcome.outcome-got_it,
+.study-outcome.outcome-nearly,
 .study-outcome.outcome-again,
 .study-outcome.outcome-no {
-  background: color-mix(in srgb, var(--miss) 12%, transparent);
+  background: transparent;
 }
 
 .study-link {
@@ -2910,13 +2914,13 @@ td {
 
 .study-hint {
   margin: 18px 0 0;
-  border-left-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border-left-color: var(--line);
+  background: var(--soft);
 }
 
 .study-hint-label {
   margin: 0 0 4px;
-  color: var(--accent);
+  color: var(--quiet);
   font-size: 0.82rem;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -2948,7 +2952,21 @@ td {
   border-top: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
   border-radius: 0 0 16px 16px;
   background: var(--card);
-  box-shadow: 0 -16px 24px -22px color-mix(in srgb, var(--ink) 45%, transparent);
+  box-shadow: none;
+}
+
+/* WHY: Inside the card the primary action is ink on paper, not a second
+   accent. The rest of the app keeps its accent button. [pack: study-card-clarity] */
+.study-card .btn.primary {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--card);
+  box-shadow: none;
+}
+
+.study-card .btn.primary:hover:not(:disabled) {
+  border-color: var(--ink);
+  box-shadow: none;
 }
 
 /* WHY: Only the question footer is pushed to the bottom of the reserved height;
@@ -3001,23 +3019,12 @@ td {
 .study-answer {
   margin: 26px 0 0;
   padding: 4px 0 4px 18px;
-  border-left: 3px solid color-mix(in srgb, var(--accent) 65%, transparent);
+  /* WHY: The answer rule marks the reveal, not the result. The outcome word
+     above already names how it went. [pack: study-card-clarity] */
+  border-left: 3px solid var(--line);
   font-family: var(--serif);
   font-size: 1.28rem;
   line-height: 1.4;
-}
-
-.study-card[data-outcome="got_it"] .study-answer {
-  border-left-color: color-mix(in srgb, var(--good) 68%, transparent);
-}
-
-.study-card[data-outcome="nearly"] .study-answer {
-  border-left-color: color-mix(in srgb, var(--near) 72%, transparent);
-}
-
-.study-card[data-outcome="again"] .study-answer,
-.study-card[data-outcome="no"] .study-answer {
-  border-left-color: color-mix(in srgb, var(--miss) 65%, transparent);
 }
 
 .study-answer .study-translation {
@@ -3166,7 +3173,8 @@ body.full-stage {
   overflow: hidden;
 }
 
-/* A folded layer is a bar, never a missing feature. */
+/* A folded layer is a bar, never a missing feature. It is neutral so it reads
+   as part of the card, not as a second accent. [pack: study-card-clarity] */
 .layer-bar {
   display: flex;
   flex-wrap: wrap;
@@ -3174,13 +3182,14 @@ body.full-stage {
   gap: 10px;
   margin: 0 0 14px;
   padding: 9px 12px;
-  border-left: 3px solid var(--accent);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--line);
   border-radius: 0 8px 8px 0;
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  background: var(--soft);
 }
 
 .layer-bar-icon {
-  color: var(--accent);
+  color: var(--quiet);
   font-size: 1.05rem;
   line-height: 1;
 }

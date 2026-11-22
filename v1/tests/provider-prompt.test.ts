@@ -8,6 +8,7 @@
 
 import { describe, expect, it } from "vitest";
 import {
+  DEFAULT_GENERATION_TEMPLATE,
   buildDeckGenerationPrompt,
   buildGenerationPrompt,
   buildHintPrompt,
@@ -462,5 +463,51 @@ describe("word lessons through the generation lane", () => {
     expect(read.ok).toBe(true);
     if (!read.ok) return;
     expect((read.bundle as { words: unknown[] }).words).toEqual([]);
+  });
+});
+
+// WHY: Both generation lanes teach the same two rules: a hidden word needs its
+// base in the line, and a study note is a distilled sentence, not a copy of the
+// learner's request. [pack: study-card-clarity]
+// 2026-11-22 opencode: added the shared rule assertions. [pack: study-card-clarity]
+describe("self-contained prompts and the study note", () => {
+  it("teaches the self-contained rule in the app's own line template", () => {
+    expect(DEFAULT_GENERATION_TEMPLATE).toContain("Base word: cup.");
+    expect(DEFAULT_GENERATION_TEMPLATE).toContain("Owner: Anna.");
+  });
+
+  it("asks for a distilled note in the line template", () => {
+    expect(DEFAULT_GENERATION_TEMPLATE).toContain("study note");
+    expect(DEFAULT_GENERATION_TEMPLATE).toContain("Do not copy the learner's request");
+  });
+
+  it("names a pack's current note and asks for a new distilled one", () => {
+    const built = buildGenerationPrompt(
+      makePack({ studyInstruction: "Read the whole line before typing." }),
+      slots,
+      { topic: "cases", count: 3 },
+    );
+    expect(built.messages[1].content).toContain(
+      'The pack\'s current study note is: "Read the whole line before typing."',
+    );
+    expect(built.messages[1].content).toContain("Write one short learner-facing study note");
+  });
+
+  it("keeps self-contained examples in every structured prompt", () => {
+    const built = allGenerationPrompts(learnerBrief());
+    for (const prompt of [built.pack, built.deck, built.cards]) {
+      expect(prompt.messages[1].content).toContain("Base word: cup.");
+      expect(prompt.messages[1].content).toContain("Owner: Anna.");
+    }
+  });
+
+  it("puts a placeholder note in the pack shape, never the raw request", () => {
+    const built = buildPackGenerationPrompt(slots, 4, {
+      brief: learnerBrief({ studyInstruction: "your job is use other words" }),
+    });
+    const shape = built.messages[1].content;
+    expect(shape).toContain("<one short learner-facing sentence on how to study>");
+    expect(shape).not.toContain('"studyInstruction":"your job is use other words"');
+    expect(shape).toContain("your job is use other words");
   });
 });

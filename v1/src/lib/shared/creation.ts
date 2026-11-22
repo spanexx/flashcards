@@ -8,6 +8,15 @@
 
 import { languageName, normalizeLanguage } from "@/lib/shared/language";
 
+// WHY: Chat and provider generation must promise the same thing about the
+// stored study note. One statement in the shared brief module keeps the two
+// prompt lanes from drifting apart when the rule changes.
+// PACK: study-card-clarity
+// 2026-11-22 opencode: added the shared study-note rule. [pack: study-card-clarity]
+/** The one rule both generation lanes teach about a pack's study note. */
+export const STUDY_NOTE_RULE =
+  'A pack may carry one "studyInstruction": a short learner-facing study note, one sentence in the question language. It says how to study. Do not copy the learner\'s request, address the AI, say "your job", or mention cards, decks, JSON or generation.';
+
 /** The four choices the Create screen offers for card style. */
 export const CARD_STYLES = ["mixed", "cloze", "type", "hear_type"] as const;
 
@@ -196,10 +205,11 @@ export function withBriefOnPackText(
   const nextPack = { ...(pack as Record<string, unknown>) };
   const target = normalizeLanguage(brief.targetLanguage);
   const source = normalizeLanguage(brief.sourceLanguage);
-  const instruction = brief.studyInstruction.trim();
   if (target.length > 0) nextPack.language = target;
   if (source.length > 0) nextPack.sourceLanguage = source;
-  if (instruction.length > 0) nextPack.studyInstruction = instruction;
+  // WHY: The pair is a hard fact, but the study note is not. A Chat answer must
+  // write its own distilled note; copying the learner's request would leak
+  // AI-directed words into the pack. [pack: study-card-clarity]
 
   return JSON.stringify({ ...record, pack: nextPack });
 }
@@ -328,7 +338,14 @@ export function describeCreationBrief(
     }
   }
   if (brief.studyInstruction.length > 0) {
-    lines.push(`Store this study instruction on the pack: "${brief.studyInstruction}"`);
+    // WHY: The field holds a learner-facing study note, not the learner's raw
+    // request to the AI. The prompt quotes the request once and asks for the
+    // distilled sentence, so the raw words never become the stored note.
+    // [pack: study-card-clarity]
+    lines.push(`The learner's study preference, in their own words: "${brief.studyInstruction}"`);
+    lines.push(
+      "Write one short learner-facing study note from it. Do not copy those words: the note is one sentence in the question language that says how to study, without addressing the AI or mentioning cards, decks, JSON or generation.",
+    );
   }
 
   // A supplied name is a request; the app's collision suffix still has the last word.

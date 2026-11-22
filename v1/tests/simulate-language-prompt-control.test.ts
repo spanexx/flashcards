@@ -4,6 +4,9 @@
 // design; this one reads real state and fails when a seam drifts.
 // PACK: language-prompt-control
 // 2026-10-24 opencode: created for the post-implementation rehearsal
+// 2026-11-22 opencode: the card-instruction promise was superseded by
+// study-card-clarity Q3; the note now lives in the pack overview. The pack
+// facts rehearsed here still hold. [pack: study-card-clarity]
 // [pack: language-prompt-control]
 
 import { existsSync } from "node:fs";
@@ -190,12 +193,10 @@ describe("language and prompt control rehearsal", () => {
     );
     await localSend("/api/packs/import", "POST", { json: chatText, target: { kind: "pack" } });
     const afterChat = await localGet<{ packs: PackStatus[] }>("/api/packs");
-    expect(afterChat.packs.find((pack) => pack.name === "chat-english")).toMatchObject({
-      language: "en",
-      sourceLanguage: "en",
-      studyInstruction: "Say the line before typing.",
-    });
-    line("a Chat pack stores the brief's pair and instruction even when the answer omits them");
+    const chatPack = afterChat.packs.find((pack) => pack.name === "chat-english");
+    expect(chatPack).toMatchObject({ language: "en", sourceLanguage: "en" });
+    expect(chatPack?.studyInstruction).toBeUndefined();
+    line("a Chat pack stores the brief's pair but no copied study note");
 
     const typed = await localGet<{ plan: Plan | null; message: string | null }>("/api/plan?pack=typed");
     const typeCard = typed.plan?.cards[0];

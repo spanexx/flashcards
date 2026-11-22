@@ -13,6 +13,7 @@
 import type { BrowserPack } from "@/lib/browser/repository";
 import {
   describeCreationBrief,
+  STUDY_NOTE_RULE,
   type CardStyle,
   type CreationBrief,
   type LibraryInventory,
@@ -20,7 +21,7 @@ import {
 import { packLanguagePair, type PackLanguagePair } from "@/lib/shared/language";
 
 /** Bump when the prompt or the JSON shape it teaches changes. */
-export const AUTHORING_SKILL_VERSION = "6.0.0";
+export const AUTHORING_SKILL_VERSION = "7.0.0";
 
 /** Where the chat is allowed to write. No learner-written name field exists. */
 export type AuthoringTarget =
@@ -71,6 +72,10 @@ function commonRules(pair: PackLanguagePair): string {
   {"mode":"picks","options":["...","..."],"correct":["..."]}
   {"mode":"hear_type","expected":["..."]}
 - hints: one or two short sentences that name the rule, never the answer.
+- A cloze or transformation prompt must be self-contained. When the sentence alone cannot tell the learner what to supply, name the base word, owner or context in the prompt itself:
+  "Base word: cup. There are two ___ on the table."
+  "Owner: Anna. That is ___ winter coat."
+  Never leave the missing word to be guessed from the deck name, the previous card or a picture.
 - fullLine: the complete sentence or phrase the card is built from.
 - teaching: optional, at most three parts. Each part is one of:
   {"type":"text","text":"...","lang":"${speakLang}"}
@@ -140,7 +145,7 @@ function wordLessonExample(deckId: string, pair: PackLanguagePair) {
       wordId: id,
       stage: "story",
       summary: "Story: the word in a line",
-      prompt: [text("A line with "), { type: "blank", id: "b1" }, text(".")],
+      prompt: [text("Base word: the base word. A line with "), { type: "blank", id: "b1" }, text(".")],
       answer: [text("A line with the changed form.")],
       answerDef: { mode: "cloze", blanks: [{ id: "b1", expected: ["the changed form"] }] },
       hints: ["Name the rule, not the form."],
@@ -198,11 +203,17 @@ function wordLessonExample(deckId: string, pair: PackLanguagePair) {
   return { word, cards };
 }
 
-function packHeader(pair: PackLanguagePair, studyInstruction = ""): Record<string, string> {
+/** The fixed example note. The raw learner request never enters the shape. */
+const STUDY_NOTE_PLACEHOLDER = "<one short learner-facing sentence on how to study>";
+
+function packHeader(
+  pair: PackLanguagePair,
+  includeStudyNote = false,
+): Record<string, string> {
   const pack: Record<string, string> = { name: "study-pack", version: "1.0.0" };
   if (pair.target.length > 0) pack.language = pair.target;
   if (pair.source.length > 0) pack.sourceLanguage = pair.source;
-  if (studyInstruction.trim().length > 0) pack.studyInstruction = studyInstruction.trim();
+  if (includeStudyNote) pack.studyInstruction = STUDY_NOTE_PLACEHOLDER;
   return pack;
 }
 
@@ -210,12 +221,12 @@ function shapeForPack(
   deckId: string,
   deckName: string,
   pair: PackLanguagePair,
-  studyInstruction = "",
+  includeStudyNote = false,
 ): string {
   const lesson = wordLessonExample(deckId, pair);
   return `{
   "schema": "flashcards.pack/v1",
-  "pack": ${JSON.stringify(packHeader(pair, studyInstruction))},
+  "pack": ${JSON.stringify(packHeader(pair, includeStudyNote))},
   "decks": [
     { "id": ${JSON.stringify(deckId)}, "name": ${JSON.stringify(deckName)} }
   ],
@@ -332,7 +343,8 @@ export function buildAuthoringPrompt(
   context: AuthoringContext = {},
 ): string {
   const pair = promptPair(pack, context.brief);
-  const studyInstruction = context.brief?.studyInstruction ?? pack?.studyInstruction ?? "";
+  const rawPreference = context.brief?.studyInstruction.trim() ?? "";
+  const existingNote = pack?.studyInstruction?.trim() ?? "";
   const pairSection = context.brief
     ? ""
     : [
@@ -340,8 +352,8 @@ export function buildAuthoringPrompt(
         pair.source.length > 0
           ? `Questions, translations and explanations are in ${pair.sourceName}.`
           : "",
-        studyInstruction.trim().length > 0
-          ? `Store this study instruction on the pack: "${studyInstruction.trim()}"`
+        existingNote.length > 0
+          ? `The pack's current study note is: "${existingNote}"`
           : "",
       ]
         .filter((line) => line.length > 0)
@@ -365,13 +377,14 @@ Make at least one deck. Deck ids use lowercase letters, numbers and dashes only.
 
 A pack may carry one "words" array beside "cards". Write at most one word: "id" (lowercase slug), "lemma", "meaning", "lang" (the target code), "forms" and "pairs". A form has "label", "to", "meaning" and at least one "why"; a pair has "target" and "meaning". Every meaning is in the question language, never a hard-coded English word.
 Every word card sets "wordId" to that word's id and "stage" to one of story, spelling, forms, dialogue, matching. Stage fixes the answer mode: story is cloze, spelling and forms are type, dialogue is picks, matching is match. Skip forms when the word has no forms and matching when it has fewer than two pairs. Never print a changed form in a card prompt or teaching part: the learner must produce it.
+${STUDY_NOTE_RULE}
 
 ${rules}
 
 Return JSON shaped like this:
-${shapeForPack("basics", "Everyday basics", pair, studyInstruction)}
+${shapeForPack("basics", "Everyday basics", pair, rawPreference.length > 0)}
 
-Before you answer, check: every deck id is lowercase; every card has a deckId that exists in "decks"; every blank has one expected answer; every picks card has "correct" inside "options"; there is no "topics" field; and no teaching part gives the answer away.`;
+Before you answer, check: every deck id is lowercase; every card has a deckId that exists in "decks"; every blank has one expected answer; every picks card has "correct" inside "options"; every cloze prompt names its base word, owner or context; the study note is one short learner-facing sentence; there is no "topics" field; and no teaching part gives the answer away.`;
   }
 
   if (!pack) {

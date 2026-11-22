@@ -11,20 +11,21 @@ import type { AnswerMode, Card, Outcome } from "@/lib/shared/types";
 /** The note under the one play control; it never prints the spoken line. */
 export const LISTEN_INSTRUCTION = "Play it as often as you need. The line appears after you answer.";
 
-/** A pack's pair and its optional instruction, as the card needs them. */
+/** A pack's pair, as the card's mode line needs it. */
 export interface StudyPackInstruction {
   language?: string;
   sourceLanguage?: string;
-  studyInstruction?: string;
 }
 
-/** The pack's own words when it has them, otherwise a plain mode-aware line. */
+/**
+ * The automatic line under a prompt. It never prints the pack's study note:
+ * that note belongs to the pack overview, because it is a goal for the pack,
+ * not a sentence to repeat on every card. [pack: study-card-clarity]
+ */
 export function studyCardInstruction(
   card: Pick<Card, "answerDef">,
   pack?: StudyPackInstruction | null,
 ): string {
-  const own = pack?.studyInstruction?.trim();
-  if (own) return own;
   const pair = packLanguagePair(pack);
   const mode = card.answerDef.mode;
   if (mode === "cloze") {
