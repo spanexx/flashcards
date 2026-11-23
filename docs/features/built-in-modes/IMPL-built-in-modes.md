@@ -119,3 +119,8 @@ new dependency, no live Drift entry.
   1220 tests; 56 targeted tests; typecheck, eslint, both drift gates green.
 - Reconciled sims: `archive/simulate-pre.sh` keeps the design record;
   `simulate.sh` is canonical. Review evidence is in `simulate-post.md`.
+
+## Open Drift — 2026-11-23
+
+- **D-54 Resolved.** `built-in-modes.test.ts` now fails when a generated mode
+  file no longer matches its authored source. Evidence is in `docs/drift.md`.

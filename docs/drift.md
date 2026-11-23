@@ -1,5 +1,5 @@
 # Drift Log
-**Last updated:** 2026-11-23  **Open:** 0  **Awaiting:** 0  **Resolved:** 50  **Critical/High:** 0
+**Last updated:** 2026-11-23  **Open:** 0  **Awaiting:** 0  **Resolved:** 54  **Critical/High:** 0
 
 ## Open
 
@@ -17,6 +17,42 @@ the IMPL reconcile section, is in progress._
 ---
 
 ## Resolved
+
+- **D-51** (Medium, 2026-11-23, reporter: independent drift review of learning modes; resolved 2026-11-23) — A hand-edited backup could overwrite a built-in mode and stop it following its manifest.
+  - Doc claim: "they survive a restore and are refreshed by the next seed." (`docs/features/learning-mode-core/PRD-TRD-learning-mode-core.md:67`); "then writes the backup's custom rows." (`docs/features/learning-mode-core/PRD-TRD-learning-mode-core.md:193`).
+  - Code reality: `applyBackup` wrote every `backup.modes` row after restoring built-ins; `v1/src/lib/browser/bundle.ts:1158-1170` now builds a built-in id set and skips imported rows with those ids.
+  - Why matters: an imported row wearing a built-in id is seen as learner-owned by the next seed, so app-owned rules never refresh.
+  - Owner: learning-mode-core
+  - To fix: add the id guard in `applyBackup` and pin it with a schema-valid backup that tries to hijack a built-in id.
+  - Verified by: red test in `v1/tests/browser-repository.test.ts` showed the overwrite; fix `be39202` made it green. Full suite 96 files / 1230 tests, build with `check-pwa: passed`, typecheck, changed-file eslint, both drift gates.
+  - Related: D-52, D-53, D-54.
+
+- **D-52** (Medium, 2026-11-23, reporter: independent drift review of learning modes; resolved 2026-11-23) — Runtime generation and chat routes never resolved `brief.modeId`, so real requests ignored the selected mode.
+  - Doc claim: "the selected mode, injected once." (`docs/features/prompt-assembler/PRD-TRD-prompt-assembler.md:24`).
+  - Code reality: `v1/src/lib/browser/provider.ts:240` and `v1/src/lib/browser/router.ts:1327` now call `resolveModePrompt`; `v1/src/lib/browser/mode-prompt.ts:26-38` owns the adapter and the one seed-pass resolver.
+  - Why matters: unit tests passed mode objects to builders while real API calls silently dropped the learner's mode choice.
+  - Owner: prompt-assembler
+  - To fix: add one browser-side adapter/resolver, pass its result into both lanes, and leave a missing or broken mode as no layer 3 so old prompts stay unchanged.
+  - Verified by: two RED route tests then fix `8ee8842`; `browser-router.test.ts` 73/73 green, full suite 1230 tests, build, typecheck, eslint, both drift gates.
+  - Related: D-51, D-53, D-54.
+
+- **D-53** (Low, 2026-11-23, reporter: independent drift review of learning modes; resolved 2026-11-23) — Mapped `PromptInputs` were described as a bridge although no rule renders them.
+  - Doc claim: "reads the already-validated brief and the profile" (`docs/features/prompt-assembler/PRD-TRD-prompt-assembler.md:57`).
+  - Code reality: `v1/src/lib/shared/prompt-layers.ts:148` discards inputs with `void inputs`, and `assemblePrompt` at `v1/src/lib/shared/prompt-layers.ts:318-332` never reads `layers.inputs`.
+  - Why matters: readers could expect a brief's `cardMix` or `modePreferences` to change a prompt when it does not.
+  - Owner: prompt-assembler
+  - To fix: document `PromptInputs` as a reserved seam and state that only a mode's skill text and example reach a prompt.
+  - Verified by: doc-only commit `5051c95`; no behavior change, so the existing adapter and prompt tests plus the full 1230-test suite stayed green.
+  - Related: D-52.
+
+- **D-54** (Low, 2026-11-23, reporter: independent drift review of learning modes; resolved 2026-11-23) — No test caught a stale generated mode file after an authored edit.
+  - Doc claim: "stale generated files are a failure the tests must catch." (`docs/features/built-in-modes/PRD-TRD-built-in-modes.md:84`).
+  - Code reality: `v1/tests/built-in-modes.test.ts:106-111` now asserts each generated file equals the authored file plus `isBuiltIn: true` and the fixed stamp.
+  - Why matters: `make-seed.mjs` is not part of the build, so a forgotten regeneration would deploy old mode content with every test green.
+  - Owner: built-in-modes
+  - To fix: add one whole-object equality pin per mode id.
+  - Verified by: proved RED by perturbing one generated file, then regenerated; commit `b97fdc6` green. Full suite 1230 tests, build and both drift gates green.
+  - Related: D-51, D-52, D-53.
 
 - **D-50** (Medium, 2026-11-23, reporter: the build gate during prompt-assembler verification; resolved 2026-11-23) — The pinned Next.js release was affected by a known security vulnerability. The build gate stopped the first build with an upgrade recommendation. The pin now points at a fixed release and the build no longer raises the advisory gate.
   - Doc claim: "The static export uses the existing Next.js, React," (`docs/features/browser-app/PRD-TRD-browser-app.md:157`); "No new runtime dependency without a locked decision." (`docs/ethics/dev-lane/build.md:31`).

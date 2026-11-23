@@ -126,3 +126,9 @@ no prompt work, no UI, no provider schema change, no new dependency.
   `clearLibrary` and written back, so an offline restore still shows them.
 - **`router.ts` churn before Track 2.** Track 1's router change is one small
   commit with all base routes, so Track 2 only appends.
+
+## Open Drift — 2026-11-23
+
+- **D-51 Resolved.** A hand-edited backup could overwrite a built-in mode.
+  `applyBackup` now skips imported ids that match a built-in; the red restore
+  test is in `browser-repository.test.ts`. See `docs/drift.md` for evidence.
