@@ -1,0 +1,49 @@
+Five Built-in Modes - Grill Notes
+
+Status: Locked
+Date: 2026-11-23
+Source: docs/features/built-in-modes/PLAN.md
+
+What this feature is about
+
+- Author and seed five default LearningModes: grammar-roles, language-general,
+  word-deep-dive, system-architecture and programming-language.
+- Each mode carries Markdown skill text and one canonical example pack that
+  passes the app's real validators.
+- The browser receives them through the mode manifest Track 1 already reads on
+  startup; this track owns the authored files and the seed generator.
+- It does not build Mode Studio screens, change prompt layers, or touch the
+  four shipped packs.
+
+Questions and answers locked so far
+
+1. Should all five canonical examples be written in English, or should language-general demonstrate a foreign language?
+Answer:
+- All five canonical examples use English lines. The skill text still teaches
+  foreign-language behavior; the examples only prove the JSON shape.
+Why:
+- The cloze context checker is English-only, and Track 3's acceptance requires
+  every example to pass it (docs/features/built-in-modes/PLAN.md:15,47-49).
+- A foreign-language example would need hand-written cues that teach a rule the
+  checker cannot verify, so the example would prove less, not more.
+
+2. Should a brand-new learner have one of the five built-in modes selected automatically, or should the modes only appear in the list for the learner to choose?
+Answer:
+- Available only. No mode is selected by default; a learner picks one in Mode
+  Studio when they want it.
+Why:
+- Track 2 locked that no mode adds no mode text, so generation keeps today's
+  wording until a learner chooses (docs/features/prompt-assembler/PRD-TRD-prompt-assembler.md:50-53).
+- A default selection would change every new learner's first prompt and break
+  that acceptance rule.
+
+3. What version should the five built-in modes ship with on first release?
+Answer:
+- 1.0.0 for all five.
+Why:
+- The seed hook replaces a built-in only when the manifest version is newer
+  (v1/src/lib/browser/modes.ts:92-96); 1.0.0 is a clean baseline.
+- Track 1's seed tests already use 1.0.0 as their baseline version
+  (v1/tests/seed-modes.test.ts:39).
+
+No remaining open questions
