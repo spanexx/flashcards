@@ -121,11 +121,11 @@ export default function ModeEditorPage() {
 
   const mirror = mirrorJsonText(draft);
   return (
-    <main className="editor-page stack" style={{ gap: 14 }}>
-      <div className="split-head">
-        <div>
-          <p className="muted" style={{ margin: 0 }}>Learning modes / Edit</p>
-          <h1 style={{ margin: 0 }}>{draft.name}</h1>
+    <main className="editor-page stack" style={{ gap: 10 }}>
+      <div className="editor-head">
+        <div className="row" style={{ alignItems: "baseline", gap: 10 }}>
+          <span className="editor-crumb">Learning modes / Edit</span>
+          <h1>{draft.name}</h1>
         </div>
         <div className="row">
           <button type="button" className="btn ghost" onClick={() => router.push("/modes")}>Cancel</button>
@@ -188,7 +188,6 @@ export default function ModeEditorPage() {
           </>
         )}
       </section>
-      <p className="muted" style={{ margin: 0 }}>Ctrl+S saves. Escape returns to Learning modes.</p>
     </main>
   );
 }
