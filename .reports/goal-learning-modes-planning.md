@@ -63,3 +63,19 @@ Verdict: pass
 Failure class: stale branch bases from creating all worktrees before commits landed.
 Pivot: rebase the stack instead of recreating worktrees.
 Next: commit ledger on main and report.
+
+### 8 — 2026-11-22
+Action: learner asked to execute Track 1 with a subagent. Confirmed worktree `feature/learning-mode-core` is clean at `06426f5` containing PLAN.md only, and that it has no `v1/node_modules`. Launched one general subagent instructed to follow `feature-pipeline` with delegated decisions, scope limited to the mode model, schema, spoiler validator, canonical-example validator, modes store/repository, loader and base `/api/modes` CRUD — explicitly excluding the five mode definitions, `make-seed.mjs`, prompt assembler, UI, push and PR.
+Verification: pending subagent report; expected evidence is feature docs, new and extended tests, typecheck, lint, build, full suite and both drift gates.
+Verdict: pending
+Failure class: none
+Pivot: none
+Next: review the subagent report, verify gates independently on the branch, then report to the learner.
+
+### 9 — 2026-11-23
+Action: the subagent died at the free-usage limit after writing the feature docs, the type/schema/validator/store/repository/loader work and four of the five test files, but it left `router.ts` half-edited: `createDeck` had lost its `readPack` line and no `/api/modes` write routes existed. Resumed in-session. Restored `createDeck`, added `createMode`/`updateMode`/`removeMode` with a local `uniqueModeName` helper and `uniquePath` id reuse, registered `GET/POST/PATCH/DELETE /api/modes`, added four router tests and a backup-restore test, fixed two lint warnings, and aligned the GRILL Q10 and PRD route wording to the code (visible name "My roles 2"; supplied `createdAt` kept).
+Verification: `npx tsc --noEmit` clean; changed-file eslint clean; `npm run build` passed check-pwa; full suite 93 files / 1173 tests pass (43 added over the 1130 base); `check:drift` and `check:drift:staged` pass; two commits on `feature/learning-mode-core` (`138cdc4` docs, `439f001` code); worktree clean; `out/`, `.next/` and temp scripts removed.
+Verdict: pass
+Failure class: subagent died mid-edit, leaving a syntax-broken shared file.
+Pivot: finished the router by hand rather than relaunching, and verified the whole branch independently.
+Next: report Track 1 complete; Track 2 (`feature/prompt-assembler`) is unblocked and still unbuilt.
