@@ -20,6 +20,8 @@ export interface TreeRow {
   value: unknown;
   count?: number;
   autoOpen: boolean;
+  /** App-owned fields are shown but never edited in the explorer. */
+  readOnly: boolean;
 }
 
 /** Read one value by path. A missing path yields undefined. */
@@ -151,6 +153,18 @@ export function mirrorJsonText(root: unknown): string {
   return JSON.stringify(root, null, 2);
 }
 
+/**
+ * Fields the app owns are shown as values, never as editable inputs.
+ * WHY: the router forces these on write; letting the editor change them would
+ * silently be ignored or break the stored row.
+ */
+export function isReadOnlyModeField(path: TreePath): boolean {
+  if (path.length === 1) {
+    return ["id", "isBuiltIn", "createdAt", "sourceModeId"].includes(String(path[0]));
+  }
+  return path.length === 2 && path[0] === "canonicalExample" && path[1] === "schema";
+}
+
 /** Only the top-level skill text is a link into the Markdown tab. */
 export function isSkillInstructionsLink(path: TreePath): boolean {
   return path.length === 1 && path[0] === "skillInstructions";
@@ -183,6 +197,7 @@ export function treeRowsFor(root: unknown): TreeRow[] {
       value,
       ...(isBranch ? { count: Array.isArray(value) ? value.length : Object.keys(value as object).length } : {}),
       autoOpen: path.length === 0 || pathText(path) === "mode / canonicalExample",
+      readOnly: isReadOnlyModeField(path),
     });
     if (!isBranch) return;
     const entries = Array.isArray(value)

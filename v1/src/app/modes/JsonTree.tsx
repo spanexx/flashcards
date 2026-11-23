@@ -141,7 +141,7 @@ export default function JsonTree({ root, onChange, onOpenSkill }: JsonTreeProps)
                 <span className="json-branch-label">{row.label}</span>
                 <span className="json-badge mono">{row.count}</span>
                 <button type="button" className="json-action" title="Add entry" onClick={() => addChild(row)}>+</button>
-                {row.path.length ? (
+                {row.path.length && !row.readOnly ? (
                   <button type="button" className="json-action danger" title="Remove" onClick={() => remove(row)}>×</button>
                 ) : null}
               </>
@@ -150,7 +150,7 @@ export default function JsonTree({ root, onChange, onOpenSkill }: JsonTreeProps)
                 <input
                   className="json-key-input mono"
                   value={row.label}
-                  readOnly={row.path.length === 0}
+                  readOnly={row.path.length === 0 || row.readOnly}
                   aria-label={`Key ${row.label}`}
                   onFocus={() => setActive(pathKey)}
                   onChange={(event) => {
@@ -161,7 +161,12 @@ export default function JsonTree({ root, onChange, onOpenSkill }: JsonTreeProps)
                     }
                   }}
                 />
-                {isSkillInstructionsLink(row.path) ? (
+                {row.readOnly ? (
+                  <span className="json-readonly mono">
+                    {typeof row.value === "string" ? row.value : JSON.stringify(row.value)}
+                    <span className="json-owned">app-owned</span>
+                  </span>
+                ) : isSkillInstructionsLink(row.path) ? (
                   <button
                     type="button"
                     className="json-link mono"

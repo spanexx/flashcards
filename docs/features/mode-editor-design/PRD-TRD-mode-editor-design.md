@@ -39,6 +39,12 @@ The raw JSON pane is a derived, read-only mirror and updates on every edit.
 `skillInstructions` is not edited here. Its row is a link that opens the
 Markdown tab and focuses the source.
 
+App-owned fields stay visible but are never editable: `id`, `isBuiltIn`,
+`createdAt`, `sourceModeId` and the example's `schema` literal. The router
+forces these on write, so changing them in the explorer would be ignored or
+would break the stored row. They render as quiet values with an "app-owned"
+badge.
+
 ### 2.3 Route and handoff
 
 `/modes/editor` is a fixed static-export route wrapped in Suspense. `?id=` loads
@@ -136,3 +142,5 @@ theme variables; no Track 1-3 file changed.
 
 - 2026-11-23: design approved by Victor through prototype iterations; all
   decisions are delegated and recorded in the GRILL.
+- 2026-11-23: the explorer no longer offers editable controls for app-owned
+  fields. The full router write contract was checked, not just `isBuiltIn`.
