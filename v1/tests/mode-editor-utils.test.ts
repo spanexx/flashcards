@@ -11,6 +11,7 @@ import {
   deleteAt,
   highlightJson,
   initialTabFromSearch,
+  isReadOnlyModeField,
   isSkillInstructionsLink,
   mirrorJsonText,
   modeWithExampleText,
@@ -79,6 +80,20 @@ describe("adding an array entry", () => {
     expect(blankArrayItem([3])).toBe(0);
     expect(blankArrayItem([true])).toBe(false);
     expect(blankArrayItem([])).toBe("");
+  });
+});
+
+describe("app-owned fields", () => {
+  it("locks every field the router owns and the protocol literal", () => {
+    expect(isReadOnlyModeField(["id"])).toBe(true);
+    expect(isReadOnlyModeField(["isBuiltIn"])).toBe(true);
+    expect(isReadOnlyModeField(["createdAt"])).toBe(true);
+    expect(isReadOnlyModeField(["sourceModeId"])).toBe(true);
+    expect(isReadOnlyModeField(["canonicalExample", "schema"])).toBe(true);
+    expect(isReadOnlyModeField(["name"])).toBe(false);
+    expect(isReadOnlyModeField(["canonicalExample", "pack", "name"])).toBe(false);
+    const row = treeRowsFor(mode()).find((item) => pathText(item.path) === "mode / isBuiltIn");
+    expect(row?.readOnly).toBe(true);
   });
 });
 

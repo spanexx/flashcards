@@ -4395,6 +4395,25 @@ a.chip {
   cursor: pointer;
 }
 .json-link:hover { text-decoration: underline; }
+.json-readonly {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 9px;
+  font-size: 13px;
+  color: var(--quiet);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.json-owned {
+  margin-left: 8px;
+  padding: 1px 6px;
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  font-size: 10px;
+  color: var(--quiet);
+  white-space: nowrap;
+}
 .json-inline {
   display: flex;
   align-items: center;
