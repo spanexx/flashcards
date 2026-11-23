@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 import { PACK_BUNDLE_SCHEMA } from "@/lib/browser/bundle";
 import type { LearningMode } from "@/lib/shared/types";
 import {
+  blankArrayItem,
   deleteAt,
   highlightJson,
   initialTabFromSearch,
@@ -68,6 +69,16 @@ describe("immutable tree edits", () => {
 
   it("mirrors the object as pretty JSON", () => {
     expect(mirrorJsonText(mode())).toBe(JSON.stringify(mode(), null, 2));
+  });
+});
+
+describe("adding an array entry", () => {
+  it("uses a blank value instead of copying the first item", () => {
+    expect(blankArrayItem([{ id: "doer", name: "Doer" }])).toEqual({});
+    expect(blankArrayItem(["cloze", "picks"])).toBe("");
+    expect(blankArrayItem([3])).toBe(0);
+    expect(blankArrayItem([true])).toBe(false);
+    expect(blankArrayItem([])).toBe("");
   });
 });
 
