@@ -166,6 +166,14 @@ describe("AI creator through the screen API", () => {
     });
     expect(sent.mode.id).toBe("drafted-mode");
     expect(await readModes(store)).toHaveLength(0);
+
+    // WHY: an unsaved draft has no row, so PATCH must fail and POST must save.
+    await expect(apiSend(`/api/modes/${sent.mode.id}`, "PATCH", sent.mode)).rejects.toThrow(
+      "There is no learning mode",
+    );
+    const saved = await apiSend<{ mode: LearningMode }>("/api/modes", "POST", sent.mode);
+    expect(saved.mode.id).toBe("drafted-mode");
+    expect(await readModes(store)).toHaveLength(1);
   });
 });
 

@@ -5,24 +5,35 @@
 // PACK: mode-studio-ui
 // 2026-11-23 opencode: created for Track 4 editing. [pack: mode-studio-ui]
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { apiSend } from "@/lib/client/api";
 import { learningModeIssues } from "@/lib/browser/modes";
 import { ANSWER_MODES, type AnswerMode, type LearningMode } from "@/lib/shared/types";
-import { modeIssueLines } from "@/app/library/mode-studio-utils";
+import { modeIssueLines, modeSaveRequest } from "@/app/library/mode-studio-utils";
 
 interface ModeEditorProps {
   mode: LearningMode;
+  /** A drafted mode has no stored row yet, so Save must create it. */
+  isNew?: boolean;
   onSaved: (mode: LearningMode) => void;
   onCancel: () => void;
 }
 
 /** Edit one learner-owned mode, checking it before the router is called. */
-export default function ModeEditor({ mode, onSaved, onCancel }: ModeEditorProps) {
+export default function ModeEditor({ mode, isNew = false, onSaved, onCancel }: ModeEditorProps) {
   const [draft, setDraft] = useState<LearningMode>(mode);
   const [exampleText, setExampleText] = useState(JSON.stringify(mode.canonicalExample, null, 2));
   const [issues, setIssues] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+
+  // WHY: Escape closes every dialog in this app, not just the delete one.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !busy) onCancel();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [busy, onCancel]);
 
   const toggleMix = (value: AnswerMode) => {
     const next = draft.defaultCardMix.includes(value)
@@ -48,11 +59,8 @@ export default function ModeEditor({ mode, onSaved, onCancel }: ModeEditorProps)
     setBusy(true);
     setIssues([]);
     try {
-      const saved = await apiSend<{ mode: LearningMode }>(
-        `/api/modes/${encodeURIComponent(candidate.id)}`,
-        "PATCH",
-        candidate,
-      );
+      const request = modeSaveRequest(candidate, isNew);
+      const saved = await apiSend<{ mode: LearningMode }>(request.url, request.method, request.body);
       onSaved(saved.mode);
     } catch (problem) {
       // WHY: a field-named server refusal is more useful than the banner alone.

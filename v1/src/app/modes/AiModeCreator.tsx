@@ -6,7 +6,7 @@
 // PACK: mode-studio-ui
 // 2026-11-23 opencode: created for Track 4 AI creation. [pack: mode-studio-ui]
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { apiGet, apiSend } from "@/lib/client/api";
 import { MODE_DRAFT_VERSION } from "@/lib/browser/mode-draft";
 import type { LearningMode, ProviderStatus } from "@/lib/shared/types";
@@ -23,6 +23,14 @@ export default function AiModeCreator({ onDraft, onNotice, onCancel }: AiModeCre
   const [prepared, setPrepared] = useState<{ requestId: string; prompt: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !busy) onCancel();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [busy, onCancel]);
 
   const prepare = async () => {
     setBusy(true);
@@ -91,7 +99,7 @@ export default function AiModeCreator({ onDraft, onNotice, onCancel }: AiModeCre
         {prepared ? (
           <>
             <pre className="dict-prompt">{prepared.prompt}</pre>
-            <p className="brief-note">This is exactly what leaves this device. Nothing is saved yet.</p>
+            <p className="brief-note">This is the prompt that is sent. Nothing is saved yet.</p>
           </>
         ) : null}
         {error ? <div className="notice error">{error}</div> : null}

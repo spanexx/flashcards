@@ -5,7 +5,7 @@
 **Date:** 2026-11-23
 **Origin:** `docs/features/mode-studio-ui/GRILL-mode-studio-ui.txt`
 **Contract:** `docs/features/mode-studio-ui/PRD-TRD-mode-studio-ui.md`
-**Design:** `docs/features/mode-studio-ui/simulate-pre.html`
+**Design:** `docs/features/mode-studio-ui/archive/simulate-pre.html`
 
 ## Phase order
 
@@ -76,7 +76,8 @@ tests prove the brief reaches Generate and Chat prompts.
 - Add the route folder before the Nav link so check-pwa finds `out/modes/index.html`.
 - Built-ins get Duplicate & Customize; custom rows get Edit / Preview / Delete.
 - AI draft shows version `1.0.1`, read-only prompt with Copy, and opens unsaved.
-- Reuse existing modal/form classes and 44px controls for 390px screens.
+- Reuse existing modal/form classes for 390px screens; inputs already have a
+  44px minimum. The shared `.btn` is 40px, so every dialog also closes on Escape.
 
 **Proof:** `npm run build` green with `check-pwa: passed`; PWA lists contain the
 route; `browser-modes-ui.test.ts` green.
@@ -109,3 +110,15 @@ test renderer, default mode, or live Drift entry.
   against the loaded list before showing its label.
 - **Mobile height.** Reuse stack/modal classes and existing 44px inputs; no new
   layout system.
+
+## Delivery note — 2026-11-23 (post-impl review)
+
+- Closed the review's Major Drift: AI draft Save now creates the row through
+  `modeSaveRequest`; the node rehearsal exercises that handoff. Minor items
+  closed: honest export wording, Escape on every dialog, delete errors inside
+  the dialog, import shape validation, busy guards, and `modeDeleteName` in use.
+- Reconciled sims: `archive/simulate-pre.html` keeps the design record;
+  `simulate.sh` is canonical. Review evidence is in `simulate-post.md`.
+- Final gates: build green with `check-pwa: passed` and `out/modes/index.html`;
+  full suite 99 files / 1248 tests; 18 targeted tests; `simulate.sh` PASS;
+  typecheck, changed-file eslint, both drift gates green. Worktree clean.

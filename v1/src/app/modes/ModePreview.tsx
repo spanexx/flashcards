@@ -5,6 +5,7 @@
 // PACK: mode-studio-ui
 // 2026-11-23 opencode: created for Track 4 local preview. [pack: mode-studio-ui]
 
+import { useEffect } from "react";
 import type { LearningMode } from "@/lib/shared/types";
 import { plainText } from "@/app/library/library-utils";
 import { previewCardsFromExample } from "@/app/library/mode-studio-utils";
@@ -18,6 +19,13 @@ interface ModePreviewProps {
 /** Local, read-only render of the canonical example. No route and no store. */
 export default function ModePreview({ mode, onClose }: ModePreviewProps) {
   const cards = previewCardsFromExample(mode);
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
   return (
     <div className="modal-wrap">
       <div className="modal" role="dialog" aria-modal="true" aria-label={`Preview ${mode.name}`}>

@@ -6,7 +6,7 @@
 **Origin:** `docs/features/mode-studio-ui/GRILL-mode-studio-ui.txt`
 **Track:** 4 of 4. Tracks 1-3 own the mode contract, prompt layers and built-in
 content. This track owns screens and pure screen helpers only.
-**Design:** `docs/features/mode-studio-ui/simulate-pre.html` (design contract)
+**Design:** `docs/features/mode-studio-ui/archive/simulate-pre.html` (design contract)
 **Canonical rehearsal:** `docs/features/mode-studio-ui/simulate.sh` (post-implementation, reads built output)
 
 ## 1. Why this exists
@@ -79,8 +79,9 @@ because this repo has no browser renderer in tests.
 
 Before Save, `learningModeIssues()` checks the whole mode; server field-named
 issues render through `errorLines`. No `/validate` endpoint is added. Export
-filters custom modes out of the existing backup JSON; import posts one parsed
-mode object to `POST /api/modes`. No new route or schema is touched.
+writes a small JSON file containing only custom modes; import posts each parsed
+mode to `POST /api/modes`, which forces `isBuiltIn: false` and validates it. The
+file is a mode list, not a whole-app backup. No new route or schema is touched.
 
 ## 3. Behavioural spec
 
@@ -88,8 +89,9 @@ mode object to `POST /api/modes`. No new route or schema is touched.
    "Learning modes" links to `/modes`, the built page exists, and the service
    worker precaches `./modes/`.
 2. **Given** a pack target, **when** the learner selects a built-in, **then**
-   the Learning Mode, Card Mix and preference fields are prefilled from that
-   mode, and Generate and Chat briefs carry its `modeId`.
+   the Learning Mode and Card Mix fields are prefilled from that mode, and
+   Generate and Chat briefs carry its `modeId`. Extra preferences stay whatever
+   the learner typed, because a mode does not store preferences.
 3. **Given** a deck or cards target, **when** the screen renders, **then** it
    shows the no-mode notice and carries no hidden `modeId` from the pack target.
 4. **Given** the mode list, **when** it loads, **then** built-ins sort first and
@@ -188,3 +190,10 @@ reported.
 - 2026-11-23: design direction confirmed by delegated decision. The learner
   asked the agent to make all decisions; each is recorded in the GRILL with its
   source. No interactive approval gate was used.
+- 2026-11-23: red tests were executed before each phase's code, then committed
+  with the green implementation, because `docs/ethics/commit.md` forbids
+  committing failing tests. The test headers describe that execution, not a
+  separate commit.
+- 2026-11-23: fresh-eyes review found that an AI draft opened in the editor
+  could not be saved: Save always PATCHed a row that did not exist. Save now
+  picks POST for an unsaved draft through the pure `modeSaveRequest` helper.

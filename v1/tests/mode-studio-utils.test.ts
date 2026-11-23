@@ -18,6 +18,7 @@ import {
   modeExportText,
   modeImportBody,
   modeIssueLines,
+  modeSaveRequest,
   previewCardsFromExample,
 } from "@/app/library/mode-studio-utils";
 
@@ -102,6 +103,17 @@ describe("mode preview and validation helpers", () => {
       { field: "canonicalExample.cards.0", message: "a cloze needs a blank" },
     ]);
     expect(modeIssueLines(error)).toEqual(["canonicalExample.cards.0: a cloze needs a blank"]);
+  });
+});
+
+describe("saving a drafted mode", () => {
+  it("creates an unsaved draft and edits a stored row", () => {
+    const draft = mode();
+    const create = modeSaveRequest(draft, true);
+    expect(create).toMatchObject({ method: "POST", url: "/api/modes" });
+    expect(create.body).toEqual(draft);
+    const edit = modeSaveRequest(draft, false);
+    expect(edit).toMatchObject({ method: "PATCH", url: `/api/modes/${draft.id}` });
   });
 });
 

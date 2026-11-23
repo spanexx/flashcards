@@ -1,43 +1,38 @@
-# Handoff 2026-11-23 — four learning-mode drifts fixed, awaiting merge decision
+# Handoff 2026-11-23 — Track 4 Mode Studio UI complete, awaiting merge decision
 
 ## Where things stand
 
-Worktree: `/home/spanexx/.config/superpowers/worktrees/flashcards/fix-learning-modes-drift`
-Branch: `fix/learning-modes-drift`, based on local `main` 1f26993.
-Origin: external report `.reports/2026-11-23-drift-learning-modes.md` on `main`.
-No merge into `main` has been made.
+Worktree: `/home/spanexx/.config/superpowers/worktrees/flashcards/feature-mode-studio-ui`
+Branch: `feature/mode-studio-ui`, based on `main` at `dbcf308`. Not merged.
 
-## Fixes, one commit each
+## What shipped
 
-- `be39202` D-51 — `applyBackup` skips imported rows whose id matches a built-in
-  mode (`v1/src/lib/browser/bundle.ts`), red test in `browser-repository.test.ts`.
-- `8ee8842` D-52 — new `v1/src/lib/browser/mode-prompt.ts` adapter/resolver;
-  `provider.ts` and `router.ts` now pass `brief.modeId` into both prompt lanes.
-  A missing or broken mode adds no layer 3, so old prompts stay unchanged.
-- `5051c95` D-53 — `PromptInputs` documented as a reserved seam in the
-  prompt-assembler PRD-TRD (doc-only).
-- `b97fdc6` D-54 — `built-in-modes.test.ts` asserts generated files equal
-  authored files plus `isBuiltIn` and the fixed stamp. Proved RED by perturbing
-  a generated file, then regenerated.
+- `cc7c724` — GRILL (12 delegated decisions), PRD-TRD, IMPL, design sim.
+- `2f24d17` — pure mode-studio helpers + tests.
+- `c8ab3a9` — shared New Pack mode fields, Library mode state, route tests.
+- Phase 5 commit — `/modes` route, list, editor, AI creator, preview, delete,
+  Nav and PWA lists.
+- Phase 6 commit — AI-draft Save fix (`modeSaveRequest`), fresh-eyes review
+  closures, post-sim, reconciliation and delivery notes.
 
-`docs/drift.md` records all four as Resolved (0 open / 54 resolved); each
-affected IMPL has an Open Drift breadcrumb.
+Canonical sim: `bash docs/features/mode-studio-ui/simulate.sh`.
+Design record: `docs/features/mode-studio-ui/archive/simulate-pre.html`.
+Review evidence: `docs/features/mode-studio-ui/simulate-post.md`.
 
 ## Verification
 
-- Full suite: 96 files / 1230 tests green.
-- `npm run build` green, `check-pwa: passed` (121 files, 119 precache entries).
-- `npm run typecheck`, changed-file eslint, both drift gates green.
-- `browser-router.test.ts` 73/73; `built-in-modes.test.ts` 16/16;
-  `browser-repository.test.ts` 20/20.
+- Full suite: 99 files / 1248 tests green.
+- 18 targeted Mode Studio tests green.
+- Build green with `check-pwa: passed`; `out/modes/index.html` exists.
+- `simulate.sh` PASS; typecheck, changed-file eslint, both drift gates green.
+- Drift log 0 open / 54 resolved. Worktree clean after cleanup.
 
 ## Next steps
 
-1. User decides whether to merge `fix/learning-modes-drift` into `main`.
-2. After merge, start Track 4 (Mode Studio UI); its plan is root `PLAN.md`.
+1. User decides whether to merge `feature/mode-studio-ui` into `main`.
+2. After merge, all four tracks are integrated; no backlog file exists in this
+   repo to mark SHIPPED.
 
 ## User-only follow-ups
 
 - Victor approves the merge. No push, PR, tag or stable move without a go.
-- The external review report remains untracked in the `main` worktree; committing
-  it there is Victor's call.

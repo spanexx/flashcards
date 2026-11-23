@@ -8,7 +8,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { apiGet, apiSend } from "@/lib/client/api";
 import type { LearningMode } from "@/lib/shared/types";
-import { modeExportText, modeImportBody } from "@/app/library/mode-studio-utils";
+import { modeDeleteName, modeExportText, modeImportBody } from "@/app/library/mode-studio-utils";
 import AiModeCreator from "./AiModeCreator";
 import ModeDeleteDialog from "./ModeDeleteDialog";
 import ModeEditor from "./ModeEditor";
@@ -21,6 +21,8 @@ export default function ModesClient() {
   const [message, setMessage] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [editing, setEditing] = useState<LearningMode | null>(null);
+  const [editingNew, setEditingNew] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<LearningMode | null>(null);
   const [aiOpen, setAiOpen] = useState(false);
   const [deleting, setDeleting] = useState<LearningMode | null>(null);
@@ -43,16 +45,21 @@ export default function ModesClient() {
   }, [load]);
 
   const duplicate = async (mode: LearningMode) => {
+    if (busy) return;
+    setBusy(true);
     try {
       const created = await apiSend<{ mode: LearningMode }>("/api/modes", "POST", {
         sourceModeId: mode.id,
         name: `${mode.name} copy`,
       });
       await load();
+      setEditingNew(false);
       setEditing(created.mode);
       setNotice("The copy is yours. Nothing else changed.");
     } catch (problem) {
       setMessage(problem instanceof Error ? problem.message : "The mode could not be copied.");
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -64,6 +71,9 @@ export default function ModesClient() {
       setNotice(`${mode.name} was deleted.`);
     } catch (problem) {
       setMessage(problem instanceof Error ? problem.message : "The mode could not be deleted.");
+      // WHY: the dialog owns the visible refusal; the banner behind it is not
+      // readable while the full-screen overlay is open.
+      throw problem;
     }
   };
 
@@ -79,6 +89,8 @@ export default function ModesClient() {
   };
 
   const importModes = async (file: File) => {
+    if (busy) return;
+    setBusy(true);
     try {
       const body = modeImportBody(await file.text());
       for (const mode of body.modes) {
@@ -88,6 +100,8 @@ export default function ModesClient() {
       setNotice("Modes were imported. Built-ins were left alone.");
     } catch (problem) {
       setMessage(problem instanceof Error ? problem.message : "The file was not a mode export.");
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -128,7 +142,10 @@ export default function ModesClient() {
       <ModesPanel
         modes={modes}
         onDuplicate={(mode) => void duplicate(mode)}
-        onEdit={setEditing}
+        onEdit={(mode) => {
+          setEditingNew(false);
+          setEditing(mode);
+        }}
         onPreview={setPreview}
         onDelete={setDeleting}
       />
@@ -136,6 +153,7 @@ export default function ModesClient() {
       {editing ? (
         <ModeEditor
           mode={editing}
+          isNew={editingNew}
           onCancel={() => setEditing(null)}
           onSaved={(saved) => {
             setEditing(null);
@@ -151,13 +169,14 @@ export default function ModesClient() {
           onNotice={setNotice}
           onDraft={(drafted) => {
             setAiOpen(false);
+            setEditingNew(true);
             setEditing(drafted);
           }}
         />
       ) : null}
       {deleting ? (
         <ModeDeleteDialog
-          modeName={deleting.name}
+          modeName={modeDeleteName(deleting)}
           onClose={() => setDeleting(null)}
           onConfirm={() => remove(deleting)}
         />

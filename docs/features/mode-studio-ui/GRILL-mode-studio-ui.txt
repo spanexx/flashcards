@@ -87,11 +87,12 @@ Why:
 
 9. Does a single-mode export/import ship?
 Answer:
-- Yes, minimal: export filters custom modes out of the existing backup JSON;
-  import posts the parsed object to `POST /api/modes`. No new route.
+- Yes, minimal: export writes a small JSON file holding only custom modes;
+  import posts each parsed mode to `POST /api/modes`. No new route.
 Why:
-- PLAN.md:40 allows deferral only when helpers are absent. Both helpers exist:
-  GET /api/backup/export (router.ts:995) and POST /api/modes (router.ts:1141).
+- PLAN.md:40 allows deferral only when helpers are absent. The create route
+  already forces isBuiltIn:false and validates, so a dedicated mode backup is
+  unnecessary. The file is a mode list, not a whole-app backup.
 
 10. Is a mode selected by default?
 Answer:

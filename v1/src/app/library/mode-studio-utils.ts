@@ -101,7 +101,23 @@ export function modeExportText(modes: LearningMode[]): string {
  * only hands over the parsed body; it never silently repairs JSON.
  */
 export function modeImportBody(text: string): { modes: LearningMode[] } {
-  return JSON.parse(text) as { modes: LearningMode[] };
+  const parsed = JSON.parse(text) as { modes?: unknown };
+  // WHY: a wrongly shaped file must name its problem, not throw a later
+  // "not iterable" error while the screen is already importing.
+  if (!Array.isArray(parsed?.modes)) throw new Error("This file has no list of learning modes.");
+  return parsed as { modes: LearningMode[] };
+}
+
+/** Where a mode Save goes: create for an unsaved draft, edit for a stored row. */
+export function modeSaveRequest(
+  mode: LearningMode,
+  isNew: boolean,
+): { method: "POST" | "PATCH"; url: string; body: LearningMode } {
+  // WHY: a drafted mode has no row, so PATCH would always refuse it. Keeping
+  // the choice here makes the editor's only write path testable without React.
+  return isNew
+    ? { method: "POST", url: "/api/modes", body: mode }
+    : { method: "PATCH", url: `/api/modes/${encodeURIComponent(mode.id)}`, body: mode };
 }
 
 /** Only a learner-owned mode may be deleted; built-ins are app-owned. */
