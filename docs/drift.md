@@ -1,9 +1,15 @@
 # Drift Log
-**Last updated:** 2026-11-22  **Open:** 0  **Awaiting:** 0  **Resolved:** 49  **Critical/High:** 0
+**Last updated:** 2026-11-23  **Open:** 1  **Awaiting:** 0  **Resolved:** 49  **Critical/High:** 0
 
 ## Open
 
-_None. See Resolved for the 2026-11-22 prompt-example clarity fix (D-49)._
+- **D-50** (Medium, 2026-11-23, reporter: the build gate during prompt-assembler verification; severity not named by the advisory output) — The pinned Next.js release is affected by a known security vulnerability. The build gate stopped the first build with an upgrade recommendation and said to retry; the retry passed, so the pack's build gate is green, but the vulnerable pin remains.
+  - Doc claim: "The static export uses the existing Next.js, React," (`docs/features/browser-app/PRD-TRD-browser-app.md:157`); "No new runtime dependency without a locked decision." (`docs/ethics/dev-lane/build.md:31`).
+  - Code reality: `v1/package.json:24` pins `"next": "16.4.2"`. During `npm run build`, Next.js raised `SecurityFatalError` with the words "Your version of Next.js is affected by a known security vulnerability" and "We strongly recommend you upgrade Next.js." It pointed at the bulk advisory feed and said to retry the command; the retry completed the build. No CVE or severity was named in that output.
+  - Why matters: a known vulnerable build tool is a risk to the operator even though the app ships as static files, and every build now needs a retry before it proceeds.
+  - Owner: dependency upgrade; the learner decides whether it runs in a separate worktree or in the current checkout.
+  - To fix: take the learner's decision, run the Next.js security upgrade in isolation, update the pin in `v1/package.json:24` and the lockfile, rerun build and the full gates, then move this entry to Resolved with a `Verified by:` line.
+  - Related: prompt-assembler (the build gate surfaced it), dev-lane.
 
 ## Awaiting decision
 
