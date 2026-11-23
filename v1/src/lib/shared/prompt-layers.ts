@@ -182,36 +182,94 @@ export function exampleLine(pair: PackLanguagePair): {
   };
 }
 
-/** Plain style rules the validator enforces, written once for both lanes. */
+/**
+ * The JSON vocabulary a rule speaks. A generation line carries a "style"
+ * field; a chat card carries answerDef.mode. The rule shape is shared, but
+ * the words must name the field the receiving shape actually has.
+ */
+export type StyleRuleVoice = "line" | "card";
+
+/** The strings that change with the voice. Kept beside the rule, once. */
+interface StyleVoicePhrases {
+  mixed: string;
+  fixed: (style: string) => string;
+  typeKnown: (source: string, target: string) => string;
+  typeUnknown: string;
+  heardKnown: (target: string) => string;
+  heardUnknown: string;
+}
+
+/**
+ * Both voices in one table, so neither lane can edit half a rule. The card
+ * strings are the old chat words, kept byte for byte so the chat keeps its own
+ * wording.
+ */
+const STYLE_VOICE_PHRASES: Record<StyleRuleVoice, StyleVoicePhrases> = {
+  line: {
+    // WHY: mixed asks for varied line styles, not a style called "mixed".
+    mixed:
+      'Card style: mixed. Set "style" on each line to "cloze", "type" or "hear_type". A line with no style becomes a cloze card.',
+    // WHY: the generation validator refuses the whole batch on a wrong style.
+    fixed: (style) =>
+      `Card style: ${style}. Every line must set "style": "${style}". A line with another style, or with no style, makes the app refuse the whole batch.`,
+    // WHY: the learner reads a translation and types the full target line.
+    typeKnown: (source, target) =>
+      `Every type line must include a translation in ${source}, because the learner reads it and types the full ${target} line.`,
+    typeUnknown:
+      "Every type line must include a translation, because the learner sees the translation and types the full line.",
+    // WHY: a heard line is spoken in the target language when one is known.
+    heardKnown: (target) =>
+      `Every hear_type line is spoken in ${target}, and the learner types the full ${target} line.`,
+    heardUnknown:
+      "Every hear_type line is spoken in the pack language when it is known, and the learner types the full line.",
+  },
+  card: {
+    // WHY: mixed asks for varied answer modes, not a mode called "mixed".
+    mixed:
+      "Card style: mixed. Use a mix of cloze, type and hear_type answer modes across the cards.",
+    // WHY: a card's mode lives in answerDef.mode, never in a style field.
+    fixed: (style) =>
+      `Card style: ${style}. Every card must build a ${style} answer. A card with another answer mode does not match the learner's request.`,
+    // WHY: a type card needs a translation part to type the full target line.
+    typeKnown: (source, target) =>
+      `Every type card needs a translation part in ${source}, because the learner reads it and types the full ${target} line.`,
+    typeUnknown:
+      "Every type card needs a translation part, because the learner sees the translation and types the full line.",
+    // WHY: a spoken card speaks the full line in the target language.
+    heardKnown: (target) =>
+      `Every hear_type card speaks the full line in ${target}, and the learner types the full ${target} line.`,
+    heardUnknown:
+      "Every hear_type card speaks the full line in the pack language when it is known, and the learner types the full line.",
+  },
+};
+
+/**
+ * Plain style rules the validator enforces, written once for both lanes.
+ * The voice chooses the words; the rule structure is identical.
+ */
 export function cardStyleRuleLines(
   cardStyle: CardStyle,
   pair: PackLanguagePair = packLanguagePair(null),
+  voice: StyleRuleVoice = "line",
 ): string[] {
-  // WHY: mixed is a request to vary styles, never an output style itself.
+  // WHY: both lanes import this one rule; only the vocabulary differs.
   // PACK: prompt-assembler
-  // 2026-11-23 opencode: moved the shared style rules here. [pack: prompt-assembler]
-  if (cardStyle === "mixed") {
-    return [
-      'Card style: mixed. Set "style" on each line to "cloze", "type" or "hear_type". A line with no style becomes a cloze card.',
-    ];
-  }
-  const lines = [
-    `Card style: ${cardStyle}. Every line must set "style": "${cardStyle}". A line with another style, or with no style, makes the app refuse the whole batch.`,
-  ];
-  // A type line the learner reads needs a translation to type the full line.
+  // 2026-11-23 opencode: added the card voice so chat keeps answer-mode words. [pack: prompt-assembler]
+  const phrases = STYLE_VOICE_PHRASES[voice];
+  if (cardStyle === "mixed") return [phrases.mixed];
+  const lines = [phrases.fixed(cardStyle)];
+  // WHY: a type card or line the learner reads needs a translation to type from.
   if (cardStyle === "type") {
     lines.push(
       pair.known && !pair.same
-        ? `Every type line must include a translation in ${pair.sourceName}, because the learner reads it and types the full ${pair.targetName} line.`
-        : "Every type line must include a translation, because the learner sees the translation and types the full line.",
+        ? phrases.typeKnown(pair.sourceName, pair.targetName)
+        : phrases.typeUnknown,
     );
   }
-  // A heard line is spoken in the target language when one is known.
+  // WHY: a heard card or line is spoken in the target language when one is known.
   if (cardStyle === "hear_type") {
     lines.push(
-      pair.target.length > 0
-        ? `Every hear_type line is spoken in ${pair.targetName}, and the learner types the full ${pair.targetName} line.`
-        : "Every hear_type line is spoken in the pack language when it is known, and the learner types the full line.",
+      pair.target.length > 0 ? phrases.heardKnown(pair.targetName) : phrases.heardUnknown,
     );
   }
   return lines;

@@ -12,10 +12,12 @@ contract; it writes no mode content and no UI.
 
 Two prompt lanes — provider generation and the chat authoring skill — currently
 repeat the same rules in their own files. The self-contained rule, the teaching
-rules, the style rules and the example line each have two copies. A change to
-one copy silently leaves the other behind, and the two lanes start teaching
-different card rules. There is also no way to put a learning mode's authored
-skill text into a prompt: the entity exists (Track 1) but nothing reads it.
+rules and the example line each have two copies. The style rules also have two
+copies, and their words differ by design: a generation line owns a `style`
+field, a chat card owns `answerDef.mode`. A change to one copy silently leaves
+the other behind, and the two lanes start teaching different card rules. There
+is also no way to put a learning mode's authored skill text into a prompt: the
+entity exists (Track 1) but nothing reads it.
 
 This pack replaces the duplication with three composable layers. Layer 1 is the
 system text and the output contract. Layer 2 is the universal card rules. Layer
@@ -32,6 +34,9 @@ later offer "Draft with AI" without this track owning a screen.
   and one prompt version.
 - The generation lane and the chat lane import those strings. Neither keeps a
   private copy of a rule the other also teaches.
+- The style rule is one shared function with a voice: `line` names the `style`
+  field on generation lines, `card` names the answer mode on chat cards. One
+  source, two vocabularies, because the two JSON shapes own different fields.
 - The version is one constant, aliased under the chat lane's existing public
   name so current callers keep compiling. It moves from 8.0.0 to 9.0.0.
 
@@ -43,7 +48,9 @@ later offer "Draft with AI" without this track owning a screen.
   rules and before the output contract. Skill text appears once; the example
   is a compact note, not a second output shape.
 - Selecting a different mode changes only that section. Supplying no mode, or
-  an empty skill, leaves the prompt as it was before this pack.
+  an empty skill, adds no mode text. The one shared wording per rule replaces
+  the old copies as the GRILL locked, keeping every old phrase so existing
+  assertions still hold; the prompt is not byte-identical to the base.
 
 ### 2.3 The brief becomes prompt inputs through an adapter
 
@@ -92,7 +99,8 @@ simulation must reproduce them through Mode Studio.
 
 - Pure and browser-safe: no `node:` import, no zod, no store, no AI answer.
 - Exports `PROMPT_SKILL_VERSION`, `PromptInputs`, `ModePromptContribution`,
-  `layerOneSystemAndContract(target)`, `universalCardRules(inputs)`,
+  `StyleRuleVoice`, `layerOneSystemAndContract(target)`,
+  `universalCardRules(inputs)`, `cardStyleRuleLines(cardStyle, pair, voice)`,
   `modeSection(mode?)`, `assemblePrompt(layers)` and `promptInputsFromBrief`.
 - Also exports the single-copy rule strings and the shared example line so
   both lanes import the same values.
@@ -114,9 +122,11 @@ simulation must reproduce them through Mode Studio.
 
 - `AUTHORING_SKILL_VERSION` aliases the shared version.
 - `AuthoringContext` gains optional `mode?` and `inputs?`.
-- The duplicated self-contained, teaching, style and example-line text is
-  removed; `commonRules` composes the imported strings into its existing
-  bullet block, so the chat-only shape rules stay where they belong.
+- The duplicated self-contained, teaching and example-line text is removed;
+  `commonRules` composes the imported strings into its existing bullet block.
+  The style rule is imported with the `card` voice so the chat keeps the
+  answer-mode words its own JSON shape needs. Chat-only shape rules stay where
+  they belong.
 - The same mode section is inserted at the three existing points after the
   rules block and before each shape.
 
@@ -129,7 +139,9 @@ simulation must reproduce them through Mode Studio.
 
 - Follows `page-draft.ts`: a pure prompt builder and reader in the module, a
   held request, one provider call, one prompt-log row, no storage write.
-- `MODE_DRAFT_VERSION = "1.0.0"` is separate from the prompt skill version.
+- `MODE_DRAFT_VERSION = "1.0.1"` is separate from the prompt skill version. A
+  first pass called `version` a number; 1.0.1 names it a version string because
+  the Track 1 store checks the field as text.
 - The reader uses `parseJsonLoose(...).value`, forces `isBuiltIn: false` and a
   fresh ISO `createdAt`, then calls `readLearningMode` (Track 1). A refusal is
   a plain sentence, never a stack trace.
@@ -168,3 +180,15 @@ simulation must reproduce them through Mode Studio.
 - `npm run build` green; full `npx vitest run` green.
 - `npm run check:drift` and `npm run check:drift:staged` green.
 - `git status` shows only intended work; no scratch file, log or process left.
+
+## 7. Delivery note
+
+- 2026-11-23: the first shared style rule used the generation voice in both
+  lanes. The chat prompt then taught a `style` field its cards do not have,
+  breaking the "no mode leaves old output unchanged" acceptance rule. The rule
+  now takes a `line`/`card` voice and the chat passes `card`, restoring the old
+  chat words byte for byte. No Drift entry: this closes the pack's own gap.
+- 2026-11-23: §2.2 and `PLAN.md` §7 said a no-mode prompt was unchanged. That
+  contradicted GRILL Q8, which merges each rule into one wording, and the code,
+  which does so. Both lines now say "adds no mode text" and name the kept
+  phrases. No behavior changed with this doc edit.

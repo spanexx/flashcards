@@ -15,7 +15,7 @@ import { providerConfig } from "@/lib/browser/provider";
 import { appendPrompt } from "@/lib/browser/repository";
 
 /** Bump when the meta-skill text or the answer shape it teaches changes. */
-export const MODE_DRAFT_VERSION = "1.0.0";
+export const MODE_DRAFT_VERSION = "1.0.1";
 
 /**
  * The meta-skill prompt. It asks for JSON only and names the stored shape,
@@ -26,7 +26,9 @@ const DRAFT_SYSTEM = [
   "Answer with one JSON object and nothing else: no markdown fence, no explanation, no comments.",
   "The object carries exactly these fields:",
   '"id": a lowercase slug of letters, numbers and dashes.',
-  '"name": a short human name; "description": one sentence; "version": a number like 1.0.0.',
+  // WHY: the store checks this field as text. Calling it a number made a
+  // provider answer that looked right fail at the door. [pack: prompt-assembler]
+  '"name": a short human name; "description": one sentence; "version": a version string like "1.0.0".',
   '"defaultCardMix": a non-empty array of the five answer modes: cloze, picks, type, hear_type, match.',
   '"usesWordStages": a boolean.',
   '"skillInstructions": the rules a generator follows when it writes cards for this mode. Teach the approach, never one answer.',

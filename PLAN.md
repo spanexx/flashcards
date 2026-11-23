@@ -14,7 +14,7 @@ Non-goals: changing CreationBrief defaults/validation beyond Track 1's additive 
 - `buildDeckGenerationPrompt` `:453-487` and `buildGenerationPrompt` `:91-140` need the same seam. The D-28 teaching append for pack-owned templates is at `:103-108` and must survive refactor.
 - System strings: `DEFAULT_GENERATION_SYSTEM` `:45-46`, `STRUCTURED_SYSTEM` `:148-149`. Output contract: `:60-61`, `:437`, `:483`.
 - Chat lane: `AUTHORING_SKILL_VERSION` `v1/src/lib/browser/authoring.ts:23-24`; header `:362`; `commonRules` `:62-90`; `authoringStyleLines` `:279-306`; router version returns `router.ts:1153-1174`.
-- Duplication to eliminate: `exampleLine` `prompt.ts:209-232` vs `authoring.ts:39-60`; `teachingPromptLines` `prompt.ts:246-252` vs `commonRules` `authoring.ts:81-87`; self-contained rule `prompt.ts:239-240` vs `authoring.ts:75-78`; cardStyle rules `prompt.ts:372-399` vs `authoring.ts:279-306`.
+- Duplication to eliminate: `exampleLine` `prompt.ts:209-232` vs `authoring.ts:39-60`; `teachingPromptLines` `prompt.ts:246-252` vs `commonRules` `authoring.ts:81-87`; self-contained rule `prompt.ts:239-240` vs `authoring.ts:75-78`; cardStyle rules `prompt.ts:372-399` vs `authoring.ts:279-306`. The cardStyle pair is parallel, not identical: lines carry `style`, cards carry `answerDef.mode`. Share the rule with a line/card voice, never one wording for both.
 - `STUDY_NOTE_RULE` is already shared from `creation.ts:17-18` into both lanes (`prompt.ts:20`, `authoring.ts:16`) — this is the pattern to follow.
 - Provider schemas are strict `generate.ts:53-75`; stage enum limited to `story|spelling|forms` at `:46`; `chosenStyle` enforces line style `:92-105`.
 - Page-draft precedent for AI draft: `core/page-draft.ts:70-91,93-138`, `browser/page-draft.ts:79-124`, `browser/provider/prepare.ts`.
@@ -56,7 +56,7 @@ Non-goals: changing CreationBrief defaults/validation beyond Track 1's additive 
 
 - All five later modes can be dropped into the seam and change only layer 3.
 - Universal rules appear once in every prompt; existing once-only teaching assertion still passes.
-- No mode/empty skill leaves current output unchanged; examples parse through existing schemas.
+- No mode/empty skill adds no mode text. The one shared wording per rule replaces the old copies but keeps their old phrases, so existing assertions still hold; examples parse through existing schemas.
 - Draft prepare returns versioned prompt; send returns a draft object and adds nothing to storage.
 
 ## 8. Risks

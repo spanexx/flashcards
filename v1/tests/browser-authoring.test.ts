@@ -218,6 +218,66 @@ describe("buildAuthoringPrompt", () => {
     }
   });
 
+  // WHY: chat cards carry their answer mode in answerDef.mode, not in a
+  // "style" field. This pin keeps the chat's style words card-shaped after the
+  // shared rule was moved into the common layer.
+  // PACK: prompt-assembler
+  // 2026-11-23 opencode: added after line-shaped words leaked into chat. [pack: prompt-assembler]
+  it("teaches answer modes on cards, never a style field on lines", () => {
+    const prompt = buildAuthoringPrompt(
+      { kind: "cards", packName: "starter", deckId: "cases" },
+      pack,
+      {
+        brief: defaultCreationBrief({
+          cardStyle: "mixed",
+          targetLanguage: "pl",
+          sourceLanguage: "en",
+        }),
+      },
+    );
+    expect(prompt).toContain(
+      "Card style: mixed. Use a mix of cloze, type and hear_type answer modes across the cards.",
+    );
+    expect(prompt).not.toContain('Set "style" on each line');
+    expect(prompt).not.toContain('Every line must set "style"');
+  });
+
+  // WHY: the type and hear_type extras are card words too. The generation
+  // lane's "every line" wording would teach a shape the chat cannot import.
+  // PACK: prompt-assembler
+  // 2026-11-23 opencode: pinned the fixed-style card words. [pack: prompt-assembler]
+  it("keeps the exact card words for fixed type and hear_type styles", () => {
+    const typed = buildAuthoringPrompt({ kind: "pack" }, pack, {
+      brief: defaultCreationBrief({
+        cardStyle: "type",
+        targetLanguage: "pl",
+        sourceLanguage: "en",
+      }),
+    });
+    expect(typed).toContain(
+      "Card style: type. Every card must build a type answer. A card with another answer mode does not match the learner's request.",
+    );
+    expect(typed).toContain(
+      "Every type card needs a translation part in English, because the learner reads it and types the full Polish line.",
+    );
+    expect(typed).not.toContain("Every type line must include a translation");
+
+    const heard = buildAuthoringPrompt({ kind: "pack" }, pack, {
+      brief: defaultCreationBrief({
+        cardStyle: "hear_type",
+        targetLanguage: "pl",
+        sourceLanguage: "en",
+      }),
+    });
+    expect(heard).toContain(
+      "Card style: hear_type. Every card must build a hear_type answer. A card with another answer mode does not match the learner's request.",
+    );
+    expect(heard).toContain(
+      "Every hear_type card speaks the full line in Polish, and the learner types the full Polish line.",
+    );
+    expect(heard).not.toContain("Every hear_type line is spoken");
+  });
+
   it("lets the chat choose from the library when the provider mode is on", () => {
     const context = {
       brief: defaultCreationBrief({ subjectMode: "provider", subject: "ignored" }),

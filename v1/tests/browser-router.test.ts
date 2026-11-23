@@ -1730,7 +1730,10 @@ describe("AI mode drafts", () => {
     );
     expect(prepared.prompt).toContain("A mode for sentence roles.");
     expect(prepared.prompt).toContain("flashcards.pack/v1");
-    expect(prepared.version).toBe("1.0.0");
+    // WHY: the field is stored as text; a prompt that calls it a number makes
+    // a provider answer fail validation. [pack: prompt-assembler]
+    expect(prepared.prompt).toContain('"version": a version string');
+    expect(prepared.version).toBe("1.0.1");
 
     replyWith(JSON.stringify(modeBody()));
     const sent = await localSend<{ mode: LearningMode }>("/api/modes/draft/send", "POST", {

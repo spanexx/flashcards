@@ -280,7 +280,11 @@ function briefSection(context: AuthoringContext, pair: PackLanguagePair): string
     ...describeCreationBrief(context.brief, context.inventory ?? [], {
       includeInventory: true,
     }),
-    ...cardStyleRuleLines(context.brief.cardStyle, pair),
+    // WHY: the rule text is shared, but a card carries answerDef.mode while a
+    // generation line carries style. The chat must keep its own words.
+    // PACK: prompt-assembler
+    // 2026-11-23 opencode: passed the card voice to the shared rule. [pack: prompt-assembler]
+    ...cardStyleRuleLines(context.brief.cardStyle, pair, "card"),
   ];
   return `\n\n${lines.join("\n")}`;
 }

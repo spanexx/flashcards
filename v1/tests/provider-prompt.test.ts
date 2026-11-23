@@ -200,11 +200,19 @@ describe("structured generation prompts", () => {
     }
   });
 
+  // WHY: generation lines carry a "style" field, unlike chat cards. These
+  // exact words keep the two lanes from being merged by mistake again.
+  // PACK: prompt-assembler
+  // 2026-11-23 opencode: pinned the line wording. [pack: prompt-assembler]
   it("asks for one concrete style on all three when the learner chose one", () => {
     const built = allGenerationPrompts(learnerBrief({ cardStyle: "type" }));
     for (const prompt of [built.pack, built.deck, built.cards]) {
       expect(prompt.messages[1].content).toContain('"style"');
       expect(prompt.messages[1].content).toContain('"type"');
+      expect(prompt.messages[1].content).toContain(
+        'Card style: type. Every line must set "style": "type". A line with another style, or with no style, makes the app refuse the whole batch.',
+      );
+      expect(prompt.messages[1].content).not.toContain("Every card must build a type answer");
       expect(prompt.messages[1].content).toMatch(/translation/i);
     }
   });

@@ -112,6 +112,22 @@ after each edit to `router.ts`.
    Do not push, open a PR, merge, or run `git config core.hooksPath`.
 7. Delete `out/`, `.next/`, logs and scratch files; confirm `git status`.
 
+## Delivery note — 2026-11-23
+
+- The shared style rule first carried only the generation voice. The chat lane
+  imported it and began teaching `style` on cards, which have `answerDef.mode`
+  instead. Added a `card` voice to `cardStyleRuleLines`, passed it from
+  `briefSection`, and pinned both lane vocabularies in
+  `browser-authoring.test.ts` and `provider-prompt.test.ts`.
+- Verification: targeted `npx vitest run` on both test files (62 passing),
+  `npm run typecheck` clean, and a scratch comparison of the chat style lines
+  against `feature/learning-mode-core` across three styles and two language
+  pairs — byte-identical in all six cases. The scratch files were deleted.
+- A full-prompt comparison found the self-contained and teaching wordings were
+  merged as GRILL Q8 asked. `PLAN.md` §7 and PRD-TRD §2.2 had called a no-mode
+  prompt unchanged; both now say "adds no mode text." Doc-only, no behavior
+  change.
+
 ## Out of scope
 
 Everything in PRD-TRD §5. In particular: no Track 1 file, no mode content, no
