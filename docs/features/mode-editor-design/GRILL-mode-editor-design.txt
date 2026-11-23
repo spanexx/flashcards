@@ -1,0 +1,105 @@
+Mode Editor Design - Grill Notes
+
+Status: Locked
+Date: 2026-11-23
+Source: wireframe/mode-studio/editor/ (Victor-reviewed prototype) and
+        docs/features/mode-studio-ui/ (Track 4 origin pack)
+Decision mode: delegated. Victor reviewed the prototype through several rounds
+and asked to integrate it. Each question below was resolved by that review.
+
+What this feature is about
+
+- Replace the cramped modal editor with a full-page, two-tab editor.
+- Keep the design simple: one box per tab, no sidebar, no duplicated editors.
+- No new endpoint, prompt rule, mode content or dependency.
+
+Questions and answers locked so far
+
+1. Is this a new pack or a drift fix?
+Answer:
+- New pack `mode-editor-design`, origin feature-pipeline. No D-N is authored.
+Why:
+- No locked decision promises a full-page editor; new design is a decision, not
+  a gap (docs/ethics/drift.md:70).
+
+2. What route hosts the editor?
+Answer:
+- One fixed `/modes/editor` route. `?id=<modeId>` edits a stored row, `?new=1`
+  opens an unsaved AI draft, `?tab=skill|json` restores the active tab.
+Why:
+- Static export cannot enumerate browser-owned ids (next.config.ts:12-13), so a
+  dynamic `[id]` segment is impossible. useSearchParams needs Suspense
+  (dictionary/page.tsx:7-16).
+
+3. Is the raw JSON pane editable?
+Answer:
+- No. It is a read-only, syntax-coloured mirror of the object. The explorer
+  tree is the only JSON editor. `canonicalExample` stays an object.
+Why:
+- The reviewed prototype does exactly this (wireframe/.../app.js:80-86). A
+  second editable surface would need a different parse/error model and would
+  violate the stored shape (schema.ts:275-278).
+
+4. Where is skillInstructions edited?
+Answer:
+- Only in the Markdown tab. The JSON tree shows a link, not an input.
+Why:
+- Victor asked for it explicitly. The prototype's link at app.js:195-208 was
+  approved.
+
+5. How does an unsaved AI draft reach the full page?
+Answer:
+- A small guarded sessionStorage helper saves it before navigation and clears
+  it when the editor page reads it. Never put the bundle in the URL.
+Why:
+- Navigation unmounts ModesClient, so in-memory state is lost. No helper
+  exists yet; theme.ts:29-32 shows the guarded access pattern.
+
+6. How does a Save notice return to the list?
+Answer:
+- A second sessionStorage notice key, read and cleared when ModesClient mounts.
+Why:
+- A query param would force Suspense onto /modes as well; local state dies with
+  the navigation.
+
+7. What happens to the old modal editor?
+Answer:
+- It is retired. The new page is the single editor and keeps the one save path
+  through `modeSaveRequest`, `learningModeIssues` and `modeIssueLines`.
+Why:
+- Two editors would drift. Track 4's review already fixed the draft-save handoff.
+
+8. What does the page own and touch?
+Answer:
+- New `app/modes/editor/**`, `app/modes/ModeEditorPage.tsx`, `JsonTree.tsx`,
+  `MarkdownPreview.tsx`, `mode-editor-utils.ts`, `globals.css`, `check-pwa.mjs`,
+  plus ModesClient handoff and the prototype as the pre-sim. No Track 1-3 files.
+Why:
+- The new route is inside the owned /modes cluster and is explicitly claimed by
+  this pack's own ownership list.
+
+9. How does it respect dark mode?
+Answer:
+- Use the app's CSS variables (globals.css:41-61) and existing surface classes
+  (`.card`, `.tabs`, `.field`, `.split-head`). No hardcoded prototype colours.
+Why:
+- Victor flagged the white textarea in the prototype; the real app must follow
+  its own theme in both light and dark.
+
+10. How is it proved without a browser renderer?
+Answer:
+- Pure helper tests for tree path edits, mirror text, markdown preview,
+  highlighting, tab deep links and the save gate; route-level tests for the
+  handoff; a node rehearsal that checks the built route.
+Why:
+- vitest is node-only (vitest.config.ts:22) and package.json is off-limits.
+
+11. What behaviour is kept from the prototype?
+Answer:
+- Two equal panes in one connected box per tab; calm inputs without glow;
+  hover-only row actions; key/value inputs; path breadcrumb; Ctrl+S to save;
+  narrow screens stack the panes.
+Why:
+- Those were the approved iterations of the wireframe.
+
+No remaining open questions

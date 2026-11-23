@@ -1,0 +1,129 @@
+<!doctype html>
+<!-- WHY: Design rehearsal for the two-mode full-page editor. Same simple
+     structure, polished surfaces and behavior. PACK: mode-studio-ui -->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mode Studio - editor</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  :root{--bg:#080f1c;--surface:#0f1829;--surface-2:#131f34;--line:#1e2c44;--muted:#7c8ba3;--text:#e6edf7;--accent:#34d399}
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--text);font:14px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+  .app{display:grid;grid-template-rows:76px 52px 1fr;height:100vh}
+  .mono{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace}
+  .pane{min-width:0;min-height:0}
+  .scroll{overflow:auto;scrollbar-width:thin;scrollbar-color:#2b3c58 transparent}
+  .surface{background:var(--surface);border:1px solid var(--line);border-radius:14px}
+  .cap{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .tree-row{border-radius:8px;transition:background .12s ease}
+  .tree-row:hover{background:#16233a}
+  .tree-row:focus-within{background:#16233a}
+  .row-action{opacity:0;transition:opacity .12s ease}
+  .tree-row:hover .row-action,.tree-row:focus-within .row-action{opacity:1}
+  .tree-key{color:#8fa3bd;background:transparent;border:1px solid transparent;border-radius:6px;padding:6px;font-size:13px}
+  .tree-key:focus{outline:none;border-color:#2f4a68;color:#cbd8ea}
+  input[type="checkbox"]{appearance:none;width:17px;height:17px;border:1px solid #3a4d68;border-radius:5px;background:#0d1728;display:inline-grid;place-content:center;cursor:pointer}
+  input[type="checkbox"]:checked{background:var(--accent);border-color:var(--accent)}
+  input[type="checkbox"]:checked::after{content:"";width:8px;height:5px;border-left:2px solid #04231a;border-bottom:2px solid #04231a;transform:rotate(-45deg) translateY(-1px)}
+  .tree-value{background:transparent;border:1px solid transparent;border-radius:7px;color:#dbe7f6;padding:7px 9px;font-size:13px;min-height:38px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:border-color .12s,background .12s}
+  .tree-value:hover{border-color:#2b3d58}
+  .tree-value:focus{outline:none;border-color:#334d68;background:rgba(255,255,255,.03)}
+  .tree-link{color:#7dd3fc;background:transparent;border:0;text-align:left;font-size:13px;padding:7px 9px;min-height:38px;cursor:pointer}
+  .tree-link:hover{text-decoration:underline}
+  .branch-btn{color:#6f829c;transition:transform .15s ease,color .12s}
+  .branch-btn.open{transform:rotate(90deg);color:#9fb3cc}
+  .branch{display:none}
+  .branch.open{display:block}
+  .tab{color:var(--muted);border-bottom:2px solid transparent;transition:color .14s,border-color .14s}
+  .tab:hover{color:#dce7f6}
+  .tab.active{color:var(--accent);border-color:var(--accent)}
+  .btn{border-radius:9px;padding:9px 16px;font-size:13px;font-weight:600;transition:transform .1s,background .14s,border-color .14s}
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--accent);color:#04231a;border:1px solid var(--accent)}
+  .btn-primary:hover{background:#6ee7b7}
+  .btn-ghost{background:transparent;color:#b6c5d8;border:1px solid var(--line)}
+  .btn-ghost:hover{background:#15223a;border-color:#2b3d58}
+  .md h1{font-size:24px;font-weight:700;margin:0 0 16px;letter-spacing:-.01em}
+  .md h2{font-size:18px;font-weight:650;margin:22px 0 8px}
+  .md h3{font-size:15px;font-weight:650;margin:18px 0 6px;color:#c9d8eb}
+  .md p{margin:0 0 12px;color:#b9c8db;line-height:1.85}
+  .md ul{margin:8px 0 16px;padding-left:22px;list-style:disc;color:#b9c8db}
+  .md li{margin:7px 0;line-height:1.8}
+  .md li::marker{color:var(--accent)}
+  .md strong{color:#f1f6fd;font-weight:650}
+  .md code{font-family:ui-monospace,Menlo,monospace;font-size:.86em;background:#1b2a42;color:#a7f3d0;padding:2px 6px;border-radius:5px}
+  textarea{background:#0d1728!important;color:#dbe7f6!important;caret-color:var(--accent)}
+  textarea::selection{background:rgba(52,211,153,.25)}
+  @media(max-width:900px){
+    .editor-split{flex-direction:column!important}
+    .editor-split>div{width:100%!important;height:42vh;border-right:0!important;border-bottom:1px solid var(--line)}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="flex items-center justify-between border-b px-8" style="border-color:var(--line);background:var(--surface)">
+    <div>
+      <div class="text-xs" style="color:var(--muted)">Learning modes <span class="mx-1 opacity-50">/</span> Grammar roles copy</div>
+      <h1 class="text-lg font-semibold tracking-tight">Edit learning mode</h1>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="rounded-full px-3 py-1 text-xs" style="background:#15223a;color:#8fa3bd">stored when you press Save</span>
+      <button id="cancel" class="btn btn-ghost">Cancel</button>
+      <button id="save" class="btn btn-primary">Save mode</button>
+    </div>
+  </header>
+
+  <nav class="flex items-end gap-6 border-b px-8" style="border-color:var(--line);background:var(--surface)" role="tablist">
+    <button class="tab h-full px-1 text-sm font-medium" data-tab="skill" role="tab">Markdown skill</button>
+    <button class="tab h-full px-1 text-sm font-medium" data-tab="json" role="tab">JSON example</button>
+  </nav>
+
+  <main class="pane scroll px-8 py-6">
+    <section class="tab-panel" data-panel="skill">
+      <div class="mb-4 flex items-baseline justify-between">
+        <div><h2 class="text-base font-semibold">Skill instructions</h2><p class="text-sm" style="color:var(--muted)">Write on the left. The generator reads the rendered rules on the right.</p></div>
+        <span id="skill-count" class="text-xs" style="color:var(--muted)"></span>
+      </div>
+      <div class="editor-split surface flex overflow-hidden" style="height:calc(100vh - 240px)">
+        <div class="flex w-1/2 min-w-0 flex-col border-r" style="border-color:var(--line)">
+          <div class="cap px-4 py-2 border-b" style="border-color:var(--line)">Write</div>
+          <textarea id="skill-source" class="mono w-full flex-1 resize-none p-5 text-[13px] leading-7 outline-none" style="background:#0d1728;color:#dbe7f6" spellcheck="false"></textarea>
+        </div>
+        <div class="flex w-1/2 min-w-0 flex-col">
+          <div class="cap px-4 py-2 border-b" style="border-color:var(--line)">Preview</div>
+          <article id="skill-preview" class="md scroll flex-1 overflow-auto p-7"></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="tab-panel hidden" data-panel="json">
+      <div class="mb-4 flex items-baseline justify-between">
+        <div><h2 class="text-base font-semibold">Canonical example</h2><p class="text-sm" style="color:var(--muted)">Raw JSON on the left. The explorer on the right is the editable preview.</p></div>
+        <button id="copy-json" class="btn btn-ghost">Copy JSON</button>
+      </div>
+      <div class="editor-split surface flex overflow-hidden" style="height:calc(100vh - 240px)">
+        <div class="flex w-1/2 min-w-0 flex-col border-r" style="border-color:var(--line);background:#0a1220">
+          <div class="cap px-4 py-2 border-b" style="border-color:var(--line)">JSON source</div>
+          <pre id="raw" class="mono scroll flex-1 overflow-auto p-5 text-xs leading-6"></pre>
+        </div>
+        <div class="flex w-1/2 min-w-0 flex-col">
+          <div class="flex items-center justify-between gap-3 border-b px-4 py-2" style="border-color:var(--line)">
+            <span class="cap">Explorer preview</span>
+            <span id="path" class="mono truncate text-[11px]" style="color:var(--muted)">mode</span>
+          </div>
+          <div id="tree" class="scroll flex-1 overflow-auto px-3 py-3 text-sm"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="toast" class="hidden fixed bottom-6 right-6 rounded-xl px-4 py-3 text-sm shadow-2xl" style="background:#15223a;border:1px solid #2b3d58;color:#e6edf7"></div>
+<script src="app.js?v=4"></script>
+</body>
+</html>

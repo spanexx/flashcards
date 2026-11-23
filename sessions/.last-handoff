@@ -1,37 +1,34 @@
-# Handoff 2026-11-23 — Track 4 Mode Studio UI complete, awaiting merge decision
+# Handoff 2026-11-23 — full-page mode editor integration starting
 
-## Where things stand
+## Locked design
 
-Worktree: `/home/spanexx/.config/superpowers/worktrees/flashcards/feature-mode-studio-ui`
-Branch: `feature/mode-studio-ui`, based on `main` at `dbcf308`. Not merged.
+Worktree `feature-mode-editor-design`, branch based on `main` at `7639891`.
+Origin docs: `docs/features/mode-editor-design/{GRILL,PRD-TRD,IMPL}`.
+Reviewed prototype: `wireframe/mode-studio/editor/`.
 
-## What shipped
+Decisions: fixed `/modes/editor` route with `?id=`/`?new=1`/`?tab=` behind
+Suspense; raw JSON is a read-only mirror, tree is the editor; skillInstructions
+is a link into the Markdown tab; unsaved AI drafts and return notices travel via
+guarded sessionStorage; old modal editor is retired; one save path through
+`modeSaveRequest`; theme uses app CSS variables.
 
-- `cc7c724` — GRILL (12 delegated decisions), PRD-TRD, IMPL, design sim.
-- `2f24d17` — pure mode-studio helpers + tests.
-- `c8ab3a9` — shared New Pack mode fields, Library mode state, route tests.
-- Phase 5 commit — `/modes` route, list, editor, AI creator, preview, delete,
-  Nav and PWA lists.
-- Phase 6 commit — AI-draft Save fix (`modeSaveRequest`), fresh-eyes review
-  closures, post-sim, reconciliation and delivery notes.
+## Ordered remaining steps and proof
 
-Canonical sim: `bash docs/features/mode-studio-ui/simulate.sh`.
-Design record: `docs/features/mode-studio-ui/archive/simulate-pre.html`.
-Review evidence: `docs/features/mode-studio-ui/simulate-post.md`.
+1. Pure helpers + `mode-editor-utils.test.ts` (RED then GREEN).
+2. `JsonTree.tsx` + `MarkdownPreview.tsx` thin renderers; typecheck/eslint.
+3. Route + `ModeEditorPage` + sessionStorage helpers + ModesClient handoff +
+   PWA lists + CSS; retire `ModeEditor.tsx`; build with check-pwa green.
+4. Post-sim, fresh-eyes review, reconciliation, full gates, one commit per phase.
+5. Human gate: open review event, then wait for Victor before merge.
 
-## Verification
+## File inventory
 
-- Full suite: 99 files / 1248 tests green.
-- 18 targeted Mode Studio tests green.
-- Build green with `check-pwa: passed`; `out/modes/index.html` exists.
-- `simulate.sh` PASS; typecheck, changed-file eslint, both drift gates green.
-- Drift log 0 open / 54 resolved. Worktree clean after cleanup.
-
-## Next steps
-
-1. User decides whether to merge `feature/mode-studio-ui` into `main`.
-2. After merge, all four tracks are integrated; no backlog file exists in this
-   repo to mark SHIPPED.
+New: `v1/src/app/modes/editor/**`, `ModeEditorPage.tsx`, `JsonTree.tsx`,
+`MarkdownPreview.tsx`, `mode-editor-utils.ts`, `mode-draft-handoff.ts`,
+`mode-notice.ts`, `v1/tests/mode-editor-utils.test.ts`.
+Changed: `ModesClient.tsx`, `check-pwa.mjs`, `globals.css`, docs.
+Deleted: `ModeEditor.tsx` (modal).
+Must not touch: Track 1-3 files, `client/api.ts`, `layout.tsx`, `package.json`.
 
 ## User-only follow-ups
 
