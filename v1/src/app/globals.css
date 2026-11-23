@@ -4282,7 +4282,35 @@ a.chip {
   overflow: auto;
   padding: 18px;
 }
-.editor-json { margin: 0; font-size: 12px; line-height: 1.6; }
+.editor-json {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+  /* WHY: wrapping long lines removes the horizontal bar from the JSON pane. */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+/* WHY: scrollbars stay quiet until the pane is hovered, so the editor reads as
+   one calm surface instead of a frame full of bars. */
+.editor-preview, .editor-json, .json-tree {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+.editor-preview:hover, .editor-json:hover, .json-tree:hover {
+  scrollbar-color: var(--line) transparent;
+}
+.editor-preview::-webkit-scrollbar, .editor-json::-webkit-scrollbar, .json-tree::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+.editor-preview::-webkit-scrollbar-thumb, .editor-json::-webkit-scrollbar-thumb, .json-tree::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 99px;
+}
+.editor-preview:hover::-webkit-scrollbar-thumb, .editor-json:hover::-webkit-scrollbar-thumb, .json-tree:hover::-webkit-scrollbar-thumb {
+  background: var(--line);
+}
 .json-key { color: var(--json-key); }
 .json-string { color: var(--json-string); }
 .json-bool { color: var(--json-bool); }
