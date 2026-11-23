@@ -17,6 +17,11 @@ const nextConfig: NextConfig = {
   trailingSlash: true,
   images: { unoptimized: true },
   basePath: BASE_PATH || undefined,
+  // WHY: records that this build followed the Next.js security upgrade, so a
+  // later advisory check can see why the flag is present.
+  // PACK: D-50
+  // 2026-11-23 opencode: added the security upgrade marker. [D-50]
+  experimental: { agentUpgrade: "security" },
 };
 
 export default nextConfig;
