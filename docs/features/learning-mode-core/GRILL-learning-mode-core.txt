@@ -1,0 +1,218 @@
+GRILL — learning-mode-core
+Status: Locked
+Date: 2026-11-22
+Decisions by: agent (delegated by the learner, 2026-11-22)
+Source: the learner's delegated instruction, PLAN.md track 1, and the existing
+locked docs.
+
+Verbatim from the learner on 2026-11-22 (the spawning session's brief):
+
+  "use my goal skill make all decision"
+
+  "You are implementing Track 1 of a four-track plan. Work ONLY inside the git
+  worktree ... Never modify the main checkout ..."
+
+  Track 1 scope, quoted: the LearningMode data model, the additive CreationBrief
+  fields, the learningModeSchema, one shared spoiler validator, the
+  canonicalExample validator, the "modes" store, the mode manifest loader and
+  base /api/modes CRUD. No final mode content, no prompt changes, no UI.
+
+The learner delegates every decision. No question below waits for an answer.
+Each answer records the decision, why it was made, what it rules out and the
+source it rests on.
+
+This pack is one track of a four-track plan: Track 2 owns the prompt assembler
+and two AI-draft routes, Track 3 owns the five built-in mode definitions and
+`make-seed.mjs`, Track 4 owns Mode Studio. Track 1 ships the contract and the
+storage they build on.
+
+--------------------------------------------------------------------------------
+Q1. Where does LearningMode live, and what is its exact shape?
+A. In `v1/src/lib/shared/types.ts`, immediately after the WordStage block. It
+   has id, name, description, version, defaultCardMix: AnswerMode[],
+   usesWordStages: boolean, skillInstructions: string, canonicalExample,
+   isBuiltIn: boolean, sourceModeId?: string and createdAt: string.
+   `canonicalExample` is a type of `unknown` holding an embedded
+   `flashcards.pack/v1` bundle object, never a JSON string.
+   Why: a mode is learner-facing vocabulary shared by the core, the browser and
+   the screens, so it belongs with the other shared types. Typing the example as
+   `unknown` keeps the shared module free of the browser's zod bundle schema;
+   the validator is the one place that reads it.
+   Rules out: a JSON-in-JSON string, a mode type inside the browser layer only,
+   and importing `PackBundle` into `shared/types.ts`.
+   Source: PLAN.md §3.1 and §4; the module boundaries already used by
+   `shared/types.ts`.
+
+Q2. How are the CreationBrief fields added without changing old briefs?
+A. Three optional fields: `modeId?: string`, `cardMix?: AnswerMode[]` and
+   `modePreferences?: string`. `DEFAULT_CREATION_BRIEF` is untouched and
+   `defaultCreationBrief` emits a new field only when the caller supplied it, so
+   an old call produces the same object byte for byte. `validateCreationBrief`
+   keeps every old rule and old default; it carries the new fields through with
+   three narrow checks: text stays text, a card mix may only name the five answer
+   modes, and an absent field stays absent.
+   Why: silently dropping a field the router was given would make Track 4's mode
+   choice vanish. Carrying it through is additive; old callers never send it.
+   Rules out: adding the fields to the defaults object, rewriting the old
+   validation, and accepting an unknown card mix.
+   Source: PLAN.md §3.2; the "byte-stable" requirement in the track brief.
+
+Q3. What does the answer-mode list become so there is no sixth copy?
+A. `ANSWER_MODES` is one `as const` tuple in `shared/types.ts`; `AnswerMode` is
+   derived from it. `schema.ts` exports `answerModeSchema = z.enum(ANSWER_MODES)`
+   and `answerDefSchema.mode` reuses it; `learningModeSchema.defaultCardMix`
+   reuses it too. `shared/creation.ts` checks a card mix against the same tuple.
+   Why: the brief names five modes today inside `answerDefSchema`. A second
+   literal list in the mode schema, or a third in the brief validator, would be
+   the sixth copy of the same fact.
+   Rules out: a hand-written union in `creation.ts`, and a zod schema in the
+   shared layer (which would invert the module direction).
+   Source: PLAN.md §4; the brief's "do not make a sixth copy" rule.
+
+Q4. How do built-in modes update, and what does "Duplicate & Customize" do?
+A. The loader compares `compareVersions` and replaces a built-in row only when
+   the manifest file is newer. A duplicated mode is a new row with its own id,
+   `isBuiltIn: false`, and `sourceModeId` naming the built-in it came from. A
+   PATCH on a built-in is refused like a DELETE, because the documented path is
+   duplicate first, then change the copy.
+   Why: versioned overwrite keeps built-ins fresh; refusing edits keeps one
+   authoritative copy of each built-in and makes "reset by re-seed" impossible
+   to break. PLAN.md only spelled out the delete refusal, but "only duplicable"
+   is the same rule for editing.
+   Rules out: a tombstone kind, editing a built-in in place, and deleting one
+   through the API.
+   Source: PLAN.md §3.3; the track brief's "refuse deleting isBuiltIn".
+
+Q5. What rides in backup and restore?
+A. A backup carries the learner's custom modes only. `buildBackup` filters
+   `!isBuiltIn`; `applyBackup` keeps the built-in rows that were already in the
+   store across `clearLibrary`, then writes the backup's custom rows.
+   Why: a built-in is app-owned content that a re-seed can restore, while a
+   custom mode is the learner's own work and would otherwise be lost. Keeping
+   the built-ins across a restore also means the mode list is complete without
+   waiting for the network.
+   Rules out: backing up seeded content, and leaving the learner with an empty
+   mode list after an offline restore.
+   Source: PLAN.md §3.4; the provider-key and subscription preservation already
+   done in `applyBackup`.
+
+Q6. What is the spoiler rule, exactly?
+A. `spoilerIssues` collects every answer token a card must not give away:
+   `answerDef.blanks[].expected`, `answerDef.expected` and `answerDef.correct`.
+   It searches the card's teaching text (text bodies, image alt text, video alt
+   text and search words) and its hints. A token matches as a whole word,
+   case-insensitively. A token shorter than three characters is not policed.
+   One issue per field, with the token named in the sentence.
+   Why: a canonical example is teaching material. If its teaching or hint spells
+   the answer, the example teaches the learner to read the answer instead of the
+   rule. The three-character floor keeps ordinary prose ("to", "is", "a") from
+   producing false refusals; a real answer token is a word, not a particle.
+   Rules out: a fuzzy or semantic guess, policing the prompt side, and a second
+   ValidationIssue shape.
+   Source: PLAN.md §3.5 and §4; the existing `clozeContextIssue` precedent.
+
+Q7. How is a canonical example validated?
+A. `validateCanonicalExample(example)` in `browser/bundle.ts` serialises the
+   embedded object and passes it through `parseBundle`, then runs
+   `hardRuleIssues` per card, `lessonIssues` over the cards and words, and
+   `spoilerIssues` per card. It adds no zod shape. For the hard-rule call each
+   card gets `topics: [deck name]`, exactly as `cardFromBundle` already does,
+   with the pack name as the fallback when a deck is missing.
+   Why: `parseBundle` alone does not run the hard rules, so a mode could ship a
+   broken cloze as its example. Composing the existing four checks is the only
+   way to refuse it without a parallel rulebook.
+   Rules out: a second bundle schema, a second card schema, and a check that
+   only the JSON parses.
+   Source: PLAN.md §4; the reuse points listed in PLAN.md §2.
+
+Q8. How does the mode manifest load, and what happens when it fails?
+A. `ensureModesSeeded()` reads `/modes/index.json` behind `withBasePath`, under
+   one four-second deadline. The manifest must carry
+   `schema: "flashcards.mode-index/v1"`, and a file path must live under
+   `/modes/` with no `..`. Each entry installs when absent and updates only when
+   `compareVersions` says the file is newer. The file's id must equal the
+   manifest entry's id. Every mode is its own try/catch: a broken or missing
+   file leaves the store unchanged for that mode and is retried on the next
+   start. A mode is stamped `isBuiltIn: true` before it is written, and the
+   loader never deletes a row. A custom row that happens to own a built-in's id
+   is left alone, because the learner's copy owns that id.
+   Why: this mirrors `seed.ts`, which the app already trusts. Silent per-mode
+   failure is the established contract: a network wobble must never break the
+   library or the other modes.
+   Rules out: a failed file writing a half row, a manifest deleting rows, and a
+   seed overwriting the learner's copy.
+   Source: PLAN.md §3.3, §4 and §8; `v1/src/lib/browser/seed.ts`.
+
+Q9. What does the API look like?
+A. `GET /api/modes` waits for the one seed pass of the start and returns
+   `{ modes, folder }`, built-ins first then by name. `POST /api/modes` with
+   `{ sourceModeId, name }` duplicates an existing mode: new slug id, requested
+   name or "<name> copy", `sourceModeId` kept, `isBuiltIn: false`. Without a
+   source it creates a mode from the body, forcing `isBuiltIn: false` and
+   defaulting `createdAt` to now when the field is absent. `PATCH
+   /api/modes/:id` merges over the stored row; `DELETE /api/modes/:id` removes
+   it. Both refuse a built-in. A body that fails validation is refused with
+   `ValidationIssue[]` as the error detail, like the import routes.
+   Why: the screens need the same plain-sentence refusal shape everywhere, and
+   the seed must be race-free with the first read.
+   Rules out: a built-in being created or changed through the API, and a
+   malformed body returning a bare error.
+   Source: the track brief's router section; `router.ts` pack CRUD precedent.
+
+Q10. What id does a mode use, and how is a duplicate id chosen?
+A. The stored id uses the existing `slugFromName` shape: lowercase letters,
+   numbers and dashes. A duplicate takes the requested name (or "<source> copy")
+   and asks a small local helper for the first free label — "My roles", "My
+   roles 2", "My roles 3" — then slugs that final label and passes the slug
+   through `uniquePackName` over the existing ids.
+   Why: two modes with the same visible name would be indistinguishable in the
+   list, and two rows cannot share an id. The label helper is local to the
+   router because `uniquePackName` appends a dash ("My roles-2"), which reads as
+   part of a name rather than a copy number; the id rule still reuses the shared
+   helper so one slug rule serves the whole app.
+   Rules out: a random UUID for a mode (unreadable in a backup and in a URL) and
+   a duplicate visible name.
+   Source: `v1/src/lib/browser/creation.ts`; the bundle and deck naming rules.
+
+Q11. Does anything else change?
+A. No. The pack schema, the bundle schema, the prompt lanes, the provider
+   request, the screens, `make-seed.mjs`, the four shipped packs and
+   `v1/modes/**` are untouched. The IndexedDB version goes from 6 to 7 only to
+   add the "modes" store, an additive upgrade that keeps every existing store.
+   Why: this track is the data contract; Track 2, 3 and 4 consume it. Doing their
+   work here would make one review cover four unrelated risks.
+   Rules out: a UI, mode content, prompt text, and a migration that rewrites a
+   row.
+   Source: PLAN.md §1, §5 and §8.
+
+Q12. Which track owns the router file, and how is it kept reviewable?
+A. Track 1 owns all base `/api/modes` CRUD and the mode seed hook in
+   `loadState`. Track 2 adds only its two AI-draft routes later, additively.
+   Track 3 does not edit the router. Track 1's router change is committed on its
+   own, small and self-contained.
+   Why: three tracks editing one file at once is how a route is lost.
+   Rules out: a placeholder route that Track 2 must rewrite, and Track 3
+   touching the router.
+   Source: PLAN.md §3.6 and §8.
+
+--------------------------------------------------------------------------------
+Deviations recorded, not hidden:
+
+D-A. The feature-pipeline asks for a pre-implementation simulation and a
+post-implementation simulation. Track 1 ships no operator surface: it is a data
+contract with no screen to walk. The spawning brief fixes the deliverable set as
+GRILL, PRD-TRD, IMPL and tests. The simulation contract is therefore written in
+PRD-TRD §3 and proven by the named tests; Track 4 owns the operator simulation
+when Mode Studio exists. This is a scope decision by the delegate, recorded here
+so no later agent mistakes it for a skipped phase.
+
+D-B. The loader sends one fetch per entry rather than pre-validating the whole
+manifest. The manifest schema already refuses a malformed manifest whole, so
+per-entry failure only covers the files, which is where a partial deploy
+actually fails.
+
+D-C. A mode id is a slug, not a UUID. It appears in a backup and in a URL, and a
+learner should be able to read it. The id is immutable after creation; renaming
+a mode changes `name`, not `id`.
+
+No remaining open questions.
