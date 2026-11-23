@@ -10,7 +10,7 @@
     "picks"
   ],
   "usesWordStages": false,
-  "skillInstructions": "# Language general\n\nName decks after themes, not grammar labels.\n\n- Write accurate language codes on every text and speak part.\n- In a foreign-language cloze, name the base word or the owner in the prompt so the missing word is never a guess.\n- For hear_type, give a spelling hint in the study note and ask for the whole line.\n- Use a translation part when the learner must read the target line and type it.",
+  "skillInstructions": "# Language general\n\nName decks after themes, not grammar labels.\n\n- Write accurate language codes on every text and speak part.\n- In a foreign-language cloze, name the base word or the owner in the prompt so the missing word is never a guess.\n- For hear_type, ask for the whole line and teach the spelling rule in the teaching layer.\n- Use a translation part when the learner must read the target line and type it.",
   "canonicalExample": {
     "schema": "flashcards.pack/v1",
     "pack": {

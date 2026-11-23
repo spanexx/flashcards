@@ -30,7 +30,7 @@ Non-goals: changing the four shipped packs, regenerating `public/packs/*`, editi
 
 1. `grammar-roles` — decks named with plain-English job + term in parentheses; role stated in prompt; no basic -s/-ed drilling; teaching explains intuition. Mix cloze/picks/type; `usesWordStages: false`.
 2. `language-general` — theme decks; accurate `lang` codes; base-word/meaning cues in foreign-language clozes; hear_type with spelling hints. Mix cloze/type/hear_type/picks; `usesWordStages: false`.
-3. `word-deep-dive` — exactly one word in `words`; five progressive decks; stage-to-mode rule; never print changed form; state trigger/context. Mix cloze/type/picks/match; `usesWordStages: true`.
+3. `word-deep-dive` — exactly one word in `words`; five progressive stages named in the skill, with 2-4 stage cards in a small example; stage-to-mode rule; never print changed form; state trigger/context. Mix cloze/type/picks/match; `usesWordStages: true`.
 4. `system-architecture` — scenario-driven constraint→pattern prompts; trade-off picks; no dictionary definitions. Mix cloze/picks/type; `usesWordStages: false`.
 5. `programming-language` — mobile-sized 1-5 line code snippets; prompt names language and goal; picks for subtle bugs; hints explain why. Mix type/cloze/picks; `usesWordStages: false`.
 

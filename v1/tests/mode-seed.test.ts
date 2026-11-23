@@ -181,4 +181,27 @@ describe("installing generated modes", () => {
     await ensureModesSeeded();
     expect(await readModes(store)).toHaveLength(5);
   });
+
+  it("installs nothing when the manifest schema is unknown", async () => {
+    const index = (await readJson("public/modes/index.json")) as { schema: string; modes: Entry[] };
+    stubModes({ ...index, schema: "flashcards.mode-index/v2" }, await generatedFiles());
+
+    await ensureModesSeeded();
+
+    expect(await readModes(store)).toHaveLength(0);
+  });
+
+  it("skips a file whose id does not match its manifest entry", async () => {
+    const index = await readJson("public/modes/index.json");
+    const files = await generatedFiles();
+    const url = withBasePath("/modes/grammar-roles.json");
+    const wrongFile = { ...(files[url] as Record<string, unknown>), id: "another-mode" };
+    stubModes(index, { ...files, [url]: wrongFile });
+
+    await ensureModesSeeded();
+
+    const modes = await readModes(store);
+    expect(modes).toHaveLength(4);
+    expect(modes.map((mode) => mode.id)).not.toContain("grammar-roles");
+  });
 });

@@ -5,7 +5,7 @@
   "version": "1.0.0",
   "defaultCardMix": ["type", "cloze", "picks"],
   "usesWordStages": false,
-  "skillInstructions": "# Programming language\n\nKeep snippets to one to five lines and name the language and the goal in the prompt.\n\n- Use picks when several lines look plausible but only one respects the goal.\n- Hints explain why the other lines fail; they never quote the correct line.\n- Ask for the method or keyword, not a full restatement of the snippet.\n- Do not require a runtime, a build step or an external package.",
+  "skillInstructions": "# Programming language\n\nKeep snippets to one to five lines; name the language in the code part and the goal in the prompt.\n\n- Use picks when several lines look plausible but only one respects the goal.\n- Hints explain why the other lines fail; they never quote the correct line.\n- Ask for the method or keyword, not a full restatement of the snippet.\n- Do not require a runtime, a build step or an external package.",
   "canonicalExample": {
     "schema": "flashcards.pack/v1",
     "pack": {

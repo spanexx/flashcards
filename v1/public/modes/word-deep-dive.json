@@ -119,7 +119,7 @@
           "mode": "picks",
           "options": [
             "signal",
-            "signals",
+            "siren",
             "silent"
           ],
           "correct": [
@@ -132,6 +132,33 @@
           {
             "type": "text",
             "text": "One singular noun follows the article."
+          }
+        ]
+      },
+      {
+        "deckId": "word-lab",
+        "summary": "Match each form with its meaning",
+        "prompt": [
+          {
+            "type": "text",
+            "text": "Match each form with its meaning."
+          }
+        ],
+        "answer": [
+          {
+            "type": "text",
+            "text": "Every pair matches."
+          }
+        ],
+        "answerDef": {
+          "mode": "match"
+        },
+        "wordId": "signal",
+        "stage": "matching",
+        "teaching": [
+          {
+            "type": "text",
+            "text": "Read each meaning, then choose the form that carries it."
           }
         ]
       }

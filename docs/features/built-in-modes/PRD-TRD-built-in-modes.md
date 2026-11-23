@@ -6,7 +6,7 @@
 **Origin:** `docs/features/built-in-modes/GRILL-built-in-modes.txt`
 **Track:** 3 of 4. Tracks 1-2 own the mode contract and prompt layers; Track 4
 owns Mode Studio. This track owns only the five definitions and the seed emit.
-**Design:** `docs/features/built-in-modes/simulate-pre.sh` (design contract)
+**Design:** `docs/features/built-in-modes/archive/simulate-pre.sh` (design contract)
 **Canonical rehearsal:** `docs/features/built-in-modes/simulate.sh` (post-implementation, reads generated files)
 
 ## 1. Why this exists
@@ -37,9 +37,9 @@ carry no stage or `wordId` in their examples.
 - `language-general`: theme decks; accurate language codes; base-word and
   meaning cues in foreign-language clozes; hear_type with spelling hints. Mix
   cloze, type, hear_type, picks.
-- `word-deep-dive`: one word, five progressive decks, stage-to-mode rule, never
-  print a changed form, trigger or context stated. Mix cloze, type, picks,
-  match.
+- `word-deep-dive`: one word, five progressive stages named in the skill with
+  2-4 stage cards in the small example, stage-to-mode rule, never print a
+  changed form, trigger or context stated. Mix cloze, type, picks, match.
 - `system-architecture`: scenario-driven constraint → pattern prompts;
   trade-off picks; no dictionary definitions. Mix cloze, picks, type.
 - `programming-language`: 1-5 line code snippets; language and goal in the
@@ -95,7 +95,7 @@ learner who never picks one keeps today's prompt wording.
 
 ## 3. Simulation contract
 
-`docs/features/built-in-modes/simulate-pre.sh` is a print-only design walk with
+`docs/features/built-in-modes/archive/simulate-pre.sh` is a print-only design walk with
 hardcoded facts: five authored files, mode shape, validator rules, generated
 manifest, fresh install, re-seed, broken input and what must not happen. It
 writes no file and ends with the direction line.
@@ -188,3 +188,22 @@ npm run check:drift && npm run check:drift:staged
 All five examples pass the validators; five built-ins install with
 `isBuiltIn: true`; no `mode-demo-*` pack appears in `/api/packs`; pack bytes are
 unchanged. Report test file and test counts from the full run.
+
+## 7. Delivery note
+
+- 2026-11-23: fresh-eyes review found Minor Drift. `word-deep-dive` lacked its
+  declared `match` card and printed its own plural form as a distractor; both
+  fixed and regenerated. Three skill lines were reworded to match their cards.
+  The plan and this contract now say five skill stages, not five example decks.
+- 2026-11-23: the two missing install cases (wrong manifest schema, file id
+  mismatch) were added to `mode-seed.test.ts`. The post-sim now prints the
+  promised `FAIL` line when a generated file is unreadable.
+- Red tests were run locally (22 failures from missing output) but not committed
+  alone, because `docs/ethics/commit.md` forbids committing red tests. Each test
+  file landed with the job that made it green.
+- Verification: build green with `check-pwa: passed`; full suite 96 files /
+  1220 tests; 56 targeted tests; `simulate.sh` PASS with 0 problems; all six
+  shipped pack hashes unchanged; typecheck, changed-file eslint, both drift
+  gates green.
+- Reconciliation: the design sim moved to `archive/simulate-pre.sh`;
+  `simulate.sh` is the single canonical rehearsal.

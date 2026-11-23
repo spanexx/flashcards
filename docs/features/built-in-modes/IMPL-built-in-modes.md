@@ -5,7 +5,7 @@
 **Date:** 2026-11-23
 **Origin:** `docs/features/built-in-modes/GRILL-built-in-modes.txt`
 **Contract:** `docs/features/built-in-modes/PRD-TRD-built-in-modes.md`
-**Design:** `docs/features/built-in-modes/simulate-pre.sh`
+**Design:** `docs/features/built-in-modes/archive/simulate-pre.sh`
 
 ## Phase order
 
@@ -26,7 +26,7 @@ fail for the right reason before code lands. One logical change per commit.
 - GRILL locks English examples, no default mode, version `1.0.0`.
 - Pre-sim prints nine design sections with hardcoded facts; no repo writes.
 
-**Proof:** `bash docs/features/built-in-modes/simulate-pre.sh` exits 0 and prints
+**Proof:** `bash docs/features/built-in-modes/archive/simulate-pre.sh` exits 0 and prints
 the direction line. Design direction confirmed by the learner.
 
 ## Phase 2 — red tests
@@ -106,3 +106,16 @@ new dependency, no live Drift entry.
 - **Fixture id collision.** `browser-router.test.ts` already uses
   `grammar-roles`; install tests use fresh stores and direct
   `ensureModesSeeded()` calls, never the cached router seed pass.
+
+## Delivery note — 2026-11-23
+
+- Fresh-eyes review closed before ship: added the fourth `matching`-stage card
+  to `word-deep-dive`, replaced the printed plural distractor, aligned three
+  skill lines with their examples, corrected the five-stage wording, added
+  wrong-schema and id-mismatch install tests, and made the post-sim print a
+  `FAIL` summary for unreadable files.
+- Regenerated `v1/public/modes/**`; all six shipped pack hashes unchanged.
+- Full gates: build green with `check-pwa: passed`; full suite 96 files /
+  1220 tests; 56 targeted tests; typecheck, eslint, both drift gates green.
+- Reconciled sims: `archive/simulate-pre.sh` keeps the design record;
+  `simulate.sh` is canonical. Review evidence is in `simulate-post.md`.

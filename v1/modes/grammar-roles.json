@@ -5,7 +5,7 @@
   "version": "1.0.0",
   "defaultCardMix": ["cloze", "picks", "type"],
   "usesWordStages": false,
-  "skillInstructions": "# Grammar roles\n\nName each deck with the job in plain English and the term in parentheses, for example `Doer (subject)`.\n\n- State the role in the prompt before asking for its name.\n- Explain the intuition in the teaching layer; never drill basic -s or -ed endings.\n- Keep the answer to the role name, not a verb parade.\n- Vary cloze, picks and type cards so the same role is recognised in new sentences.",
+  "skillInstructions": "# Grammar roles\n\nName each deck with the job in plain English and the term in parentheses, for example `Doer (subject)`.\n\n- Give the sentence and its context before asking for the role name.\n- Explain the intuition in the teaching layer; never drill basic -s or -ed endings.\n- Keep the answer to the role name, not a verb parade.\n- Vary cloze, picks and type cards so the same role is recognised in new sentences.",
   "canonicalExample": {
     "schema": "flashcards.pack/v1",
     "pack": {
