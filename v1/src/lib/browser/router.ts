@@ -87,6 +87,7 @@ import { ensureModesSeeded, readLearningMode } from "@/lib/browser/modes";
 import { readPage, readPages, readTraces, recordTracedPart, revertPage, savePage } from "@/lib/browser/pages";
 import { generatePageDraft, preparePageDraft, type PageDraftTarget } from "@/lib/browser/page-draft";
 import { generateModeDraft, prepareModeDraft } from "@/lib/browser/mode-draft";
+import { resolveModePrompt } from "@/lib/browser/mode-prompt";
 import {
   askHint,
   browserProviderStatus,
@@ -1321,11 +1322,14 @@ export async function localSend<T>(
     // Chat always sees the brief and the allowed library facts when one is sent.
     const brief = optionalBriefFor(record, kind);
     const inventory = libraryInventoryFromPacks(await readPacks());
+    // WHY: resolve the selected mode once for all three chat targets. A stale
+    // selection adds no mode section, so old prompts keep their wording. [D-52]
+    const mode = await resolveModePrompt(brief?.modeId ?? null);
     const packName = asString(target.packName);
     const deckId = asString(target.deckId);
     if (kind === "pack") {
       return {
-        prompt: buildAuthoringPrompt({ kind: "pack" }, undefined, { brief, inventory }),
+        prompt: buildAuthoringPrompt({ kind: "pack" }, undefined, { brief, inventory, mode }),
         version: AUTHORING_SKILL_VERSION,
       } as T;
     }
@@ -1334,7 +1338,7 @@ export async function localSend<T>(
       const pack = await readPack(packName);
       if (!pack) fail(`There is no pack "${packName}" here.`);
       return {
-        prompt: buildAuthoringPrompt({ kind: "deck", packName }, pack, { brief, inventory }),
+        prompt: buildAuthoringPrompt({ kind: "deck", packName }, pack, { brief, inventory, mode }),
         version: AUTHORING_SKILL_VERSION,
       } as T;
     }
@@ -1343,7 +1347,7 @@ export async function localSend<T>(
       const pack = await readPack(packName);
       if (!pack) fail(`There is no pack "${packName}" here.`);
       return {
-        prompt: buildAuthoringPrompt({ kind: "cards", packName, deckId }, pack, { brief, inventory }),
+        prompt: buildAuthoringPrompt({ kind: "cards", packName, deckId }, pack, { brief, inventory, mode }),
         version: AUTHORING_SKILL_VERSION,
       } as T;
     }

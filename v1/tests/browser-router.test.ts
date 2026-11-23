@@ -12,7 +12,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryStore, setBrowserStore, type Store } from "@/lib/browser/store";
 import { localGet, localSend } from "@/lib/browser/router";
-import { rememberRelayHost, writeMeta, writeMode } from "@/lib/browser/repository";
+import { rememberRelayHost, writeMeta, writeMode, type BrowserLearningMode } from "@/lib/browser/repository";
 import { PACK_BUNDLE_SCHEMA } from "@/lib/browser/bundle";
 import { createJobRunner } from "@/lib/browser/jobs";
 import type { BrowserJob, JobView } from "@/lib/browser/jobs";
@@ -40,6 +40,37 @@ function packBundle(): string {
       },
     ],
   });
+}
+
+/** A stored mode a route can resolve, with a unique marker in its skill text. */
+function storedModeForPrompt(skillInstructions: string): BrowserLearningMode {
+  return {
+    id: "selected-mode",
+    name: "Selected mode",
+    description: "The mode chosen for this request.",
+    version: "1.0.0",
+    defaultCardMix: ["cloze"],
+    usesWordStages: false,
+    skillInstructions,
+    canonicalExample: JSON.parse(packBundle()),
+    isBuiltIn: false,
+    createdAt: "2026-11-23T00:00:00.000Z",
+  };
+}
+
+/** A learner brief that names a mode, in the shape the screens send. */
+function briefWithMode(modeId?: string) {
+  const base = {
+    subjectMode: "learner",
+    subject: "ordering coffee",
+    deckFocus: "cafes, paying",
+    cardStyle: "mixed",
+    packName: "",
+    deckName: "",
+    targetLanguage: "pl",
+    sourceLanguage: "en",
+  };
+  return modeId ? { ...base, modeId } : base;
 }
 
 function seedFetch() {
@@ -713,6 +744,40 @@ describe("settings and export", () => {
 });
 
 describe("provider calls", () => {
+  // WHY: a brief's modeId is a real selection. The prepare route must resolve
+  // it to a stored mode before the prompt is frozen into the held request.
+  // PACK: D-52
+  // 2026-11-23 opencode: added the route-level mode pin. [D-52]
+  it("injects the selected mode into a generation prompt", async () => {
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
+    await writeMode(storedModeForPrompt("GENERATION-MODE-SKILL: name each role."), store);
+
+    const prepared = await localSend<{ prompt: string }>("/api/provider/prepare", "POST", {
+      target: { kind: "pack" },
+      count: 1,
+      brief: briefWithMode("selected-mode"),
+    });
+
+    expect(prepared.prompt).toContain("GENERATION-MODE-SKILL: name each role.");
+    expect(prepared.prompt).toContain("Mode canonical example:");
+  });
+
+  it("keeps the old generation prompt when the selected mode is missing", async () => {
+    await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
+    const bare = await localSend<{ prompt: string }>("/api/provider/prepare", "POST", {
+      target: { kind: "pack" },
+      count: 1,
+      brief: briefWithMode(),
+    });
+    const selected = await localSend<{ prompt: string }>("/api/provider/prepare", "POST", {
+      target: { kind: "pack" },
+      count: 1,
+      brief: briefWithMode("gone-mode"),
+    });
+    expect(selected.prompt).toBe(bare.prompt);
+    expect(selected.prompt).not.toContain("Learning mode:");
+  });
+
   it("prepares, generates and hints through the browser", async () => {
     await localSend("/api/packs/import", "POST", { json: packBundle(), target: { kind: "pack" } });
     await localSend("/api/settings", "PATCH", {
@@ -1103,6 +1168,41 @@ describe("creation brief through the router", () => {
       expect(result.prompt).toContain("Basics");
       expect(result.prompt).toContain("Cases");
     }
+  });
+
+  // WHY: the chat route takes the same brief. A selected mode must reach the
+  // authoring prompt through the route, not only through a unit-test fixture.
+  // PACK: D-52
+  // 2026-11-23 opencode: added the chat route mode pin. [D-52]
+  it("injects the selected mode into every chat prompt", async () => {
+    await seedStarter();
+    await writeMode(storedModeForPrompt("CHAT-MODE-SKILL: name each role."), store);
+    for (const target of [
+      { kind: "pack" as const },
+      { kind: "deck" as const, packName: "starter" },
+      { kind: "cards" as const, packName: "starter", deckId: "cases" },
+    ]) {
+      const result = await localSend<{ prompt: string }>("/api/authoring/prompt", "POST", {
+        target,
+        brief: briefWithMode("selected-mode"),
+      });
+      expect(result.prompt).toContain("CHAT-MODE-SKILL: name each role.");
+      expect(result.prompt).toContain("Mode canonical example:");
+    }
+  });
+
+  it("keeps the old chat prompt when the selected mode is missing", async () => {
+    await seedStarter();
+    const bare = await localSend<{ prompt: string }>("/api/authoring/prompt", "POST", {
+      target: { kind: "pack" },
+      brief: briefWithMode(),
+    });
+    const selected = await localSend<{ prompt: string }>("/api/authoring/prompt", "POST", {
+      target: { kind: "pack" },
+      brief: briefWithMode("gone-mode"),
+    });
+    expect(selected.prompt).toBe(bare.prompt);
+    expect(selected.prompt).not.toContain("Learning mode:");
   });
 
   it("lets the provider choose from the library in Generate and Chat", async () => {

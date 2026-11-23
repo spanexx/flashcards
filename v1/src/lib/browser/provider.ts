@@ -53,6 +53,7 @@ import {
   type BrowserPack,
 } from "@/lib/browser/repository";
 import { importBundle } from "@/lib/browser/bundle";
+import { resolveModePrompt } from "@/lib/browser/mode-prompt";
 import { systemApiBase, systemChatBase } from "@/lib/client/system";
 
 /** No key, no call. This is the one refusal every provider feature shares. */
@@ -234,12 +235,16 @@ export async function prepareGeneration(body: {
   // The prompt may name the library, so it is read once in the allowed shape.
   const packs = await readPacks();
   const inventory = libraryInventoryFromPacks(packs);
+  // WHY: the brief's mode is resolved once here so all three targets get the
+  // same layer 3; a stale selection simply adds nothing. [D-52]
+  const mode = await resolveModePrompt(body.brief?.modeId);
 
   if (target.kind === "pack") {
     const count = generationCount(body.count, 10);
     const prompt = buildPackGenerationPrompt(slots, count, {
       brief: body.brief,
       inventory,
+      mode,
     });
     const prepared = holdPrepared({
       kind: "generation",
@@ -265,6 +270,7 @@ export async function prepareGeneration(body: {
     const prompt = buildDeckGenerationPrompt(packRecord(pack), slots, count, {
       brief: body.brief,
       inventory,
+      mode,
     });
     const prepared = holdPrepared({
       kind: "generation",
@@ -296,6 +302,7 @@ export async function prepareGeneration(body: {
       count,
       brief: body.brief,
       inventory,
+      mode,
     },
   );
   const prepared = holdPrepared({
