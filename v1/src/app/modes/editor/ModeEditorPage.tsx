@@ -121,7 +121,7 @@ export default function ModeEditorPage() {
 
   const mirror = mirrorJsonText(draft);
   return (
-    <main className="stack" style={{ padding: 24, gap: 14 }}>
+    <main className="editor-page stack" style={{ gap: 14 }}>
       <div className="split-head">
         <div>
           <p className="muted" style={{ margin: 0 }}>Learning modes / Edit</p>
