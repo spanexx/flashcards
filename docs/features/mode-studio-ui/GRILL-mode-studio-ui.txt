@@ -1,0 +1,119 @@
+Mode Studio UI - Grill Notes
+
+Status: Locked
+Date: 2026-11-23
+Source: PLAN.md (Track 4) and docs/features/{learning-mode-core,prompt-assembler,built-in-modes}/
+Decision mode: delegated. Victor asked the agent to make all decisions; each
+question below is the one this track had to resolve, with its locked answer.
+
+What this feature is about
+
+- A first-class Learning modes screen and a new-pack form that lets a learner
+  choose how the AI should write cards.
+- Duplicate, edit, test, create with AI, export/import and delete modes through
+  the routes Tracks 1-3 already ship.
+- No new endpoint, no prompt change, no mode content, no new dependency.
+
+Questions and answers locked so far
+
+1. Should Learning modes be a Library tab or its own route?
+Answer:
+- Its own `/modes` route with a sidebar entry labelled "Learning modes".
+Why:
+- The track plan locks a first-class route (PLAN.md:22). The full label follows
+  the locked rule at PLAN.md:27: bare "Mode" collides with AnswerMode and the
+  provider mode. The link and `out/modes/index.html` land in one change because
+  check-pwa scans every linked href (scripts/check-pwa.mjs:181-204).
+
+2. Where do the new pack fields render, and what do they actually affect?
+Answer:
+- Render once for target pack, before the method branch. They feed Generate and
+  Chat briefs. A Write pack has no prompt, so the form says the selection is for
+  AI methods and does not claim it is saved on a hand-written pack.
+Why:
+- PLAN.md:23 locks one shared block. `requestBrief` is sent by Generate and Chat
+  (CreatePanel.tsx:141,375) and D-52 resolves `brief.modeId` in both routes
+  (provider.ts:240, router.ts:1327). Write posts no brief (CreatePanel.tsx:259).
+
+3. What does a deck or cards target show about a mode?
+Answer:
+- A read-only notice: no learning mode is stored on this pack. Hidden mode
+  fields are cleared when the learner switches away from pack.
+Why:
+- `PackStatus` has no mode field (types.ts:429-448), so an inherited mode cannot
+  be read from a pack. `briefForTarget` would otherwise carry a stale id
+  (library-utils.ts:205-227) into a prompt where D-52 silently ignores it.
+
+4. Does Card Mix change prompt wording?
+Answer:
+- No. Keep the field because the plan locks it, label it "stored, not yet used
+  in prompt wording", and never replace `cardStyle`.
+Why:
+- D-53 records that `PromptInputs` is a reserved seam (docs/drift.md:39-46).
+  Silently implying an effect would be a false promise to the learner.
+
+5. Which draft routes and version does the AI creator use?
+Answer:
+- Track 2's `POST /api/modes/draft` and `/api/modes/draft/send`, with badge
+  "1.0.1" from MODE_DRAFT_VERSION. Read-only prompt plus Copy; send opens the
+  editor with "Nothing is saved until you press Save."
+Why:
+- Routes at router.ts:1093-1101; version at mode-draft.ts:18. The prompt/editor
+  pattern comes from PageEditor.tsx:367-410 and CreatePanel.tsx:493-502.
+
+6. How is Test Preview proved without a browser renderer?
+Answer:
+- A pure `previewCardsFromExample` helper plus a zero-write assertion. Visual
+  appearance stays in the manual walkthrough.
+Why:
+- vitest uses environment node (v1/vitest.config.ts:22) and package.json is
+  off-limits (PLAN.md:46), so jsdom/component tests are unavailable.
+
+7. Which actions appear on built-ins versus custom modes?
+Answer:
+- Built-ins: Duplicate & Customize only. Custom: Edit, Test preview, Delete
+  with typed-name confirmation. The router remains the real guard.
+Why:
+- PLAN.md:31. The router refuses built-in PATCH/DELETE (router.ts:593-595,613-615).
+  DeleteTarget/deleteName are extended in the owned helper file.
+
+8. How does Save validate a mode?
+Answer:
+- Inline composed `learningModeIssues()` before Save; the actual write still
+  goes through POST/PATCH and server field-named errors render via errorLines.
+Why:
+- PLAN.md:28 forbids a /validate endpoint; the pure reader already exists
+  (modes.ts:126-152), and library-utils.ts:154-168 formats issues.
+
+9. Does a single-mode export/import ship?
+Answer:
+- Yes, minimal: export writes a small JSON file holding only custom modes;
+  import posts each parsed mode to `POST /api/modes`. No new route.
+Why:
+- PLAN.md:40 allows deferral only when helpers are absent. The create route
+  already forces isBuiltIn:false and validates, so a dedicated mode backup is
+  unnecessary. The file is a mode list, not a whole-app backup.
+
+10. Is a mode selected by default?
+Answer:
+- No. The dropdown starts empty.
+Why:
+- Track 3 locked no default mode (built-in-modes PRD-TRD:93-94); selecting one
+  adds a prompt layer, so a default would change every new learner's prompt.
+
+11. Which new test files prove the pack?
+Answer:
+- `mode-studio-utils.test.ts`, `browser-modes-ui.test.ts` and
+  `simulate-mode-studio.test.ts`. No component tests.
+Why:
+- PLAN.md:49 names them; the node-only test environment cannot render React.
+
+12. How are route files and the PWA gate handled?
+Answer:
+- Add `app/modes/page.tsx` + `ModesClient.tsx`, the Nav entry, and both
+  check-pwa lists in one change.
+Why:
+- check-pwa's href scan (scripts/check-pwa.mjs:181-204) fails every page when a
+  linked route is missing from `out/`.
+
+No remaining open questions

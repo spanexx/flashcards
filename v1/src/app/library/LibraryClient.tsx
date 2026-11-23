@@ -16,7 +16,7 @@ import { apiGet, apiSend } from "@/lib/client/api";
 import { onJobFinished } from "@/lib/browser/jobs";
 import { LIBRARY_FOCUS_EVENT, type LibraryFocus } from "@/lib/client/library-focus";
 import { normalizeLanguage } from "@/lib/shared/language";
-import type { Card, PackStatus, ProviderStatus, Settings, StudyLevel } from "@/lib/shared/types";
+import type { Card, LearningMode, PackStatus, ProviderStatus, Settings, StudyLevel } from "@/lib/shared/types";
 import CardsPanel from "./CardsPanel";
 import CreatePanel from "./CreatePanel";
 import DeleteDialog from "./DeleteDialog";
@@ -34,6 +34,7 @@ import {
 
 export default function LibraryClient() {
   const [packs, setPacks] = useState<PackStatus[]>([]);
+  const [modes, setModes] = useState<LearningMode[]>([]);
   const [orphans, setOrphans] = useState<string[]>([]);
   const [cards, setCards] = useState<Card[]>([]);
   const [provider, setProvider] = useState<ProviderStatus | null>(null);
@@ -51,11 +52,13 @@ export default function LibraryClient() {
   // One read gets the three panels everything they need to stay honest.
   const refresh = useCallback(async () => {
     try {
-      const [packsAnswer, cardsAnswer, settingsAnswer] = await Promise.all([
+      const [packsAnswer, cardsAnswer, settingsAnswer, modesAnswer] = await Promise.all([
         apiGet<{ packs: PackStatus[]; orphans: string[]; folder: string }>("/api/packs"),
         apiGet<{ cards: Card[] }>("/api/cards"),
         apiGet<{ provider: ProviderStatus; settings: Settings }>("/api/settings"),
+        apiGet<{ modes: LearningMode[] }>("/api/modes"),
       ]);
+      setModes(modesAnswer.modes);
       setPacks(packsAnswer.packs);
       setOrphans(packsAnswer.orphans);
       setCards(cardsAnswer.cards);
@@ -262,6 +265,7 @@ export default function LibraryClient() {
         <CreatePanel
           key={`create-${createSeed?.token ?? "initial"}`}
           packs={packs}
+          modes={modes}
           provider={provider}
           level={level}
           seed={createSeed}

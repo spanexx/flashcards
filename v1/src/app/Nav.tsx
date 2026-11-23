@@ -18,6 +18,7 @@ import ThemeButton from "./ThemeButton";
 const LINKS = [
   { href: "/", label: "Study" },
   { href: "/library", label: "Library" },
+  { href: "/modes", label: "Learning modes" },
   { href: "/progress", label: "Progress" },
   { href: "/settings", label: "Settings" },
 ];
