@@ -77,6 +77,18 @@ export function renameKeyAt(root: unknown, path: TreePath, newKey: string): unkn
   return setAt(root, parentPath, rebuilt);
 }
 
+/**
+ * A blank entry for an array: object slots get {}, primitives get their zero.
+ * WHY: cloning the first item silently duplicated ids and deck/card content.
+ */
+export function blankArrayItem(items: unknown[]): unknown {
+  const first = items[0];
+  if (first !== null && typeof first === "object" && !Array.isArray(first)) return {};
+  if (typeof first === "number") return 0;
+  if (typeof first === "boolean") return false;
+  return "";
+}
+
 /** The breadcrumb text for one path. */
 export function pathText(path: TreePath): string {
   return path.length ? `mode / ${path.map(String).join(" / ")}` : "mode";

@@ -8,6 +8,7 @@
 
 import { Fragment, useState } from "react";
 import {
+  blankArrayItem,
   deleteAt,
   getAt,
   isSkillInstructionsLink,
@@ -85,8 +86,8 @@ export default function JsonTree({ root, onChange, onOpenSkill }: JsonTreeProps)
   const addChild = (row: TreeRow) => {
     const parent = getAt(root, row.path);
     if (Array.isArray(parent)) {
-      const next = [...parent, parent.length ? structuredClone(parent[0]) : ""];
-      onChange(setAt(root, row.path, next));
+      // WHY: a new array entry starts blank. Cloning item 0 copied ids and data.
+      onChange(setAt(root, row.path, [...parent, blankArrayItem(parent)]));
       return;
     }
     setAddingAt(row.path);
