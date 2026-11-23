@@ -25,6 +25,36 @@ interface JsonTreeProps {
   onOpenSkill: () => void;
 }
 
+/**
+ * A number cell keeps its typed text until blur.
+ * WHY: committing on every keystroke turns "-" into NaN and "" into 0.
+ */
+function NumberCell({ value, label, onFocus, onCommit }: {
+  value: number;
+  label: string;
+  onFocus: () => void;
+  onCommit: (next: number) => void;
+}) {
+  const [text, setText] = useState(String(value));
+  return (
+    <input
+      className="json-value-input mono"
+      value={text}
+      aria-label={`Value ${label}`}
+      onFocus={onFocus}
+      onChange={(event) => setText(event.target.value)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") event.currentTarget.blur();
+      }}
+      onBlur={() => {
+        const parsed = Number(text);
+        if (text.trim() !== "" && Number.isFinite(parsed)) onCommit(parsed);
+        else setText(String(value));
+      }}
+    />
+  );
+}
+
 /** Recursive, file-explorer-style editor for one JSON object. */
 export default function JsonTree({ root, onChange, onOpenSkill }: JsonTreeProps) {
   const rows = treeRowsFor(root);
@@ -125,6 +155,14 @@ export default function JsonTree({ root, onChange, onOpenSkill }: JsonTreeProps)
                     onFocus={() => setActive(pathKey)}
                     onChange={(event) => onChange(setAt(root, row.path, event.target.checked))}
                   />
+                ) : row.type === "number" && typeof row.value === "number" ? (
+                  <NumberCell
+                    key={String(row.value)}
+                    value={row.value}
+                    label={row.label}
+                    onFocus={() => setActive(pathKey)}
+                    onCommit={(next) => onChange(setAt(root, row.path, next))}
+                  />
                 ) : (
                   <input
                     className="json-value-input mono"
@@ -132,10 +170,7 @@ export default function JsonTree({ root, onChange, onOpenSkill }: JsonTreeProps)
                     title={String(row.value)}
                     aria-label={`Value ${row.label}`}
                     onFocus={() => setActive(pathKey)}
-                    onChange={(event) => {
-                      const next = row.type === "number" ? Number(event.target.value) : event.target.value;
-                      onChange(setAt(root, row.path, next));
-                    }}
+                    onChange={(event) => onChange(setAt(root, row.path, event.target.value))}
                   />
                 )}
               </>

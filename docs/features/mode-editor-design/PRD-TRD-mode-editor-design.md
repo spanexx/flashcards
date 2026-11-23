@@ -4,7 +4,7 @@
 **Status:** Locked by delegated decision, 2026-11-23
 **Date:** 2026-11-23
 **Origin:** `docs/features/mode-editor-design/GRILL-mode-editor-design.txt`
-**Design:** `wireframe/mode-studio/editor/index.html` (Victor-reviewed prototype)
+**Design:** `docs/features/mode-editor-design/archive/simulate-pre/index.html` (Victor-reviewed prototype)
 **Track:** follow-up to Track 4. Consumes Tracks 1-3; writes no endpoint or mode content.
 
 ## 1. Why this exists
@@ -97,7 +97,7 @@ The route wrapper is the dictionary-style Suspense shell.
 
 ### 4.4 Handoff modules (new)
 
-`mode-draft-handoff.ts` and `mode-notice.ts` in `v1/src/lib/browser/` with
+`mode-editor-handoff.ts` in `v1/src/lib/browser/` with
 guarded sessionStorage access that clears on read.
 
 ### 4.5 Changed files

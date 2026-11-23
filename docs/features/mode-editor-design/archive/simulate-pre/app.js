@@ -1,6 +1,6 @@
 // WHY: Prototype state and interactions for the polished two-mode editor.
 // Nothing is stored; edits mutate one in-memory object.
-// PACK: mode-studio-ui
+// PACK: mode-editor-design
 
 const state = {
   id: "grammar-roles-copy",

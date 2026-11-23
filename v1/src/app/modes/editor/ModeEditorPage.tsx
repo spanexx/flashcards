@@ -5,7 +5,7 @@
 // PACK: mode-editor-design
 // 2026-11-23 opencode: created for the full-page editor. [pack: mode-editor-design]
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { apiGet, apiSend } from "@/lib/client/api";
@@ -28,6 +28,7 @@ export default function ModeEditorPage() {
   const [busy, setBusy] = useState(false);
   const [issues, setIssues] = useState<string[]>([]);
   const [missing, setMissing] = useState<string | null>(null);
+  const skillRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -64,6 +65,13 @@ export default function ModeEditorPage() {
     const params = new URLSearchParams(search.toString());
     params.set("tab", next);
     router.replace(`/modes/editor?${params.toString()}`);
+  };
+
+  // WHY: the JSON tree's skill link must land the learner in the source box,
+  // not just on the right tab. The prototype did both. [mode-editor-design]
+  const openSkill = () => {
+    chooseTab("skill");
+    window.requestAnimationFrame(() => skillRef.current?.focus());
   };
 
   const save = async () => {
@@ -148,6 +156,7 @@ export default function ModeEditorPage() {
             <div className="editor-pane">
               <div className="cap">Write</div>
               <textarea
+                ref={skillRef}
                 className="editor-source mono"
                 value={skillSource}
                 spellCheck={false}
@@ -173,7 +182,7 @@ export default function ModeEditorPage() {
               <JsonTree
                 root={draft}
                 onChange={(next) => setDraft(next as LearningMode)}
-                onOpenSkill={() => chooseTab("skill")}
+                onOpenSkill={openSkill}
               />
             </div>
           </>

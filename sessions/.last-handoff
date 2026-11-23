@@ -1,34 +1,34 @@
-# Handoff 2026-11-23 — full-page mode editor integration starting
+# Handoff 2026-11-23 — full-page mode editor complete, awaiting merge decision
 
-## Locked design
+## Where things stand
 
-Worktree `feature-mode-editor-design`, branch based on `main` at `7639891`.
-Origin docs: `docs/features/mode-editor-design/{GRILL,PRD-TRD,IMPL}`.
-Reviewed prototype: `wireframe/mode-studio/editor/`.
+Worktree: `/home/spanexx/.config/superpowers/worktrees/flashcards/feature-mode-editor-design`
+Branch: `feature/mode-editor-design`, based on `main` at `7639891`. Not merged.
 
-Decisions: fixed `/modes/editor` route with `?id=`/`?new=1`/`?tab=` behind
-Suspense; raw JSON is a read-only mirror, tree is the editor; skillInstructions
-is a link into the Markdown tab; unsaved AI drafts and return notices travel via
-guarded sessionStorage; old modal editor is retired; one save path through
-`modeSaveRequest`; theme uses app CSS variables.
+## What shipped
 
-## Ordered remaining steps and proof
+- `7831b5d` — GRILL, PRD-TRD, IMPL, Victor-reviewed prototype.
+- `71e336c` — pure editor helpers + tests.
+- `a34116c` — fixed `/modes/editor` route, two tabs, JSON explorer, sessionStorage
+  handoff, PWA lists, modal retired.
+- Final commit — fresh-eyes fixes: skill-link focus, theme-variable JSON colours,
+  numeric input blur commit, handoff tests, archived pre-sim, post-sim note.
 
-1. Pure helpers + `mode-editor-utils.test.ts` (RED then GREEN).
-2. `JsonTree.tsx` + `MarkdownPreview.tsx` thin renderers; typecheck/eslint.
-3. Route + `ModeEditorPage` + sessionStorage helpers + ModesClient handoff +
-   PWA lists + CSS; retire `ModeEditor.tsx`; build with check-pwa green.
-4. Post-sim, fresh-eyes review, reconciliation, full gates, one commit per phase.
-5. Human gate: open review event, then wait for Victor before merge.
+Canonical sim: `bash docs/features/mode-editor-design/simulate.sh`.
+Design record: `docs/features/mode-editor-design/archive/simulate-pre/`.
+Review evidence: `docs/features/mode-editor-design/simulate-post.md`.
 
-## File inventory
+## Verification
 
-New: `v1/src/app/modes/editor/**`, `ModeEditorPage.tsx`, `JsonTree.tsx`,
-`MarkdownPreview.tsx`, `mode-editor-utils.ts`, `mode-draft-handoff.ts`,
-`mode-notice.ts`, `v1/tests/mode-editor-utils.test.ts`.
-Changed: `ModesClient.tsx`, `check-pwa.mjs`, `globals.css`, docs.
-Deleted: `ModeEditor.tsx` (modal).
-Must not touch: Track 1-3 files, `client/api.ts`, `layout.tsx`, `package.json`.
+- Full suite: 101 files / 1262 tests green.
+- 24 targeted tests green; build green with `check-pwa: passed` and the editor
+  route present; `simulate.sh` PASS; typecheck, changed-file eslint, both drift
+  gates green (0 open / 54 resolved).
+
+## Next steps
+
+1. Victor decides whether to merge `feature/mode-editor-design` into `main`.
+2. After merge, rebuild and reopen the app if the local server should show it.
 
 ## User-only follow-ups
 

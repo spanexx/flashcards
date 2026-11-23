@@ -2,7 +2,7 @@ Mode Editor Design - Grill Notes
 
 Status: Locked
 Date: 2026-11-23
-Source: wireframe/mode-studio/editor/ (Victor-reviewed prototype) and
+Source: docs/features/mode-editor-design/archive/simulate-pre/ (Victor-reviewed prototype) and
         docs/features/mode-studio-ui/ (Track 4 origin pack)
 Decision mode: delegated. Victor reviewed the prototype through several rounds
 and asked to integrate it. Each question below was resolved by that review.

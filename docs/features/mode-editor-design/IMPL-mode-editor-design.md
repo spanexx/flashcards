@@ -5,7 +5,7 @@
 **Date:** 2026-11-23
 **Origin:** `docs/features/mode-editor-design/GRILL-mode-editor-design.txt`
 **Contract:** `docs/features/mode-editor-design/PRD-TRD-mode-editor-design.md`
-**Design:** `wireframe/mode-studio/editor/index.html`
+**Design:** `docs/features/mode-editor-design/archive/simulate-pre/index.html`
 
 ## Phase order
 
@@ -21,7 +21,7 @@ fail for the right reason, then committed with the green implementation.
 
 ## Phase 1 — origin docs
 
-**Files:** GRILL, PRD-TRD, IMPL, `wireframe/mode-studio/editor/`.
+**Files:** GRILL, PRD-TRD, IMPL, `archive/simulate-pre/`.
 
 **Proof:** drift gate green; no code touched.
 
@@ -50,7 +50,7 @@ fail for the right reason, then committed with the green implementation.
 ## Phase 4 — route and handoff
 
 **Files:** `v1/src/app/modes/editor/page.tsx`, `ModeEditorPage.tsx`,
-`mode-draft-handoff.ts`, `mode-notice.ts`, `ModesClient.tsx`, `check-pwa.mjs`,
+`mode-editor-handoff.ts`, `ModesClient.tsx`, `check-pwa.mjs`,
 `globals.css`; retire `ModeEditor.tsx`.
 
 - Fixed route behind Suspense; no dynamic segment.
@@ -68,6 +68,17 @@ tests updated and green.
 
 **Proof:** sim PASS; full suite once; typecheck, eslint, both drift gates; clean
 `git status`.
+
+## Delivery note — 2026-11-23 (post-impl review)
+
+- Fresh-eyes review found undelivered Phase 5 evidence, a missing focus on the
+  skill link, dark-only JSON colours, a numeric input bug and no handoff tests.
+  All five were fixed before ship; details are in `simulate-post.md`.
+- Reconciled sims: `archive/simulate-pre/` keeps the Victor-reviewed prototype;
+  `simulate.sh` is canonical.
+- Final gates: build green with `check-pwa: passed`; full suite 101 files /
+  1262 tests; 24 targeted tests; `simulate.sh` PASS; typecheck, changed-file
+  eslint, both drift gates green.
 
 ## Out of scope
 
