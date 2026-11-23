@@ -1,0 +1,138 @@
+<!doctype html>
+<!-- WHY: Design-time rehearsal for Mode Studio. Hardcoded state only, so the
+     shape of every screen can be judged before any UI code exists.
+     PACK: mode-studio-ui
+     2026-11-23 opencode: created from the locked GRILL. [pack: mode-studio-ui] -->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mode Studio - design rehearsal</title>
+<style>
+  :root { color-scheme: light; --line:#ccd3dc; --ink:#17212b; --muted:#5d6b7a; --ok:#157347; --bad:#b3261e; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.5 system-ui,sans-serif; color:var(--ink); background:#f6f8fa; display:flex; min-height:100vh; }
+  nav { width:180px; padding:20px 14px; background:#fff; border-right:1px solid var(--line); }
+  nav b { display:block; margin:0 0 16px 8px; }
+  nav a { display:block; padding:9px 10px; border-radius:8px; color:var(--ink); text-decoration:none; }
+  nav a.on { background:#e8f0fe; }
+  main { flex:1; padding:24px; max-width:980px; }
+  h1 { font-size:22px; margin:0 0 18px; }
+  section { background:#fff; border:1px solid var(--line); border-radius:12px; padding:18px; margin:0 0 18px; }
+  .row { display:flex; gap:14px; flex-wrap:wrap; }
+  .col { flex:1 1 220px; }
+  label { display:block; font-weight:600; margin:0 0 6px; }
+  .field { width:100%; min-height:44px; padding:9px 10px; border:1px solid var(--line); border-radius:8px; font:inherit; background:#fff; }
+  .note { padding:10px 12px; border-left:3px solid #2a6fdb; background:#f0f5ff; border-radius:6px; color:var(--muted); }
+  .warn { border-left-color:#d97706; background:#fff8ea; }
+  .pill { display:inline-block; padding:3px 9px; border-radius:99px; background:#eef1f4; font-size:12px; margin-right:6px; }
+  button { min-height:42px; padding:8px 14px; border:1px solid var(--line); border-radius:8px; background:#fff; font:inherit; cursor:pointer; }
+  button.primary { background:#1a56db; color:#fff; border-color:#1a56db; }
+  button.danger { color:var(--bad); border-color:#e6b7b4; }
+  ul { margin:8px 0 0; padding-left:20px; }
+  .mode { display:flex; gap:10px; align-items:center; padding:12px; border:1px solid var(--line); border-radius:9px; margin:8px 0; }
+  .mode .grow { flex:1; }
+  pre { white-space:pre-wrap; background:#f4f6f8; padding:12px; border-radius:8px; overflow:auto; }
+  .screen { display:none; }
+  .screen.on { display:block; }
+</style>
+</head>
+<body>
+<nav>
+  <b>Learning modes</b>
+  <a href="#new" class="on" onclick="show('new')">New pack</a>
+  <a href="#list" onclick="show('list')">Learning modes</a>
+  <a href="#editor" onclick="show('editor')">Editor</a>
+  <a href="#ai" onclick="show('ai')">AI creator</a>
+  <a href="#preview" onclick="show('preview')">Test preview</a>
+</nav>
+<main>
+  <!-- WHY: the shared New Pack block is the only place a learner picks a mode. -->
+  <div class="screen on" id="new">
+    <h1>New pack - shared fields</h1>
+    <section>
+      <p class="note">These fields feed the AI methods only. A hand-written pack has no prompt, so no mode is stored on it.</p>
+      <div class="row">
+        <div class="col"><label>Learning mode</label><select class="field"><option>(none selected)</option><option>Grammar roles</option><option>Language general</option></select></div>
+        <div class="col"><label>Subject</label><input class="field" value="Ordering coffee" /></div>
+      </div>
+      <div class="row">
+        <div class="col"><label>Target language</label><input class="field" value="pl" /></div>
+        <div class="col"><label>Question language</label><input class="field" value="en" /></div>
+      </div>
+      <div class="row">
+        <div class="col"><label>Card mix</label><div><span class="pill">cloze</span><span class="pill">picks</span><span class="pill">type</span></div><p class="note warn">Stored, not yet used in prompt wording.</p></div>
+        <div class="col"><label>Extra study preferences</label><textarea class="field">One short line at a time.</textarea></div>
+      </div>
+    </section>
+    <section>
+      <h2>When the target is Deck or Cards</h2>
+      <p class="note">No learning mode is stored on this pack. The hidden selection is cleared when you switch target.</p>
+    </section>
+  </div>
+
+  <!-- WHY: built-ins and custom rows have deliberately different actions. -->
+  <div class="screen" id="list">
+    <h1>Learning modes - /modes</h1>
+    <section>
+      <p><span class="pill">Build in order</span><span class="pill">Built-ins first, then by name</span></p>
+      <div class="mode"><div class="grow"><b>Grammar roles</b><div><span class="pill">built-in</span><span class="pill">1.0.0</span></div></div><button>Duplicate &amp; Customize</button></div>
+      <div class="mode"><div class="grow"><b>My roles</b><div><span class="pill">your copy</span><span class="pill">1.0.0</span></div></div><button>Edit</button><button>Test preview</button><button class="danger">Delete</button></div>
+      <p class="note">Delete asks for the exact visible name. A built-in never shows Delete.</p>
+    </section>
+    <section>
+      <h2>Export and import</h2>
+      <p>Export writes your custom modes as JSON from the existing backup. Import posts one mode JSON through the existing create route.</p>
+      <button>Export custom modes</button> <button>Import mode JSON</button>
+    </section>
+  </div>
+
+  <!-- WHY: inline validation is pure; the write still goes through the router. -->
+  <div class="screen" id="editor">
+    <h1>Mode editor</h1>
+    <section>
+      <div class="row">
+        <div class="col"><label>Name</label><input class="field" value="My roles" /></div>
+        <div class="col"><label>Version</label><input class="field" value="1.0.0" /></div>
+      </div>
+      <label>Skill instructions (Markdown)</label>
+      <textarea class="field" rows="5">Name each deck with the job and the term in parentheses.</textarea>
+      <label style="margin-top:12px">Canonical example</label>
+      <pre>{"schema":"flashcards.pack/v1","pack":{"name":"mode-demo-my-roles","version":"1.0.0"},"decks":[{"id":"doer","name":"Doer"}],"cards":[{"deckId":"doer","summary":"The doer","prompt":[{"type":"blank","id":"b1"}],"answer":[{"type":"text","text":"subject"}],"answerDef":{"mode":"cloze","blanks":[{"id":"b1","expected":["subject"]}]}}]}</pre>
+      <p class="note warn">Invalid name, id, mix or example is named here before Save; the editor stays open.</p>
+      <button class="primary">Save mode</button>
+    </section>
+  </div>
+
+  <!-- WHY: the draft is read-only and unsaved until the learner presses Save. -->
+  <div class="screen" id="ai">
+    <h1>AI mode creator</h1>
+    <section>
+      <label>What should this mode teach?</label>
+      <textarea class="field" rows="2">Roles in plain English.</textarea>
+      <p><button>Prepare prompt</button> <span class="pill">draft version 1.0.1</span></p>
+      <pre>Return one JSON object and nothing else... The object carries exactly these fields: id, name, description, version... [pack: flashcards.pack/v1]</pre>
+      <p><button>Copy prompt</button> <button class="primary">Send and open editor</button></p>
+      <p class="note">Nothing is saved until you press Save in the editor. The prompt you see is exactly what leaves this device.</p>
+    </section>
+  </div>
+
+  <!-- WHY: preview is a local render of the example; no route, no write. -->
+  <div class="screen" id="preview">
+    <h1>Test preview</h1>
+    <section>
+      <p><span class="pill">Local render</span><span class="pill">Zero writes</span></p>
+      <div class="mode"><div class="grow"><b>In 'Anna reads a book', the noun doing the action is the ___ .</b><div>subject</div></div></div>
+      <p class="note">The preview uses the same card renderer as Study, with answers revealed and no answer input.</p>
+    </section>
+  </div>
+</main>
+<script>
+  // WHY: screen switching is local demo state only; nothing here writes data.
+  function show(id) {
+    document.querySelectorAll('.screen').forEach(function (node) { node.classList.toggle('on', node.id === id); });
+    document.querySelectorAll('nav a').forEach(function (node) { node.classList.toggle('on', node.getAttribute('href') === '#' + id); });
+  }
+</script>
+</body>
+</html>
