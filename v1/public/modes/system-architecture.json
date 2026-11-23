@@ -1,0 +1,137 @@
+{
+  "id": "system-architecture",
+  "name": "System architecture",
+  "description": "Learn design patterns through constraints and trade-offs, not definitions.",
+  "version": "1.0.0",
+  "defaultCardMix": [
+    "cloze",
+    "picks",
+    "type"
+  ],
+  "usesWordStages": false,
+  "skillInstructions": "# System architecture\n\nDrive each card from a scenario: a constraint, then the pattern that answers it.\n\n- Use trade-off picks when two patterns could fit but one respects the constraint.\n- Do not ask for dictionary definitions of a pattern.\n- Teaching explains what the constraint makes expensive, never the pattern name.\n- Vary cloze, picks and type so the same idea is recognised in a new scenario.",
+  "canonicalExample": {
+    "schema": "flashcards.pack/v1",
+    "pack": {
+      "name": "mode-demo-system-architecture",
+      "version": "1.0.0",
+      "language": "en",
+      "sourceLanguage": "en"
+    },
+    "decks": [
+      {
+        "id": "patterns",
+        "name": "Patterns",
+        "level": "intermediate"
+      }
+    ],
+    "cards": [
+      {
+        "deckId": "patterns",
+        "summary": "One owner per store",
+        "prompt": [
+          {
+            "type": "text",
+            "text": "When two teams must not share a store, give each service its own"
+          },
+          {
+            "type": "blank",
+            "id": "b1"
+          },
+          {
+            "type": "text",
+            "text": "."
+          }
+        ],
+        "answer": [
+          {
+            "type": "text",
+            "text": "When two teams must not share a store, give each service its own database."
+          }
+        ],
+        "answerDef": {
+          "mode": "cloze",
+          "blanks": [
+            {
+              "id": "b1",
+              "expected": [
+                "database"
+              ]
+            }
+          ]
+        },
+        "teaching": [
+          {
+            "type": "text",
+            "text": "Owning the store lets a team change it without asking another team."
+          }
+        ]
+      },
+      {
+        "deckId": "patterns",
+        "summary": "Choosing under a constraint",
+        "prompt": [
+          {
+            "type": "text",
+            "text": "Which pattern gives each service its own place to keep data?"
+          }
+        ],
+        "answer": [
+          {
+            "type": "text",
+            "text": "One store per service"
+          }
+        ],
+        "answerDef": {
+          "mode": "picks",
+          "options": [
+            "One store per service",
+            "One shared table",
+            "One global cache"
+          ],
+          "correct": [
+            "One store per service"
+          ]
+        },
+        "teaching": [
+          {
+            "type": "text",
+            "text": "A shared table couples releases that should stay independent."
+          }
+        ]
+      },
+      {
+        "deckId": "patterns",
+        "summary": "Naming the trade-off",
+        "prompt": [
+          {
+            "type": "text",
+            "text": "Type the cost you accept when you split one system into services."
+          }
+        ],
+        "answer": [
+          {
+            "type": "text",
+            "text": "network calls"
+          }
+        ],
+        "answerDef": {
+          "mode": "type",
+          "expected": [
+            "network calls"
+          ]
+        },
+        "teaching": [
+          {
+            "type": "text",
+            "text": "Work in another process is reached by messages, not by a function call."
+          }
+        ]
+      }
+    ],
+    "words": [],
+    "pages": []
+  },
+  "isBuiltIn": true,
+  "createdAt": "2026-11-23T00:00:00.000Z"
+}

@@ -1,80 +1,59 @@
-# Handoff 2026-10-26 — CORS + prompt parity landed; five decisions locked
+# Handoff 2026-11-23 — Track 3 built-in modes complete, awaiting review/merge
 
-## Where main stands
+## Where things stand
 
-`main` is at `9117c12`, equal to `origin/main`.
+Worktree: `/home/spanexx/.config/superpowers/worktrees/flashcards/feature-built-in-modes`
+Branch: `feature/built-in-modes` (fast-forwarded to `main` before this pack began).
 
-- **CORS message landed.** Fix `478fd29`, merge `4521230`. `D-27` is Resolved;
-  Scenario 7 of `docs/features/browser-app/PRD-TRD-browser-app.md` and
-  `docs/ethics/dev-lane/data.md:19-22` name CORS.
-- **Generate prompt parity landed after it** (PR #2, `5d93001` → merge
-  `9117c12`). It fixed three gaps and added `D-28`, `D-29`, `D-30`:
-  - cards added into an existing deck now ask for the teaching layer even when
-    the pack ships its own template;
-  - generated packs and decks now store the learner's level (deck level first,
-    global level as fallback) instead of a hard-coded `intermediate`;
-  - every prepared Generate prompt is now editable, and the edited text is what
-    the provider receives (`GenerationPromptEditor.tsx`); this superseded the
-    old language-prompt-control non-goal at that doc's line 217.
-  - Evidence in `.reports/goal-generate-prompt-parity.md`: 60 files / 678 tests,
-    typecheck clean, `npx eslint src tests` clean (plain `eslint .` hangs on the
-    Windows `v1/node_modules` symlink), both drift gates green, plus a live
-    built-export pass where the edited prompt alone reached the provider.
-- Earlier `main` already carried the learner-delight palette/sound/motion, the
-  teaching layers and the study-resilience pack.
-- Working tree holds only `sessions/` churn. No server, no `out/`, `.next` or
-  temp files.
-- **Provider fact, proven this session:** a direct `POST` to
-  `https://larprouter.com/v1/chat/completions` with `deepseek-v4.1-flash`
-  returned **200** and `OK`; the browser `OPTIONS` preflight with
-  `Origin: https://spanexx.github.io` returned **401 with no
-  `Access-Control-Allow-Origin`**. Curl and Zed work because they are native
-  clients; only browsers enforce CORS. The page cannot fix this. The real fix is
-  provider-side (answer `OPTIONS` unauthenticated, then send
-  `Access-Control-Allow-Origin: https://spanexx.github.io`,
-  `Access-Control-Allow-Methods: POST, OPTIONS`,
-  `Access-Control-Allow-Headers: authorization, content-type`), a relay, or a
-  provider that already allows browser calls.
+`main` already contains the earlier branch merges: Track 1 `41cf04d`, Track 2
+`de7192c`, Track 3 plan `7d736db`, Track 4 plan `0289f6d`, plus
+`97c9656` preserving the Track 3 plan at `docs/features/built-in-modes/PLAN.md`.
+Track 3 implementation is **not yet merged** into `main`.
 
-## Next session: implement the five locked decisions
+## What Track 3 shipped (commits on this branch)
 
-The five requests are now locked decision records, written 2026-10-27. The map
-index is `wayfinder/anything-learning-spec/map.md`; the loop ledger is
-`.reports/goal-learner-requests.md`. **Do not re-grill** — each ticket is the
-locked answer. All five are new surface, so they enter through
-`feature-pipeline` (Phase 0.5), not `surgical-change`.
+- `a55b571` — GRILL locked: English examples, no default mode, version 1.0.0.
+- `1bbfb65` — PRD-TRD, IMPL, design sim.
+- `5fc88d3` — five authored modes in `v1/modes/` + `built-in-modes.test.ts`.
+- `8dc1100` — additive emit in `v1/scripts/make-seed.mjs`, generated
+  `v1/public/modes/**` + `mode-seed.test.ts`.
+- `72157ca` — drift-review fixes, post-sim, reconciliation, delivery notes.
 
-- **18 — Study sidebar and previous sessions**:
-  `tickets/study-sidebar-and-history.md`
-- **19 — Hear the answer** (answer TTS): `tickets/answer-speech.md`
-- **20 — Fix a refused import with the provider**: `tickets/import-repair.md`
-- **21 — Ask the tutor to summarise progress**: `tickets/progress-summary.md`
-- **22 — Build a plan from many packs and decks**: `tickets/plan-multi-select.md`
+Design is locked in
+`docs/features/built-in-modes/GRILL-built-in-modes.txt` and
+`docs/features/built-in-modes/PRD-TRD-built-in-modes.md`.
+Canonical simulation: `bash docs/features/built-in-modes/simulate.sh` (PASS, 0
+problems). Design record: `docs/features/built-in-modes/archive/simulate-pre.sh`.
+Review evidence: `docs/features/built-in-modes/simulate-post.md`.
 
-Carry forward:
+## Verification evidence
 
-- The learner's typed confirmation: "main area = previous sessions, right
-  sidebar = the moved panels".
-- Ticket 20 records a **learner-approved exception** to the privacy boundary:
-  the refused import text may go to the learner's provider, but only after an
-  exact preview and only for the import the learner pressed on. Do not widen it.
-- Answer TTS uses the existing device voice (`v1/src/lib/client/speech.ts`), not
-  the feedback chime the learner-delight pack added.
+- Full suite: 96 files / 1220 tests green.
+- Targeted tests: 56 green (`built-in-modes`, `mode-seed`, `seed-modes`,
+  `seed-packs`).
+- `npm run build` green, `check-pwa: passed` (121 files, 119 precache entries).
+- `npm run typecheck`, changed-file eslint, both drift gates green
+  (0 open / 50 resolved).
+- Regeneration hash check: all six shipped `v1/public/packs/*.json` unchanged.
+- Worktree clean; logs, `out/`, `.next/` and temp snapshots deleted.
 
-## Remaining steps (in order)
+## Next steps (in order)
 
-1. Pick the pack order (suggest 18 → 22 → 19 → 20 → 21: UI breadth first, then
-   the provider paths). **Proves:** one pack is chosen before a worktree exists.
-2. For each pack: `feature-pipeline` at Phase 0.5, pre-impl sim → PRD-TRD → IMPL
-   → implement → post-impl sim → drift check → reconcile. **Proves:** the pack's
-   own tests and simulation.
-3. Commit, merge and push only after the learner says so. **Proves:** the
-   learner's words and a green Pages run.
+1. Open the human-review gate with `agent-notify create` (project skill rule
+   before merge). Ask for approval of branch `feature/built-in-modes`.
+2. After approval, merge into `main` (user decision; no merge done here).
+3. Start Track 4 (Mode Studio UI) from `main`; its plan is the root `PLAN.md`.
 
-## User-only follow-ups (the agent must not do these)
+## User-only follow-ups
 
-- Watch Pages run `40281828330` (learner chose to).
-- Decide the CORS route for larprouter (provider-side headers, relay, or a
-  different provider). The app now says the truth; it cannot make the call.
-- Consider rotating the `lrsk-…` key, since it was pasted in plain chat.
-- `git config core.hooksPath .githooks` — once per clone, learner only.
+- Victor approves the human-review event and decides the merge.
+- No push, PR, or stable move was made; pack docs forbid them without a go.
+
+## Notes for a fresh agent
+
+- No `docs/Feature_Backlog.md` exists in this repo, so the execute-pack
+  "mark SHIPPED / update backlog" step has no file to update.
+- Red tests were run locally (22 expected failures) but never committed alone,
+  per `docs/ethics/commit.md`; each test file landed with its green job.
+- Do not edit Track 1 files (`router.ts`, `modes.ts`, `bundle.ts`, schemas) for
+  this pack; any loader defect is a separate drift/Track 1 issue.
