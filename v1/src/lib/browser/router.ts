@@ -86,6 +86,7 @@ import { deleteBuiltInCard, dismissPack, ensureSeeded } from "@/lib/browser/seed
 import { ensureModesSeeded, readLearningMode } from "@/lib/browser/modes";
 import { readPage, readPages, readTraces, recordTracedPart, revertPage, savePage } from "@/lib/browser/pages";
 import { generatePageDraft, preparePageDraft, type PageDraftTarget } from "@/lib/browser/page-draft";
+import { generateModeDraft, prepareModeDraft } from "@/lib/browser/mode-draft";
 import {
   askHint,
   browserProviderStatus,
@@ -1083,6 +1084,19 @@ export async function localSend<T>(
     const requestId = record ? asString(record.requestId) : null;
     if (!requestId) fail("A prepared prompt id is needed.");
     return { draft: await generatePageDraft(requestId) } as T;
+  }
+  // WHY: the mode draft mirrors the page draft exactly: prepare shows the
+  // prompt, send returns a draft object, and neither route writes to the store.
+  // PACK: prompt-assembler
+  // 2026-11-23 opencode: added the two additive mode draft routes. [pack: prompt-assembler]
+  if (path === "/api/modes/draft" && method === "POST") {
+    const instruction = record ? asString(record.instruction) : null;
+    return (await prepareModeDraft(instruction ?? undefined)) as T;
+  }
+  if (path === "/api/modes/draft/send" && method === "POST") {
+    const requestId = record ? asString(record.requestId) : null;
+    if (!requestId) fail("A prepared prompt id is needed.");
+    return { mode: await generateModeDraft(requestId) } as T;
   }
   const tracedPath = /^\/api\/pages\/([^/]+)\/traced$/.exec(path);
   if (tracedPath && method === "POST") {

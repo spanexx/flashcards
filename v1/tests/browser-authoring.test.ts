@@ -16,6 +16,7 @@ import {
   defaultCreationBrief,
   libraryInventoryFromPacks,
 } from "@/lib/shared/creation";
+import { modeSection } from "@/lib/shared/prompt-layers";
 
 function example(prompt: string): string {
   const at = prompt.lastIndexOf("Return JSON shaped like this");
@@ -89,7 +90,7 @@ describe("buildAuthoringPrompt", () => {
         }),
       },
     );
-    expect(AUTHORING_SKILL_VERSION).toBe("8.0.0");
+    expect(AUTHORING_SKILL_VERSION).toBe("9.0.0");
     expect(prompt).toContain("Spanish");
     expect(prompt).toContain("English");
     expect(prompt).toContain("Say each line aloud first.");
@@ -288,5 +289,67 @@ describe("buildAuthoringPrompt", () => {
     expect(cardsPrompt).toContain('lemma "biuro"');
     expect(cardsPrompt).toContain("A fragment cannot define a word");
     expect(parseCardsBundle(example(cardsPrompt)).ok).toBe(true);
+  });
+});
+
+// WHY: the chat lane must place the same mode section once, before its JSON
+// shape, and leave every other line alone. [pack: prompt-assembler]
+// 2026-11-23 opencode: added the chat mode-seam assertions. [pack: prompt-assembler]
+describe("learning mode in chat prompts", () => {
+  const targets = [
+    { kind: "pack" as const },
+    { kind: "deck" as const, packName: "starter" },
+    { kind: "cards" as const, packName: "starter", deckId: "cases" },
+  ];
+  const modeA = {
+    skillInstructions: "MODE-A-SKILL: name each role in plain English.",
+    canonicalExample: '{"pack":{"name":"example-a"}}',
+  };
+  const modeB = {
+    skillInstructions: "MODE-B-SKILL: one card for each changed form.",
+    canonicalExample: '{"pack":{"name":"example-b"}}',
+  };
+
+  function build(mode?: typeof modeA) {
+    return targets.map((target) => buildAuthoringPrompt(target, pack, { mode }));
+  }
+
+  it("injects the skill and example once before the JSON shape in every target", () => {
+    const sectionA = modeSection(modeA).join("\n");
+    const prompts = build(modeA);
+    for (let index = 0; index < prompts.length; index += 1) {
+      const prompt = prompts[index];
+      expect(prompt.split(modeA.skillInstructions)).toHaveLength(2);
+      expect(prompt.split(modeA.canonicalExample)).toHaveLength(2);
+      expect(prompt.split(sectionA)).toHaveLength(2);
+      expect(prompt.indexOf(modeA.skillInstructions)).toBeLessThan(
+        prompt.lastIndexOf("Return JSON shaped like this:"),
+      );
+      const shape = example(prompt);
+      expect(shape.length).toBeGreaterThan(10);
+      if (targets[index].kind === "pack") expect(parseBundle(shape).ok).toBe(true);
+      if (targets[index].kind === "deck") expect(parseDeckBundle(shape).ok).toBe(true);
+      if (targets[index].kind === "cards") expect(parseCardsBundle(shape).ok).toBe(true);
+    }
+  });
+
+  it("changes only layer 3 when a different mode is selected", () => {
+    const sectionA = modeSection(modeA).join("\n");
+    const sectionB = modeSection(modeB).join("\n");
+    const first = build(modeA);
+    const second = build(modeB);
+    for (let index = 0; index < first.length; index += 1) {
+      expect(first[index]).not.toBe(second[index]);
+      expect(first[index].replace(sectionA, "MODE")).toBe(second[index].replace(sectionB, "MODE"));
+    }
+  });
+
+  it("leaves the prompt unchanged when no mode or an empty skill is given", () => {
+    const bare = build();
+    const empty = build({ skillInstructions: "   ", canonicalExample: "x" });
+    for (let index = 0; index < bare.length; index += 1) {
+      expect(empty[index]).toBe(bare[index]);
+      expect(bare[index]).not.toContain("Learning mode:");
+    }
   });
 });

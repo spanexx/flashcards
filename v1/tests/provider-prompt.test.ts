@@ -28,6 +28,7 @@ import {
   type CreationBrief,
 } from "@/lib/shared/creation";
 import { makeCard, makeSource } from "./helpers";
+import { modeSection } from "@/lib/shared/prompt-layers";
 
 function makePack(overrides: Partial<PackRecord> = {}): PackRecord {
   return {
@@ -510,5 +511,70 @@ describe("self-contained prompts and the study note", () => {
     expect(shape).toContain("<one short learner-facing sentence on how to study>");
     expect(shape).not.toContain('"studyInstruction":"your job is use other words"');
     expect(shape).toContain("your job is use other words");
+  });
+});
+
+// WHY: a selected mode must change only layer 3, once, in every generation
+// prompt; the other two layers must stay byte identical. [pack: prompt-assembler]
+// 2026-11-23 opencode: added the mode seam assertions. [pack: prompt-assembler]
+describe("learning mode in generation prompts", () => {
+  const brief = learnerBrief();
+  const modeA = {
+    skillInstructions: "MODE-A-SKILL: name each role in plain English.",
+    canonicalExample: '{"pack":{"name":"example-a"}}',
+  };
+  const modeB = {
+    skillInstructions: "MODE-B-SKILL: one card for each changed form.",
+    canonicalExample: '{"pack":{"name":"example-b"}}',
+  };
+
+  function build(mode?: typeof modeA) {
+    return {
+      pack: buildPackGenerationPrompt(slots, 4, { brief, inventory, mode }),
+      deck: buildDeckGenerationPrompt(makePack(), slots, 3, { brief, inventory, mode }),
+      cards: buildGenerationPrompt(makePack(), slots, {
+        topic: "cases",
+        count: 3,
+        brief,
+        inventory,
+        mode,
+      }),
+    };
+  }
+
+  it("injects the skill text and the example exactly once in all three lanes", () => {
+    const built = build(modeA);
+    const sectionA = modeSection(modeA).join("\n");
+    for (const prompt of [built.pack, built.deck, built.cards]) {
+      const text = prompt.messages[1].content;
+      expect(text.split(modeA.skillInstructions)).toHaveLength(2);
+      expect(text.split(modeA.canonicalExample)).toHaveLength(2);
+      expect(text.split(sectionA)).toHaveLength(2);
+      expect(text.indexOf(modeA.skillInstructions)).toBeLessThan(
+        text.lastIndexOf("Return JSON only, shaped like:"),
+      );
+    }
+  });
+
+  it("changes only layer 3 when a different mode is selected", () => {
+    const first = build(modeA);
+    const second = build(modeB);
+    const sectionA = modeSection(modeA).join("\n");
+    const sectionB = modeSection(modeB).join("\n");
+    for (const lane of ["pack", "deck", "cards"] as const) {
+      const firstText = first[lane].messages[1].content;
+      const secondText = second[lane].messages[1].content;
+      expect(firstText).not.toBe(secondText);
+      expect(firstText.replace(sectionA, "MODE")).toBe(secondText.replace(sectionB, "MODE"));
+    }
+  });
+
+  it("leaves the prompt unchanged when no mode or an empty skill is given", () => {
+    const bare = build();
+    const empty = build({ skillInstructions: "   ", canonicalExample: "x" });
+    for (const lane of ["pack", "deck", "cards"] as const) {
+      expect(empty[lane].messages[1].content).toBe(bare[lane].messages[1].content);
+      expect(bare[lane].messages[1].content).not.toContain("Learning mode:");
+    }
   });
 });

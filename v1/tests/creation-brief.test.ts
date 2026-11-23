@@ -14,6 +14,7 @@ import {
   validateCreationBrief,
   withBriefOnPackText,
 } from "@/lib/shared/creation";
+import { promptInputsFromBrief } from "@/lib/shared/prompt-layers";
 
 describe("creation brief defaults", () => {
   it("starts as a learner brief with no subject and a mixed style", () => {
@@ -323,5 +324,61 @@ describe("focusWord validation", () => {
       focusWord: 7,
     });
     expect(result.ok).toBe(false);
+  });
+});
+
+// WHY: the adapter is the only bridge from a checked brief to prompt inputs.
+// It must read the Track 1 mode fields without changing brief defaults or
+// validation. [pack: prompt-assembler]
+// 2026-11-23 opencode: added the adapter cases. [pack: prompt-assembler]
+describe("promptInputsFromBrief", () => {
+  const slots = { weakTopics: [], level: "beginner" as const, learningStyle: "examples-first" };
+  const inventory = libraryInventoryFromPacks([
+    { name: "starter", description: "Everyday Polish", language: "pl", decks: [{ name: "Basics" }] },
+  ]);
+
+  it("maps every field and carries the optional mode mix through", () => {
+    const brief = validateCreationBrief({
+      subjectMode: "learner",
+      subject: "ordering coffee",
+      deckFocus: "paying",
+      targetLanguage: "es",
+      sourceLanguage: "en",
+      studyInstruction: "Say each line aloud.",
+      modeId: "grammar-roles",
+      cardMix: ["cloze", "type"],
+      modePreferences: "one card per role",
+    });
+    expect(brief.ok).toBe(true);
+    if (!brief.ok) return;
+    const inputs = promptInputsFromBrief(brief.brief, inventory, slots, 6);
+    expect(inputs).toMatchObject({
+      subject: "ordering coffee",
+      targetLanguage: "es",
+      questionLanguage: "en",
+      existingLibrarySummary: expect.stringContaining("starter"),
+      customFocus: "Say each line aloud.",
+      cardMix: ["cloze", "type"],
+      level: "beginner",
+      learningStyle: "examples-first",
+      count: 6,
+    });
+  });
+
+  it("leaves a brief without mode fields unchanged and maps absent values", () => {
+    const brief = defaultCreationBrief({ subject: "cases" });
+    const snapshot = JSON.stringify(brief);
+    const inputs = promptInputsFromBrief(brief, [], slots, 2);
+    expect(inputs.cardMix).toBeUndefined();
+    expect(inputs.subject).toBe("cases");
+    expect(inputs.existingLibrarySummary).toMatch(/library is empty/i);
+    expect(inputs.count).toBe(2);
+    expect(JSON.stringify(brief)).toBe(snapshot);
+  });
+
+  it("does not change the shared brief defaults", () => {
+    expect(DEFAULT_CREATION_BRIEF).not.toHaveProperty("modeId");
+    expect(DEFAULT_CREATION_BRIEF).not.toHaveProperty("cardMix");
+    expect(DEFAULT_CREATION_BRIEF).not.toHaveProperty("modePreferences");
   });
 });

@@ -1698,3 +1698,70 @@ describe("learning modes", () => {
     );
   });
 });
+
+// WHY: a drafted mode is a starting point, not a stored row. These tests walk
+// the two additive routes through the real provider seam and check that send
+// returns a validated mode and leaves the library untouched.
+// PACK: prompt-assembler
+// 2026-11-23 opencode: added the AI mode draft route tests. [pack: prompt-assembler]
+describe("AI mode drafts", () => {
+  function replyWith(text: string): void {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(JSON.stringify({ choices: [{ message: { content: text } }] }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+      ),
+    );
+  }
+
+  it("prepares a versioned prompt and sends a validated mode without saving it", async () => {
+    await localSend("/api/settings", "PATCH", {
+      provider: { url: "https://provider.test/v1", model: "test-model" },
+    });
+    await localSend("/api/provider/key", "POST", { key: "secret" });
+
+    const prepared = await localSend<{ requestId: string; prompt: string; version: string }>(
+      "/api/modes/draft",
+      "POST",
+      { instruction: "A mode for sentence roles." },
+    );
+    expect(prepared.prompt).toContain("A mode for sentence roles.");
+    expect(prepared.prompt).toContain("flashcards.pack/v1");
+    expect(prepared.version).toBe("1.0.0");
+
+    replyWith(JSON.stringify(modeBody()));
+    const sent = await localSend<{ mode: LearningMode }>("/api/modes/draft/send", "POST", {
+      requestId: prepared.requestId,
+    });
+    expect(sent.mode.id).toBe("grammar-roles");
+    expect(sent.mode.isBuiltIn).toBe(false);
+    expect(Date.parse(sent.mode.createdAt)).not.toBeNaN();
+
+    const listed = await localGet<{ modes: LearningMode[] }>("/api/modes");
+    expect(listed.modes).toHaveLength(0);
+
+    await expect(
+      localSend("/api/modes/draft/send", "POST", { requestId: prepared.requestId }),
+    ).rejects.toThrow("That prepared prompt has expired.");
+  });
+
+  it("refuses a missing id and an answer the Track 1 reader cannot accept", async () => {
+    await expect(localSend("/api/modes/draft/send", "POST", {})).rejects.toThrow(
+      "A prepared prompt id is needed.",
+    );
+    await localSend("/api/settings", "PATCH", {
+      provider: { url: "https://provider.test/v1", model: "test-model" },
+    });
+    await localSend("/api/provider/key", "POST", { key: "secret" });
+    const prepared = await localSend<{ requestId: string }>("/api/modes/draft", "POST", {});
+
+    replyWith(JSON.stringify({ id: "broken", name: "Broken" }));
+    await expect(
+      localSend("/api/modes/draft/send", "POST", { requestId: prepared.requestId }),
+    ).rejects.toThrow("not a usable learning mode");
+    expect((await localGet<{ modes: LearningMode[] }>("/api/modes")).modes).toHaveLength(0);
+  });
+});
