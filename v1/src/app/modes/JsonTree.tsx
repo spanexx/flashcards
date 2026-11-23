@@ -6,7 +6,7 @@
 // PACK: mode-editor-design
 // 2026-11-23 opencode: created for the full-page editor. [pack: mode-editor-design]
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import {
   deleteAt,
   getAt,
@@ -62,6 +62,11 @@ export default function JsonTree({ root, onChange, onOpenSkill }: JsonTreeProps)
     () => new Set(rows.filter((row) => row.autoOpen).map((row) => pathText(row.path))),
   );
   const [active, setActive] = useState("mode");
+  // WHY: add and remove stay on the row. Native dialogs broke the app's look
+  // and could be blocked by the browser. [mode-editor-design]
+  const [addingAt, setAddingAt] = useState<TreePath | null>(null);
+  const [newKey, setNewKey] = useState("");
+  const [confirming, setConfirming] = useState<TreePath | null>(null);
 
   const toggle = (path: TreePath) => {
     const key = pathText(path);
@@ -84,15 +89,33 @@ export default function JsonTree({ root, onChange, onOpenSkill }: JsonTreeProps)
       onChange(setAt(root, row.path, next));
       return;
     }
-    const key = window.prompt("Key name", "newKey");
-    if (!key) return;
-    onChange(setAt(root, row.path, { ...((parent ?? {}) as Record<string, unknown>), [key]: "" }));
-    setExpanded((current) => new Set(current).add(pathText(row.path)));
+    setAddingAt(row.path);
+    setNewKey("");
+    setConfirming(null);
+  };
+
+  const commitNewKey = () => {
+    if (!addingAt) return;
+    const key = newKey.trim();
+    if (key) {
+      const parent = (getAt(root, addingAt) ?? {}) as Record<string, unknown>;
+      if (!(key in parent)) {
+        onChange(setAt(root, addingAt, { ...parent, [key]: "" }));
+        setExpanded((current) => new Set(current).add(pathText(addingAt)));
+      }
+    }
+    setAddingAt(null);
+    setNewKey("");
   };
 
   const remove = (row: TreeRow) => {
-    if (!window.confirm(`Remove ${row.label}?`)) return;
+    setConfirming(row.path);
+    setAddingAt(null);
+  };
+
+  const confirmRemove = (row: TreeRow) => {
     onChange(deleteAt(root, row.path));
+    setConfirming(null);
   };
 
   return (
@@ -102,7 +125,8 @@ export default function JsonTree({ root, onChange, onOpenSkill }: JsonTreeProps)
         const isBranch = row.kind === "branch";
         const pathKey = pathText(row.path);
         return (
-          <div className="json-tree-row" key={pathKey} style={{ paddingLeft: 6 + row.depth * 16 }}>
+          <Fragment key={pathKey}>
+          <div className="json-tree-row" style={{ paddingLeft: 6 + row.depth * 16 }}>
             {isBranch ? (
               <>
                 <button
@@ -176,6 +200,32 @@ export default function JsonTree({ root, onChange, onOpenSkill }: JsonTreeProps)
               </>
             )}
           </div>
+          {addingAt && pathText(addingAt) === pathKey ? (
+            <div className="json-inline">
+              <input
+                autoFocus
+                className="json-value-input mono"
+                value={newKey}
+                placeholder="New key name"
+                aria-label="New key name"
+                onChange={(event) => setNewKey(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") commitNewKey();
+                  if (event.key === "Escape") { setAddingAt(null); setNewKey(""); }
+                }}
+              />
+              <button type="button" className="json-inline-btn" onClick={commitNewKey}>Add</button>
+              <button type="button" className="json-inline-btn" onClick={() => { setAddingAt(null); setNewKey(""); }}>Cancel</button>
+            </div>
+          ) : null}
+          {confirming && pathText(confirming) === pathKey ? (
+            <div className="json-inline json-confirm">
+              <span>Remove {row.label}?</span>
+              <button type="button" className="json-inline-btn danger" onClick={() => confirmRemove(row)}>Remove</button>
+              <button type="button" className="json-inline-btn" onClick={() => setConfirming(null)}>Cancel</button>
+            </div>
+          ) : null}
+          </Fragment>
         );
       })}
     </div>

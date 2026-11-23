@@ -4344,6 +4344,26 @@ a.chip {
   cursor: pointer;
 }
 .json-link:hover { text-decoration: underline; }
+.json-inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0 6px;
+  padding: 4px 8px 4px 26px;
+  border-left: 2px solid var(--accent);
+}
+.json-inline > span { color: var(--quiet); font-size: 12px; }
+.json-inline-btn {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ink);
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.json-inline-btn:hover { background: var(--soft); }
+.json-inline-btn.danger { color: var(--miss); border-color: var(--miss); }
 .md-preview h1 { font-size: 24px; margin: 0 0 16px; }
 .md-preview h2 { font-size: 18px; margin: 20px 0 8px; }
 .md-preview h3 { font-size: 15px; margin: 16px 0 6px; }
