@@ -14,7 +14,6 @@
 
 import type { Card, StudyLevel } from "@/lib/shared/types";
 import type { PackPrompts, PackRecord } from "@/lib/packs/types";
-import type { ChatMessage } from "@/lib/provider/client";
 import {
   describeCreationBrief,
   STUDY_NOTE_RULE,
@@ -23,6 +22,34 @@ import {
   type LibraryInventory,
 } from "@/lib/shared/creation";
 import { packLanguagePair, type PackLanguagePair } from "@/lib/shared/language";
+import {
+  assemblePrompt,
+  cardStyleRuleLines,
+  DEFAULT_GENERATION_SYSTEM,
+  exampleLine,
+  FRAGMENT_WORD_RULE,
+  modeSection,
+  OUTPUT_CONTRACT_LINE,
+  SELF_CONTAINED_RULE,
+  STRUCTURED_SYSTEM,
+  STUDY_NOTE_PLACEHOLDER,
+  TEACHING_RULE_LINES,
+  WORD_LESSON_RULE_LINES,
+  type ModePromptContribution,
+  type PromptInputs,
+} from "@/lib/shared/prompt-layers";
+
+// WHY: keep the public names this module already exported, so callers and tests
+// do not change while the words themselves move to the shared layer.
+// PACK: prompt-assembler
+// 2026-11-23 opencode: re-exported the shared prompt values. [pack: prompt-assembler]
+export {
+  DEFAULT_GENERATION_SYSTEM,
+  STRUCTURED_SYSTEM,
+  STUDY_NOTE_PLACEHOLDER,
+  type BuiltPrompt,
+} from "@/lib/shared/prompt-layers";
+import type { BuiltPrompt } from "@/lib/shared/prompt-layers";
 
 /** The learner categories the app owns. Packs may not add slots. */
 export interface ProfileSlots {
@@ -31,19 +58,10 @@ export interface ProfileSlots {
   learningStyle: string;
 }
 
-/** A built prompt: the exact display text and the messages sent to the provider. */
-export interface BuiltPrompt {
-  display: string;
-  messages: ChatMessage[];
-}
-
 /** Fill {{slots}} in a pack's own text. Unknown slots become nothing. */
 export function renderTemplate(template: string, values: Record<string, string>): string {
   return template.replace(/\{\{([a-zA-Z0-9_]+)\}\}/g, (_match, key: string) => values[key] ?? "");
 }
-
-export const DEFAULT_GENERATION_SYSTEM =
-  "You write complete, correct study lines for one learner. You never write exercises: you write truth, and the app hides part of it.";
 
 export const DEFAULT_GENERATION_TEMPLATE = [
   "Write {{count}} complete, correct lines in {{targetLanguage}} about {{topic}}.",
@@ -52,12 +70,12 @@ export const DEFAULT_GENERATION_TEMPLATE = [
   "Weak topic categories (labels only): {{weakTopics}}.",
   "Do not mention the learner or repeat their words.",
   "Vary the nouns, verbs and sentence shapes; do not reuse a line.",
-  'When the app hides a word the sentence cannot identify, the fullLine must name the base word or owner first: "Base word: cup. There are two cups on the table." or "Owner: Anna. That is Anna\'s winter coat."',
+  // WHY: the shared rule strings replace the private copies so the two lanes
+  // can never teach different wording. [pack: prompt-assembler]
+  SELF_CONTAINED_RULE,
   STUDY_NOTE_RULE,
-  'A line may add "teaching": up to three parts that help before the answer. A part is {"type":"text","text":"...","lang":"..."} or {"type":"image","source":"web","src":"https://...","alt":"..."} or {"type":"video","source":"youtube","src":"<11-character video id>","search":"..."}.',
-  'A teaching part never contains the answer, the hidden word or a translation of either. Leave it out when it would only repeat the line.',
-  "Never claim a video is verified or reliable: the app can check that a YouTube id exists, not that it still plays.",
-  "Return JSON only, shaped like:",
+  ...TEACHING_RULE_LINES,
+  OUTPUT_CONTRACT_LINE,
   '{"lines":[{"style":"cloze","fullLine":"the complete correct line","target":"the exact word or phrase the app should hide","translation":"a plain translation","topics":["{{topic}}"],"tags":[],"summary":"one short plain sentence","teaching":[{"type":"text","text":"a short help line that never gives the answer","lang":"{{targetLanguage}}"}]}]}',
 ].join("\n");
 
@@ -84,6 +102,10 @@ export function defaultPackPrompts(): PackPrompts {
 export interface GenerationPromptContext {
   brief?: CreationBrief | null;
   inventory?: LibraryInventory;
+  /** The selected mode's two prompt strings, when the learner chose one. */
+  mode?: ModePromptContribution | null;
+  /** The brief mapped to prompt inputs. Absent keeps the lane's old words. */
+  inputs?: PromptInputs;
 }
 
 /**
@@ -105,7 +127,7 @@ export function buildGenerationPrompt(
   // paths ask for. The app's default template already carries these words, so
   // they are added only when a pack's own template is in use. [D-28]
   const teaching =
-    ownTemplate === undefined ? [] : [SELF_CONTAINED_PROMPT_RULE, ...teachingPromptLines()];
+    ownTemplate === undefined ? [] : [SELF_CONTAINED_RULE, ...TEACHING_RULE_LINES];
   const values = {
     topic: input.topic,
     count: String(input.count),
@@ -116,13 +138,12 @@ export function buildGenerationPrompt(
     sourceLanguage: pair.sourceName || "the question language",
   };
   let user = renderTemplate(template, values);
-
   // A brief is appended to the pack's own words, so a pack template cannot
   // silently erase the learner's subject or the requested exercise style.
   if (input.brief) {
     const extra = [
       ...describeCreationBrief(input.brief, input.inventory ?? []),
-      ...cardStylePromptLines(input.brief.cardStyle, pair),
+      ...cardStyleRuleLines(input.brief.cardStyle, pair),
       ...teaching,
       FRAGMENT_WORD_RULE,
     ];
@@ -136,6 +157,21 @@ export function buildGenerationPrompt(
     if (pairLines.length > 0) user = `${user}\n\n${pairLines.join("\n")}`;
   }
 
+  // WHY: the template carries its own rules and shape, so a contract line is
+  // the one seam for mode between them. A template with no contract line gets
+  // mode after the universal rules above, not between the template and them.
+  // PACK: prompt-assembler
+  // 2026-11-23 opencode: moved the contract-less mode seam after the rules. [pack: prompt-assembler]
+  const modeLines = modeSection(input.mode);
+  if (modeLines.length > 0) {
+    const contractAt = user.indexOf(OUTPUT_CONTRACT_LINE);
+    if (contractAt >= 0) {
+      user = `${user.slice(0, contractAt)}${modeLines.join("\n")}\n${user.slice(contractAt)}`;
+    } else {
+      user = `${user}\n\n${modeLines.join("\n")}`;
+    }
+  }
+
   return {
     display: `${system}\n\n${user}`,
     messages: [
@@ -144,9 +180,6 @@ export function buildGenerationPrompt(
     ],
   };
 }
-
-const STRUCTURED_SYSTEM =
-  "You write complete, correct study lines for one learner and choose the containers they belong to. You never write exercises: you write truth, and the app hides part of it.";
 
 /** The example style always names a concrete style; mixed is not a line style. */
 function exampleStyle(cardStyle: CardStyle): string {
@@ -205,52 +238,6 @@ function pairPromptLines(pair: PackLanguagePair, studyInstruction = ""): string[
   return lines;
 }
 
-/** A short concrete line in the target language, translated into the source. */
-function exampleLine(pair: PackLanguagePair): {
-  fullLine: string;
-  base: string;
-  target: string;
-  translation: string;
-  teaching: string;
-} {
-  const examples: Record<string, { fullLine: string; base: string; target: string; teaching: string }> = {
-    de: { fullLine: "Grundwort: Apfel. Es liegen zwei Äpfel auf dem Tisch.", base: "Apfel", target: "Äpfel", teaching: "Es wächst auf einem Baum." },
-    en: { fullLine: "Base word: apple. There are two apples on the table.", base: "apple", target: "apples", teaching: "It grows on a tree." },
-    es: { fullLine: "Palabra base: manzana. Hay dos manzanas sobre la mesa.", base: "manzana", target: "manzanas", teaching: "Crece en un árbol." },
-    fr: { fullLine: "Mot de base: pomme. Il y a deux pommes sur la table.", base: "pomme", target: "pommes", teaching: "Il pousse sur un arbre." },
-    pl: { fullLine: "Słowo podstawowe: jabłko. Na stole leżą dwa jabłka.", base: "jabłko", target: "jabłka", teaching: "Rośnie na drzewie." },
-  };
-  const target = examples[pair.target.split("-")[0]] ?? examples.en;
-  const source = examples[pair.source.split("-")[0]] ?? target;
-  return {
-    fullLine: target.fullLine,
-    base: target.base,
-    target: target.target,
-    translation: source.fullLine,
-    teaching: target.teaching,
-  };
-}
-
-/** A deck or cards bundle cannot carry words, so its lines cannot link to one. */
-const FRAGMENT_WORD_RULE =
-  'This target cannot define a word. Leave "wordId" and "stage" out of every line.';
-
-/** The rule both generation lanes share: a hidden word needs its base in the line. */
-const SELF_CONTAINED_PROMPT_RULE =
-  'When the app hides a word the sentence cannot identify, the fullLine must name the base word or owner first: "Base word: cup. There are two cups on the table." or "Owner: Anna. That is Anna\'s winter coat."';
-
-/** The fixed example note. The raw learner request never enters the shape. */
-const STUDY_NOTE_PLACEHOLDER = "<one short learner-facing sentence on how to study>";
-
-/** The optional layer rules every structured prompt repeats. */
-function teachingPromptLines(): string[] {
-  return [
-    'A line may add "teaching": up to three parts that help before the answer. A part is {"type":"text","text":"...","lang":"..."} or {"type":"image","source":"web","src":"https://...","alt":"..."} or {"type":"video","source":"youtube","src":"<11-character video id>","search":"..."}.',
-    "A teaching part never contains the answer, the hidden word or a translation of either. Leave it out when it would only repeat the line.",
-    "Never claim a video is verified or reliable: the app can check that a YouTube id exists, not that it still plays.",
-  ];
-}
-
 /** The example layer for one line, with the pair's language when one is known. */
 function exampleTeaching(
   line: { teaching: string },
@@ -259,22 +246,6 @@ function exampleTeaching(
   return pair.target.length > 0
     ? { type: "text", text: line.teaching, lang: pair.target }
     : { type: "text", text: line.teaching };
-}
-
-/**
- * The word rules this lane can honour. It writes cloze and type lines, so it
- * can teach story, spelling and forms but never picks or a matching board.
- */
-function generationWordLessonLines(): string[] {
-  return [
-    "A word lesson is one word and the cards that teach it. Write at most one word beside the lines, and make every word card belong to it.",
-    'A word has "id" (lowercase slug), "lemma", "meaning", "lang" (the target language code), "forms" and "pairs".',
-    'A form is {"label":"...","to":"...","meaning":"...","why":[{"type":"text","text":"..."}]}. "meaning" and "why" are in the question language; "why" explains the change and never gives a card answer.',
-    'A pair is {"target":"...","meaning":"..."}; both are in the question language and must be distinct inside one word.',
-    'Every word card sets "wordId" to that word\'s id and "stage" to "story", "spelling" or "forms". Stage fixes style: story is cloze, spelling and forms are type. This lane must not write "dialogue" or "matching".',
-    "Never print a changed form in a card prompt or teaching part: the learner has to produce it.",
-    'A forms line is a type line: it asks for the changed form, and the app turns the line into a translation prompt with one answer field — never a ___ blank.',
-  ];
 }
 
 /** A word and one linked card the new-pack example can copy. */
@@ -368,36 +339,6 @@ function deckShape(cardStyle: CardStyle, pair: PackLanguagePair): string {
   });
 }
 
-/** Plain style rules every structured prompt repeats, because the validator enforces them. */
-function cardStylePromptLines(
-  cardStyle: CardStyle,
-  pair: PackLanguagePair = packLanguagePair(null),
-): string[] {
-  if (cardStyle === "mixed") {
-    return [
-      'Card style: mixed. Set "style" on each line to "cloze", "type" or "hear_type". A line with no style becomes a cloze card.',
-    ];
-  }
-  const lines = [
-    `Card style: ${cardStyle}. Every line must set "style": "${cardStyle}". A line with another style, or with no style, makes the app refuse the whole batch.`,
-  ];
-  if (cardStyle === "type") {
-    lines.push(
-      pair.known && !pair.same
-        ? `Every type line must include a translation in ${pair.sourceName}, because the learner reads it and types the full ${pair.targetName} line.`
-        : "Every type line must include a translation, because the learner sees the translation and types the full line.",
-    );
-  }
-  if (cardStyle === "hear_type") {
-    lines.push(
-      pair.target.length > 0
-        ? `Every hear_type line is spoken in ${pair.targetName}, and the learner types the full ${pair.targetName} line.`
-        : "Every hear_type line is spoken in the pack language when it is known, and the learner types the full line.",
-    );
-  }
-  return lines;
-}
-
 /** A generated pack chooses its own name, version, decks and lines. */
 export function buildPackGenerationPrompt(
   slots: ProfileSlots,
@@ -417,7 +358,7 @@ export function buildPackGenerationPrompt(
 
   if (brief) {
     userLines.push(...describeCreationBrief(brief, inventory));
-    userLines.push(...cardStylePromptLines(brief.cardStyle, pair));
+    userLines.push(...cardStyleRuleLines(brief.cardStyle, pair));
   } else {
     // Legacy requests keep the old hint that keeps a pack near the learner's topics.
     const knownTopics = [...new Set(inventory.flatMap((pack) => pack.decks))];
@@ -431,20 +372,21 @@ export function buildPackGenerationPrompt(
   userLines.push(
     `Learner level: ${slots.level}. Preferred learning style: ${slots.learningStyle}.`,
     "Every line must name one of your decks with deckId. The app turns each line into its exercise.",
-    SELF_CONTAINED_PROMPT_RULE,
-    ...teachingPromptLines(),
-    ...generationWordLessonLines(),
-    "Return JSON only, shaped like:",
-    packShape(brief?.cardStyle ?? "mixed", pair, rawPreference.length > 0),
+    SELF_CONTAINED_RULE,
+    ...TEACHING_RULE_LINES,
+    ...WORD_LESSON_RULE_LINES,
   );
-  const user = userLines.join("\n");
-  return {
-    display: `${STRUCTURED_SYSTEM}\n\n${user}`,
-    messages: [
-      { role: "system", content: STRUCTURED_SYSTEM },
-      { role: "user", content: user },
-    ],
-  };
+  // WHY: the shared composer appends the mode section once, then the contract
+  // and the shape, so a mode can never appear after the output contract.
+  // PACK: prompt-assembler
+  // 2026-11-23 opencode: moved this tail onto the shared assembler. [pack: prompt-assembler]
+  return assemblePrompt({
+    system: STRUCTURED_SYSTEM,
+    lines: userLines,
+    mode: context.mode,
+    inputs: context.inputs,
+    shape: packShape(brief?.cardStyle ?? "mixed", pair, rawPreference.length > 0),
+  });
 }
 
 /** A generated deck chooses its own name and lines inside a known pack. */
@@ -468,7 +410,7 @@ export function buildDeckGenerationPrompt(
 
   if (brief) {
     userLines.push(...describeCreationBrief(brief, inventory));
-    userLines.push(...cardStylePromptLines(brief.cardStyle, pair));
+    userLines.push(...cardStyleRuleLines(brief.cardStyle, pair));
   } else {
     const pairLines = pairPromptLines(pair, pack.studyInstruction ?? "");
     if (pairLines.length > 0) userLines.push(...pairLines);
@@ -477,20 +419,19 @@ export function buildDeckGenerationPrompt(
   userLines.push(
     `Learner level: ${slots.level}. Preferred learning style: ${slots.learningStyle}.`,
     "The app turns each line into its exercise.",
-    SELF_CONTAINED_PROMPT_RULE,
-    ...teachingPromptLines(),
+    SELF_CONTAINED_RULE,
+    ...TEACHING_RULE_LINES,
     FRAGMENT_WORD_RULE,
-    "Return JSON only, shaped like:",
-    deckShape(brief?.cardStyle ?? "mixed", pair),
   );
-  const user = userLines.join("\n");
-  return {
-    display: `${STRUCTURED_SYSTEM}\n\n${user}`,
-    messages: [
-      { role: "system", content: STRUCTURED_SYSTEM },
-      { role: "user", content: user },
-    ],
-  };
+  // WHY: the same composer keeps deck prompts in the same layer order as pack
+  // prompts, so a mode changes only layer 3 in both. [pack: prompt-assembler]
+  return assemblePrompt({
+    system: STRUCTURED_SYSTEM,
+    lines: userLines,
+    mode: context.mode,
+    inputs: context.inputs,
+    shape: deckShape(brief?.cardStyle ?? "mixed", pair),
+  });
 }
 
 /** Pull the question text out of a card without touching the answer side. */

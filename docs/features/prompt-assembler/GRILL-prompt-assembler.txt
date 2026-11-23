@@ -1,0 +1,195 @@
+GRILL — prompt-assembler
+Status: Locked
+Date: 2026-11-23
+Decisions by: agent (delegated by the learner, 2026-11-23)
+
+Verbatim from the learner on 2026-11-23 (the spawning session's brief):
+
+  "remember to maintain reasonable logic isolation where needed for easy scaling"
+  "again do not rush into it find out what the issue is, split the job, for each
+  task get full context before implementing."
+
+  "All decisions are delegated — make them yourself, record each in the GRILL
+  with decision, reason, what it rules out, and source. Do NOT stop to ask the
+  user questions."
+
+This pack is Track 2 of four. Track 1 shipped the LearningMode entity, its
+schema, its validator, its store and the base /api/modes CRUD. Track 3 owns the
+five built-in mode definitions. Track 4 owns Mode Studio. This track consumes
+the contract and writes no mode content and no UI.
+
+The learner's standing instruction is operational: the phases in IMPL are
+strictly ordered, full context is read before each phase, and logic isolation
+is enforced by module boundaries. Every decision below is made by the delegate.
+
+--------------------------------------------------------------------------------
+Q1. Where do the shared prompt layers live, and what do they own?
+A. In a new pure browser-safe module `v1/src/lib/shared/prompt-layers.ts`. It
+   owns layer 1 (the system strings and the single "Return JSON only, shaped
+   like:" output-contract line), layer 2 (the universal rule strings:
+   self-contained rule, teaching lines, fragment rule, style lines, the shared
+   example line), `assemblePrompt(...)`, `PromptInputs`,
+   `ModePromptContribution`, and one exported prompt version.
+   Why: the generation lane and the chat lane currently keep copies of the same
+   words. One pure module makes the shared text byte-identical and gives the
+   tests one place to count it. It has no Node import, so it runs in the
+   browser and in vitest alike.
+   Rules out: a third copy in either lane, a provider-only module, and any
+   import of the whole LearningMode entity into the shared module.
+   Source: PLAN.md §3.1 and §4; `STUDY_NOTE_RULE` in `shared/creation.ts` is the
+   precedent for one shared rule string imported by both lanes.
+
+Q2. What is the mode seam, and what text does it inject?
+A. A structural interface `ModePromptContribution { skillInstructions: string;
+   canonicalExample: string }`. The lane passes only those two strings. The
+   shared module renders one mode section: a short "Learning mode:" header,
+   the skill text once, then one compact canonical-example note. It is placed
+   after the universal rules and before the output contract in pack, deck and
+   cards prompts, and at the three equivalent chat insertion points (after the
+   rules block, before "Return JSON shaped like this:").
+   Why: the example teaches the mode's approach, not a second competing output
+   shape. Keeping the rendering in the shared module makes "exactly once"
+   testable and stops either lane from inventing its own wording. A structural
+   seam keeps the prompt layer independent of the Track 1 entity.
+   Rules out: importing `LearningMode` into the layers, a second full `packShape`
+   for every mode, and placing mode text after the output contract (which
+   would break the example-extraction helpers in the chat tests).
+   Source: PLAN.md §3.3, §3.4 and §4.
+
+Q3. What does "no mode" mean for an existing prompt?
+A. When no mode is supplied, or its skill text is empty after trimming, the
+   mode section is an empty list and the assembled prompt is the same text the
+   lane produced before this pack. The D-28 teaching append in
+   `buildGenerationPrompt` stays in place and in order.
+   Why: mode selection is optional. An old caller must not receive a new
+   sentence, and the once-only teaching assertion must still see exactly one
+   teaching block.
+   Rules out: a placeholder "no mode" line, and moving or deleting the D-28
+   append.
+   Source: PLAN.md §7; `provider-prompt.test.ts:265-273`.
+
+Q4. How is a brief turned into prompt inputs without changing the brief?
+A. `promptInputsFromBrief(brief, inventory, slots, count): PromptInputs` lives
+   beside the layers in `prompt-layers.ts`. It reads the existing fields
+   (subject, target/question language, library summary, study instruction as
+   custom focus, card mix, level, learning style, count) and returns a plain
+   object. `CreationBrief` defaults and validation are untouched.
+   Why: Track 1 deliberately added only optional fields. A separate adapter is
+   the clean place to bridge a stored brief to the prompt's narrower input
+   type without making the shared brief module know about prompt wording.
+   Rules out: adding fields to `DEFAULT_CREATION_BRIEF`, changing
+   `validateCreationBrief`, and making the layers accept a whole brief.
+   Source: PLAN.md §3.2 and §5; `shared/creation.ts:40-58, 84-105, 143-237`.
+
+Q5. What is the prompt version, and who owns it?
+A. One shared `PROMPT_SKILL_VERSION = "9.0.0"`. `authoring.ts` keeps its public
+   name `AUTHORING_SKILL_VERSION` as an alias of the shared constant, so the
+   router and the screens keep compiling. The two hard-coded assertions move
+   to "9.0.0".
+   Why: a single source stops the generation lane and the chat lane from
+   reporting different versions. A bump is right because the shared text
+   changes. Keeping the old export name is additive for callers.
+   Rules out: two version constants, leaving the version at 8.0.0, and
+   renaming the export the router already imports.
+   Source: PLAN.md §3.5; `authoring.ts:23-24`, `router.ts:1315-1333`,
+   `browser-authoring.test.ts:92`, `simulate-study-card-clarity.test.ts:99`.
+
+Q6. How is the AI mode draft exposed, and does it save anything?
+A. A new browser module `mode-draft.ts` owns a versioned meta-skill prompt
+   (`MODE_DRAFT_VERSION = "1.0.0"`) that demands JSON only and describes the
+   LearningMode shape. It follows `page-draft.ts`: `prepareModeDraft` holds
+   the prompt with `holdPrepared` and returns `{requestId, prompt, expiresAt}`;
+   `generateModeDraft` takes it once, calls the provider, logs the prompt with
+   `appendPrompt`, parses with `parseJsonLoose`, forces `isBuiltIn: false` and
+   a fresh `createdAt`, then validates with `readLearningMode`. It returns the
+   mode object. No repository write. Two additive POST routes in `router.ts`
+   mirror `/api/pages/draft*`: `/api/modes/draft` returns
+   `{requestId, prompt, version}` and `/api/modes/draft/send` returns `{mode}`.
+   Why: the learner must approve the exact prompt; a draft is a starting point
+   for Mode Studio (Track 4), not a stored row. Forcing the server-owned fields
+   stops an AI answer from creating a built-in or a backdated row.
+   Rules out: reusing the page-draft routes, a route that writes to the store,
+   and trusting AI-supplied `isBuiltIn` or `createdAt`.
+   Source: PLAN.md §3.6; `core/page-draft.ts:57-138`,
+   `browser/page-draft.ts:78-124`, `router.ts:1067-1086`.
+
+Q7. Does `PreparedRequest` change?
+A. Yes, additively: its `kind` union gains `"mode"`. Every existing consumer
+   uses equality checks (`kind !== "generation"`, `kind !== "page"`), so no
+   switch needs rewriting.
+   Why: a held mode draft must be distinguishable from a held page draft;
+   otherwise `generatePageDraft` would accept and misread it.
+   Rules out: reusing `kind: "page"` with a hidden marker, and a second held
+   prompt map in the new module.
+   Source: `provider/prepare.ts:21-39` and the callers at
+   `browser/provider.ts:331,339`, `browser/jobs.ts:261`, `browser/page-draft.ts:102`.
+
+Q8. Which rules are shared, given the two lanes use different wording today?
+A. One wording per concept, chosen so the existing assertions still hold:
+   the self-contained rule names the base word, owner and both blank and
+   full-line examples; the teaching lines include both "not that it still
+   plays" and "nobody has checked that it still plays"; card-style and example
+   line text come from the shared module. Both lanes import them; chat renders
+   them as its existing bullet block, generation as its existing plain lines.
+   Why: the strings are the contract the tests read. Keeping every old phrase
+   present means no existing assertion is weakened while the duplicate sources
+   disappear.
+   Rules out: two near-identical constants with different names, and editing
+   old assertions to match new wording.
+   Source: PLAN.md §2 duplication list; `prompt.ts:209-252, 372-399`,
+   `authoring.ts:39-90, 279-306`, and the assertions in
+   `provider-prompt.test.ts` and `browser-authoring.test.ts`.
+
+Q9. Do provider schemas widen?
+A. No. `generate.ts` is read-only. The canonical example a mode carries was
+   already checked by `validateCanonicalExample` in Track 1, so the existing
+   schemas keep accepting it.
+   Why: a wider schema would let a provider answer bypass the app's card
+   rules, which is the one safety property the generation lane exists for.
+   Rules out: new fields in `generatedLineSchema`, new stages, and a second
+   bundle shape for draft modes.
+   Source: PLAN.md §3.7; `provider/generate.ts:30-75`.
+
+Q10. Which files are owned, and which are read-only?
+A. Own: the new `shared/prompt-layers.ts` and `browser/mode-draft.ts`,
+   `provider/prompt.ts`, `browser/authoring.ts`, `provider/prepare.ts` (one
+   union member only), the two additive router routes, and the named tests.
+   Read-only: `shared/creation.ts`, `provider/generate.ts`, all Track 1 type,
+   schema, store, repository and base CRUD files, Track 3 mode content,
+   `v1/src/app/**`, `make-seed.mjs`, and the Drift log.
+   Why: four tracks share these files. A small explicit ownership list is how
+   one track stops overwriting another's work.
+   Rules out: any edit to a Track 1 file, any UI edit, and any Drift entry.
+   Source: PLAN.md §5; the subagent brief's hard exclusions.
+
+Q11. What are the simulations for this pack?
+A. No separate pre/post shell simulation. Track 1 recorded the same deviation
+   (D-A): the deliverable set fixed by the spawning brief is GRILL, PRD-TRD,
+   IMPL and tests, while Track 4 owns the operator simulation. The simulation
+   contract is written in PRD-TRD §3 and proven by the named tests.
+   Why: this track has no operator screen; its observable surface is prompt
+   text and route responses, which the tests read directly. Writing a shell
+   play that echoes hardcoded strings would be decoration.
+   Rules out: a simulation script that does not read real code, and any change
+   to Track 4's deliverables.
+   Source: Track 1 GRILL deviation D-A; the subagent brief's phase list.
+
+No remaining open questions.
+
+## Addendum - 2026-11-23 (delivery notes, not new decisions)
+
+These notes record where the shipped code intentionally refines locked
+answers. They reopen no question and change no decision.
+
+- Q3: a no-mode prompt adds no mode text, but it is not byte-identical to the
+  base branch. Q8 locked one merged wording per rule; that wording replaces the
+  old copies while keeping their old phrases. PLAN section 7 and PRD-TRD
+  section 2.2 and section 3 item 4 carry the shipped wording.
+- Q6: MODE_DRAFT_VERSION shipped as "1.0.1", not "1.0.0". The first pass called
+  version a number; the Track 1 store checks it as text, so the prompt now
+  teaches a version string. PRD-TRD section 4.5 and the router test pin it.
+- Q8: "one wording per concept" still means one source of truth: one phrase
+  table and one cardStyleRuleLines function. The style rule speaks two
+  vocabularies because a generation line owns "style" and a chat card owns
+  answerDef.mode. PLAN section 2 line 17 locks that exception. One wording
+  here taught the chat a field its own JSON shape does not have.

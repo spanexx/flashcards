@@ -14,14 +14,27 @@ import type { BrowserPack } from "@/lib/browser/repository";
 import {
   describeCreationBrief,
   STUDY_NOTE_RULE,
-  type CardStyle,
   type CreationBrief,
   type LibraryInventory,
 } from "@/lib/shared/creation";
 import { packLanguagePair, type PackLanguagePair } from "@/lib/shared/language";
+import {
+  cardStyleRuleLines,
+  exampleLine,
+  modeSection,
+  PROMPT_SKILL_VERSION,
+  SELF_CONTAINED_RULE,
+  STUDY_NOTE_PLACEHOLDER,
+  TEACHING_RULE_LINES,
+  type ModePromptContribution,
+  type PromptInputs,
+} from "@/lib/shared/prompt-layers";
 
+// WHY: the version is single sourced with the generation lane, so the two
+// prompts cannot claim different skill versions. The old export name stays for
+// the router and the screens. [pack: prompt-assembler]
 /** Bump when the prompt or the JSON shape it teaches changes. */
-export const AUTHORING_SKILL_VERSION = "8.0.0";
+export const AUTHORING_SKILL_VERSION = PROMPT_SKILL_VERSION;
 
 /** Where the chat is allowed to write. No learner-written name field exists. */
 export type AuthoringTarget =
@@ -33,30 +46,10 @@ export type AuthoringTarget =
 export interface AuthoringContext {
   brief?: CreationBrief | null;
   inventory?: LibraryInventory;
-}
-
-/** A short concrete line in the target language, translated into the source. */
-function exampleLine(pair: PackLanguagePair): {
-  fullLine: string;
-  target: string;
-  translation: string;
-  teaching: string;
-} {
-  const examples: Record<string, { fullLine: string; target: string; teaching: string }> = {
-    de: { fullLine: "Grundwort: Apfel. Es liegen zwei Äpfel auf dem Tisch.", target: "Äpfel", teaching: "Es wächst auf einem Baum." },
-    en: { fullLine: "Base word: apple. There are two apples on the table.", target: "apples", teaching: "It grows on a tree." },
-    es: { fullLine: "Palabra base: manzana. Hay dos manzanas sobre la mesa.", target: "manzanas", teaching: "Crece en un árbol." },
-    fr: { fullLine: "Mot de base: pomme. Il y a deux pommes sur la table.", target: "pommes", teaching: "Il pousse sur un arbre." },
-    pl: { fullLine: "Słowo podstawowe: jabłko. Na stole leżą dwa jabłka.", target: "jabłka", teaching: "Rośnie na drzewie." },
-  };
-  const target = examples[pair.target.split("-")[0]] ?? examples.en;
-  const source = examples[pair.source.split("-")[0]] ?? target;
-  return {
-    fullLine: target.fullLine,
-    target: target.target,
-    translation: source.fullLine,
-    teaching: target.teaching,
-  };
+  /** The selected mode's two prompt strings, when the learner chose one. */
+  mode?: ModePromptContribution | null;
+  /** The brief mapped to prompt inputs. Absent keeps the chat lane's old words. */
+  inputs?: PromptInputs;
 }
 
 function commonRules(pair: PackLanguagePair): string {
@@ -72,19 +65,11 @@ function commonRules(pair: PackLanguagePair): string {
   {"mode":"picks","options":["...","..."],"correct":["..."]}
   {"mode":"hear_type","expected":["..."]}
 - hints: one or two short sentences that name the rule, never the answer.
-- A cloze or transformation prompt must be self-contained. When the sentence alone cannot tell the learner what to supply, name the base word, owner or context in the prompt itself:
-  "Base word: cup. There are two ___ on the table."
-  "Owner: Anna. That is ___ winter coat."
-  Never leave the missing word to be guessed from the deck name, the previous card or a picture.
+- ${SELF_CONTAINED_RULE}
 - A forms card is a type card, not a cloze: its prompt names the change and asks for the changed form in words, for example "Type the genitive form of \"the base word\":". Do not write a ___ blank in a forms prompt; the learner types the answer in the answer field.
 - fullLine: the complete sentence or phrase the card is built from.
-- teaching: optional, at most three parts. Each part is one of:
-  {"type":"text","text":"...","lang":"${speakLang}"}
-  {"type":"image","source":"web","src":"https://...","alt":"..."}
-  {"type":"video","source":"youtube","src":"<11-character video id>","search":"..."}
-- A teaching part helps before the answer. It never contains the answer, the missing word, or a translation of either.
-- A picture or video earns its place only when it teaches the same point. A web address starts with https://; alt text describes the picture; a YouTube source is the video id alone, and nobody has checked that it still plays.
-- Leave "teaching" out when a short layer would only repeat the prompt.
+- ${TEACHING_RULE_LINES.join("\n- ")}
+- A picture or video earns its place only when it teaches the same point. A web address starts with https://; alt text describes the picture; a YouTube source is the video id alone.
 - Never include a "topics" field. The deck decides the topic.
 - Never include learner evidence, settings, a provider key, or a backup.`;
 }
@@ -204,9 +189,6 @@ function wordLessonExample(deckId: string, pair: PackLanguagePair) {
   return { word, cards };
 }
 
-/** The fixed example note. The raw learner request never enters the shape. */
-const STUDY_NOTE_PLACEHOLDER = "<one short learner-facing sentence on how to study>";
-
 function packHeader(
   pair: PackLanguagePair,
   includeStudyNote = false,
@@ -275,36 +257,6 @@ function exampleDeckId(pack: BrowserPack): string {
   return id;
 }
 
-/** Turn the learner's style choice into card-shape words the chat can follow. */
-function authoringStyleLines(cardStyle: CardStyle, pair: PackLanguagePair): string[] {
-  // Mixed is a request to vary the answer mode, not a mode of its own.
-  if (cardStyle === "mixed") {
-    return [
-      "Card style: mixed. Use a mix of cloze, type and hear_type answer modes across the cards.",
-    ];
-  }
-  const lines = [
-    `Card style: ${cardStyle}. Every card must build a ${cardStyle} answer. A card with another answer mode does not match the learner's request.`,
-  ];
-  // A type card cannot work without the translation it asks the learner to read.
-  if (cardStyle === "type") {
-    lines.push(
-      pair.known && !pair.same
-        ? `Every type card needs a translation part in ${pair.sourceName}, because the learner reads it and types the full ${pair.targetName} line.`
-        : "Every type card needs a translation part, because the learner sees the translation and types the full line.",
-    );
-  }
-  // A spoken card uses the pack language when one is known.
-  if (cardStyle === "hear_type") {
-    lines.push(
-      pair.target.length > 0
-        ? `Every hear_type card speaks the full line in ${pair.targetName}, and the learner types the full ${pair.targetName} line.`
-        : "Every hear_type card speaks the full line in the pack language when it is known, and the learner types the full line.",
-    );
-  }
-  return lines;
-}
-
 /** The pair a brief asks for, or the pair the existing pack already declares. */
 function promptPair(
   pack: BrowserPack | null | undefined,
@@ -328,7 +280,11 @@ function briefSection(context: AuthoringContext, pair: PackLanguagePair): string
     ...describeCreationBrief(context.brief, context.inventory ?? [], {
       includeInventory: true,
     }),
-    ...authoringStyleLines(context.brief.cardStyle, pair),
+    // WHY: the rule text is shared, but a card carries answerDef.mode while a
+    // generation line carries style. The chat must keep its own words.
+    // PACK: prompt-assembler
+    // 2026-11-23 opencode: passed the card voice to the shared rule. [pack: prompt-assembler]
+    ...cardStyleRuleLines(context.brief.cardStyle, pair, "card"),
   ];
   return `\n\n${lines.join("\n")}`;
 }
@@ -365,6 +321,13 @@ You are writing content for a flashcards app. Answer with one JSON object and no
 
 The app will check every card before it saves anything. If one card is wrong, the whole import is refused, so follow the shape exactly.${briefSection(context, pair)}${pairSection ? `\n\n${pairSection}` : ""}`;
   const rules = commonRules(pair);
+  // WHY: the mode is one optional section after the shared rules and before
+  // the JSON shape, so the chat's example-extraction helper still finds the
+  // shape last. An absent mode adds nothing to the prompt.
+  // PACK: prompt-assembler
+  // 2026-11-23 opencode: added the chat-lane mode seam. [pack: prompt-assembler]
+  const modeLines = modeSection(context.mode);
+  const modeText = modeLines.length > 0 ? `\n\n${modeLines.join("\n")}` : "";
 
   if (target.kind === "pack") {
     const nameRule = context.brief?.packName
@@ -380,7 +343,7 @@ A pack may carry one "words" array beside "cards". Write at most one word: "id" 
 Every word card sets "wordId" to that word's id and "stage" to one of story, spelling, forms, dialogue, matching. Stage fixes the answer mode: story is cloze, spelling and forms are type, dialogue is picks, matching is match. Skip forms when the word has no forms and matching when it has fewer than two pairs. Never print a changed form in a card prompt or teaching part: the learner must produce it.
 ${STUDY_NOTE_RULE}
 
-${rules}
+${rules}${modeText}
 
 Return JSON shaped like this:
 ${shapeForPack("basics", "Everyday basics", pair, rawPreference.length > 0)}
@@ -407,7 +370,7 @@ ${deckList || "- (none yet)"}
 ${nameRule}
 Return only the new decks and their cards. Do not include a "pack" header, a "words" key, or an existing deck id. A fragment cannot define a word, so leave "wordId" and "stage" out.
 
-${rules}
+${rules}${modeText}
 
 Return JSON shaped like this:
 ${shapeForDeck(id, "Extra deck", pair)}`;
@@ -424,7 +387,7 @@ ${deckList}
 
 Return only cards for the target deck. Do not include a "pack" header, a "decks" key or a "words" key. Every card must have "deckId": "${deck.id}". A fragment cannot define a word, so leave "wordId" and "stage" out.
 
-${rules}
+${rules}${modeText}
 
 Return JSON shaped like this:
 ${shapeForCards(deck.id, pair)}`;

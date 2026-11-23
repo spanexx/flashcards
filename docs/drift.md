@@ -1,9 +1,9 @@
 # Drift Log
-**Last updated:** 2026-11-22  **Open:** 0  **Awaiting:** 0  **Resolved:** 49  **Critical/High:** 0
+**Last updated:** 2026-11-23  **Open:** 0  **Awaiting:** 0  **Resolved:** 50  **Critical/High:** 0
 
 ## Open
 
-_None. See Resolved for the 2026-11-22 prompt-example clarity fix (D-49)._
+_None. See Resolved for the 2026-11-23 Next.js security pin fix (D-50)._
 
 ## Awaiting decision
 
@@ -17,6 +17,15 @@ the IMPL reconcile section, is in progress._
 ---
 
 ## Resolved
+
+- **D-50** (Medium, 2026-11-23, reporter: the build gate during prompt-assembler verification; resolved 2026-11-23) — The pinned Next.js release was affected by a known security vulnerability. The build gate stopped the first build with an upgrade recommendation. The pin now points at a fixed release and the build no longer raises the advisory gate.
+  - Doc claim: "The static export uses the existing Next.js, React," (`docs/features/browser-app/PRD-TRD-browser-app.md:157`); "No new runtime dependency without a locked decision." (`docs/ethics/dev-lane/build.md:31`).
+  - Code reality: `v1/package.json:24` pins `"next": "16.4.6"` and the lockfile matches; `next --version` reports `Next.js v16.4.6`. `v1/next.config.ts:24` sets `experimental.agentUpgrade` to `"security"` to record why the flag is present. The build completes without the advisory stop.
+  - Why matters: a known vulnerable build tool is a risk to the operator even though the app ships as static files, and every build had needed a retry before it would proceed.
+  - Owner: dependency upgrade; the learner chose the current checkout over a separate worktree.
+  - To fix: run the Next.js security upgrade, update the pin and lockfile, add the upgrade marker, rerun build and the full gates, then resolve this entry.
+  - Verified by: `npm install next@16.4.6 --save-exact`; `next --version` = `Next.js v16.4.6`; `npm run build` green with `check-pwa: passed` and no advisory stop; full suite 94 files / 1195 tests; `npm run typecheck` and changed-file eslint green; both drift gates green. `npm audit` still lists seven moderate findings in the dev-only `typescript-eslint`/`minimatch` chain; they are unrelated to this Next.js advisory and out of scope here.
+  - Related: prompt-assembler (the build gate surfaced it), dev-lane.
 
 - **D-49** (Medium, 2026-11-22, reporter: the learner via an independent triage of the delegated goal; resolved 2026-11-22) — Two worked examples in the authoring skill contradicted the self-contained-card rule they teach: the generic apple cloze hid "sweet" with no clue, and the forms-stage example used a literal "___" inside a text part even though forms is a type card.
   - Doc claim: "every cloze or transformation prompt must name the base word, owner, or context in the prompt when the sentence alone cannot tell the learner what to supply" (`docs/features/study-card-clarity/PRD-TRD-study-card-clarity.md:63-79`); "forms -> type" (`docs/features/word-lessons/GRILL-word-lessons.txt:86-97`).

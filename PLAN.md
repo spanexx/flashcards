@@ -1,70 +1,64 @@
-# TRACK 1 — Learning Mode Core (build FIRST)
+# TRACK 2 — Prompt Assembler & Mode Meta-Skill (build SECOND, after Track 1)
 
-Status: PLAN ONLY. Base: `main` at `8acc181`. Branch: `feature/learning-mode-core`.
+Status: PLAN ONLY. Base: `feature/learning-mode-core`. Branch: `feature/prompt-assembler`.
 
 ## 1. Scope and non-goals
 
-Own the `LearningMode` data model, IndexedDB storage, seeding/loader, validation contract and base `/api/modes` CRUD. Ship **no** final mode content, no prompt changes and no UI.
+Replace the monolithic prompt text with three composable layers and add the AI-mode-draft meta-skill. Consume LearningMode from Track 1; write no mode content and no UI.
 
-Non-goals: the five built-in definitions (Track 3), prompt assembler (Track 2), Mode Studio screens (Track 4), changing `flashcards.pack/v1`, widening provider schemas.
+Non-goals: changing CreationBrief defaults/validation beyond Track 1's additive fields, widening provider schemas, editing mode definitions, building Mode Studio screens.
 
 ## 2. Current state (evidence from research)
 
-- `LearningMode` does not exist anywhere in `v1/src` (grep confirmed).
-- `AnswerMode` is `v1/src/lib/shared/types.ts:104-105`; `WordStage` at `:179`; `PackStatus` and its optional `studyInstruction` at `:384-403`.
-- `v1/src/lib/core/schema.ts:11-12` imports `AnswerMode`/`WordStage` and `studyInstructionField`. `answerDefSchema.mode` hardcodes the five modes at `:146-147`. `packManifestSchema` is at `:228-243`, `packPromptsSchema` at `:251-263`, `ValidationIssue` at `:265-270`.
-- `BrowserPack` row pattern: `v1/src/lib/browser/repository.ts:27-48`; legacy repair `:81-87`; CRUD `:89-104`; `clearLibrary` enumerates stores at `:532-550`.
-- Store: `STORE_NAMES` `v1/src/lib/browser/store.ts:14-32`; `MemoryStore` creates stores lazily `:59-66`; IndexedDB version 6 at `:113`, additive upgrade `:114-118`, `onblocked` `:122-123`.
-- Pack seeding: `v1/scripts/make-seed.mjs:13-18,114-186`; `v1/src/lib/browser/seed.ts:14-36,61-71,73-80,105-130`; one-shot hook `v1/src/lib/browser/router.ts:189-204` (`seedPass ??= ensureSeeded()`).
-- Validation already available: `parseBundle` `bundle.ts:240-248`; `hardRuleIssues` `core/card.ts:125-182`; `clozeContextIssue` `core/prompt-context.ts:118-149`; `lessonIssues` `core/word-check.ts:35-156`; `normalizeStudyInstruction`/`studyInstructionField` `prompt-context.ts:162-199`. `parseBundle` alone does NOT run hard rules — this is the key reuse point.
-- Backup/restore: `bundle.ts:881-1009`, `1019-1054`, `1084-1143`.
-- Router: reads at `:784-849`, writes at `:851-1179`; `/api/packs` at `:791`, pack CRUD at `:977-992`; authoring version returns at `:1153-1174`.
+- `buildPackGenerationPrompt` `v1/src/lib/provider/prompt.ts:402-448`; context type `:84-87` has only `brief?` and `inventory?`; universal tail `:431-439` (level line, deckId rule, `SELF_CONTAINED_PROMPT_RULE` `:239-240`, `teachingPromptLines()` `:246-252`, `generationWordLessonLines()` `:268-278`, `"Return JSON only, shaped like:"`, `packShape()` `:315-349`).
+- `buildDeckGenerationPrompt` `:453-487` and `buildGenerationPrompt` `:91-140` need the same seam. The D-28 teaching append for pack-owned templates is at `:103-108` and must survive refactor.
+- System strings: `DEFAULT_GENERATION_SYSTEM` `:45-46`, `STRUCTURED_SYSTEM` `:148-149`. Output contract: `:60-61`, `:437`, `:483`.
+- Chat lane: `AUTHORING_SKILL_VERSION` `v1/src/lib/browser/authoring.ts:23-24`; header `:362`; `commonRules` `:62-90`; `authoringStyleLines` `:279-306`; router version returns `router.ts:1153-1174`.
+- Duplication to eliminate: `exampleLine` `prompt.ts:209-232` vs `authoring.ts:39-60`; `teachingPromptLines` `prompt.ts:246-252` vs `commonRules` `authoring.ts:81-87`; self-contained rule `prompt.ts:239-240` vs `authoring.ts:75-78`; cardStyle rules `prompt.ts:372-399` vs `authoring.ts:279-306`. The cardStyle pair is parallel, not identical: lines carry `style`, cards carry `answerDef.mode`. Share the rule with a line/card voice, never one wording for both.
+- `STUDY_NOTE_RULE` is already shared from `creation.ts:17-18` into both lanes (`prompt.ts:20`, `authoring.ts:16`) — this is the pattern to follow.
+- Provider schemas are strict `generate.ts:53-75`; stage enum limited to `story|spelling|forms` at `:46`; `chosenStyle` enforces line style `:92-105`.
+- Page-draft precedent for AI draft: `core/page-draft.ts:70-91,93-138`, `browser/page-draft.ts:79-124`, `browser/provider/prepare.ts`.
 
-## 3. Locked decisions (delegated by the learner's goal instruction)
+## 3. Locked decisions
 
-1. `LearningMode` goes in `shared/types.ts`, immediately after `WordStage`; `canonicalExample` is an embedded `flashcards.pack/v1` object, not a JSON-in-JSON string.
-2. Additive optional `CreationBrief` fields: `modeId?`, `cardMix?: AnswerMode[]`, `modePreferences?`. Existing defaults and validation of old fields stay byte-stable. Track 4 consumes these; nobody else edits `creation.ts`.
-3. Built-ins are versioned and overwritten on update. They are not deletable — only duplicable. "Duplicate & Customize" writes a new row with `sourceModeId`, so no tombstone kind is needed.
-4. Customised modes ride in backup/restore; built-ins are re-seedable and need not be backed up.
-5. One shared spoiler-free validator is added to `core/prompt-context.ts` and reused by canonical-example validation. This is a new shared rule, not a copy. The rule: teaching/hints must not contain any `answerDef.blanks[].expected`, `expected`, or `correct` token.
-6. Track 1 owns ALL base `/api/modes` CRUD and the boot seed hook in `router.ts`. Track 2 adds only the two AI-draft routes additively later. Track 3 does not edit `router.ts`.
-7. `make-seed.mjs` is owned by Track 3, not Track 1.
+1. New pure browser-safe module `v1/src/lib/shared/prompt-layers.ts` owns layer 1 (system + output contract), layer 2 (universal card rules) and `assemblePrompt(...)`. Both lanes import it; no third copy.
+2. Do NOT restructure `CreationBrief`. Track 1 added optional `modeId`/`cardMix`/`modePreferences`; add adapter `promptInputsFromBrief(brief, inventory, slots, count): PromptInputs` with fields subject, targetLanguage, questionLanguage, existingLibrarySummary, customFocus, cardMix, level, learningStyle, count.
+3. Use local structural seam `ModePromptContribution { skillInstructions: string; canonicalExample: string }` — no full entity import. Add optional `mode?` and `inputs?` to `GenerationPromptContext` and `AuthoringContext`; all existing callers compile unchanged.
+4. Inject mode skill exactly once, after universal rules and before `"Return JSON only, shaped like:"` in pack/deck/cards builders; mirror at `authoring.ts:383,410,427`.
+5. One shared prompt version aliases `AUTHORING_SKILL_VERSION`; both lanes bump together. Update assertions at `browser-authoring.test.ts:92` and `simulate-study-card-clarity.test.ts:99`.
+6. Track 2 owns the two AI-draft routes additively in `router.ts`: `POST /api/modes/draft` and `POST /api/modes/draft/send`, mirroring `/api/pages/draft*` `router.ts:918-937`. Send returns a draft, never saves.
+7. No provider schemas widen; canonical examples must pass existing validators.
 
-## 4. Proposed seams and signatures
+## 4. Proposed seams
 
-- `types.ts`: `interface LearningMode { id; name; description; version: string; defaultCardMix: AnswerMode[]; usesWordStages: boolean; skillInstructions: string; canonicalExample: unknown; isBuiltIn: boolean; sourceModeId?: string; createdAt: string }`.
-- `schema.ts`: export `answerModeSchema` from the `answerDefSchema.mode` enum and reuse it in `learningModeSchema.defaultCardMix`; add `learningModeSchema` as a peer of `packManifestSchema`. `canonicalExample` is validated by a thin wrapper, not a second zod shape.
-- `core/prompt-context.ts`: add `spoilerIssues(card: CardSource): ValidationIssue[]`, imported by the canonical-example validator.
-- `bundle.ts`: add `validateCanonicalExample(example: unknown): ValidationIssue[]` = strict `JSON.parse`/`parseBundle` + `hardRuleIssues` per card + `lessonIssues` + `spoilerIssues`; reuse `ValidationIssue` shape.
-- `store.ts`: add `"modes"` to `STORE_NAMES`, bump DB version to 7.
-- `repository.ts`: `BrowserLearningMode extends StoredValue`; `readMode/readModes/writeMode/deleteMode`; include custom modes in backup rows and `clearLibrary`.
-- new `browser/modes.ts`: `MODES_INDEX_PATH`, `flashcards.mode-index/v1` schema with the same path-traversal guard as `seed.ts:21-25`, bounded fetch, `ensureModesSeeded()` with per-mode silent try/catch and version compare via `compareVersions`.
-- `router.ts`: `modesAnswer()` beside `packsAnswer()` (`:234-237`), `GET /api/modes` after `/api/packs` (`:791`), CRUD near pack CRUD (`:977-992`), and `await ensureModesSeeded()` in `loadState` (`:192`).
+- `prompt-layers.ts`: `layerOneSystemAndContract(target: "lines"|"pack"|"deck"): string`, `universalCardRules(inputs: PromptInputs): string[]`, `assemblePrompt(layers: { system; universal; mode?; inputs; shape }): BuiltPrompt`.
+- `ModePromptContribution` and `PromptInputs` exported here; adapter lives in same module or `shared/prompt-inputs.ts`.
+- Mode section rendered as skill text plus a short canonical-example note — not a second full `packShape`, to avoid competing shapes and once-only failures.
 
 ## 5. File ownership
 
-**Own:** `shared/types.ts`, `shared/creation.ts`, `core/schema.ts`, `core/prompt-context.ts`, `browser/store.ts`, `browser/repository.ts`, new `browser/modes.ts`, `browser/router.ts`, thin additions to `browser/bundle.ts`, tests: new `learning-mode-schema.test.ts`, extend `browser-repository`, `browser-seed`, new `seed-modes`, extend `browser-router`, `prompt-context`, `card`.
+**Own:** `shared/prompt-layers.ts` (new), optionally `shared/prompt-inputs.ts`, `provider/prompt.ts`, `browser/authoring.ts`, additive `browser/router.ts` draft routes, tests: new `prompt-assembler.test.ts`, `provider-prompt.test.ts`, `browser-authoring.test.ts`, `creation-brief.test.ts` (adapter cases only), `simulate-study-card-clarity.test.ts`, `simulate-language-prompt-control.test.ts`.
 
-**Read-only/coordinate:** `core/card.ts`, `core/word-check.ts`, `lib/packs/*`.
+**Read-only:** `shared/creation.ts` (source of brief wording), `provider/generate.ts` (reference only), `browser/provider.ts` callers.
 
-**Must not touch:** provider modules, `app/**`, `v1/modes/**`, `public/modes/**`, `make-seed.mjs`, Drift live entries.
+**Must not touch:** Track 1 type/schema/store/repository/CRUD routes; Track 3 mode content; `app/**`; provider schemas; Drift live entries.
 
 ## 6. Ordered steps with proof
 
-1. Write `docs/features/learning-mode-core/{GRILL,PRD-TRD,IMPL}.md` from this plan (origin gate).
-2. Red tests: schema accepts/rejects; repository round-trip; canonicalExample refuses spoiler and missing-owner examples; routes reject malformed bodies.
-3. Add type + additive brief fields + schema + spoiler validator.
-4. Add IndexedDB store, repository CRUD and backup inclusion.
-5. Add `modes.ts` loader and one-line router seed hook; add base CRUD routes.
-6. Proof: targeted vitest green; `npx tsc --noEmit`; changed-file `npx eslint`; `npm run build`; full `npx vitest run`; `npm run check:drift` and `check:drift:staged`.
+1. Write `docs/features/prompt-assembler/{GRILL,PRD-TRD,IMPL}.md` from this plan.
+2. Red tests: mode text once per lane; two modes change only layer 3; universal strings shared byte-for-byte; draft send does not persist.
+3. Build `prompt-layers.ts`, refactor `prompt.ts` and `authoring.ts` to import all universal strings.
+4. Add adapter/optional context fields; wire pass-through callers unchanged.
+5. Add meta-skill prompt and two draft routes; keep version single-sourced.
+6. Proof: targeted vitest; `npx tsc --noEmit`; changed-file eslint; `npm run build`; full `npx vitest run`; both drift gates.
 
 ## 7. Acceptance
 
-- Full mode passes schema; bad id, empty mix, unknown answer mode, non-boolean `usesWordStages`, missing skill and invalid canonicalExample fail.
-- Canonical example is validated through existing validators only; a spoiler or ownerless cloze is refused.
-- Modes round-trip through MemoryStore and backup/restore; custom rows survive re-seed; built-ins cannot be deleted via API.
-- Base CRUD returns plain `ValidationIssue` details; unknown paths still fail as before.
+- All five later modes can be dropped into the seam and change only layer 3.
+- Universal rules appear once in every prompt; existing once-only teaching assertion still passes.
+- No mode/empty skill adds no mode text. The one shared wording per rule replaces the old copies but keeps their old phrases, so existing assertions still hold; examples parse through existing schemas.
+- Draft prepare returns versioned prompt; send returns a draft object and adds nothing to storage.
 
 ## 8. Risks
 
-IndexedDB v6→v7 blocks old tabs until closed (additive upgrade is lossless). `router.ts` must be one small commit before Track 2. No Drift entry may be self-authored. Spoiler validator must not reject legitimate teaching that names a rule but not the token.
+Prompt duplication is the main regression; count assertions for every universal rule are mandatory. Chat version is user-visible. Keep module pure (no Node imports). Never inject learner evidence/provider keys/raw AI directives from a mode.

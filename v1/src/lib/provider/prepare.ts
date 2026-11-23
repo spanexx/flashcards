@@ -20,8 +20,12 @@ import type { StudyLevel } from "@/lib/shared/types";
 /** A prompt held for approval. It is one-time use and expires quickly. */
 export interface PreparedRequest {
   id: string;
-  /** A page draft is held like a generation, but its answer is never saved. */
-  kind: "generation" | "hint" | "page";
+  /** A page or mode draft is held like a generation, but its answer is never saved. */
+  // WHY: a held mode draft must not be mistaken for a page draft; the two send
+  // paths read different answer shapes. Additive, so old callers are unchanged.
+  // PACK: prompt-assembler
+  // 2026-11-23 opencode: added the mode draft kind. [pack: prompt-assembler]
+  kind: "generation" | "hint" | "page" | "mode";
   display: string;
   messages: ChatMessage[];
   /** Older held requests did not carry a target; they behave like cards. */
