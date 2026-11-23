@@ -81,7 +81,7 @@ try {
 }
 
 const files = (await walk(output)).filter((file) => !file.endsWith(".map"));
-const requiredRoutes = ["index.html", "library/index.html", "modes/index.html", "progress/index.html", "settings/index.html", "404.html"];
+const requiredRoutes = ["index.html", "library/index.html", "modes/index.html", "modes/editor/index.html", "progress/index.html", "settings/index.html", "404.html"];
 for (const route of requiredRoutes) {
   check(files.includes(route), `missing route ${route}`);
 }
@@ -243,7 +243,7 @@ if (worker) {
       fail("sw.js PRECACHE is not valid JSON");
     }
   }
-  for (const route of ["./", "./library/", "./modes/", "./progress/", "./settings/", "./manifest.webmanifest"]) {
+  for (const route of ["./", "./library/", "./modes/", "./modes/editor/", "./progress/", "./settings/", "./manifest.webmanifest"]) {
     check(precache.includes(route), `sw.js does not precache ${route}`);
   }
   for (const icon of [

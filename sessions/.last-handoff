@@ -1,37 +1,34 @@
-# Handoff 2026-11-23 — Track 4 Mode Studio UI complete, awaiting merge decision
+# Handoff 2026-11-23 — full-page mode editor complete, awaiting merge decision
 
 ## Where things stand
 
-Worktree: `/home/spanexx/.config/superpowers/worktrees/flashcards/feature-mode-studio-ui`
-Branch: `feature/mode-studio-ui`, based on `main` at `dbcf308`. Not merged.
+Worktree: `/home/spanexx/.config/superpowers/worktrees/flashcards/feature-mode-editor-design`
+Branch: `feature/mode-editor-design`, based on `main` at `7639891`. Not merged.
 
 ## What shipped
 
-- `cc7c724` — GRILL (12 delegated decisions), PRD-TRD, IMPL, design sim.
-- `2f24d17` — pure mode-studio helpers + tests.
-- `c8ab3a9` — shared New Pack mode fields, Library mode state, route tests.
-- Phase 5 commit — `/modes` route, list, editor, AI creator, preview, delete,
-  Nav and PWA lists.
-- Phase 6 commit — AI-draft Save fix (`modeSaveRequest`), fresh-eyes review
-  closures, post-sim, reconciliation and delivery notes.
+- `7831b5d` — GRILL, PRD-TRD, IMPL, Victor-reviewed prototype.
+- `71e336c` — pure editor helpers + tests.
+- `a34116c` — fixed `/modes/editor` route, two tabs, JSON explorer, sessionStorage
+  handoff, PWA lists, modal retired.
+- Final commit — fresh-eyes fixes: skill-link focus, theme-variable JSON colours,
+  numeric input blur commit, handoff tests, archived pre-sim, post-sim note.
 
-Canonical sim: `bash docs/features/mode-studio-ui/simulate.sh`.
-Design record: `docs/features/mode-studio-ui/archive/simulate-pre.html`.
-Review evidence: `docs/features/mode-studio-ui/simulate-post.md`.
+Canonical sim: `bash docs/features/mode-editor-design/simulate.sh`.
+Design record: `docs/features/mode-editor-design/archive/simulate-pre/`.
+Review evidence: `docs/features/mode-editor-design/simulate-post.md`.
 
 ## Verification
 
-- Full suite: 99 files / 1248 tests green.
-- 18 targeted Mode Studio tests green.
-- Build green with `check-pwa: passed`; `out/modes/index.html` exists.
-- `simulate.sh` PASS; typecheck, changed-file eslint, both drift gates green.
-- Drift log 0 open / 54 resolved. Worktree clean after cleanup.
+- Full suite: 101 files / 1262 tests green.
+- 24 targeted tests green; build green with `check-pwa: passed` and the editor
+  route present; `simulate.sh` PASS; typecheck, changed-file eslint, both drift
+  gates green (0 open / 54 resolved).
 
 ## Next steps
 
-1. User decides whether to merge `feature/mode-studio-ui` into `main`.
-2. After merge, all four tracks are integrated; no backlog file exists in this
-   repo to mark SHIPPED.
+1. Victor decides whether to merge `feature/mode-editor-design` into `main`.
+2. After merge, rebuild and reopen the app if the local server should show it.
 
 ## User-only follow-ups
 

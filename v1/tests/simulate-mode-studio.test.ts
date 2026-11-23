@@ -89,6 +89,10 @@ describe("Mode Studio contract rehearsal", () => {
     line("the /modes page and built output exist");
     expect(existsSync(path.join(projectRoot, "src", "app", "modes", "page.tsx"))).toBe(true);
     expect(existsSync(path.join(projectRoot, "out", "modes", "index.html"))).toBe(true);
+    line("the full-page /modes/editor route is built and precached");
+    expect(existsSync(path.join(projectRoot, "out", "modes", "editor", "index.html"))).toBe(true);
+    expect(pwa).toContain("modes/editor/index.html");
+    expect(pwa).toContain("./modes/editor/");
   });
 
   it("2-6. select, list, duplicate, save refusal and preview", async () => {

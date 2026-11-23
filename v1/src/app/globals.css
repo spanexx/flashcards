@@ -27,6 +27,10 @@
   --good: #2f6d3f;
   --near: #8a6d1f;
   --miss: #8a3b2f;
+  --json-key: #0f766e;
+  --json-string: #92400e;
+  --json-bool: #be123c;
+  --json-num: #6d28d9;
   --plain: #4b5563;
   --soft: #f1efe9;
   --aura-one: color-mix(in srgb, var(--accent) 9%, transparent);
@@ -50,6 +54,10 @@
   --good: #8ec79b;
   --near: #d9bc6a;
   --miss: #e0968a;
+  --json-key: #5eead4;
+  --json-string: #fcd34d;
+  --json-bool: #fda4af;
+  --json-num: #c4b5fd;
   --plain: #b6bcc7;
   --soft: #2b2a27;
   --aura-one: color-mix(in srgb, var(--accent) 10%, transparent);
@@ -4219,4 +4227,140 @@ a.chip {
   .study-start:hover:not(:disabled) .study-arrow {
     transform: none;
   }
+}
+
+/* WHY: the full-page mode editor is one connected surface per tab, split by a
+   single divider. All colour comes from the app's theme variables.
+   PACK: mode-editor-design */
+.editor-surface {
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+}
+.editor-pane {
+  display: flex;
+  flex: 1 1 50%;
+  min-width: 0;
+  flex-direction: column;
+  border-right: 1px solid var(--line);
+}
+.editor-pane:last-child { border-right: 0; }
+.editor-pane > .cap {
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.editor-source {
+  flex: 1;
+  min-height: 0;
+  resize: none;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  padding: 18px;
+  font-size: 13px;
+  line-height: 1.75;
+  outline: none;
+}
+.editor-preview, .editor-json {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 18px;
+}
+.editor-json { margin: 0; font-size: 12px; line-height: 1.6; }
+.json-key { color: var(--json-key); }
+.json-string { color: var(--json-string); }
+.json-bool { color: var(--json-bool); }
+.json-num { color: var(--json-num); }
+.json-null { color: var(--quiet); }
+.json-tree { padding: 8px 10px; }
+.json-breadcrumb {
+  padding: 6px 8px 10px;
+  margin-bottom: 6px;
+  color: var(--quiet);
+  border-bottom: 1px solid var(--line);
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.json-tree-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  border-radius: 8px;
+  padding-right: 6px;
+}
+.json-tree-row:hover, .json-tree-row:focus-within { background: var(--soft); }
+.json-chevron, .json-action {
+  border: 0;
+  background: transparent;
+  color: var(--quiet);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 2px 5px;
+}
+.json-chevron.open { transform: rotate(90deg); }
+.json-action { opacity: 0; }
+.json-tree-row:hover .json-action, .json-tree-row:focus-within .json-action { opacity: 1; }
+.json-action.danger:hover { color: var(--miss); }
+.json-branch-label { flex: 1; color: var(--ink); }
+.json-badge {
+  padding: 1px 6px;
+  border-radius: 99px;
+  background: var(--soft);
+  color: var(--quiet);
+  font-size: 10px;
+}
+.json-key-input, .json-value-input {
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ink);
+  padding: 7px 9px;
+  font-size: 13px;
+  min-height: 38px;
+}
+.json-key-input { width: 150px; flex: 0 0 150px; color: var(--quiet); }
+.json-value-input { flex: 1; min-width: 0; }
+.json-key-input:focus, .json-value-input:focus {
+  outline: none;
+  border-color: var(--line);
+  background: var(--bg);
+}
+.json-check { accent-color: var(--accent); width: 17px; height: 17px; margin-left: auto; }
+.json-link {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  text-align: left;
+  padding: 7px 9px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.json-link:hover { text-decoration: underline; }
+.md-preview h1 { font-size: 24px; margin: 0 0 16px; }
+.md-preview h2 { font-size: 18px; margin: 20px 0 8px; }
+.md-preview h3 { font-size: 15px; margin: 16px 0 6px; }
+.md-preview p { margin: 0 0 12px; line-height: 1.85; }
+.md-preview ul { margin: 8px 0 16px; padding-left: 22px; list-style: disc; }
+.md-preview li { margin: 6px 0; line-height: 1.8; }
+.md-preview strong { font-weight: 650; }
+.md-preview code {
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: .86em;
+  background: var(--soft);
+  padding: 2px 6px;
+  border-radius: 5px;
+}
+.tabs .tab.active { border-bottom-color: var(--accent); color: var(--ink); }
+@media (max-width: 760px) {
+  .editor-surface { flex-direction: column; }
+  .editor-pane { border-right: 0; border-bottom: 1px solid var(--line); min-height: 42vh; }
+  .editor-pane:last-child { border-bottom: 0; }
 }
