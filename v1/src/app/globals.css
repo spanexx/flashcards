@@ -4232,6 +4232,16 @@ a.chip {
 /* WHY: the full-page mode editor is one connected surface per tab, split by a
    single divider. All colour comes from the app's theme variables.
    PACK: mode-editor-design */
+.editor-page {
+  display: flex;
+  flex-direction: column;
+  /* WHY: .content already reserves 34px top and 80px bottom; keep the editor
+     inside one screen so long JSON scrolls in its pane, not the whole page. */
+  height: calc(100vh - 114px);
+  height: calc(100dvh - 114px);
+  min-height: 420px;
+}
+.editor-page > .editor-surface { flex: 1; min-height: 0; }
 .editor-surface {
   display: flex;
   min-height: 0;
@@ -4244,6 +4254,8 @@ a.chip {
   display: flex;
   flex: 1 1 50%;
   min-width: 0;
+  min-height: 0;
+  overflow: hidden;
   flex-direction: column;
   border-right: 1px solid var(--line);
 }
@@ -4276,7 +4288,7 @@ a.chip {
 .json-bool { color: var(--json-bool); }
 .json-num { color: var(--json-num); }
 .json-null { color: var(--quiet); }
-.json-tree { padding: 8px 10px; }
+.json-tree { flex: 1; min-height: 0; overflow: auto; padding: 8px 10px; }
 .json-breadcrumb {
   padding: 6px 8px 10px;
   margin-bottom: 6px;
@@ -4379,6 +4391,9 @@ a.chip {
   border-radius: 5px;
 }
 .tabs .tab.active { border-bottom-color: var(--accent); color: var(--ink); }
+@media (max-width: 1100px) {
+  .editor-page { height: calc(100vh - 92px); height: calc(100dvh - 92px); }
+}
 @media (max-width: 760px) {
   .editor-surface { flex-direction: column; }
   .editor-pane { border-right: 0; border-bottom: 1px solid var(--line); min-height: 42vh; }
