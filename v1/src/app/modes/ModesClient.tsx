@@ -6,22 +6,22 @@
 // 2026-11-23 opencode: created for the Track 4 route. [pack: mode-studio-ui]
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { apiGet, apiSend } from "@/lib/client/api";
+import { saveModeDraft, saveModeNotice, takeModeNotice } from "@/lib/browser/mode-editor-handoff";
 import type { LearningMode } from "@/lib/shared/types";
 import { modeDeleteName, modeExportText, modeImportBody } from "@/app/library/mode-studio-utils";
 import AiModeCreator from "./AiModeCreator";
 import ModeDeleteDialog from "./ModeDeleteDialog";
-import ModeEditor from "./ModeEditor";
 import ModePreview from "./ModePreview";
 import ModesPanel from "./ModesPanel";
 
 /** The whole Learning modes screen, with no Library tab and no router edits. */
 export default function ModesClient() {
+  const router = useRouter();
   const [modes, setModes] = useState<LearningMode[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [editing, setEditing] = useState<LearningMode | null>(null);
-  const [editingNew, setEditingNew] = useState(false);
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<LearningMode | null>(null);
   const [aiOpen, setAiOpen] = useState(false);
@@ -38,7 +38,11 @@ export default function ModesClient() {
   }, []);
 
   useEffect(() => {
-    const pending = Promise.resolve().then(() => load());
+    const pending = Promise.resolve().then(() => {
+      const returned = takeModeNotice();
+      if (returned) setNotice(returned);
+      return load();
+    });
     return () => {
       void pending;
     };
@@ -52,10 +56,8 @@ export default function ModesClient() {
         sourceModeId: mode.id,
         name: `${mode.name} copy`,
       });
-      await load();
-      setEditingNew(false);
-      setEditing(created.mode);
-      setNotice("The copy is yours. Nothing else changed.");
+      saveModeNotice("The copy is yours. Nothing else changed.");
+      router.push(`/modes/editor?id=${encodeURIComponent(created.mode.id)}`);
     } catch (problem) {
       setMessage(problem instanceof Error ? problem.message : "The mode could not be copied.");
     } finally {
@@ -143,25 +145,12 @@ export default function ModesClient() {
         modes={modes}
         onDuplicate={(mode) => void duplicate(mode)}
         onEdit={(mode) => {
-          setEditingNew(false);
-          setEditing(mode);
+          router.push(`/modes/editor?id=${encodeURIComponent(mode.id)}`);
         }}
         onPreview={setPreview}
         onDelete={setDeleting}
       />
 
-      {editing ? (
-        <ModeEditor
-          mode={editing}
-          isNew={editingNew}
-          onCancel={() => setEditing(null)}
-          onSaved={(saved) => {
-            setEditing(null);
-            void load();
-            setNotice(`${saved.name} was saved.`);
-          }}
-        />
-      ) : null}
       {preview ? <ModePreview mode={preview} onClose={() => setPreview(null)} /> : null}
       {aiOpen ? (
         <AiModeCreator
@@ -169,8 +158,8 @@ export default function ModesClient() {
           onNotice={setNotice}
           onDraft={(drafted) => {
             setAiOpen(false);
-            setEditingNew(true);
-            setEditing(drafted);
+            saveModeDraft(drafted);
+            router.push("/modes/editor?new=1");
           }}
         />
       ) : null}
