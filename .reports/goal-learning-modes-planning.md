@@ -79,3 +79,11 @@ Verdict: pass
 Failure class: subagent died mid-edit, leaving a syntax-broken shared file.
 Pivot: finished the router by hand rather than relaunching, and verified the whole branch independently.
 Next: report Track 1 complete; Track 2 (`feature/prompt-assembler`) is unblocked and still unbuilt.
+
+### 10 — 2026-11-23
+Action: learner asked for Track 2 to run with a subagent and gave two standing rules: maintain reasonable logic isolation for easy scaling, and do not rush — find the issue, split the job, get full context for each task before implementing. Checked the Track 2 worktree and found it stale (it did not contain Track 1's implementation commits); rebased `feature/prompt-assembler` onto `feature/learning-mode-core`, confirmed the Track 1 code is present and the plan header still names Track 2, installed `v1/node_modules`, and verified typecheck. Launched one general subagent with the learner's two rules verbatim, a seven-phase split (map → origin docs → shared layer → generation lane → chat lane → adapter → draft routes → gates), a no-half-edits rule, and explicit isolation boundaries.
+Verification: pending subagent work; expected evidence is feature docs, new/changed prompt modules, once-only rule tests, two working draft routes, and all gates green.
+Verdict: pending
+Failure class: stale stack branch, fixed by rebase before handoff.
+Pivot: none
+Next: review the subagent's report and verify gates independently on the branch.
