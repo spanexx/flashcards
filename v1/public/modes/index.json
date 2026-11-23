@@ -1,0 +1,30 @@
+{
+  "schema": "flashcards.mode-index/v1",
+  "modes": [
+    {
+      "id": "grammar-roles",
+      "version": "1.0.0",
+      "file": "/modes/grammar-roles.json"
+    },
+    {
+      "id": "language-general",
+      "version": "1.0.0",
+      "file": "/modes/language-general.json"
+    },
+    {
+      "id": "programming-language",
+      "version": "1.0.0",
+      "file": "/modes/programming-language.json"
+    },
+    {
+      "id": "system-architecture",
+      "version": "1.0.0",
+      "file": "/modes/system-architecture.json"
+    },
+    {
+      "id": "word-deep-dive",
+      "version": "1.0.0",
+      "file": "/modes/word-deep-dive.json"
+    }
+  ]
+}

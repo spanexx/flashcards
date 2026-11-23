@@ -13,6 +13,19 @@ import path from "node:path";
 const root = path.resolve(import.meta.dirname, "..");
 const packsRoot = path.join(root, "packs");
 const targetRoot = path.join(root, "public", "packs");
+// WHY: built-in modes use the same authored-to-generated path as packs, but a
+// separate folder so one track's output cannot overwrite another's.
+// PACK: built-in-modes
+// 2026-11-23 opencode: added the mode roots and fixed id list. [pack: built-in-modes]
+const modesRoot = path.join(root, "modes");
+const modesTargetRoot = path.join(root, "public", "modes");
+const seedModes = [
+  "grammar-roles",
+  "language-general",
+  "programming-language",
+  "system-architecture",
+  "word-deep-dive",
+];
 
 /** Only these folders are seeded. A stray folder never reaches a learner. */
 const seedPacks = ["biuro", "browser-dev", "polish-from-scratch", "system-design"];
@@ -184,3 +197,35 @@ for (const slug of seedPacks) {
 
 await writeFile(path.join(targetRoot, "index.json"), `${JSON.stringify(index, null, 2)}\n`, "utf8");
 console.log(`Wrote ${index.packs.length} packs to public/packs/index.json`);
+
+// WHY: This block is additive. The pack loop above is untouched so the four
+// shipped bundles keep their exact bytes; modes arrive in their own folder.
+// PACK: built-in-modes
+// 2026-11-23 opencode: added the five-mode emit loop and manifest. [pack: built-in-modes]
+const modeIndex = { schema: "flashcards.mode-index/v1", modes: [] };
+// WHY: a fixed stamp makes regeneration byte-stable and keeps createdAt, which
+// the stored shape requires, out of the authored files.
+const modeCreatedAt = "2026-11-23T00:00:00.000Z";
+
+await mkdir(modesTargetRoot, { recursive: true });
+
+for (const id of seedModes) {
+  const authored = await readJson(path.join(modesRoot, `${id}.json`));
+  const generated = { ...authored, isBuiltIn: true, createdAt: modeCreatedAt };
+  await writeFile(
+    path.join(modesTargetRoot, `${id}.json`),
+    `${JSON.stringify(generated, null, 2)}\n`,
+    "utf8",
+  );
+  // WHY: the reader strips unknown keys, so the manifest carries only the
+  // three fields the Track 1 loader actually uses.
+  modeIndex.modes.push({ id, version: authored.version, file: `/modes/${id}.json` });
+  console.log(`Wrote built-in mode ${id} to public/modes/${id}.json`);
+}
+
+await writeFile(
+  path.join(modesTargetRoot, "index.json"),
+  `${JSON.stringify(modeIndex, null, 2)}\n`,
+  "utf8",
+);
+console.log(`Wrote ${modeIndex.modes.length} modes to public/modes/index.json`);

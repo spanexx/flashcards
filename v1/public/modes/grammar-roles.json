@@ -1,0 +1,142 @@
+{
+  "id": "grammar-roles",
+  "name": "Grammar roles",
+  "description": "Study grammar as the jobs words do in a sentence, not as forms to memorise.",
+  "version": "1.0.0",
+  "defaultCardMix": [
+    "cloze",
+    "picks",
+    "type"
+  ],
+  "usesWordStages": false,
+  "skillInstructions": "# Grammar roles\n\nName each deck with the job in plain English and the term in parentheses, for example `Doer (subject)`.\n\n- State the role in the prompt before asking for its name.\n- Explain the intuition in the teaching layer; never drill basic -s or -ed endings.\n- Keep the answer to the role name, not a verb parade.\n- Vary cloze, picks and type cards so the same role is recognised in new sentences.",
+  "canonicalExample": {
+    "schema": "flashcards.pack/v1",
+    "pack": {
+      "name": "mode-demo-grammar-roles",
+      "version": "1.0.0",
+      "language": "en",
+      "sourceLanguage": "en"
+    },
+    "decks": [
+      {
+        "id": "doer",
+        "name": "Doer (subject)",
+        "level": "beginner"
+      },
+      {
+        "id": "receiver",
+        "name": "Receiver (object)",
+        "level": "beginner"
+      }
+    ],
+    "cards": [
+      {
+        "deckId": "doer",
+        "summary": "The noun that acts",
+        "prompt": [
+          {
+            "type": "text",
+            "text": "In 'Anna reads a book', the noun doing the action is the"
+          },
+          {
+            "type": "blank",
+            "id": "b1"
+          },
+          {
+            "type": "text",
+            "text": "."
+          }
+        ],
+        "answer": [
+          {
+            "type": "text",
+            "text": "In 'Anna reads a book', the noun doing the action is the subject."
+          }
+        ],
+        "answerDef": {
+          "mode": "cloze",
+          "blanks": [
+            {
+              "id": "b1",
+              "expected": [
+                "subject"
+              ]
+            }
+          ]
+        },
+        "teaching": [
+          {
+            "type": "text",
+            "text": "It answers who or what performs the verb."
+          }
+        ]
+      },
+      {
+        "deckId": "doer",
+        "summary": "Choosing the role",
+        "prompt": [
+          {
+            "type": "text",
+            "text": "Which role does 'Anna' have in 'Anna reads a book'?"
+          }
+        ],
+        "answer": [
+          {
+            "type": "text",
+            "text": "Doer"
+          }
+        ],
+        "answerDef": {
+          "mode": "picks",
+          "options": [
+            "Doer",
+            "Receiver",
+            "Modifier"
+          ],
+          "correct": [
+            "Doer"
+          ]
+        },
+        "teaching": [
+          {
+            "type": "text",
+            "text": "Look for the noun that performs the verb."
+          }
+        ]
+      },
+      {
+        "deckId": "receiver",
+        "summary": "The noun that receives the action",
+        "prompt": [
+          {
+            "type": "text",
+            "text": "Type the role of the noun that receives the action."
+          }
+        ],
+        "answer": [
+          {
+            "type": "text",
+            "text": "object"
+          }
+        ],
+        "answerDef": {
+          "mode": "type",
+          "expected": [
+            "object"
+          ]
+        },
+        "teaching": [
+          {
+            "type": "text",
+            "text": "It answers whom the action reaches."
+          }
+        ]
+      }
+    ],
+    "words": [],
+    "pages": []
+  },
+  "isBuiltIn": true,
+  "createdAt": "2026-11-23T00:00:00.000Z"
+}

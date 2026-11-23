@@ -1,0 +1,169 @@
+{
+  "id": "language-general",
+  "name": "Language general",
+  "description": "Learn a new language through themes, full lines and a mix of answer surfaces.",
+  "version": "1.0.0",
+  "defaultCardMix": [
+    "cloze",
+    "type",
+    "hear_type",
+    "picks"
+  ],
+  "usesWordStages": false,
+  "skillInstructions": "# Language general\n\nName decks after themes, not grammar labels.\n\n- Write accurate language codes on every text and speak part.\n- In a foreign-language cloze, name the base word or the owner in the prompt so the missing word is never a guess.\n- For hear_type, give a spelling hint in the study note and ask for the whole line.\n- Use a translation part when the learner must read the target line and type it.",
+  "canonicalExample": {
+    "schema": "flashcards.pack/v1",
+    "pack": {
+      "name": "mode-demo-language-general",
+      "version": "1.0.0",
+      "language": "en",
+      "sourceLanguage": "en"
+    },
+    "decks": [
+      {
+        "id": "travel",
+        "name": "Travel",
+        "level": "beginner"
+      }
+    ],
+    "cards": [
+      {
+        "deckId": "travel",
+        "summary": "Two tickets",
+        "prompt": [
+          {
+            "type": "text",
+            "text": "Base word: ticket. We bought two"
+          },
+          {
+            "type": "blank",
+            "id": "b1"
+          },
+          {
+            "type": "text",
+            "text": "at the station."
+          }
+        ],
+        "answer": [
+          {
+            "type": "text",
+            "text": "Base word: ticket. We bought two tickets at the station."
+          }
+        ],
+        "answerDef": {
+          "mode": "cloze",
+          "blanks": [
+            {
+              "id": "b1",
+              "expected": [
+                "tickets"
+              ]
+            }
+          ]
+        },
+        "teaching": [
+          {
+            "type": "text",
+            "text": "A plural noun names more than one of the same thing."
+          }
+        ]
+      },
+      {
+        "deckId": "travel",
+        "summary": "Listen and repeat",
+        "prompt": [
+          {
+            "type": "speak",
+            "text": "Where is the station?",
+            "lang": "en",
+            "label": "Listen"
+          }
+        ],
+        "answer": [
+          {
+            "type": "text",
+            "text": "Where is the station?",
+            "lang": "en"
+          }
+        ],
+        "answerDef": {
+          "mode": "hear_type",
+          "expected": [
+            "Where is the station?"
+          ]
+        },
+        "teaching": [
+          {
+            "type": "text",
+            "text": "Listen for the place word, then repeat the whole line."
+          }
+        ]
+      },
+      {
+        "deckId": "travel",
+        "summary": "A place to wait",
+        "prompt": [
+          {
+            "type": "text",
+            "text": "Type the word for a place where you wait for a train."
+          }
+        ],
+        "answer": [
+          {
+            "type": "text",
+            "text": "station"
+          }
+        ],
+        "answerDef": {
+          "mode": "type",
+          "expected": [
+            "station"
+          ]
+        },
+        "teaching": [
+          {
+            "type": "text",
+            "text": "A noun names the place; the sentence says what happens there."
+          }
+        ]
+      },
+      {
+        "deckId": "travel",
+        "summary": "Where the train stops",
+        "prompt": [
+          {
+            "type": "text",
+            "text": "Which word names the place where a train stops?"
+          }
+        ],
+        "answer": [
+          {
+            "type": "text",
+            "text": "platform"
+          }
+        ],
+        "answerDef": {
+          "mode": "picks",
+          "options": [
+            "platform",
+            "ticket",
+            "station"
+          ],
+          "correct": [
+            "platform"
+          ]
+        },
+        "teaching": [
+          {
+            "type": "text",
+            "text": "Read the question for the part of the place the train uses."
+          }
+        ]
+      }
+    ],
+    "words": [],
+    "pages": []
+  },
+  "isBuiltIn": true,
+  "createdAt": "2026-11-23T00:00:00.000Z"
+}
