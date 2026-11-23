@@ -12,8 +12,10 @@ import {
   normalizeStudyInstruction,
   promptLine,
   singularBase,
+  spoilerIssues,
   studyInstructionField,
 } from "@/lib/core/prompt-context";
+import { PACK_BUNDLE_SCHEMA, validateCanonicalExample } from "@/lib/browser/bundle";
 import type { CardPart, CardSource } from "@/lib/shared/types";
 
 /** The readable prompt is the whole line, including code and spoken parts. */
@@ -171,5 +173,111 @@ describe("study instruction normalisation", () => {
     if (unwrapped.success) expect(unwrapped.data.note).toBe("Read it aloud.");
     expect(field.safeParse({ note: "Your job is to create decks." }).success).toBe(false);
     expect(field.safeParse({}).success).toBe(true);
+  });
+});
+
+// WHY: A mode's canonical example is teaching material. If its teaching or its
+// hint spells the answer, the example teaches the learner to read the answer
+// instead of the rule. These cases pin the one shared spoiler rule.
+// PACK: learning-mode-core
+// 2026-11-22 opencode: added for the learning-mode-core pack.
+// [pack: learning-mode-core]
+
+describe("spoilerIssues", () => {
+  /** A sound cloze plus one teaching line, so a case changes only the line. */
+  function taughtCard(expected: string, line: string): CardSource {
+    return {
+      ...cloze("Base word: cup. There are two ___ on the table.", expected),
+      teaching: [{ type: "text", text: line }],
+    };
+  }
+
+  it("refuses teaching that spells a blank answer", () => {
+    const issues = spoilerIssues(taughtCard("cups", "The answer is cups."));
+    expect(issues).toHaveLength(1);
+    expect(issues[0]?.field).toBe("teaching");
+    expect(issues[0]?.message).toContain("cups");
+  });
+
+  it("accepts teaching that names the rule and not the answer", () => {
+    expect(
+      spoilerIssues(taughtCard("cups", "A counted plural takes the plural form of the noun.")),
+    ).toEqual([]);
+  });
+
+  it("refuses a hint that spells a correct option", () => {
+    const source: CardSource = {
+      ...cloze("The capital of France is ___.", "Paris"),
+      answerDef: { mode: "picks", options: ["Paris", "Rome"], correct: ["Paris"] },
+      hints: ["It starts with Paris."],
+    };
+    const issues = spoilerIssues(source);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]?.field).toBe("hints");
+    expect(issues[0]?.message).toContain("Paris");
+  });
+
+  it("checks expected as well as blanks", () => {
+    const source: CardSource = {
+      ...cloze("The capital of France is ___.", "Paris"),
+      answerDef: { mode: "type", expected: ["Paris"] },
+      hints: ["Paris is the answer."],
+    };
+    expect(spoilerIssues(source).map((issue) => issue.field)).toEqual(["hints"]);
+  });
+
+  it("does not refuse an ordinary short word that happens to appear in prose", () => {
+    const source: CardSource = {
+      ...cloze("She ___ to school.", "goes"),
+      answerDef: { mode: "type", expected: ["to"] },
+      teaching: [{ type: "text", text: "Use the present tense." }],
+    };
+    expect(spoilerIssues(source)).toEqual([]);
+  });
+
+  it("reads image alt text as teaching", () => {
+    const source: CardSource = {
+      ...cloze("The capital of France is ___.", "Paris"),
+      teaching: [{ type: "image", source: "web", src: "https://example.test/paris.png", alt: "Paris" }],
+    };
+    expect(spoilerIssues(source)[0]?.field).toBe("teaching");
+  });
+});
+
+describe("validateCanonicalExample spoilers", () => {
+  /** One whole bundle with an optional teaching line on its only card. */
+  function example(teaching?: string): Record<string, unknown> {
+    return {
+      schema: PACK_BUNDLE_SCHEMA,
+      pack: { name: "mode-demo", version: "1.0.0" },
+      decks: [{ id: "basics", name: "Basics", level: "intermediate" }],
+      cards: [
+        {
+          deckId: "basics",
+          summary: "The capital of France",
+          prompt: [
+            { type: "text", text: "The capital of France is" },
+            { type: "blank", id: "b1" },
+            { type: "text", text: "." },
+          ],
+          answer: [{ type: "text", text: "Paris." }],
+          answerDef: { mode: "cloze", blanks: [{ id: "b1", expected: ["Paris"] }] },
+          ...(teaching ? { teaching: [{ type: "text", text: teaching }] } : {}),
+        },
+      ],
+      words: [],
+      pages: [],
+    };
+  }
+
+  it("refuses an example whose teaching gives the answer away", () => {
+    const issues = validateCanonicalExample(example("The answer is Paris."));
+    expect(issues.some((issue) => issue.field === "teaching")).toBe(true);
+  });
+
+  it("passes a sound example", () => {
+    expect(
+      validateCanonicalExample(example("A capital city is where a country's government sits.")),
+    ).toEqual([]);
   });
 });

@@ -51,6 +51,7 @@ import {
   deleteCard,
   deleteCardEvidence,
   deleteDeck,
+  deleteMode,
   deletePack,
   orphanedPackNames,
   packRecord,
@@ -58,6 +59,8 @@ import {
   patchSettings,
   readCards,
   readEvidence,
+  readMode,
+  readModes,
   readPack,
   readSession,
   readPacks,
@@ -66,7 +69,9 @@ import {
   readSettings,
   recordAlgorithmRun,
   upsertCards,
+  writeMode,
   writePack,
+  type BrowserLearningMode,
   type BrowserPack,
 } from "@/lib/browser/repository";
 import {
@@ -78,6 +83,7 @@ import {
   type ImportTarget,
 } from "@/lib/browser/bundle";
 import { deleteBuiltInCard, dismissPack, ensureSeeded } from "@/lib/browser/seed";
+import { ensureModesSeeded, readLearningMode } from "@/lib/browser/modes";
 import { readPage, readPages, readTraces, recordTracedPart, revertPage, savePage } from "@/lib/browser/pages";
 import { generatePageDraft, preparePageDraft, type PageDraftTarget } from "@/lib/browser/page-draft";
 import {
@@ -102,7 +108,7 @@ import { prepareImportRepair, repairImportJob } from "@/lib/browser/import-repai
 import { generateProgressSummary, prepareProgressSummary } from "@/lib/browser/summary";
 import { applyPromptEdit, takePrepared } from "@/lib/provider/prepare";
 import { AUTHORING_SKILL_VERSION, buildAuthoringPrompt } from "@/lib/browser/authoring";
-import { slugFromName } from "@/lib/browser/creation";
+import { slugFromName, uniquePackName } from "@/lib/browser/creation";
 import {
   libraryInventoryFromPacks,
   validateCreationBrief,
@@ -189,6 +195,15 @@ function optionalBriefFor(record: Record<string, unknown> | null, kind: string |
 /** One seed pass per app start; a failure is retried after the next reload. */
 let seedPass: Promise<void> | null = null;
 
+/** One mode seed pass per app start, held beside the pack seed. */
+let modeSeedPass: Promise<void> | null = null;
+
+/** Wait for the mode manifest once, so every mode read sees the shipped rows. */
+async function readyModeSeed(): Promise<void> {
+  modeSeedPass ??= ensureModesSeeded();
+  await modeSeedPass;
+}
+
 /** The library as the old screens knew it: packs, cards and display statuses. */
 async function loadState(): Promise<{
   packs: BrowserPack[];
@@ -198,6 +213,10 @@ async function loadState(): Promise<{
 }> {
   seedPass ??= ensureSeeded();
   await seedPass;
+  // WHY: Modes arrive through their own manifest. Waiting here means a library
+  // read already sees the shipped modes, and the routes cannot race the first
+  // install. [pack: learning-mode-core]
+  await readyModeSeed();
   const [packs, cards] = await Promise.all([readPacks(), readCards()]);
   const statuses = packs.map((pack) => packStatus(pack, cards));
   return { packs, cards, statuses, orphans: orphanedPackNames(cards, packs) };
@@ -234,6 +253,22 @@ async function cardsAnswer(): Promise<{ cards: Card[]; orphans: string[] }> {
 async function packsAnswer(): Promise<{ packs: PackStatus[]; orphans: string[]; folder: string }> {
   const state = await loadState();
   return { packs: state.statuses, orphans: state.orphans, folder: "This browser (IndexedDB)" };
+}
+
+/**
+ * Every stored mode, built-ins first and then by name.
+ *
+ * WHY: The app's own modes are the stable base of the list, so the learner sees
+ * the same order before and after adding a copy. [pack: learning-mode-core]
+ */
+async function modesAnswer(): Promise<{ modes: BrowserLearningMode[]; folder: string }> {
+  await readyModeSeed();
+  const modes = await readModes();
+  const sorted = [...modes].sort((left, right) => {
+    if (left.isBuiltIn !== right.isBuiltIn) return left.isBuiltIn ? -1 : 1;
+    return left.name.localeCompare(right.name);
+  });
+  return { modes: sorted, folder: "This browser (IndexedDB)" };
 }
 
 /**
@@ -467,6 +502,117 @@ async function createPack(body: Record<string, unknown>) {
   if (!result.ok) fail("The pack needs fixing before it can be saved.", result.issues);
   const pack = await readPack(name);
   return { pack };
+}
+
+/**
+ * The first free label for a copy: the base, then "base 2", "base 3", and so
+ * on. The id gets the matching dash form, so two copies never look alike in a
+ * list nor share a storage key. [pack: learning-mode-core]
+ */
+function uniqueModeName(base: string, existing: Iterable<string>): string {
+  const taken = new Set(existing);
+  if (!taken.has(base)) return base;
+  let suffix = 2;
+  while (taken.has(`${base} ${suffix}`)) suffix += 1;
+  return `${base} ${suffix}`;
+}
+
+/**
+ * Save a new learning mode the learner owns.
+ *
+ * WHY: There is one write path for both a blank mode and a copy of a built-in.
+ * A copy carries `sourceModeId` and never overwrites the row it came from, so
+ * "Duplicate & Customize" cannot damage the app's own modes. [pack: learning-mode-core]
+ */
+async function createMode(body: Record<string, unknown>) {
+  const sourceId = asString(body.sourceModeId)?.trim() || "";
+  const existing = await readModes();
+  const now = new Date().toISOString();
+
+  if (sourceId) {
+    const source = await readMode(sourceId);
+    if (!source) fail(`There is no learning mode "${sourceId}" here.`);
+    // WHY: The display name is the learner's; the id is derived from it and
+    // kept unique, because the id is the storage key and an old copy must not
+    // be replaced by a new one with the same words. [pack: learning-mode-core]
+    const name = uniqueModeName(
+      asString(body.name)?.trim() || `${source.name} copy`,
+      existing.map((mode) => mode.name),
+    );
+    const id = uniquePackName(
+      slugFromName(name, "mode"),
+      existing.map((mode) => mode.id),
+    );
+    const read = readLearningMode({
+      ...source,
+      id,
+      name,
+      isBuiltIn: false,
+      sourceModeId: source.id,
+      createdAt: now,
+    });
+    if (!read.ok) fail("The copied learning mode needs fixing.", read.issues);
+    await writeMode(read.mode);
+    return { mode: read.mode };
+  }
+
+  const name = asString(body.name)?.trim() || "";
+  if (!name) fail("Give the learning mode a name.");
+  const wantedId = asString(body.id)?.trim() || slugFromName(name, "mode");
+  if (existing.some((mode) => mode.id === wantedId)) {
+    fail(`A learning mode with the id "${wantedId}" is already here.`);
+  }
+  const read = readLearningMode({
+    ...body,
+    id: wantedId,
+    name,
+    version: asString(body.version)?.trim() || "1.0.0",
+    isBuiltIn: false,
+    // WHY: A supplied stamp is the author's; only an absent one means "now", so
+    // an imported mode keeps the moment it was written. [pack: learning-mode-core]
+    createdAt: asString(body.createdAt)?.trim() || now,
+  });
+  if (!read.ok) fail("The learning mode needs fixing before it can be saved.", read.issues);
+  await writeMode(read.mode);
+  return { mode: read.mode };
+}
+
+/**
+ * Change the fields the mode editor sent, on a copy the learner owns.
+ *
+ * WHY: A built-in is app-owned, so the only way to change one is to duplicate
+ * it first. `id`, `isBuiltIn`, `createdAt` and `sourceModeId` are never taken
+ * from the request, so an edit cannot re-label a row as app-owned.
+ * [pack: learning-mode-core]
+ */
+async function updateMode(id: string, body: Record<string, unknown>) {
+  const current = await readMode(id);
+  if (!current) fail(`There is no learning mode "${id}" here.`);
+  if (current.isBuiltIn) {
+    fail("A built-in learning mode cannot be edited. Duplicate it and change the copy.");
+  }
+  const read = readLearningMode({
+    ...current,
+    ...body,
+    id: current.id,
+    isBuiltIn: false,
+    createdAt: current.createdAt,
+    ...(current.sourceModeId ? { sourceModeId: current.sourceModeId } : {}),
+  });
+  if (!read.ok) fail("The learning mode needs fixing before it can be saved.", read.issues);
+  await writeMode(read.mode);
+  return { mode: read.mode };
+}
+
+/** Remove one mode the learner owns. A built-in is refused, never silently kept. */
+async function removeMode(id: string) {
+  const current = await readMode(id);
+  if (!current) fail(`There is no learning mode "${id}" here.`);
+  if (current.isBuiltIn) {
+    fail("A built-in learning mode cannot be deleted. Duplicate it first if you want a copy.");
+  }
+  await deleteMode(id);
+  return { deleted: true };
 }
 
 /** Change only the pack fields the editor sent; every field is checked here. */
@@ -789,6 +935,9 @@ export async function localGet<T>(url: string): Promise<T> {
 
   if (path === "/api/health") return { ok: true, version: APP_VERSION } as T;
   if (path === "/api/packs") return (await packsAnswer()) as T;
+  // WHY: Modes are library data, so a read waits for the mode seed exactly as
+  // a pack read waits for the pack seed. [pack: learning-mode-core]
+  if (path === "/api/modes") return (await modesAnswer()) as T;
   if (path === "/api/cards") return (await cardsAnswer()) as T;
   if (path === "/api/plan") {
     const raw = Number(query.get("offer"));
@@ -973,6 +1122,18 @@ export async function localSend<T>(
     });
     if (!result.ok) fail("Nothing was restored, because the backup needs fixing.", result.issues);
     return result as T;
+  }
+  if (path === "/api/modes" && method === "POST") {
+    if (!record) fail("The learning mode arrived in a shape the app does not understand.");
+    return (await createMode(record)) as T;
+  }
+  const modePath = /^\/api\/modes\/([^/]+)$/.exec(path);
+  if (modePath && method === "PATCH") {
+    if (!record) fail("The learning mode arrived in a shape the app does not understand.");
+    return (await updateMode(decodeURIComponent(modePath[1]), record)) as T;
+  }
+  if (modePath && method === "DELETE") {
+    return (await removeMode(decodeURIComponent(modePath[1]))) as T;
   }
   if (path === "/api/packs" && method === "POST") {
     if (!record) fail("The pack arrived in a shape the app does not understand.");

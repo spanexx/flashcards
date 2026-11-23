@@ -21,9 +21,10 @@ import { parseJsonLoose, type RepairKind } from "@/lib/core/json-repair";
 import { referencedMediaIds } from "@/lib/core/media";
 import { pageIdFor, pageRuleProblems } from "@/lib/core/pages";
 import { lessonIssues } from "@/lib/core/word-check";
-import { studyInstructionField } from "@/lib/core/prompt-context";
+import { studyInstructionField, spoilerIssues } from "@/lib/core/prompt-context";
 import {
   cardSourceSchema,
+  learningModeSchema,
   packPromptsSchema,
   studyLevelSchema,
   teachingPartSchema,
@@ -37,6 +38,7 @@ import {
   clearLibrary,
   readCards,
   readEvidence,
+  readModes,
   readPack,
   readPacks,
   readPromptLog,
@@ -46,6 +48,7 @@ import {
   readSystemLicense,
   patchSettings,
   upsertCards,
+  writeMode,
   writePack,
   writeProviderKey,
   writeSystemLicense,
@@ -877,6 +880,50 @@ export async function exportPackBundle(name: string): Promise<{ ok: true; json: 
   return { ok: true, json: JSON.stringify(bundle, null, 2) };
 }
 
+// WHY: A learning mode's canonical example is a whole bundle, but a mode is not
+// an import: nothing is written, and only the rules that protect a learner from
+// a broken or spoilered example matter. This uses the existing reader, the
+// existing hard rules, the existing lesson links and the one new spoiler rule.
+// It adds no schema of its own.
+// PACK: learning-mode-core
+// 2026-11-22 opencode: created for the learning-mode-core pack.
+// [pack: learning-mode-core]
+export function validateCanonicalExample(example: unknown): ValidationIssue[] {
+  let text: string | undefined;
+  try {
+    text = JSON.stringify(example);
+  } catch {
+    return [issue("canonicalExample", "the canonical example cannot be read as JSON", 0)];
+  }
+  if (text === undefined) {
+    return [issue("canonicalExample", "the canonical example must be an object", 0)];
+  }
+
+  const read = parseBundle(text);
+  if (!read.ok) return read.issues;
+
+  const bundle = read.bundle;
+  const deckNames = new Map(bundle.decks.map((deck) => [deck.id, deck.name]));
+  const issues: ValidationIssue[] = [];
+
+  bundle.cards.forEach((card, index) => {
+    // WHY: A bundle card carries no topics, but the hard-rule checker speaks
+    // the learner's card source. The importer already fills the topics from the
+    // card's deck; the pack name is the harmless fallback for a missing deck,
+    // which the bundle reader has already reported if it matters.
+    const { deckId, ...rest } = card;
+    const source: CardSource = {
+      ...rest,
+      topics: [deckNames.get(deckId ?? "") ?? bundle.pack.name],
+    };
+    issues.push(...hardRuleIssues(source, index));
+    issues.push(...spoilerIssues(source, index));
+  });
+
+  issues.push(...lessonIssues(bundle.cards, bundle.words));
+  return issues;
+}
+
 /** The full backup shape. The provider key is deliberately absent. */
 export const backupSchema = z.object({
   schema: z.literal(BACKUP_SCHEMA),
@@ -986,6 +1033,10 @@ export const backupSchema = z.object({
       }),
     )
     .default([]),
+  // WHY: A customised mode is the learner's own work, so a backup carries it.
+  // Built-ins are app-owned and refreshed by the seed, so they are left out and
+  // an old backup without this field still restores. [pack: learning-mode-core]
+  modes: z.array(learningModeSchema).default([]),
   settings: z.unknown(),
   prompts: z.array(
     z.object({
@@ -1018,7 +1069,7 @@ export interface BackupContent {
 
 /** Export everything the learner owns, but never the key. */
 export async function buildBackup(): Promise<BackupContent> {
-  const [packs, cards, evidence, sessions, settings, prompts, tombstones, allMedia, pages, pageTraces] =
+  const [packs, cards, evidence, sessions, settings, prompts, tombstones, allMedia, pages, pageTraces, modes] =
     await Promise.all([
       readPacks(),
       readCards(),
@@ -1030,6 +1081,7 @@ export async function buildBackup(): Promise<BackupContent> {
       readAllMedia(),
       readPages(),
       readTraces(),
+      readModes(),
     ]);
   const wanted = referencedMediaIds(cards, pages);
   const media = allMedia.filter((record) => wanted.has(record.id));
@@ -1043,6 +1095,9 @@ export async function buildBackup(): Promise<BackupContent> {
       sessions,
       pages,
       pageTraces,
+      // WHY: A built-in mode comes back from the app's manifest; only the
+      // learner's copies need the backup. [pack: learning-mode-core]
+      modes: modes.filter((mode) => !mode.isBuiltIn),
       settings,
       prompts,
       tombstones,
@@ -1091,6 +1146,11 @@ export async function applyBackup(
   // settings store. Both the provider key and the subscription pass survive
   // the restore that way, matching the promise the screen makes.
   const license = await readSystemLicense();
+  // WHY: A built-in mode is app-owned and is not part of a backup, but the mode
+  // list must not be empty after an offline restore. Reading the built-ins
+  // before the library is cleared and writing them back keeps them in place;
+  // the backup's custom rows are written beside them. [pack: learning-mode-core]
+  const builtInModes = (await readModes()).filter((mode) => mode.isBuiltIn);
   // The caller may stop background work after validation, but before the
   // library changes. A malformed backup must not kill a healthy job.
   await options.beforeApply?.();
@@ -1099,6 +1159,8 @@ export async function applyBackup(
   try {
     await clearLibrary();
 
+    for (const mode of builtInModes) await writeMode(mode);
+    for (const mode of backup.modes) await writeMode(mode);
     for (const pack of backup.packs) await writePack(pack as BrowserPack);
     for (const card of backup.cards) {
       const { id, ...source } = card;

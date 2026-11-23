@@ -12,13 +12,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryStore, setBrowserStore, type Store } from "@/lib/browser/store";
 import { localGet, localSend } from "@/lib/browser/router";
-import { rememberRelayHost, writeMeta } from "@/lib/browser/repository";
+import { rememberRelayHost, writeMeta, writeMode } from "@/lib/browser/repository";
 import { PACK_BUNDLE_SCHEMA } from "@/lib/browser/bundle";
 import { createJobRunner } from "@/lib/browser/jobs";
 import type { BrowserJob, JobView } from "@/lib/browser/jobs";
 import { ApiError } from "@/lib/client/errors";
 import { cardPageId, deckPageId, packPageId } from "@/lib/core/pages";
-import type { AnswerResult, Card, DictionaryPage, PageTrace, Plan, ProviderStatus } from "@/lib/shared/types";
+import type { AnswerResult, Card, DictionaryPage, LearningMode, PageTrace, Plan, ProviderStatus } from "@/lib/shared/types";
 
 function packBundle(): string {
   return JSON.stringify({
@@ -1599,5 +1599,102 @@ describe("dictionary pages through the router", () => {
     await expect(
       localSend("/api/pages/draft", "POST", { level: "card", deckId: "basics" }),
     ).rejects.toThrow("Choose the pack this page belongs to.");
+  });
+});
+
+// WHY: A learning mode is stored data with the same write rules as a pack: the
+// screen sends one, the router checks it whole, and a built-in is app-owned.
+// These tests prove that contract before Tracks 2-4 build on it.
+// PACK: learning-mode-core
+// 2026-11-22 opencode: created for the learning-mode-core pack.
+// [pack: learning-mode-core]
+
+/** One whole mode body, valid unless the test overrides a field. */
+function modeBody(overrides: Record<string, unknown> = {}) {
+  return {
+    id: "grammar-roles",
+    name: "Grammar roles",
+    description: "Understand sentence roles in plain English.",
+    version: "1.0.0",
+    defaultCardMix: ["cloze", "picks", "type"],
+    usesWordStages: false,
+    skillInstructions: "One deck per role, named in plain English.",
+    canonicalExample: JSON.parse(packBundle()),
+    createdAt: "2026-11-22T00:00:00.000Z",
+    ...overrides,
+  };
+}
+
+describe("learning modes", () => {
+  it("creates, reads, edits and deletes a mode the learner owns", async () => {
+    const created = await localSend<{ mode: LearningMode }>("/api/modes", "POST", modeBody());
+    expect(created.mode.isBuiltIn).toBe(false);
+    expect(created.mode.id).toBe("grammar-roles");
+
+    const listed = await localGet<{ modes: LearningMode[] }>("/api/modes");
+    expect(listed.modes.map((mode) => mode.id)).toEqual(["grammar-roles"]);
+
+    const edited = await localSend<{ mode: LearningMode }>("/api/modes/grammar-roles", "PATCH", {
+      name: "Roles, renamed",
+      description: "A better sentence.",
+    });
+    expect(edited.mode.name).toBe("Roles, renamed");
+    // WHY: the id is the storage key, so an edit never moves a row.
+    expect(edited.mode.id).toBe("grammar-roles");
+
+    const removed = await localSend<{ deleted: boolean }>("/api/modes/grammar-roles", "DELETE");
+    expect(removed.deleted).toBe(true);
+    expect((await localGet<{ modes: LearningMode[] }>("/api/modes")).modes).toHaveLength(0);
+  });
+
+  it("duplicates a built-in into a new row and protects the original", async () => {
+    await writeMode({ ...(modeBody() as unknown as LearningMode), id: "built-in-roles", isBuiltIn: true });
+
+    const copy = await localSend<{ mode: LearningMode }>("/api/modes", "POST", {
+      sourceModeId: "built-in-roles",
+      name: "My roles",
+    });
+    expect(copy.mode.id).toBe("my-roles");
+    expect(copy.mode.isBuiltIn).toBe(false);
+    expect(copy.mode.sourceModeId).toBe("built-in-roles");
+
+    // A second copy of the same name takes the next free label and id, never
+    // the first copy's. [pack: learning-mode-core]
+    const second = await localSend<{ mode: LearningMode }>("/api/modes", "POST", {
+      sourceModeId: "built-in-roles",
+      name: "My roles",
+    });
+    expect(second.mode.name).toBe("My roles 2");
+    expect(second.mode.id).toBe("my-roles-2");
+
+    await expect(localSend("/api/modes/built-in-roles", "PATCH", { name: "Changed" })).rejects.toThrow(
+      "A built-in learning mode cannot be edited.",
+    );
+    await expect(localSend("/api/modes/built-in-roles", "DELETE")).rejects.toThrow(
+      "A built-in learning mode cannot be deleted.",
+    );
+
+    // The original kept its name, and both copies survive beside it.
+    const listed = await localGet<{ modes: LearningMode[] }>("/api/modes");
+    expect(listed.modes.find((mode) => mode.id === "built-in-roles")?.name).toBe("Grammar roles");
+    expect(listed.modes).toHaveLength(3);
+  });
+
+  it("refuses a mode whose example gives away an answer", async () => {
+    const example = JSON.parse(packBundle());
+    example.cards[0].teaching = [{ type: "text", text: "Use kawę here." }];
+
+    await expect(localSend("/api/modes", "POST", modeBody({ canonicalExample: example }))).rejects.toThrow(
+      "The learning mode needs fixing before it can be saved.",
+    );
+  });
+
+  it("refuses a mode the app cannot store", async () => {
+    await expect(
+      localSend("/api/modes", "POST", modeBody({ defaultCardMix: ["listen"] })),
+    ).rejects.toThrow("The learning mode needs fixing before it can be saved.");
+    await expect(localSend("/api/modes", "POST", modeBody({ name: "" }))).rejects.toThrow(
+      "Give the learning mode a name.",
+    );
   });
 });

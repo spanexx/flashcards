@@ -9,6 +9,8 @@
 // 2026-11-21 opencode: a language pack may teach one word in depth, and a card
 // may name that word and its stage. The link is context, never identity.
 // [pack: word-lessons]
+// 2026-11-22 opencode: a learning mode is named data, and the five answer modes
+// now live in one runtime list so no module can copy them. [pack: learning-mode-core]
 
 /** How a deck presents help. The level belongs to the deck, never the card. */
 export type StudyLevel = "beginner" | "intermediate" | "advanced";
@@ -101,8 +103,15 @@ export type CardPart =
   | { type: "media"; src: string; alt?: string; mime?: string }
   | { type: "blank"; id: string; hint?: string; width?: "short" | "medium" | "long" };
 
+/**
+ * The five answer surfaces a card can use. It is a runtime list on purpose: the
+ * zod schema, the creation brief and any screen all read this tuple, so the
+ * five names are written once and cannot drift apart.
+ */
+export const ANSWER_MODES = ["cloze", "picks", "type", "hear_type", "match"] as const;
+
 /** How a card collects its answer. The pack declares one of the five surfaces. */
-export type AnswerMode = "cloze" | "picks" | "type" | "hear_type" | "match";
+export type AnswerMode = (typeof ANSWER_MODES)[number];
 
 /** One blank inside a cloze card. */
 export interface BlankDef {
@@ -177,6 +186,42 @@ export interface CardSource {
  * writes only the stages its word supports; a missing stage is simply absent.
  */
 export type WordStage = "story" | "spelling" | "forms" | "dialogue" | "matching";
+
+/**
+ * One named way of studying: the skill text a generator reads, the card kinds
+ * the mode prefers, and one whole worked example.
+ *
+ * A built-in mode is app-owned: a seed refreshes it when its version is newer,
+ * and the only way to change one is to duplicate it. The copy keeps
+ * `sourceModeId`, so it can always say which built-in it came from.
+ */
+export interface LearningMode {
+  /** A lowercase slug. It is the storage key and never changes after creation. */
+  id: string;
+  name: string;
+  /** One learner-facing sentence shown beside the name. Never empty. */
+  description: string;
+  /** Author-written. A newer version replaces an older built-in row. */
+  version: string;
+  /** The card surfaces this mode prefers, in order. Never empty. */
+  defaultCardMix: AnswerMode[];
+  /** True when the mode walks a word through the five lesson stages. */
+  usesWordStages: boolean;
+  /** The rule text a generator reads. It teaches the mode, never one answer. */
+  skillInstructions: string;
+  /**
+   * One whole `flashcards.pack/v1` bundle, embedded as an object rather than a
+   * JSON string. It is `unknown` here because the shared layer must not depend
+   * on the browser's zod bundle schema; the validator is the one reader.
+   */
+  canonicalExample: unknown;
+  /** Seeded modes are refreshed by the app and can be duplicated, never deleted. */
+  isBuiltIn: boolean;
+  /** The built-in this row was copied from, when the learner customised one. */
+  sourceModeId?: string;
+  /** An ISO date and time, the same stamp every other stored row carries. */
+  createdAt: string;
+}
 
 /**
  * One changed form of a word, with the rule that explains the change. The rule

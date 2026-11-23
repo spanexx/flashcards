@@ -6,9 +6,11 @@
 // 2026-11-21 opencode: a language pack may declare words, and a card may name
 // one and its stage. The stage fixes the answer mode, so a mislabelled card is
 // refused here rather than rendered somewhere unexpected. [pack: word-lessons]
+// 2026-11-22 opencode: the five answer modes are exported once, and a learning
+// mode has a stored shape beside the pack manifest. [pack: learning-mode-core]
 
 import { z } from "zod";
-import type { AnswerMode, WordStage } from "@/lib/shared/types";
+import { ANSWER_MODES, type AnswerMode, type WordStage } from "@/lib/shared/types";
 import { studyInstructionField } from "@/lib/core/prompt-context";
 
 /** One ordered part of a card side. */
@@ -142,9 +144,12 @@ export const blankDefSchema = z.object({
   options: z.array(z.string()).optional(),
 });
 
+/** The five answer modes, checked against the one shared list. */
+export const answerModeSchema = z.enum(ANSWER_MODES);
+
 /** The answering rule the pack declared for this card. */
 export const answerDefSchema = z.object({
-  mode: z.enum(["cloze", "picks", "type", "hear_type", "match"]),
+  mode: answerModeSchema,
   blanks: z.array(blankDefSchema).optional(),
   options: z.array(z.string()).optional(),
   correct: z.array(z.string()).optional(),
@@ -246,6 +251,34 @@ export const packManifestSchema = z.object({
 export const packCardsSchema = z.object({
   cards: z.array(cardSourceSchema),
   words: z.array(wordSchema).default([]),
+});
+
+/**
+ * A learning mode's stored shape.
+ *
+ * WHY: The stored row and the seed manifest must agree before a mode can reach a
+ * prompt. The canonical example is held as an object here and checked as a whole
+ * bundle by the browser reader, because this module cannot import the bundle
+ * reader without a cycle. [pack: learning-mode-core]
+ */
+export const learningModeSchema = z.object({
+  id: z
+    .string()
+    .min(1, "a mode needs an id")
+    .regex(/^[a-z0-9][a-z0-9-]*$/, "a mode id uses lowercase letters, numbers and dashes"),
+  name: z.string().min(1, "a mode needs a name"),
+  description: z.string().min(1, "a mode needs a description"),
+  version: z.string().min(1, "a mode needs an author-written version"),
+  defaultCardMix: z.array(answerModeSchema).min(1, "a mode needs at least one card kind"),
+  usesWordStages: z.boolean(),
+  skillInstructions: z.string().min(1, "a mode needs skill instructions"),
+  canonicalExample: z.custom<Record<string, unknown>>(
+    (value) => typeof value === "object" && value !== null && !Array.isArray(value),
+    "a canonical example must be a whole bundle object, not a JSON string",
+  ),
+  isBuiltIn: z.boolean(),
+  sourceModeId: z.string().min(1, "a source mode id cannot be empty").optional(),
+  createdAt: z.iso.datetime(),
 });
 
 /** The pack's prompt text. The app owns the three slots it fills in. */
