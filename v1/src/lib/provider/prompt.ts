@@ -138,21 +138,6 @@ export function buildGenerationPrompt(
     sourceLanguage: pair.sourceName || "the question language",
   };
   let user = renderTemplate(template, values);
-  // WHY: the template already carries its rules and JSON shape, so the mode
-  // section goes between them at the one output-contract line. A pack template
-  // without that line gets the section at the end; an absent mode adds nothing.
-  // PACK: prompt-assembler
-  // 2026-11-23 opencode: placed the cards-lane mode seam before the contract. [pack: prompt-assembler]
-  const modeLines = modeSection(input.mode);
-  if (modeLines.length > 0) {
-    const contractAt = user.indexOf(OUTPUT_CONTRACT_LINE);
-    if (contractAt >= 0) {
-      user = `${user.slice(0, contractAt)}${modeLines.join("\n")}\n${user.slice(contractAt)}`;
-    } else {
-      user = `${user}\n\n${modeLines.join("\n")}`;
-    }
-  }
-
   // A brief is appended to the pack's own words, so a pack template cannot
   // silently erase the learner's subject or the requested exercise style.
   if (input.brief) {
@@ -170,6 +155,21 @@ export function buildGenerationPrompt(
       FRAGMENT_WORD_RULE,
     ];
     if (pairLines.length > 0) user = `${user}\n\n${pairLines.join("\n")}`;
+  }
+
+  // WHY: the template carries its own rules and shape, so a contract line is
+  // the one seam for mode between them. A template with no contract line gets
+  // mode after the universal rules above, not between the template and them.
+  // PACK: prompt-assembler
+  // 2026-11-23 opencode: moved the contract-less mode seam after the rules. [pack: prompt-assembler]
+  const modeLines = modeSection(input.mode);
+  if (modeLines.length > 0) {
+    const contractAt = user.indexOf(OUTPUT_CONTRACT_LINE);
+    if (contractAt >= 0) {
+      user = `${user.slice(0, contractAt)}${modeLines.join("\n")}\n${user.slice(contractAt)}`;
+    } else {
+      user = `${user}\n\n${modeLines.join("\n")}`;
+    }
   }
 
   return {

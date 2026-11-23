@@ -577,6 +577,25 @@ describe("learning mode in generation prompts", () => {
     }
   });
 
+  // WHY: a pack template with no output-contract line has no seam to insert
+  // mode before. The mode must still follow the universal rules the app
+  // appends, never sit between the template and those rules.
+  // PACK: prompt-assembler
+  // 2026-11-23 opencode: pinned the contract-less template order. [pack: prompt-assembler]
+  it("puts mode after the appended rules when a pack template has no contract line", () => {
+    const text = buildGenerationPrompt(ownTemplatePack(), slots, {
+      topic: "cases",
+      count: 3,
+      brief,
+      inventory,
+      mode: modeA,
+    }).messages[1].content;
+    expect(text.split(modeA.skillInstructions)).toHaveLength(2);
+    expect(text.indexOf('may add "teaching"')).toBeLessThan(
+      text.indexOf(modeA.skillInstructions),
+    );
+  });
+
   it("leaves the prompt unchanged when no mode or an empty skill is given", () => {
     const bare = build();
     const empty = build({ skillInstructions: "   ", canonicalExample: "x" });

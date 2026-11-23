@@ -117,8 +117,9 @@ simulation must reproduce them through Mode Studio.
 - Pack, deck and cards builders receive the optional mode section; the D-28
   teaching append keeps its position and wording.
 - A pack-owned cards template with no output-contract line gets the mode
-  section after its shape and before the teaching append. The default path
-  keeps mode after the universal rules and before the contract.
+  section after the appended universal rules, so it never splits the template
+  from those rules. The default path keeps mode after the universal rules and
+  before the contract.
 - The output contract and shape stay last, so the chat example-extraction
   helpers keep working.
 

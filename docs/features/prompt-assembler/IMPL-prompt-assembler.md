@@ -128,6 +128,15 @@ after each edit to `router.ts`.
   prompt unchanged; both now say "adds no mode text." Doc-only, no behavior
   change.
 
+## Delivery note — 2026-11-23 (post-impl review gap)
+
+- The fresh-eyes review found that a pack-owned cards template without the
+  output-contract line got mode text between the template and the universal
+  rules the app appends. Moved the seam after the append, so every lane puts
+  mode after the universal rules. PRD-TRD §4.2 now describes the shipped order.
+- Verified by a new contract-less-template pin in `provider-prompt.test.ts`
+  (RED before the move, GREEN after) and the existing mode-seam tests.
+
 ## Out of scope
 
 Everything in PRD-TRD §5. In particular: no Track 1 file, no mode content, no
