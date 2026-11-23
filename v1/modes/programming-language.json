@@ -1,0 +1,71 @@
+{
+  "id": "programming-language",
+  "name": "Programming language",
+  "description": "Read short real code, name the language and goal, then explain subtle bugs.",
+  "version": "1.0.0",
+  "defaultCardMix": ["type", "cloze", "picks"],
+  "usesWordStages": false,
+  "skillInstructions": "# Programming language\n\nKeep snippets to one to five lines and name the language and the goal in the prompt.\n\n- Use picks when several lines look plausible but only one respects the goal.\n- Hints explain why the other lines fail; they never quote the correct line.\n- Ask for the method or keyword, not a full restatement of the snippet.\n- Do not require a runtime, a build step or an external package.",
+  "canonicalExample": {
+    "schema": "flashcards.pack/v1",
+    "pack": {
+      "name": "mode-demo-programming-language",
+      "version": "1.0.0",
+      "language": "en",
+      "sourceLanguage": "en"
+    },
+    "decks": [
+      { "id": "javascript", "name": "JavaScript", "level": "intermediate" }
+    ],
+    "cards": [
+      {
+        "deckId": "javascript",
+        "summary": "Fold a list into one value",
+        "prompt": [
+          { "type": "code", "text": "const total = items.reduce((sum, n) => sum + n, 0);", "language": "javascript" },
+          { "type": "text", "text": "Name the array method that folds every item into one value." }
+        ],
+        "answer": [{ "type": "text", "text": "reduce" }],
+        "answerDef": { "mode": "type", "expected": ["reduce"] },
+        "teaching": [
+          { "type": "text", "text": "A fold walks a list while carrying one running value." }
+        ]
+      },
+      {
+        "deckId": "javascript",
+        "summary": "Loop over every element",
+        "prompt": [
+          { "type": "text", "text": "In JavaScript, a loop that visits every element of an iterable is a" },
+          { "type": "blank", "id": "b1" },
+          { "type": "text", "text": "loop." }
+        ],
+        "answer": [
+          { "type": "text", "text": "In JavaScript, a loop that visits every element of an iterable is a for-of loop." }
+        ],
+        "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["for-of"] }] },
+        "teaching": [
+          { "type": "text", "text": "It takes one item at a time from the iterable." }
+        ]
+      },
+      {
+        "deckId": "javascript",
+        "summary": "Start the counter at zero",
+        "prompt": [
+          { "type": "code", "text": "let count = 1;\nfor (const item of items) count += 1;", "language": "javascript" },
+          { "type": "text", "text": "Which single line must change so the final count equals the number of items?" }
+        ],
+        "answer": [{ "type": "code", "text": "let count = 0;", "language": "javascript" }],
+        "answerDef": {
+          "mode": "picks",
+          "options": ["let count = 0;", "let count = 1;", "count += 1;"],
+          "correct": ["let count = 0;"]
+        },
+        "teaching": [
+          { "type": "text", "text": "The first value decides what the running total begins with." }
+        ]
+      }
+    ],
+    "words": [],
+    "pages": []
+  }
+}

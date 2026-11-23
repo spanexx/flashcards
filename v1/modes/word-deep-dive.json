@@ -1,0 +1,97 @@
+{
+  "id": "word-deep-dive",
+  "name": "Word deep dive",
+  "description": "Study one word across its forms, pairs and stages instead of many unrelated lines.",
+  "version": "1.0.0",
+  "defaultCardMix": ["cloze", "type", "picks", "match"],
+  "usesWordStages": true,
+  "skillInstructions": "# Word deep dive\n\nPut exactly one word in `words`. Use five progressive stages in the skill: story, spelling, forms, dialogue, matching.\n\n- Keep stage to answer mode: story is cloze, spelling and forms are type, dialogue is picks, matching is match.\n- Never print a changed form in a prompt or teaching part; the learner must produce it.\n- State the trigger or context that selects the form.\n- Keep the example small: one word, one or two forms, two or three pairs, and a few stage cards.",
+  "canonicalExample": {
+    "schema": "flashcards.pack/v1",
+    "pack": {
+      "name": "mode-demo-word-deep-dive",
+      "version": "1.0.0",
+      "language": "en",
+      "sourceLanguage": "en"
+    },
+    "decks": [
+      { "id": "word-lab", "name": "Word lab", "level": "beginner" }
+    ],
+    "cards": [
+      {
+        "deckId": "word-lab",
+        "summary": "A light that tells you to stop",
+        "prompt": [
+          { "type": "text", "text": "A red light is a" },
+          { "type": "blank", "id": "b1" },
+          { "type": "text", "text": "to stop." }
+        ],
+        "answer": [
+          { "type": "text", "text": "A red light is a signal to stop." }
+        ],
+        "answerDef": { "mode": "cloze", "blanks": [{ "id": "b1", "expected": ["signal"] }] },
+        "wordId": "signal",
+        "stage": "story",
+        "teaching": [
+          { "type": "text", "text": "An object can carry a message without using words." }
+        ]
+      },
+      {
+        "deckId": "word-lab",
+        "summary": "Type the base word",
+        "prompt": [
+          { "type": "text", "text": "Type the word that means a sign carrying information." }
+        ],
+        "answer": [{ "type": "text", "text": "signal" }],
+        "answerDef": { "mode": "type", "expected": ["signal"] },
+        "wordId": "signal",
+        "stage": "spelling",
+        "teaching": [
+          { "type": "text", "text": "Read the meaning, then spell the whole word." }
+        ]
+      },
+      {
+        "deckId": "word-lab",
+        "summary": "Choose the form",
+        "prompt": [
+          { "type": "text", "text": "Which word fits: 'Turn the ___ to change tracks'?" }
+        ],
+        "answer": [{ "type": "text", "text": "signal" }],
+        "answerDef": {
+          "mode": "picks",
+          "options": ["signal", "signals", "silent"],
+          "correct": ["signal"]
+        },
+        "wordId": "signal",
+        "stage": "dialogue",
+        "teaching": [
+          { "type": "text", "text": "One singular noun follows the article." }
+        ]
+      }
+    ],
+    "words": [
+      {
+        "id": "signal",
+        "lemma": "signal",
+        "meaning": "a sign that carries information",
+        "lang": "en",
+        "forms": [
+          {
+            "label": "plural",
+            "to": "signals",
+            "meaning": "more than one signal",
+            "why": [
+              { "type": "text", "text": "Add -s to make the plural of a regular noun." }
+            ],
+            "use": "Two lights gave different signals."
+          }
+        ],
+        "pairs": [
+          { "target": "signal", "meaning": "a sign that carries information" },
+          { "target": "signals", "meaning": "more than one signal" }
+        ]
+      }
+    ],
+    "pages": []
+  }
+}
