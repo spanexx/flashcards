@@ -9,6 +9,7 @@
 
 import { z } from "zod";
 import type { CardPart, CardSource } from "@/lib/shared/types";
+import type { ValidationIssue } from "@/lib/core/schema";
 
 /** The words that tell a learner a plural is expected. */
 export const COUNT_WORDS = [
@@ -146,6 +147,84 @@ export function clozeContextIssue(
   }
 
   return null;
+}
+
+// WHY: A canonical example is teaching material, so a teaching line or a hint
+// that spells the answer teaches the learner to read the answer instead of the
+// rule. This is the one shared spoiler rule; every mode example runs it.
+// PACK: learning-mode-core
+// 2026-11-22 opencode: created for the learning-mode-core pack.
+// [pack: learning-mode-core]
+
+/** The readable words of a card's teaching layer: text, image alt and video alt/search. */
+function teachingLine(parts: CardSource["teaching"]): string {
+  if (!parts) return "";
+  return parts
+    .map((part) => {
+      if (part.type === "text") return part.text;
+      if (part.type === "image") return part.alt;
+      return [part.alt ?? "", part.search ?? ""].join(" ");
+    })
+    .join(" ");
+}
+
+/** Every answer a card must not give away, folded to one entry per spelling. */
+function answerTokens(def: CardSource["answerDef"]): string[] {
+  const raw = [
+    ...(def.blanks ?? []).flatMap((blank) => blank.expected ?? []),
+    ...(def.expected ?? []),
+    ...(def.correct ?? []),
+  ];
+  const seen = new Set<string>();
+  const tokens: string[] = [];
+  for (const value of raw) {
+    const token = value.trim();
+    // WHY: A one- or two-letter token ("to", "is", "a") occurs in ordinary
+    // prose. Policing it would refuse sound teaching, which the risk section
+    // of this pack forbids. A real answer token is a word. [pack: learning-mode-core]
+    if (token.length < 3) continue;
+    const key = token.toLocaleLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    tokens.push(token);
+  }
+  return tokens;
+}
+
+/**
+ * Refuse teaching or a hint that spells one of the card's answers.
+ *
+ * The check is literal and whole-word: a line that names the rule passes, and
+ * only the answer token itself is refused. At most one issue per field, so a
+ * card with several spoilered tokens still reads as one sentence per field.
+ */
+export function spoilerIssues(
+  source: Pick<CardSource, "teaching" | "hints" | "answerDef">,
+  index = 0,
+): ValidationIssue[] {
+  const tokens = answerTokens(source.answerDef);
+  if (tokens.length === 0) return [];
+
+  const fields = [
+    { field: "teaching", text: teachingLine(source.teaching) },
+    { field: "hints", text: (source.hints ?? []).join(" ") },
+  ];
+
+  const issues: ValidationIssue[] = [];
+  for (const { field, text } of fields) {
+    if (text.length === 0) continue;
+    const token = tokens.find((candidate) => hasWholeWord(text, candidate));
+    if (!token) continue;
+    issues.push({
+      index,
+      field,
+      message:
+        field === "hints"
+          ? `a hint gives away the answer "${token}"; a hint must point at the rule, never the answer`
+          : `the teaching gives away the answer "${token}"; show how to work it out instead`,
+    });
+  }
+  return issues;
 }
 
 // WHY (D-48): the prompt lanes ask the provider to write a learner-facing note,

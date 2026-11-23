@@ -10,6 +10,8 @@
 // store, so a reload can pick the lesson back up. [pack: study-resilience]
 // 2026-10-29 qoder: dictionary pages and their reading traces are an additive
 // version 6 upgrade; no existing store changes shape. [pack: course-dictionary]
+// 2026-11-22 opencode: the learning modes are an additive version 7 store, so a
+// mode can be stored, seeded and backed up. [pack: learning-mode-core]
 
 /** The object stores that hold the library, the record and the settings. */
 export const STORE_NAMES = [
@@ -27,6 +29,7 @@ export const STORE_NAMES = [
   "resume",
   "pages",
   "pageTraces",
+  "modes",
 ] as const;
 
 export type StoreName = (typeof STORE_NAMES)[number];
@@ -110,7 +113,10 @@ let database: Promise<IDBDatabase> | null = null;
 function openDatabase(): Promise<IDBDatabase> {
   if (!database) {
     database = new Promise((resolve, reject) => {
-      const request = indexedDB.open("flashcards", 6);
+      // WHY: The version moves whenever a store is added. The upgrade loop
+      // below only creates missing stores, so an old database gains "modes"
+      // and keeps every existing row untouched. [pack: learning-mode-core]
+      const request = indexedDB.open("flashcards", 7);
       request.onupgradeneeded = () => {
         const db = request.result;
         for (const name of STORE_NAMES) {

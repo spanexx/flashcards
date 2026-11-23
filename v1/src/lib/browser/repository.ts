@@ -5,11 +5,14 @@
 // 2026-10-20 opencode: created for the browser-owned build.
 // 2026-10-26 qoder: one live snapshot keeps a running session alive across a
 // reload; replacing the library clears it. [pack: study-resilience]
+// 2026-11-22 opencode: learning modes join the domain vocabulary, with their own
+// row and their own clear rule. [pack: learning-mode-core]
 
 import type {
   Card,
   Deck,
   EvidenceRow,
+  LearningMode,
   PackStatus,
   PromptLogEntry,
   SessionEvent,
@@ -100,6 +103,41 @@ export async function readPack(name: string, store: Store = browserStore()): Pro
 /** Add or replace one pack manifest. */
 export async function writePack(pack: BrowserPack, store: Store = browserStore()): Promise<void> {
   await store.put("packs", { ...pack, id: pack.name });
+  markChanged();
+}
+
+/**
+ * A learning mode as the browser keeps it. The shared `LearningMode` already
+ * carries the id, so the stored row is the same shape; the alias names the
+ * storage role and keeps the repository's vocabulary consistent with packs.
+ */
+export interface BrowserLearningMode extends LearningMode, StoredValue {}
+
+/** Every stored mode, built-ins and the learner's copies alike. */
+export async function readModes(store: Store = browserStore()): Promise<BrowserLearningMode[]> {
+  return store.all<BrowserLearningMode>("modes");
+}
+
+/** One mode by its exact id. */
+export async function readMode(
+  id: string,
+  store: Store = browserStore(),
+): Promise<BrowserLearningMode | null> {
+  return store.get<BrowserLearningMode>("modes", id);
+}
+
+/** Add or replace one mode. The id is the key, so a re-seed replaces its own row. */
+export async function writeMode(mode: LearningMode, store: Store = browserStore()): Promise<void> {
+  await store.put("modes", mode);
+  markChanged();
+}
+
+/**
+ * Remove one mode. The router refuses a built-in before calling this; the
+ * repository does not need to know who is allowed to ask.
+ */
+export async function deleteMode(id: string, store: Store = browserStore()): Promise<void> {
+  await store.delete("modes", id);
   markChanged();
 }
 
@@ -528,6 +566,10 @@ export function orphanedPackNames(cards: Card[], packs: BrowserPack[]): string[]
  * because the incoming backup may point at it; removal tombstones stay because
  * a restore must not undo what the learner deliberately took out. The running
  * session goes because its cards are gone (GRILL Q11).
+ *
+ * Modes are library data too: a restore writes the learner's copies back and
+ * keeps the built-in rows itself, so clearing them here is safe.
+ * [pack: learning-mode-core]
  */
 export function clearLibrary(store: Store = browserStore()): Promise<void> {
   return serial(async () => {
@@ -542,6 +584,7 @@ export function clearLibrary(store: Store = browserStore()): Promise<void> {
       "resume",
       "pages",
       "pageTraces",
+      "modes",
     ] as const) {
       await store.clear(name);
     }

@@ -5,8 +5,12 @@
 // 2026-10-22 opencode: created for the creation-control pack [pack: creation-control]
 // 2026-10-23 opencode: the brief now names the pack's target and question
 // languages and its study instruction. [pack: language-prompt-control]
+// 2026-11-22 opencode: the brief may name a learning mode, its card mix and the
+// learner's mode preferences. Old briefs and old defaults stay byte for byte.
+// [pack: learning-mode-core]
 
 import { languageName, normalizeLanguage } from "@/lib/shared/language";
+import { ANSWER_MODES, type AnswerMode } from "@/lib/shared/types";
 
 // WHY: Chat and provider generation must promise the same thing about the
 // stored study note. One statement in the shared brief module keeps the two
@@ -45,6 +49,12 @@ export interface CreationBrief {
   studyInstruction: string;
   /** One optional word to build a focused lesson around. Empty means no lesson. */
   focusWord: string;
+  /** The learning mode the learner chose, when the Create screen offers modes. */
+  modeId?: string;
+  /** The card surfaces this request wants. Absent means the mode decides. */
+  cardMix?: AnswerMode[];
+  /** The learner's own words for how they want to work through the mode. */
+  modePreferences?: string;
 }
 
 /** A blank brief is a learner brief with no subject, ready for the screen to fill. */
@@ -84,6 +94,13 @@ export function defaultCreationBrief(overrides: Partial<CreationBrief> = {}): Cr
     sourceLanguage: overrides.sourceLanguage ?? DEFAULT_CREATION_BRIEF.sourceLanguage,
     studyInstruction: overrides.studyInstruction ?? DEFAULT_CREATION_BRIEF.studyInstruction,
     focusWord: overrides.focusWord ?? DEFAULT_CREATION_BRIEF.focusWord,
+    // WHY: The mode fields stay absent unless a caller supplied one, so an old
+    // caller's brief is unchanged field for field. [pack: learning-mode-core]
+    ...(overrides.modeId !== undefined ? { modeId: overrides.modeId } : {}),
+    ...(overrides.cardMix !== undefined ? { cardMix: overrides.cardMix } : {}),
+    ...(overrides.modePreferences !== undefined
+      ? { modePreferences: overrides.modePreferences }
+      : {}),
   };
 }
 
@@ -95,6 +112,27 @@ function optionalText(value: unknown): string | null {
   if (value === undefined || value === null) return "";
   if (typeof value !== "string") return null;
   return value.trim();
+}
+
+/** True when a value is one of the five answer modes the shared list names. */
+function isAnswerMode(value: unknown): value is AnswerMode {
+  return typeof value === "string" && (ANSWER_MODES as readonly string[]).includes(value);
+}
+
+/**
+ * Read one optional card mix. Null means the list named something the app does
+ * not know; a repeated mode is folded into one entry because order is the only
+ * thing a mix expresses.
+ */
+function optionalCardMix(value: unknown): AnswerMode[] | null {
+  if (value === undefined || value === null) return [];
+  if (!Array.isArray(value)) return null;
+  const modes: AnswerMode[] = [];
+  for (const item of value) {
+    if (!isAnswerMode(item)) return null;
+    if (!modes.includes(item)) modes.push(item);
+  }
+  return modes;
 }
 
 /**
@@ -140,6 +178,19 @@ export function validateCreationBrief(value: unknown): BriefValidation {
     return { ok: false, message: "Every text field in a creation brief must be a string." };
   }
 
+  // WHY: The mode fields are optional and additive. A brief that does not name
+  // one keeps exactly the old shape, so old screens and old tests see no change.
+  // [pack: learning-mode-core]
+  const modeId = optionalText(record.modeId);
+  const modePreferences = optionalText(record.modePreferences);
+  if (modeId === null || modePreferences === null) {
+    return { ok: false, message: "The mode fields in a creation brief must be text." };
+  }
+  const cardMix = optionalCardMix(record.cardMix);
+  if (cardMix === null) {
+    return { ok: false, message: "A card mix may only name the five answer modes the app knows." };
+  }
+
   // A learner who writes nothing has not given the provider a goal, so refuse it.
   if (subjectMode === "learner" && subject.length === 0) {
     return { ok: false, message: "A learner brief needs a subject." };
@@ -176,6 +227,11 @@ export function validateCreationBrief(value: unknown): BriefValidation {
       sourceLanguage: normalizeLanguage(sourceLanguage),
       studyInstruction,
       focusWord,
+      // A mode value the learner left blank stays absent, so an old brief keeps
+      // its old shape. [pack: learning-mode-core]
+      ...(modeId.length > 0 ? { modeId } : {}),
+      ...(cardMix.length > 0 ? { cardMix } : {}),
+      ...(modePreferences.length > 0 ? { modePreferences } : {}),
     },
   };
 }

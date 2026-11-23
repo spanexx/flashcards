@@ -13,6 +13,7 @@ import {
   clearLibrary,
   deleteCardEvidence,
   deleteDeck,
+  deleteMode,
   deletePack,
   orphanedPackNames,
   packRecord,
@@ -20,6 +21,8 @@ import {
   patchSettings,
   readCards,
   readEvidence,
+  readMode,
+  readModes,
   readPack,
   readPacks,
   readPromptLog,
@@ -28,11 +31,14 @@ import {
   readTombstones,
   recordAlgorithmRun,
   upsertCards,
+  writeMode,
   writePack,
   writeProviderKey,
   writeTombstone,
+  type BrowserLearningMode,
   type BrowserPack,
 } from "@/lib/browser/repository";
+import { buildBackup, PACK_BUNDLE_SCHEMA, restoreBackup } from "@/lib/browser/bundle";
 import { putMedia, readAllMedia } from "@/lib/browser/media";
 import type { Card, EvidenceRow } from "@/lib/shared/types";
 
@@ -73,6 +79,29 @@ function card(id: string, deckId = "basics"): Card {
 
 function row(id: string, cardId: string): EvidenceRow {
   return { id, cardId, attemptId: `a-${id}`, region: null, outcome: "got_it", timeMs: 900, seenBefore: 0, at: now, kind: "answer" };
+}
+
+/** One mode row, so a repository case changes only the fact it tests. */
+function mode(id = "calm-basics", isBuiltIn = false): BrowserLearningMode {
+  return {
+    id,
+    name: id,
+    description: "One card at a time.",
+    version: "1.0.0",
+    defaultCardMix: ["cloze"],
+    usesWordStages: false,
+    skillInstructions: "Ask one question, then wait.",
+    canonicalExample: {
+      schema: PACK_BUNDLE_SCHEMA,
+      pack: { name: "mode-demo", version: "1.0.0" },
+      decks: [{ id: "basics", name: "Basics", level: "intermediate" }],
+      cards: [],
+      words: [],
+      pages: [],
+    },
+    isBuiltIn,
+    createdAt: now,
+  };
 }
 
 let store: Store;
@@ -228,5 +257,77 @@ describe("clearLibrary", () => {
     expect(await readProviderKey(store)).toBe("");
     expect((await readAllMedia(store)).map((record) => record.id)).toEqual(["media-kept"]);
     expect((await readTombstones(store)).map((row) => row.id)).toEqual(["pack-old"]);
+  });
+
+  // WHY: Modes hold the learner's skill text and their own copies, so a
+  // library reset must not leave stale modes behind for the next seed to mix
+  // with. [pack: learning-mode-core]
+  it("clears the stored modes too", async () => {
+    await writeMode(mode("custom-one"), store);
+    expect(await readModes(store)).toHaveLength(1);
+
+    await clearLibrary(store);
+
+    expect(await readModes(store)).toEqual([]);
+  });
+});
+
+// WHY: A mode is stored data with two kinds: app-owned built-ins and the
+// learner's copies. These cases pin the row, the built-in flag and the backup
+// rule before the loader or the routes exist. [pack: learning-mode-core]
+describe("learning modes", () => {
+  it("round-trips one mode and reads them as a list", async () => {
+    const written = mode("calm-basics");
+    await writeMode(written, store);
+
+    expect(await readMode("calm-basics", store)).toEqual(written);
+    expect((await readModes(store)).map((entry) => entry.id)).toEqual(["calm-basics"]);
+
+    await deleteMode("calm-basics", store);
+    expect(await readMode("calm-basics", store)).toBeNull();
+    expect(await readModes(store)).toEqual([]);
+  });
+
+  it("keeps the built-in flag and the source mode id", async () => {
+    const builtIn = mode("calm-basics", true);
+    const copy = { ...builtIn, id: "my-calm", isBuiltIn: false, sourceModeId: "calm-basics" };
+    await writeMode(builtIn, store);
+    await writeMode(copy, store);
+
+    expect((await readMode("calm-basics", store))?.isBuiltIn).toBe(true);
+    expect((await readMode("my-calm", store))?.isBuiltIn).toBe(false);
+    expect((await readMode("my-calm", store))?.sourceModeId).toBe("calm-basics");
+  });
+
+  it("carries only the learner's copies in a backup", async () => {
+    await writeMode(mode("calm-basics", true), store);
+    await writeMode(
+      { ...mode("my-calm"), isBuiltIn: false, sourceModeId: "calm-basics" },
+      store,
+    );
+
+    const backup = JSON.parse((await buildBackup()).json) as {
+      modes: Array<{ id: string; sourceModeId?: string }>;
+    };
+
+    expect(backup.modes.map((entry) => entry.id)).toEqual(["my-calm"]);
+    expect(backup.modes[0]?.sourceModeId).toBe("calm-basics");
+  });
+
+  // WHY: Restore replaces the library, but the app's own modes are not in the
+  // backup. They must survive the clear, while the learner's copy comes back
+  // from the file. [pack: learning-mode-core]
+  it("restores the learner's copy and keeps the built-in across a restore", async () => {
+    await writeMode(mode("calm-basics", true), store);
+    await writeMode({ ...mode("my-calm"), sourceModeId: "calm-basics" }, store);
+    const backup = (await buildBackup()).json;
+
+    const restored = await restoreBackup(backup);
+    expect(restored.ok).toBe(true);
+
+    const ids = (await readModes(store)).map((entry) => entry.id).sort();
+    expect(ids).toEqual(["calm-basics", "my-calm"]);
+    expect((await readMode("calm-basics", store))?.isBuiltIn).toBe(true);
+    expect((await readMode("my-calm", store))?.isBuiltIn).toBe(false);
   });
 });
