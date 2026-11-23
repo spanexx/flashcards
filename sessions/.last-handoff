@@ -1,59 +1,43 @@
-# Handoff 2026-11-23 — Track 3 built-in modes complete, awaiting review/merge
+# Handoff 2026-11-23 — four learning-mode drifts fixed, awaiting merge decision
 
 ## Where things stand
 
-Worktree: `/home/spanexx/.config/superpowers/worktrees/flashcards/feature-built-in-modes`
-Branch: `feature/built-in-modes` (fast-forwarded to `main` before this pack began).
+Worktree: `/home/spanexx/.config/superpowers/worktrees/flashcards/fix-learning-modes-drift`
+Branch: `fix/learning-modes-drift`, based on local `main` 1f26993.
+Origin: external report `.reports/2026-11-23-drift-learning-modes.md` on `main`.
+No merge into `main` has been made.
 
-`main` already contains the earlier branch merges: Track 1 `41cf04d`, Track 2
-`de7192c`, Track 3 plan `7d736db`, Track 4 plan `0289f6d`, plus
-`97c9656` preserving the Track 3 plan at `docs/features/built-in-modes/PLAN.md`.
-Track 3 implementation is **not yet merged** into `main`.
+## Fixes, one commit each
 
-## What Track 3 shipped (commits on this branch)
+- `be39202` D-51 — `applyBackup` skips imported rows whose id matches a built-in
+  mode (`v1/src/lib/browser/bundle.ts`), red test in `browser-repository.test.ts`.
+- `8ee8842` D-52 — new `v1/src/lib/browser/mode-prompt.ts` adapter/resolver;
+  `provider.ts` and `router.ts` now pass `brief.modeId` into both prompt lanes.
+  A missing or broken mode adds no layer 3, so old prompts stay unchanged.
+- `5051c95` D-53 — `PromptInputs` documented as a reserved seam in the
+  prompt-assembler PRD-TRD (doc-only).
+- `b97fdc6` D-54 — `built-in-modes.test.ts` asserts generated files equal
+  authored files plus `isBuiltIn` and the fixed stamp. Proved RED by perturbing
+  a generated file, then regenerated.
 
-- `a55b571` — GRILL locked: English examples, no default mode, version 1.0.0.
-- `1bbfb65` — PRD-TRD, IMPL, design sim.
-- `5fc88d3` — five authored modes in `v1/modes/` + `built-in-modes.test.ts`.
-- `8dc1100` — additive emit in `v1/scripts/make-seed.mjs`, generated
-  `v1/public/modes/**` + `mode-seed.test.ts`.
-- `72157ca` — drift-review fixes, post-sim, reconciliation, delivery notes.
+`docs/drift.md` records all four as Resolved (0 open / 54 resolved); each
+affected IMPL has an Open Drift breadcrumb.
 
-Design is locked in
-`docs/features/built-in-modes/GRILL-built-in-modes.txt` and
-`docs/features/built-in-modes/PRD-TRD-built-in-modes.md`.
-Canonical simulation: `bash docs/features/built-in-modes/simulate.sh` (PASS, 0
-problems). Design record: `docs/features/built-in-modes/archive/simulate-pre.sh`.
-Review evidence: `docs/features/built-in-modes/simulate-post.md`.
+## Verification
 
-## Verification evidence
-
-- Full suite: 96 files / 1220 tests green.
-- Targeted tests: 56 green (`built-in-modes`, `mode-seed`, `seed-modes`,
-  `seed-packs`).
+- Full suite: 96 files / 1230 tests green.
 - `npm run build` green, `check-pwa: passed` (121 files, 119 precache entries).
-- `npm run typecheck`, changed-file eslint, both drift gates green
-  (0 open / 50 resolved).
-- Regeneration hash check: all six shipped `v1/public/packs/*.json` unchanged.
-- Worktree clean; logs, `out/`, `.next/` and temp snapshots deleted.
+- `npm run typecheck`, changed-file eslint, both drift gates green.
+- `browser-router.test.ts` 73/73; `built-in-modes.test.ts` 16/16;
+  `browser-repository.test.ts` 20/20.
 
-## Next steps (in order)
+## Next steps
 
-1. Open the human-review gate with `agent-notify create` (project skill rule
-   before merge). Ask for approval of branch `feature/built-in-modes`.
-2. After approval, merge into `main` (user decision; no merge done here).
-3. Start Track 4 (Mode Studio UI) from `main`; its plan is the root `PLAN.md`.
+1. User decides whether to merge `fix/learning-modes-drift` into `main`.
+2. After merge, start Track 4 (Mode Studio UI); its plan is root `PLAN.md`.
 
 ## User-only follow-ups
 
-- Victor approves the human-review event and decides the merge.
-- No push, PR, or stable move was made; pack docs forbid them without a go.
-
-## Notes for a fresh agent
-
-- No `docs/Feature_Backlog.md` exists in this repo, so the execute-pack
-  "mark SHIPPED / update backlog" step has no file to update.
-- Red tests were run locally (22 expected failures) but never committed alone,
-  per `docs/ethics/commit.md`; each test file landed with its green job.
-- Do not edit Track 1 files (`router.ts`, `modes.ts`, `bundle.ts`, schemas) for
-  this pack; any loader defect is a separate drift/Track 1 issue.
+- Victor approves the merge. No push, PR, tag or stable move without a go.
+- The external review report remains untracked in the `main` worktree; committing
+  it there is Victor's call.

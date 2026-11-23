@@ -98,3 +98,15 @@ describe("authored built-in modes", () => {
     }
   });
 });
+
+// WHY: make-seed is not run by the build. Without this guard an authored edit
+// silently ships stale generated modes. [D-54]
+// PACK: D-54
+// 2026-11-23 opencode: added the authored/generated equality pin. [D-54]
+describe("generated modes match their authored source", () => {
+  it.each(IDS)("%s generated file equals the authored file plus the stamp", async (id) => {
+    const authored = await readJson(`modes/${id}.json`);
+    const generated = await readJson(`public/modes/${id}.json`);
+    expect(generated).toEqual({ ...authored, isBuiltIn: true, createdAt: STAMP });
+  });
+});

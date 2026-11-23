@@ -58,6 +58,11 @@ later offer "Draft with AI" without this track owning a screen.
   slots into `PromptInputs`. It changes no default and no validation rule.
 - The adapter is the only bridge: the shared layers never accept a whole
   `CreationBrief`.
+- `PromptInputs` is a reserved seam, not a rendered input. Neither
+  `universalCardRules` nor `assemblePrompt` embeds `cardMix`, `modePreferences`
+  or any other mapped input. A mode's rules reach a prompt only through its
+  skill text and canonical example, resolved from `brief.modeId` at runtime;
+  the mapped inputs do not change prompt wording. [D-53]
 
 ### 2.4 AI mode drafts are prepared and sent, never saved
 

@@ -154,3 +154,10 @@ UI, no provider schema change, no Drift entry, no new dependency.
   path forces `isBuiltIn: false` and a fresh ISO `createdAt` before validation.
 - **A half-edited shared file is committed.** A typecheck runs immediately
   after every shared-file edit, and the staged drift gate runs before commit.
+
+## Open Drift — 2026-11-23
+
+- **D-52 Resolved.** Runtime generation and chat routes now resolve
+  `brief.modeId` through `browser/mode-prompt.ts`; a missing mode adds no layer
+  3. **D-53 Resolved.** `PromptInputs` is documented as a reserved seam.
+  Evidence is in `docs/drift.md`.

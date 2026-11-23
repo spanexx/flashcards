@@ -38,7 +38,7 @@ import {
   type BrowserLearningMode,
   type BrowserPack,
 } from "@/lib/browser/repository";
-import { buildBackup, PACK_BUNDLE_SCHEMA, restoreBackup } from "@/lib/browser/bundle";
+import { BACKUP_SCHEMA, buildBackup, PACK_BUNDLE_SCHEMA, restoreBackup } from "@/lib/browser/bundle";
 import { putMedia, readAllMedia } from "@/lib/browser/media";
 import type { Card, EvidenceRow } from "@/lib/shared/types";
 
@@ -329,5 +329,32 @@ describe("learning modes", () => {
     expect(ids).toEqual(["calm-basics", "my-calm"]);
     expect((await readMode("calm-basics", store))?.isBuiltIn).toBe(true);
     expect((await readMode("my-calm", store))?.isBuiltIn).toBe(false);
+  });
+
+  // WHY: a hand-edited backup can carry a built-in id. An import must not
+  // replace the app-owned row, or that mode stops following its manifest.
+  // PACK: D-51
+  // 2026-11-23 opencode: added the built-in collision case. [D-51]
+  it("refuses an imported row that wears a built-in id", async () => {
+    await writeMode({ ...mode("calm-basics", true), name: "Original", version: "1.0.0" }, store);
+    const hijack = {
+      schema: BACKUP_SCHEMA,
+      exportedAt: now,
+      packs: [],
+      cards: [],
+      evidence: [],
+      sessions: [],
+      modes: [{ ...mode("calm-basics"), name: "Imported hijack", version: "9.9.9" }],
+      settings: {},
+      prompts: [],
+    };
+
+    const restored = await restoreBackup(JSON.stringify(hijack));
+    expect(restored.ok).toBe(true);
+    expect(await readMode("calm-basics", store)).toMatchObject({
+      isBuiltIn: true,
+      name: "Original",
+      version: "1.0.0",
+    });
   });
 });

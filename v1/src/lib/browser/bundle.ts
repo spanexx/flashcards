@@ -1151,6 +1151,11 @@ export async function applyBackup(
   // before the library is cleared and writing them back keeps them in place;
   // the backup's custom rows are written beside them. [pack: learning-mode-core]
   const builtInModes = (await readModes()).filter((mode) => mode.isBuiltIn);
+  // WHY: a hand-edited backup can carry a built-in id. Skipping those rows on
+  // import keeps the app-owned mode in charge of its own manifest refresh.
+  // PACK: D-51
+  // 2026-11-23 opencode: added the built-in id guard. [D-51]
+  const builtInIds = new Set(builtInModes.map((mode) => mode.id));
   // The caller may stop background work after validation, but before the
   // library changes. A malformed backup must not kill a healthy job.
   await options.beforeApply?.();
@@ -1160,7 +1165,11 @@ export async function applyBackup(
     await clearLibrary();
 
     for (const mode of builtInModes) await writeMode(mode);
-    for (const mode of backup.modes) await writeMode(mode);
+    for (const mode of backup.modes) {
+      // WHY: the built-in row just written must win over an imported id clone.
+      if (builtInIds.has(mode.id)) continue;
+      await writeMode(mode);
+    }
     for (const pack of backup.packs) await writePack(pack as BrowserPack);
     for (const card of backup.cards) {
       const { id, ...source } = card;
