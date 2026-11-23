@@ -280,8 +280,8 @@ export function cardStyleRuleLines(
  * never from learner text, a provider key or an AI-directed instruction.
  */
 export function modeSection(mode?: ModePromptContribution | null): string[] {
-  // WHY: an empty skill is the same as no mode, so an old caller's prompt is
-  // byte for byte the prompt it had before this pack.
+  // WHY: an empty skill is the same as no mode, so an old caller gains no
+  // mode text; the shared rule wording is the one merged wording.
   // PACK: prompt-assembler
   // 2026-11-23 opencode: added the once-only mode section. [pack: prompt-assembler]
   if (!mode) return [];

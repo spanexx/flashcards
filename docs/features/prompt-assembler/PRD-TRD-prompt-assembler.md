@@ -82,8 +82,9 @@ simulation must reproduce them through Mode Studio.
    layer 1 and layer 2 are byte-identical.
 3. Every universal rule appears once per prompt, including the existing
    once-only teaching assertion; identical rule strings are the same constant.
-4. No mode, or a mode with empty skill text, produces the same prompt the lanes
-   produced before this pack.
+4. No mode, or a mode with empty skill text, adds no mode text. Layers 1 and 2
+   use the one merged wording per rule, keeping every old phrase, so existing
+   assertions still hold; the prompt is not byte-identical to the base.
 5. The canonical examples used by the seam still pass the existing bundle
    schemas and validators; no provider schema widens.
 6. `promptInputsFromBrief` maps a brief to every input field without mutating
@@ -115,6 +116,9 @@ simulation must reproduce them through Mode Studio.
 - `GenerationPromptContext` gains optional `mode?` and `inputs?`.
 - Pack, deck and cards builders receive the optional mode section; the D-28
   teaching append keeps its position and wording.
+- A pack-owned cards template with no output-contract line gets the mode
+  section after its shape and before the teaching append. The default path
+  keeps mode after the universal rules and before the contract.
 - The output contract and shape stay last, so the chat example-extraction
   helpers keep working.
 

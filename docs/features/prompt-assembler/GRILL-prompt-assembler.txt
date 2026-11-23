@@ -175,3 +175,21 @@ A. No separate pre/post shell simulation. Track 1 recorded the same deviation
    Source: Track 1 GRILL deviation D-A; the subagent brief's phase list.
 
 No remaining open questions.
+
+## Addendum - 2026-11-23 (delivery notes, not new decisions)
+
+These notes record where the shipped code intentionally refines locked
+answers. They reopen no question and change no decision.
+
+- Q3: a no-mode prompt adds no mode text, but it is not byte-identical to the
+  base branch. Q8 locked one merged wording per rule; that wording replaces the
+  old copies while keeping their old phrases. PLAN section 7 and PRD-TRD
+  section 2.2 and section 3 item 4 carry the shipped wording.
+- Q6: MODE_DRAFT_VERSION shipped as "1.0.1", not "1.0.0". The first pass called
+  version a number; the Track 1 store checks it as text, so the prompt now
+  teaches a version string. PRD-TRD section 4.5 and the router test pin it.
+- Q8: "one wording per concept" still means one source of truth: one phrase
+  table and one cardStyleRuleLines function. The style rule speaks two
+  vocabularies because a generation line owns "style" and a chat card owns
+  answerDef.mode. PLAN section 2 line 17 locks that exception. One wording
+  here taught the chat a field its own JSON shape does not have.
