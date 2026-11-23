@@ -13,7 +13,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { apiGet, apiSend } from "@/lib/client/api";
 import type { JobView } from "@/lib/browser/jobs";
-import type { PackStatus, ProviderStatus, StudyLevel } from "@/lib/shared/types";
+import type { LearningMode, PackStatus, ProviderStatus, StudyLevel } from "@/lib/shared/types";
 import {
   defaultCreationBrief,
   withBriefOnPackText,
@@ -25,6 +25,8 @@ import ChatPromptEditor from "./ChatPromptEditor";
 import CreationBriefFields from "./CreationBriefFields";
 import GenerationPromptEditor from "./GenerationPromptEditor";
 import LanguageField from "./LanguageField";
+import LearningModeFields from "./LearningModeFields";
+import { briefWithoutMode, inheritedModeNotice } from "./mode-studio-utils";
 import PlacementPicker from "./PlacementPicker";
 import {
   briefForTarget,
@@ -69,6 +71,7 @@ function InheritedPackFacts({ target, pack }: { target: "deck" | "cards"; pack: 
 /** What the Create panel needs from the shell and its loaded library. */
 interface CreatePanelProps {
   packs: PackStatus[];
+  modes: LearningMode[];
   provider: ProviderStatus | null;
   /** The learner's global level, the starting level for a new deck. */
   level: StudyLevel;
@@ -78,7 +81,7 @@ interface CreatePanelProps {
   onNotice: (message: string | null) => void;
 }
 
-export default function CreatePanel({ packs, provider, level, seed, onCreated, onError, onNotice }: CreatePanelProps) {
+export default function CreatePanel({ packs, modes, provider, level, seed, onCreated, onError, onNotice }: CreatePanelProps) {
   const [target, setTarget] = useState<CreateTarget>(seed?.target ?? "pack");
   const [method, setMethod] = useState<CreateMethod>(seed?.method ?? "write");
   const [packChoice, setPackChoice] = useState(seed?.packName ?? "");
@@ -178,12 +181,17 @@ export default function CreatePanel({ packs, provider, level, seed, onCreated, o
     const nextDeckId = nextDecks.some((deck) => deck.id === deckChoice)
       ? deckChoice
       : (nextDecks[0]?.id ?? "");
-    setBrief((previous) => ({
-      ...previous,
-      subject: briefSubjectDefault(packs, next, nextPack?.name ?? "", nextDeckId),
-      packName: next === "pack" ? previous.packName : "",
-      deckName: next === "deck" ? previous.deckName : "",
-    }));
+    setBrief((previous) => {
+      const base = {
+        ...previous,
+        subject: briefSubjectDefault(packs, next, nextPack?.name ?? "", nextDeckId),
+        packName: next === "pack" ? previous.packName : "",
+        deckName: next === "deck" ? previous.deckName : "",
+      };
+      // WHY: a hidden mode id would still reach a prompt after the learner
+      // switched target, so it is dropped with the other stale fields.
+      return next === "pack" ? base : briefWithoutMode(base);
+    });
     setPrepared(null);
     setKeyNeeded(false);
     onError(null);
@@ -621,6 +629,14 @@ export default function CreatePanel({ packs, provider, level, seed, onCreated, o
               {method === "generate" ? "one batch, all or nothing" : "validated before saving"}
             </span>
           </div>
+
+          {target === "pack" ? (
+            <LearningModeFields brief={brief} modes={modes} onChange={updateBrief} />
+          ) : (
+            <p className="notice" style={{ marginTop: 12 }}>
+              {inheritedModeNotice(target)}
+            </p>
+          )}
 
           {method === "write" && target === "pack" ? (
             <div className="stack" style={{ marginTop: 12 }}>
