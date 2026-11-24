@@ -1234,7 +1234,17 @@ td {
 .library-head h1 { margin: 0; font-size: 18px; font-weight: 600; }
 .library-hint { color: var(--quiet); font-size: 12px; }
 .library-page > .tabs { margin-top: 0; }
-.library-page > .stack { flex: 1; min-height: 0; overflow: auto; }
+.library-page > .stack {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+.library-page > .stack:hover { scrollbar-color: var(--line) transparent; }
+.library-page > .stack::-webkit-scrollbar { width: 7px; }
+.library-page > .stack::-webkit-scrollbar-thumb { background: transparent; border-radius: 99px; }
+.library-page > .stack:hover::-webkit-scrollbar-thumb { background: var(--line); }
 .library-layout {
   display: grid;
   flex: 1;
