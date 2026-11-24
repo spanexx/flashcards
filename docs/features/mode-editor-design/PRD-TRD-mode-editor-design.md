@@ -150,3 +150,6 @@ theme variables; no Track 1-3 file changed.
 - 2026-11-24: the Learning modes list was redesigned with the same mindset: a
   compact head, one quiet surface, calm rows with hover-only actions, and theme
   variables instead of hardcoded borders.
+- 2026-11-24: the Library shell got the same convention. Its head is compact,
+  the page fills one viewport, the main panel and rail scroll quietly, and
+  narrow screens fall back to normal page scrolling.

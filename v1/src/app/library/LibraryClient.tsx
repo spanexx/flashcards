@@ -242,9 +242,11 @@ export default function LibraryClient() {
   ).size;
 
   return (
-    <div>
-      <h1>Library</h1>
-      <p className="lead">Packs, cards and their record live in this browser. Nothing is sent to a server.</p>
+    <div className="library-page">
+      <div className="library-head">
+        <h1>Library</h1>
+        <span className="library-hint">Packs, cards and their record live in this browser.</span>
+      </div>
 
       {message ? <div className="notice error">{message}</div> : null}
       {notice ? <div className="notice">{notice}</div> : null}
