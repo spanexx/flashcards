@@ -4255,12 +4255,41 @@ a.chip {
 .editor-page > .tabs { margin-top: 0; }
 .editor-surface {
   display: flex;
+  flex-direction: column;
   min-height: 0;
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 14px;
   background: var(--card);
 }
+.editor-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.editor-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.editor-toggle:hover { background: var(--soft); }
+.editor-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.editor-body > * { flex: 1; min-width: 0; min-height: 0; }
 .editor-pane {
   display: flex;
   flex: 1 1 50%;

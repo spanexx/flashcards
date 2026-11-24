@@ -23,6 +23,7 @@ export default function ModeEditorPage() {
   const id = search.get("id");
   const isDraftParam = search.get("new") === "1";
   const [tab, setTab] = useState<"skill" | "json">(() => initialTabFromSearch(search.toString()));
+  const [showPreview, setShowPreview] = useState(false);
   const [draft, setDraft] = useState<LearningMode | null>(null);
   const [skillSource, setSkillSource] = useState("");
   const [busy, setBusy] = useState(false);
@@ -62,6 +63,7 @@ export default function ModeEditorPage() {
 
   const chooseTab = (next: "skill" | "json") => {
     setTab(next);
+    setShowPreview(false);
     const params = new URLSearchParams(search.toString());
     params.set("tab", next);
     router.replace(`/modes/editor?${params.toString()}`);
@@ -71,6 +73,7 @@ export default function ModeEditorPage() {
   // not just on the right tab. The prototype did both. [mode-editor-design]
   const openSkill = () => {
     chooseTab("skill");
+    setShowPreview(false);
     window.requestAnimationFrame(() => skillRef.current?.focus());
   };
 
@@ -151,10 +154,27 @@ export default function ModeEditorPage() {
       ) : null}
 
       <section className="editor-surface">
-        {tab === "skill" ? (
-          <>
-            <div className="editor-pane">
-              <div className="cap">Write</div>
+        <div className="editor-bar">
+          <span className="cap">
+            {tab === "skill"
+              ? showPreview ? "Skill instructions - preview" : "Skill instructions - write"
+              : showPreview ? "Canonical example - JSON source" : "Canonical example - explorer"}
+          </span>
+          <button
+            type="button"
+            className="editor-toggle"
+            aria-label={showPreview ? "Back to editing" : "Show preview"}
+            onClick={() => setShowPreview((current) => !current)}
+          >
+            <span aria-hidden="true">{showPreview ? "✎" : "◉"}</span>
+            {showPreview ? "Edit" : "Preview"}
+          </button>
+        </div>
+        <div className="editor-body">
+          {tab === "skill" ? (
+            showPreview ? (
+              <div className="editor-preview scroll-area"><MarkdownPreview source={skillSource} /></div>
+            ) : (
               <textarea
                 ref={skillRef}
                 className="editor-source mono"
@@ -165,28 +185,17 @@ export default function ModeEditorPage() {
                   setDraft({ ...draft, skillInstructions: event.target.value });
                 }}
               />
-            </div>
-            <div className="editor-pane">
-              <div className="cap">Preview</div>
-              <div className="editor-preview scroll-area"><MarkdownPreview source={skillSource} /></div>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="editor-pane">
-              <div className="cap">JSON source</div>
-              <pre className="editor-json mono" dangerouslySetInnerHTML={{ __html: highlightJson(mirror) }} />
-            </div>
-            <div className="editor-pane">
-              <div className="cap">Explorer preview</div>
-              <JsonTree
-                root={draft}
-                onChange={(next) => setDraft(next as LearningMode)}
-                onOpenSkill={openSkill}
-              />
-            </div>
-          </>
-        )}
+            )
+          ) : showPreview ? (
+            <pre className="editor-json mono" dangerouslySetInnerHTML={{ __html: highlightJson(mirror) }} />
+          ) : (
+            <JsonTree
+              root={draft}
+              onChange={(next) => setDraft(next as LearningMode)}
+              onOpenSkill={openSkill}
+            />
+          )}
+        </div>
       </section>
     </main>
   );

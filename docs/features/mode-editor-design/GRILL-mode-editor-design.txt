@@ -103,3 +103,11 @@ Why:
 - Those were the approved iterations of the wireframe.
 
 No remaining open questions
+
+## Addendum - 2026-11-24
+
+- Victor asked to stop showing two panes at once. Each tab now shows one
+  full-width view with a small Preview/Edit toggle: Markdown source or rendered
+  Markdown, and JSON explorer or read-only JSON source. Switching tabs returns
+  to the editing view. This supersedes the two-pane part of decision 11; all
+  other behaviour from that decision remains.

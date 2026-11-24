@@ -20,10 +20,10 @@ source mirror and an editable explorer.
 ### 2.1 Two tabs, one box each
 
 The page has exactly two tabs. The active tab owns the full content area. Each
-tab contains one continuous surface with a single divider:
-- Markdown skill: write on the left, rendered Markdown on the right.
-- JSON example: syntax-coloured raw JSON on the left, editable explorer on the
-  right.
+tab shows one full-width view at a time, with a small Preview/Edit toggle:
+- Markdown skill: the Markdown source, or its rendered preview.
+- JSON example: the editable explorer, or the read-only syntax-coloured JSON
+  source.
 
 No sidebar, no second editor, no glowing focus treatment. Inputs are large
 enough to use, row actions appear on hover, and the panes stack on narrow
@@ -144,3 +144,6 @@ theme variables; no Track 1-3 file changed.
   decisions are delegated and recorded in the GRILL.
 - 2026-11-23: the explorer no longer offers editable controls for app-owned
   fields. The full router write contract was checked, not just `isBuiltIn`.
+- 2026-11-24: Victor asked to stop showing two panes at once. Each tab now has
+  one full-width view and a small Preview/Edit toggle. The toggle lives inside
+  the tab, so switching tabs always returns to the editing view.
