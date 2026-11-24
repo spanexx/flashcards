@@ -108,22 +108,18 @@ export default function ModesClient() {
   };
 
   return (
-    <main className="stack" style={{ padding: 24, maxWidth: 980 }}>
-      <div className="split-head">
-        <div>
-          <h1 style={{ margin: 0 }}>Learning modes</h1>
-          <p className="muted" style={{ margin: "4px 0 0" }}>
-            Pick how the AI writes cards. Built-ins can be copied; your copies can be edited.
-          </p>
+    <main className="modes-page stack" style={{ gap: 10 }}>
+      <div className="modes-head">
+        <div className="row" style={{ alignItems: "baseline", gap: 10 }}>
+          <h1>Learning modes</h1>
+          <span className="modes-hint">Pick a mode to shape how the AI writes cards.</span>
         </div>
-        <div className="row">
-          <button type="button" onClick={() => setAiOpen(true)}>
+        <div className="row" style={{ gap: 6 }}>
+          <button type="button" className="mode-action primary" onClick={() => setAiOpen(true)}>
             Create with AI
           </button>
-          <button type="button" onClick={exportModes}>
-            Export
-          </button>
-          <label className="btn" style={{ display: "inline-flex", alignItems: "center" }}>
+          <button type="button" className="mode-action" onClick={exportModes}>Export</button>
+          <label className="mode-action" style={{ display: "inline-flex", alignItems: "center", cursor: "pointer" }}>
             Import
             <input
               type="file"
