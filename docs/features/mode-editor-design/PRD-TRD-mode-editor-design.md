@@ -158,3 +158,5 @@ theme variables; no Track 1-3 file changed.
   validation are unchanged.
 - 2026-11-24: the Study plan adopted the same compact head and one-screen shell,
   with quiet scrolling in the plan and aside columns. Session flow is unchanged.
+- 2026-11-24: Rebuild and Start became compact labelled icon buttons, matching
+  the Library actions.

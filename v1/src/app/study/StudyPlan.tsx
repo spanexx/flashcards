@@ -86,29 +86,31 @@ export default function StudyPlan({
             />
           </label>
           <button
-            className="study-ghost study-rebuild"
+            className="icon-btn"
             type="button"
+            title="Rebuild the plan"
+            aria-label="Rebuild the plan"
             onClick={onRebuild}
             disabled={refreshing}
           >
-            Rebuild the plan
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6" />
+            </svg>
           </button>
         </div>
 
         <div className="study-start-row">
           <button
-            className="btn primary study-start"
+            className="icon-btn primary"
             type="button"
+            title="Start session"
+            aria-label={refreshing ? "Laying out the new choice" : "Start session"}
             onClick={onStart}
             disabled={plan.cards.length === 0 || refreshing}
           >
-            {refreshing ? (
-              "Laying out the new choice…"
-            ) : (
-              <>
-                Start session <span className="study-arrow" aria-hidden="true">→</span>
-              </>
-            )}
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M8 5l11 7-11 7V5z" />
+            </svg>
           </button>
           <p className="study-calm">Stopping is not an ending.</p>
         </div>
