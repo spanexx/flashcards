@@ -4427,6 +4427,18 @@ a.chip {
 .study-plan-layout > .study-plan::-webkit-scrollbar { width: 7px; }
 .study-plan-layout > .study-plan::-webkit-scrollbar-thumb { background: transparent; border-radius: 99px; }
 .study-plan-layout > .study-plan:hover::-webkit-scrollbar-thumb { background: var(--line); }
+.study-scope-row > .icon-btn { align-self: flex-end; width: 44px; height: 44px; }
+.study-start-row { gap: 10px; margin-top: 20px; }
+.study-start {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 16px;
+  font-size: .9rem;
+}
+.study-start svg { width: 16px; height: 16px; fill: currentColor; }
+.study-calm { font-size: 12px; }
 .study-plan-head { padding-bottom: 10px; }
 .study-eyebrow { margin-bottom: 4px; font-size: 10px; }
 .study-display {
