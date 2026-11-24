@@ -4229,6 +4229,69 @@ a.chip {
   }
 }
 
+/* WHY: the modes list follows the editor's shape: compact head, one quiet
+   surface, calm rows whose actions appear on hover. Theme variables only.
+   PACK: mode-editor-design */
+.modes-page { max-width: 980px; }
+.modes-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+.modes-head h1 { margin: 0; font-size: 18px; font-weight: 600; }
+.modes-hint { color: var(--quiet); font-size: 12px; }
+.modes-surface {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+}
+.modes-surface-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.modes-count { color: var(--quiet); font-size: 11px; }
+.modes-empty { padding: 18px; margin: 0; }
+.mode-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.mode-item:last-child { border-bottom: 0; }
+.mode-item:hover, .mode-item:focus-within { background: var(--soft); }
+.mode-info { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 3px; }
+.mode-name { font-size: 14px; font-weight: 600; }
+.mode-description {
+  font-size: 12px;
+  color: var(--quiet);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mode-meta { font-size: 11px; color: var(--quiet); }
+.mode-actions { display: flex; gap: 6px; opacity: 0; transition: opacity .12s ease; }
+.mode-item:hover .mode-actions, .mode-item:focus-within .mode-actions { opacity: 1; }
+.mode-action {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.mode-action:hover { background: var(--card); }
+.mode-action.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.mode-action.danger { color: var(--miss); border-color: var(--miss); }
+
 /* WHY: the full-page mode editor is one connected surface per tab, split by a
    single divider. All colour comes from the app's theme variables.
    PACK: mode-editor-design */

@@ -147,3 +147,6 @@ theme variables; no Track 1-3 file changed.
 - 2026-11-24: Victor asked to stop showing two panes at once. Each tab now has
   one full-width view and a small Preview/Edit toggle. The toggle lives inside
   the tab, so switching tabs always returns to the editing view.
+- 2026-11-24: the Learning modes list was redesigned with the same mindset: a
+  compact head, one quiet surface, calm rows with hover-only actions, and theme
+  variables instead of hardcoded borders.
