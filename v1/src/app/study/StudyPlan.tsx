@@ -101,16 +101,15 @@ export default function StudyPlan({
 
         <div className="study-start-row">
           <button
-            className="icon-btn primary"
+            className="btn primary study-start"
             type="button"
-            title="Start session"
-            aria-label={refreshing ? "Laying out the new choice" : "Start session"}
             onClick={onStart}
             disabled={plan.cards.length === 0 || refreshing}
           >
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path d="M8 5l11 7-11 7V5z" />
             </svg>
+            {refreshing ? "Laying out the new choice…" : "Start session"}
           </button>
           <p className="study-calm">Stopping is not an ending.</p>
         </div>
