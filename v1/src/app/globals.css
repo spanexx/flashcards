@@ -4281,6 +4281,34 @@ a.chip {
   }
 }
 
+/* WHY: frequent library actions stay compact; the icon carries the meaning.
+   PACK: mode-editor-design */
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+.icon-btn svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.icon-btn:hover:not(:disabled) { background: var(--soft); }
+.icon-btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.icon-btn.primary:hover:not(:disabled) { background: var(--accent); }
+.icon-btn:disabled { opacity: .5; cursor: not-allowed; }
+.create-choices .split-head h2 { font-size: 16px; }
+
 /* WHY: the modes list follows the editor's shape: compact head, one quiet
    surface, calm rows whose actions appear on hover. Theme variables only.
    PACK: mode-editor-design */

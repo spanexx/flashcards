@@ -565,57 +565,45 @@ export default function CreatePanel({ packs, modes, provider, level, seed, onCre
 
   return (
     <div className="stack">
-      <section className="card">
+      <section className="card create-choices">
         <div className="split-head">
           <div>
-            <h2 style={{ margin: 0 }}>1. What are you making?</h2>
+            <h2 style={{ margin: 0 }}>What are you making?</h2>
             <p className="muted" style={{ margin: "3px 0 0" }}>
-              Choose the object first. The method comes second.
+              Choose the object and the method. Both use the same validation.
             </p>
           </div>
-          <span className="pill">{target}</span>
+          {method === "generate" ? providerBadge : null}
         </div>
-        <div className="choice-grid three">
-          {targetChoices.map(([id, name, text]) => (
-            <button
-              className="choice"
-              type="button"
-              key={id}
-              aria-pressed={target === id}
-              onClick={() => chooseTarget(id)}
+        <div className="form-grid" style={{ marginTop: 12 }}>
+          <label className="field-label">
+            Object
+            <select
+              className="field"
+              value={target}
+              onChange={(event) => chooseTarget(event.target.value as CreateTarget)}
             >
-              <span className="glyph">{name[0]}</span>
-              <strong>{name}</strong>
-              <span className="muted">{text}</span>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section className="card">
-        <div className="split-head">
-          <div>
-            <h2 style={{ margin: 0 }}>2. How?</h2>
-            <p className="muted" style={{ margin: "3px 0 0" }}>
-              Every method uses the same validation.
-            </p>
-          </div>
-        </div>
-        <div className="choice-grid four">
-          {methodChoices.map(([id, letter, name, text]) => (
-            <button
-              className="choice"
-              type="button"
-              key={id}
-              aria-pressed={method === id}
-              onClick={() => chooseMethod(id)}
+              {targetChoices.map(([id, name, text]) => (
+                <option key={id} value={id}>
+                  {name} — {text}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="field-label">
+            Method
+            <select
+              className="field"
+              value={method}
+              onChange={(event) => chooseMethod(event.target.value as CreateMethod)}
             >
-              <span className="glyph">{letter}</span>
-              <strong>{name}</strong>
-              <span className="muted">{text}</span>
-              {id === "generate" ? <span style={{ display: "block", marginTop: 6 }}>{providerBadge}</span> : null}
-            </button>
-          ))}
+              {methodChoices.map(([id, , name, text]) => (
+                <option key={id} value={id}>
+                  {name} — {text}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
       </section>
 
