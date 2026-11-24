@@ -156,3 +156,5 @@ theme variables; no Track 1-3 file changed.
 - 2026-11-24: Packs panel actions became labelled icon buttons. Create now uses
   two selects for object and method instead of large choice cards; behavior and
   validation are unchanged.
+- 2026-11-24: the Study plan adopted the same compact head and one-screen shell,
+  with quiet scrolling in the plan and aside columns. Session flow is unchanged.

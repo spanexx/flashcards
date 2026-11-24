@@ -3366,6 +3366,8 @@ body.full-stage {
 @media (max-width: 860px) {
   .study-plan-layout {
     grid-template-columns: 1fr;
+    height: calc(100vh - 92px);
+    height: calc(100dvh - 92px);
   }
 
   .study-aside {
@@ -4403,6 +4405,48 @@ a.chip {
 .mode-action:hover { background: var(--card); }
 .mode-action.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .mode-action.danger { color: var(--miss); border-color: var(--miss); }
+
+/* WHY: the Study plan follows the same compact, one-screen convention. The
+   headline stops shouting and only the columns scroll, quietly.
+   PACK: mode-editor-design */
+.study-plan-layout {
+  height: calc(100vh - 114px);
+  height: calc(100dvh - 114px);
+  min-height: 420px;
+  align-items: stretch;
+}
+.study-plan-layout > .study-plan {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+.study-plan-layout > .study-plan:hover { scrollbar-color: var(--line) transparent; }
+.study-plan-layout > .study-plan::-webkit-scrollbar { width: 7px; }
+.study-plan-layout > .study-plan::-webkit-scrollbar-thumb { background: transparent; border-radius: 99px; }
+.study-plan-layout > .study-plan:hover::-webkit-scrollbar-thumb { background: var(--line); }
+.study-plan-head { padding-bottom: 10px; }
+.study-eyebrow { margin-bottom: 4px; font-size: 10px; }
+.study-display {
+  font-family: inherit;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0;
+}
+.study-lede { margin-top: 4px; font-size: 12px; }
+.study-aside { position: relative; top: 0; max-height: none; height: 100%; }
+.study-aside-body {
+  scrollbar-gutter: auto;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+.study-aside-body:hover { scrollbar-color: var(--line) transparent; }
+.study-aside-body::-webkit-scrollbar { width: 7px; }
+.study-aside-body::-webkit-scrollbar-thumb { background: transparent; border-radius: 99px; }
+.study-aside-body:hover::-webkit-scrollbar-thumb { background: var(--line); }
 
 /* WHY: the full-page mode editor is one connected surface per tab, split by a
    single divider. All colour comes from the app's theme variables.
