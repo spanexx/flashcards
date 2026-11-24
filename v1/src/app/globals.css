@@ -1213,15 +1213,63 @@ td {
   align-content: start;
 }
 
+/* WHY: the Library follows the same compact, one-screen convention as the
+   modes pages. Only the list and rail scroll; the shell stays still.
+   PACK: mode-editor-design */
+.library-page {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: calc(100vh - 114px);
+  height: calc(100dvh - 114px);
+  min-height: 420px;
+}
+.library-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+.library-head h1 { margin: 0; font-size: 18px; font-weight: 600; }
+.library-hint { color: var(--quiet); font-size: 12px; }
+.library-page > .tabs { margin-top: 0; }
+.library-page > .stack { flex: 1; min-height: 0; overflow: auto; }
 .library-layout {
   display: grid;
+  flex: 1;
+  min-height: 0;
   grid-template-columns: minmax(0, 1.65fr) minmax(280px, 0.65fr);
   gap: 18px;
-  align-items: start;
+  align-items: stretch;
 }
 
 .library-main {
+  display: flex;
   min-width: 0;
+  min-height: 0;
+}
+.library-main > .card {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+}
+.library-main > .card > .scroll-area { flex: 1; min-height: 0; }
+.rail { min-height: 0; overflow: auto; }
+.library-main .scroll-area, .rail {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+.library-main .scroll-area:hover, .rail:hover { scrollbar-color: var(--line) transparent; }
+.library-main .scroll-area::-webkit-scrollbar, .rail::-webkit-scrollbar { width: 7px; }
+.library-main .scroll-area::-webkit-scrollbar-thumb, .rail::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 99px;
+}
+.library-main .scroll-area:hover::-webkit-scrollbar-thumb, .rail:hover::-webkit-scrollbar-thumb {
+  background: var(--line);
 }
 
 .stat-grid {
@@ -3291,9 +3339,13 @@ body.full-stage {
 }
 
 @media (max-width: 1100px) {
+  .library-page { height: auto; min-height: 0; }
   .library-layout {
     grid-template-columns: 1fr;
+    flex: none;
   }
+  .library-main > .card { flex: none; }
+  .rail { overflow: visible; }
 
   .rail {
     position: static;
@@ -4564,7 +4616,7 @@ a.chip {
 }
 .tabs .tab.active { border-bottom-color: var(--accent); color: var(--ink); }
 @media (max-width: 1100px) {
-  .editor-page, .modes-page { height: calc(100vh - 92px); height: calc(100dvh - 92px); }
+  .editor-page, .modes-page, .library-page { height: calc(100vh - 92px); height: calc(100dvh - 92px); }
 }
 @media (max-width: 760px) {
   .editor-surface { flex-direction: column; }
