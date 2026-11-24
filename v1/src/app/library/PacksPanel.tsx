@@ -151,14 +151,20 @@ export default function PacksPanel({
           value={search}
           onChange={(event) => setSearch(event.target.value)}
         />
-        <button className="btn primary" type="button" onClick={onCreatePack}>
-          Create a pack
+        <button className="icon-btn primary" type="button" title="Create a pack" aria-label="Create a pack" onClick={onCreatePack}>
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
         </button>
-        <button className="btn" type="button" onClick={() => void refresh()} disabled={busy}>
-          Refresh
+        <button className="icon-btn" type="button" title="Refresh packs" aria-label="Refresh packs" onClick={() => void refresh()} disabled={busy}>
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6" />
+          </svg>
         </button>
-        <label className="btn">
-          Import a pack file
+        <label className="icon-btn" title="Import a pack file" aria-label="Import a pack file">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M12 16V4m0 0L8 8m4-4 4 4M5 16v3a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3" />
+          </svg>
           <input
             type="file"
             accept=".json,.zip,application/json,application/zip"

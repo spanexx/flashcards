@@ -153,3 +153,6 @@ theme variables; no Track 1-3 file changed.
 - 2026-11-24: the Library shell got the same convention. Its head is compact,
   the page fills one viewport, the main panel and rail scroll quietly, and
   narrow screens fall back to normal page scrolling.
+- 2026-11-24: Packs panel actions became labelled icon buttons. Create now uses
+  two selects for object and method instead of large choice cards; behavior and
+  validation are unchanged.
