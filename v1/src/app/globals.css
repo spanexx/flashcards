@@ -4233,6 +4233,8 @@ a.chip {
    surface, calm rows whose actions appear on hover. Theme variables only.
    PACK: mode-editor-design */
 .modes-page {
+  display: flex;
+  flex-direction: column;
   max-width: 980px;
   height: calc(100vh - 114px);
   height: calc(100dvh - 114px);
