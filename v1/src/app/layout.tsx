@@ -1,7 +1,7 @@
-// WHY: One shell for every screen: a fixed sidebar with the four places the
-// learner actually goes, and a quiet content column. Compact by default so a
-// screen does not become a vertical wall.
-// PACK: browser-app
+// WHY: One shell for every screen: a compact top header with the places the
+// learner actually goes, and a quiet content column. Kept on an isolated
+// branch so the sidebar can be restored if the experiment is rejected.
+// PACK: header-nav
 // 2026-10-19 opencode: created for the v1 prototype [pack: v1-prototype]
 // 2026-10-19 opencode: sidebar shell replaces the top nav [pack: v1-prototype]
 // 2026-10-20 opencode: browser autosave boot and app icon [pack: browser-app]
@@ -63,9 +63,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <JobsBoot />
         <PwaBoot />
         <div className="shell">
-          <aside className="sidebar">
+          <header className="topbar">
             <Nav />
-          </aside>
+          </header>
           <main className="content">{children}</main>
         </div>
         <InstallButton />

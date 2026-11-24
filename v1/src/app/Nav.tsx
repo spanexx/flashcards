@@ -1,15 +1,10 @@
 "use client";
 
-// WHY: One sidebar for every screen, and one place that decides which link is
-// current. Keeping this in a tiny client component lets the layout stay a
-// server component while navigation still knows where the learner is.
-// PACK: v1-prototype
-// 2026-10-19 opencode: created for the v1-prototype UI shell [pack: v1-prototype]
-// 2026-10-20 opencode: static export prefetch is off; Next's RSC prefetch paths
-// 404 on a plain file host. [pack: browser-app]
-// 2026-10-25 opencode: the brand now carries the same Lucide mark as the
-// favicon and PWA icons. [pack: learner-interface]
-// 2026-10-25 opencode: the sidebar carries the one-click theme flip. [pack: learner-delight]
+// WHY: One header for every screen, with the same links and active rule the
+// sidebar used. Kept as a tiny client component so the layout stays a server
+// component while navigation still knows where the learner is.
+// PACK: header-nav
+// 2026-11-24 opencode: moved the five links into one top row. [pack: header-nav]
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -40,15 +35,12 @@ export default function Nav() {
   const pathname = usePathname();
 
   return (
-    <>
-      <div className="sidebar-top">
-        <Link className="brand" href="/" prefetch={false}>
-          <BrandMark />
-          <span className="brand-name">Flashcards</span>
-        </Link>
-        <ThemeButton />
-      </div>
-      <nav className="side-nav" aria-label="Main">
+    <div className="topbar-inner">
+      <Link className="brand" href="/" prefetch={false}>
+        <BrandMark />
+        <span className="brand-name">Flashcards</span>
+      </Link>
+      <nav className="top-nav" aria-label="Main">
         {LINKS.map((link) => {
           const current = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
           return (
@@ -63,7 +55,7 @@ export default function Nav() {
           );
         })}
       </nav>
-      <p className="side-foot">Local only. No account.</p>
-    </>
+      <ThemeButton />
+    </div>
   );
 }

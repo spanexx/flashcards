@@ -30,7 +30,8 @@ goes.
 Settings; slim, always visible, text labels. The top bar and its inline links
 are gone. Chosen over a collapsible icon rail: the learner asked for a sidebar
 and confirmed the plain version; an icon rail adds a state and a memory burden
-this prototype does not need.
+this prototype does not need. *(Superseded by the 2026-11-24 header-nav
+experiment below; kept here as the original decision.)*
 
 **One pattern everywhere: a screen is a header plus tabbed or collapsible
 panels.** Primary content is visible; secondary material is one click away.
@@ -59,6 +60,19 @@ fixed-height scroll areas. Long card lists must not push the page down.
   Corrections stay inside that panel.
 - **Settings** has four tabs: `Profile`, `Provider`, `Prompts`, `Data`.
   Only the active tab is rendered; the rest wait.
+
+## Override - 2026-11-24 (header navigation experiment)
+
+Victor asked to try a compact top header instead of the sidebar. This
+supersedes the sidebar-only resolution above **for this experiment only**. The
+work lives on isolated branch `feature/header-nav` so it can be rolled back
+without touching `main`.
+
+- One sticky header: brand on the left, text links inline, theme toggle right.
+- Same five routes, same labels, same active-path rule. No icon-only rail.
+- Narrow screens keep one header row with horizontal scrolling, not a second bar.
+- No route, data, prompt or behavior changes.
+- Rollback: discard the branch and rebuild `main`; there is no migration.
 
 ## Deliberately not done
 
