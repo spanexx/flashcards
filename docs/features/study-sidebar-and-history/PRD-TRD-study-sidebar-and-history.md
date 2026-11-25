@@ -142,6 +142,10 @@ only when `pack` is present.
 ### CSS
 
 - `.study-plan-layout`: grid, `minmax(0, 860px) 320px`, 34px gap, max 1214px.
+  **Branch override:** the isolated `feature/header-nav` experiment drops the
+  1214px cap and the centring so the plan starts at the same shell edge as the
+  other pages. The base rule stays here; the override lives in
+  `v1/src/app/header-nav.css` and disappears with the branch.
 - `.study-aside`: sticky at 24px, bordered card.
 - `.study-fold`: hidden on desktop; at `max-width: 860px` the aside is hidden and
   the fold is shown, single column.

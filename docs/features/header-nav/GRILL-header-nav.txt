@@ -1,0 +1,69 @@
+Header Navigation - Grill Notes
+
+Status: Locked for an isolated experiment
+Date: 2026-11-24
+Source: wayfinder/anything-learning-spec/tickets/ui-shell.md (override section)
+Decision mode: Victor approved a trial, explicitly requesting isolation and a
+rollback path. Nothing is merged to main.
+
+What this feature is about
+
+- Replace the fixed left sidebar with one compact top header.
+- Keep the same five routes, labels and active-link behavior.
+- Prove the layout can be rolled back by leaving it on feature/header-nav.
+
+Questions and answers locked so far
+
+1. Does this contradict a locked decision?
+Answer:
+- Yes. ui-shell.md:29 locked the sidebar as the only navigation. Victor
+  explicitly overrode it for this experiment and asked for isolation.
+Why:
+- "Do not resolve a ticket without writing it down": the override and rollback
+  path are recorded in the ticket and the map index.
+
+2. What replaces the sidebar?
+Answer:
+- One sticky header: brand left, text links inline, theme toggle right.
+Why:
+- Keeps every destination visible without a second bar or an icon-only rail.
+
+3. Does narrow-screen behavior change?
+Answer:
+- No second navigation bar. The single header stays on one row. As first built,
+  the links scrolled horizontally inside it; on 2026-11-25 Victor replaced that
+  with a menu button in the header. See question 5.
+Why:
+- The old phone compact bar was a sidebar adaptation; the header makes it
+  unnecessary.
+
+4. Do the page bodies need the same edges? (Added 2026-11-25)
+Answer:
+- Yes. Study plan and Learning modes line up with Library, Progress and
+  Settings. Their private 1214px centred and 980px caps are removed for this
+  experiment.
+Why:
+- Victor's five page screenshots showed a different left edge and a different
+  right edge on each page. The header could not look consistent above bodies
+  that did not line up.
+Source:
+- Learner review of the running preview, 2026-11-25.
+
+5. What does the phone menu do? (Added 2026-11-25)
+Answer:
+- On phones the header keeps the brand, a menu button and the right-hand
+  controls. The button opens one panel with the same five routes; the current
+  route is marked. Desktop keeps the full tab row.
+Why:
+- Victor asked for a menu bar in the mobile header. Five labels could not fit
+  beside the brand and controls at 390px, so a hidden row was not usable.
+Source:
+- Learner review of the running preview, 2026-11-25.
+
+6. What must not change?
+Answer:
+- Routes, data, prompts, answering, judging and all screen behavior.
+Why:
+- This is a shell experiment only, so rollback is a branch discard and rebuild.
+
+No remaining open questions

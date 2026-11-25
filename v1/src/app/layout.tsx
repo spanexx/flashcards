@@ -1,7 +1,7 @@
-// WHY: One shell for every screen: a fixed sidebar with the four places the
-// learner actually goes, and a quiet content column. Compact by default so a
-// screen does not become a vertical wall.
-// PACK: browser-app
+// WHY: One shell for every screen: a compact top header with the places the
+// learner actually goes, and a quiet content column. Kept on an isolated
+// branch so the sidebar can be restored if the experiment is rejected.
+// PACK: header-nav
 // 2026-10-19 opencode: created for the v1 prototype [pack: v1-prototype]
 // 2026-10-19 opencode: sidebar shell replaces the top nav [pack: v1-prototype]
 // 2026-10-20 opencode: browser autosave boot and app icon [pack: browser-app]
@@ -11,11 +11,14 @@
 // 2026-10-25 opencode: link the Lucide SVG mark and the real favicon route. [pack: pwa-deploy]
 // 2026-10-25 opencode: paint the saved palette before the first frame and keep
 // it live with the system. [pack: learner-delight]
+// 2026-11-25 opencode: the install control moved into the header actions so it
+// no longer floats over the tab row. [pack: header-nav]
+// 2026-11-25 opencode: all header-nav styling now lives in one branch-only
+// stylesheet, switched on by the shell--header class. [pack: header-nav]
 
 import type { Metadata, Viewport } from "next";
 import Nav from "./Nav";
 import AutoSaveBoot from "./AutoSaveBoot";
-import InstallButton from "./InstallButton";
 import JobsBoot from "./JobsBoot";
 import JobsDock from "./JobsDock";
 import PwaBoot from "./PwaBoot";
@@ -23,6 +26,7 @@ import ThemeBoot from "./ThemeBoot";
 import { THEME_BOOT } from "@/lib/client/theme";
 import { withBasePath } from "@/lib/shared/paths";
 import "./globals.css";
+import "./header-nav.css";
 
 export const metadata: Metadata = {
   title: "Flashcards",
@@ -62,13 +66,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AutoSaveBoot />
         <JobsBoot />
         <PwaBoot />
-        <div className="shell">
-          <aside className="sidebar">
+        <div className="shell shell--header">
+          <header className="topbar">
             <Nav />
-          </aside>
+          </header>
           <main className="content">{children}</main>
         </div>
-        <InstallButton />
         <JobsDock />
       </body>
     </html>
