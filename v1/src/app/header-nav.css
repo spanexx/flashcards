@@ -1,0 +1,348 @@
+/* WHY: One seam for the whole header experiment. The base stylesheet stays as
+   it is on main; every header-nav rule and override lives here and is removed
+   with this file. No page rule is deleted from globals.css.
+   PACK: header-nav
+   2026-11-25 opencode: created the branch-only seam, shared shell gutter, tab
+   treatment, page-edge overrides and small-screen repairs. [pack: header-nav]
+   2026-11-25 opencode: phones now open the five routes from one menu button in
+   the header instead of a scrolling tab row. [pack: header-nav]
+   2026-11-25 opencode: cleared the base stylesheet's active pill and softened
+   the current-route underline. [pack: header-nav] */
+
+:root {
+  /* WHY: the header and every page body read the same tokens, so one change
+     moves the whole shell instead of scattering literals across five pages. */
+  --topbar-h: 60px;
+  --shell-max: 1760px;
+  --shell-gutter: 40px;
+}
+
+@media (max-width: 1100px) {
+  :root { --shell-gutter: 24px; }
+}
+
+@media (max-width: 860px) {
+  :root { --shell-gutter: 16px; }
+}
+
+/* WHY: the header and the content share one cap and one horizontal inset.
+   Without this, the header sat 40px in while the page sat 24px or 16px in. */
+.shell--header .topbar-inner,
+.shell--header .content {
+  max-width: var(--shell-max);
+  padding-left: var(--shell-gutter);
+  padding-right: var(--shell-gutter);
+}
+
+.shell--header .topbar {
+  height: var(--topbar-h);
+}
+
+.shell--header .topbar-inner {
+  display: flex;
+  align-items: stretch;
+  gap: 28px;
+  width: 100%;
+  height: 100%;
+}
+
+.shell--header .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-weight: 650;
+  letter-spacing: -0.012em;
+  text-decoration: none;
+}
+
+.shell--header .brand:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 6px;
+}
+
+/* WHY: a tab is a full-height label with a quiet underline on the current
+   route, never a floating pill. On phones the whole row is replaced by the
+   menu button below. */
+.shell--header .top-nav {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  gap: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+}
+
+.shell--header .top-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.shell--header .top-nav a {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 14px;
+  border-bottom: 2px solid transparent;
+  color: var(--quiet);
+  font-size: 13px;
+  text-decoration: none;
+  white-space: nowrap;
+  scroll-snap-align: start;
+  transition:
+    color 140ms ease,
+    border-color 140ms ease;
+}
+
+/* WHY: the base stylesheet paints a pill on both hover and the current route.
+   Clearing those two properties leaves only text weight and one quiet line. */
+.shell--header .top-nav a:hover {
+  background: transparent;
+  color: var(--ink);
+}
+
+.shell--header .top-nav a[aria-current="page"] {
+  background: transparent;
+  border-bottom-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  box-shadow: none;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.shell--header .top-nav a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -4px;
+}
+
+/* WHY: the install and theme controls are peers, so they use one ghost button
+   shape instead of a bordered circle next to a floating install button. */
+.shell--header .top-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  padding-left: 16px;
+  border-left: 1px solid var(--line);
+}
+
+.shell--header .top-actions .theme-button,
+.shell--header .top-actions .install-fab {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--quiet);
+  box-shadow: none;
+}
+
+.shell--header .top-actions .theme-button:hover,
+.shell--header .top-actions .install-fab:hover {
+  border-color: var(--line);
+  background: var(--soft);
+  color: var(--ink);
+}
+
+.shell--header .top-actions .theme-button:focus-visible,
+.shell--header .top-actions .install-fab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.shell--header .theme-icon { width: 16px; height: 16px; }
+.shell--header .top-actions .install-fab svg { width: 18px; height: 18px; }
+
+/* WHY: the old install button was fixed to the corner. Here it is a flex
+   child, so its top/right offsets must be cleared and its hint kept below it. */
+.shell--header .top-actions .install-wrap {
+  position: relative;
+  top: auto;
+  right: auto;
+  display: block;
+}
+
+.shell--header .install-hint {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 40;
+}
+
+/* WHY: on a phone the five scrolling tabs are replaced by one menu button.
+   The button is hidden on desktop, where the full tab row stays visible. */
+.shell--header .menu-wrap {
+  display: none;
+}
+
+.shell--header .menu-button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--quiet);
+  cursor: pointer;
+}
+
+.shell--header .menu-button:hover {
+  border-color: var(--line);
+  background: var(--soft);
+  color: var(--ink);
+}
+
+.shell--header .menu-button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.shell--header .menu-button svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+}
+
+/* WHY: the panel is anchored to the sticky header, not to the tiny button,
+   so every destination gets a full-width touch target. */
+.shell--header .mobile-menu {
+  position: absolute;
+  top: calc(var(--topbar-h) - 1px);
+  right: var(--shell-gutter);
+  left: var(--shell-gutter);
+  z-index: 35;
+  display: grid;
+  gap: 2px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+  box-shadow: var(--shadow-card);
+}
+
+.shell--header .mobile-menu a {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: var(--quiet);
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.shell--header .mobile-menu a:hover {
+  background: var(--soft);
+  color: var(--ink);
+}
+
+.shell--header .mobile-menu a[aria-current="page"] {
+  background: color-mix(in srgb, var(--soft) 80%, transparent);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* WHY: overrides, not deletions. The base caps stay in globals.css so main is
+   unchanged and the experiment disappears when this file is removed. */
+.shell--header .study-plan-layout {
+  max-width: none;
+  margin: 0;
+  grid-template-columns: minmax(0, 1fr) 320px;
+}
+
+.shell--header .modes-page {
+  max-width: none;
+}
+
+@media (max-width: 860px) {
+  .shell--header .topbar-inner { gap: 10px; }
+  .shell--header .brand-name { display: none; }
+  .shell--header .top-nav { display: none; }
+  .shell--header .menu-wrap { display: block; }
+  .shell--header .top-actions { gap: 2px; padding-left: 8px; margin-left: auto; }
+
+  /* WHY: the plan must still fold to one column on a phone. The desktop
+     override above is more specific than the base media rule, so restate it. */
+  .shell--header .study-plan-layout { grid-template-columns: 1fr; }
+
+  /* WHY: below 860px the content inset is 20px + 56px = 76px, not 92px.
+     One-screen pages otherwise end 16px short of the available height. */
+  .shell--header .study-plan-layout,
+  .shell--header .modes-page,
+  .shell--header .editor-page {
+    height: calc(100dvh - 76px - var(--topbar-h));
+  }
+}
+
+@media (max-width: 1100px) {
+  /* WHY: a later base rule re-imposes a fixed height on the stacked Library.
+     Re-assert the earlier decision so main and rail scroll naturally. */
+  .shell--header .library-page {
+    height: auto;
+    min-height: 0;
+  }
+
+  /* WHY: the stacked grid used a 1fr track whose automatic minimum came from
+     the longest pack line, so the card grew past the phone viewport. A zero
+     minimum forces the text to wrap inside the screen instead. */
+  .shell--header .library-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .shell--header .library-main,
+  .shell--header .library-main > .card,
+  .shell--header .pack-list,
+  .shell--header .pack-row {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+/* WHY: between 761px and the header breakpoint the Create rail is sticky at
+   24px, which puts its top behind the 60px header while scrolling. */
+@media (min-width: 761px) {
+  .shell--header .create-grid > aside {
+    top: calc(var(--topbar-h) + 16px);
+  }
+}
+
+@media (max-width: 760px) {
+  /* WHY: the base rule turns the editor surface into a column but leaves the
+     body as a row, so the two panes never actually stack on a phone. */
+  .shell--header .editor-body {
+    flex-direction: column;
+  }
+
+  .shell--header .editor-pane {
+    min-height: 42vh;
+  }
+}
+
+@media (hover: none) {
+  /* WHY: mode actions were revealed only by hover, so touch users could not
+     see Edit, Export, Import or Delete until the row was already focused. */
+  .shell--header .mode-actions {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 620px) {
+  .shell--header .install-hint {
+    width: min(240px, calc(100vw - 28px));
+  }
+}
+
+/* WHY: the header-scoped display above beats the base standalone rule. State
+   it again, scoped the same way, so an installed app still hides the control. */
+@media (display-mode: standalone) {
+  .shell--header .install-wrap {
+    display: none;
+  }
+}

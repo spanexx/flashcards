@@ -70,8 +70,13 @@ without touching `main`.
 
 - One sticky header: brand on the left, text links inline, theme toggle right.
 - Same five routes, same labels, same active-path rule. No icon-only rail.
-- Narrow screens keep one header row with horizontal scrolling, not a second bar.
+- Narrow screens keep one header row, not a second bar. Amended 2026-11-25:
+  five scrolling tabs were replaced by one menu button in that row; opening it
+  shows the same five routes in a panel.
 - No route, data, prompt or behavior changes.
+- Added 2026-11-25: all page bodies line up to one shell width. The Study plan
+  centred cap and the modes list 980px cap are removed on this branch only. A
+  focused study card keeps its narrow reading column.
 - Rollback: discard the branch and rebuild `main`; there is no migration.
 
 ## Deliberately not done

@@ -11,11 +11,14 @@
 // 2026-10-25 opencode: link the Lucide SVG mark and the real favicon route. [pack: pwa-deploy]
 // 2026-10-25 opencode: paint the saved palette before the first frame and keep
 // it live with the system. [pack: learner-delight]
+// 2026-11-25 opencode: the install control moved into the header actions so it
+// no longer floats over the tab row. [pack: header-nav]
+// 2026-11-25 opencode: all header-nav styling now lives in one branch-only
+// stylesheet, switched on by the shell--header class. [pack: header-nav]
 
 import type { Metadata, Viewport } from "next";
 import Nav from "./Nav";
 import AutoSaveBoot from "./AutoSaveBoot";
-import InstallButton from "./InstallButton";
 import JobsBoot from "./JobsBoot";
 import JobsDock from "./JobsDock";
 import PwaBoot from "./PwaBoot";
@@ -23,6 +26,7 @@ import ThemeBoot from "./ThemeBoot";
 import { THEME_BOOT } from "@/lib/client/theme";
 import { withBasePath } from "@/lib/shared/paths";
 import "./globals.css";
+import "./header-nav.css";
 
 export const metadata: Metadata = {
   title: "Flashcards",
@@ -62,13 +66,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AutoSaveBoot />
         <JobsBoot />
         <PwaBoot />
-        <div className="shell">
+        <div className="shell shell--header">
           <header className="topbar">
             <Nav />
           </header>
           <main className="content">{children}</main>
         </div>
-        <InstallButton />
         <JobsDock />
       </body>
     </html>
